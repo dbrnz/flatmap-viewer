@@ -64,23 +64,20 @@ export class Pathways
         this._nervePaths = reverseMap(this._pathNerves);     // nerveId: [pathIds]
 
         const nodePaths = flatmap.pathways['node-paths'];
-        this._nodeStartPaths = nodePaths['start-paths'];      // nodeId: [pathIds]
-        this._nodeThroughPaths = nodePaths['through-paths'];  // nodeId: [pathIds]
-        this._nodeEndPaths = nodePaths['end-paths'];          // nodeId: [pathIds]
-
-        this._typePaths = flatmap.pathways['type-paths'];     // nerve-type: [pathIds]
-
+        if (!('start-paths' in nodePaths)) {
+            this._nodePaths = nodePaths;                     // nodeId: [pathIds]
+        } else {                                             // Original format
+            this._nodePaths = nodePaths['start-paths'];
+            this.extendNodePaths_(nodePaths['through-paths']);
+            this.extendNodePaths_(nodePaths['end-paths']);
+        }
         const featureIds = new Set();
-        for (const paths of Object.values(this._nodeStartPaths)) {
-            this.addFeatures_(featureIds, paths);
-        }
-        for (const paths of Object.values(this._nodeThroughPaths)) {
-            this.addFeatures_(featureIds, paths);
-        }
-        for (const paths of Object.values(this._nodeEndPaths)) {
+        for (const paths of Object.values(this._nodePaths)) {
             this.addFeatures_(featureIds, paths);
         }
         this._allFeatureIds = featureIds;
+
+        this._typePaths = flatmap.pathways['type-paths'];     // nerve-type: [pathIds]
     }
 
     addFeatures_(featureSet, paths)
@@ -90,6 +87,18 @@ export class Pathways
             if (path in this._pathLines) {
                 this._pathLines[path].forEach(lineId => featureSet.add(lineId));
                 this._pathNerves[path].forEach(nerveId => featureSet.add(nerveId));
+            }
+        }
+    }
+
+    extendNodePaths_(nodePaths)
+    //=========================
+    {
+        for (const [key, values] of Object.entries(nodePaths)) {
+            if (key in this._nodePaths) {
+                this._nodePaths[key].push(...values);
+            } else {
+                this._nodePaths[key] = values;
             }
         }
     }
@@ -125,23 +134,15 @@ export class Pathways
     isNode(id)
     //========
     {
-        return id in this._nodeStartPaths
-            || id in this._nodeThroughPaths
-            || id in this._nodeEndPaths;
+        return id in this._nodePaths;
     }
 
     pathFeatureIds(nodeId)
     //====================
     {
         const featureIds = new Set();
-        if (nodeId in this._nodeStartPaths) {
-            this.addFeatures_(featureIds, this._nodeStartPaths[nodeId]);
-        }
-        if (nodeId in this._nodeThroughPaths) {
-            this.addFeatures_(featureIds, this._nodeThroughPaths[nodeId]);
-        }
-        if (nodeId in this._nodeEndPaths) {
-            this.addFeatures_(featureIds, this._nodeEndPaths[nodeId]);
+        if (nodeId in this._nodePaths) {
+            this.addFeatures_(featureIds, this._nodePaths[nodeId]);
         }
         return featureIds;
     }
