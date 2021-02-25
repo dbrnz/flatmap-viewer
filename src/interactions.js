@@ -648,7 +648,7 @@ export class UserInteractions
             const lineFeatures = features.filter(feature => ('type' in feature.properties
                                                          && feature.properties.type.startsWith('line')));
             if (lineFeatures.length > 0) {
-                for (const featureId of this._pathways.featureIdsForLines(
+                for (const featureId of this._pathways.lineFeatureIds(
                                                         lineFeatures.map(f => f.properties.featureId))) {
                     this.activateFeature_(this.mapFeature_(featureId));
                 }
@@ -733,7 +733,7 @@ export class UserInteractions
     activateNerveFeatures_(nerveId)
     //=============================
     {
-        for (const featureId of this._pathways.featureIdsForNerve(nerveId)) {
+        for (const featureId of this._pathways.nerveFeatureIds(nerveId)) {
             this.activateFeature_(this.mapFeature_(featureId));
         }
     }
@@ -763,7 +763,7 @@ export class UserInteractions
     addMarker(anatomicalId, markerType='')
     //====================================
     {
-        const featureIds = this._flatmap.featureIdsForModel(anatomicalId);
+        const featureIds = this._flatmap.modelFeatureIds(anatomicalId);
         let markerId = -1;
 
         for (const featureId of featureIds) {

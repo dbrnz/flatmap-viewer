@@ -433,8 +433,8 @@ export class FlatMap
         }
     }
 
-    featureIdsForModel(anatomicalId)
-    //==============================
+    modelFeatureIds(anatomicalId)
+    //===========================
     {
         const featureIds = this._modelToFeatureIds.get(utils.normaliseId(anatomicalId));
         return featureIds ? featureIds : [];
@@ -777,10 +777,10 @@ export class FlatMap
             const featureIds = new utils.List();
             if (Array.isArray(anatomicalIds)) {
                 for (const id of anatomicalIds) {
-                    featureIds.extend(this.featureIdsForModel(id));
+                    featureIds.extend(this.modelFeatureIds(id));
                 }
             } else {
-                featureIds.extend(this.featureIdsForModel(anatomicalIds));
+                featureIds.extend(this.modelFeatureIds(anatomicalIds));
             }
             this._userInteractions.zoomToFeatures(featureIds, padding);
         }
