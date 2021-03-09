@@ -77,14 +77,20 @@ class MapFeatureLayer
     addPathwayStyleLayers_()
     //======================
     {
-        if (this._map.getSource('vector-tiles')
-                     .vectorLayerIds
-                     .indexOf('pathways') >= 0) {
-            this.addStyleLayer_(style.FeatureLineLayer.style, 'pathways');
-            this.addStyleLayer_(style.FeatureLineDashLayer.style, 'pathways');
-            this.addStyleLayer_(style.NervePolygonBorder.style, 'pathways');
-            this.addStyleLayer_(style.NervePolygonFill.style, 'pathways');
-            this.addStyleLayer_(style.FeatureNerveLayer.style, 'pathways');
+        //for (const pathLayer of ['pathways', 'autopaths']) {
+        let addedPaths = false;
+        for (const pathLayer of ['autopaths', 'pathways']) {
+            if (!addedPaths
+             && this._map.getSource('vector-tiles')
+                    .vectorLayerIds
+                    .indexOf(pathLayer) >= 0) {
+                this.addStyleLayer_(style.FeatureLineLayer.style, pathLayer);
+                this.addStyleLayer_(style.FeatureLineDashLayer.style, pathLayer);
+                this.addStyleLayer_(style.NervePolygonBorder.style, pathLayer);
+                this.addStyleLayer_(style.NervePolygonFill.style, pathLayer);
+                this.addStyleLayer_(style.FeatureNerveLayer.style, pathLayer);
+                addedPaths = true;
+            }
         }
     }
 
