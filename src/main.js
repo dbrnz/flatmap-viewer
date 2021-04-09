@@ -38,7 +38,7 @@ window.onload = async function() {
     const options = [];
     const selector = document.getElementById('map-selector');
     for (const map of Object.values(maps)) {
-        const text = [ map.id ];
+        const text = [];
         if ('describes' in map) {
             text.push(map.describes);
         }
@@ -47,6 +47,7 @@ window.onload = async function() {
             text.push(map.created);
             sortKey = map.created;
         }
+        text.push(map.id);
         options.push({
             option: `<option value="${map.id}">${text.join(' -- ')}</option>`,
             sortKey: sortKey
