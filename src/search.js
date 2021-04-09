@@ -121,6 +121,8 @@ export class SearchControl
 // The properties of a feature we index and show
 
 export const indexedProperties = [
+    'id',
+    'class',
     'label',
     'models'
 ];
