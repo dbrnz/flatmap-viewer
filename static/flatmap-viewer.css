@@ -88,6 +88,12 @@ li.flatmap-contextmenu-item:hover {
     line-height: 1.1em;
 }
 
+.info-display {
+    background-color: white;
+    border: 1px solid red;
+    overflow: scroll;
+}
+
 /* Navigation control buttons */
 
 .mapboxgl-ctrl button.navigation-zoom-in {
