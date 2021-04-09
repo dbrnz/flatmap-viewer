@@ -212,7 +212,7 @@ export class UserInteractions
 
         this._map.on('click', this.clickEvent_.bind(this));
         this._map.on('mousemove', this.mouseMoveEvent_.bind(this));
-        this._lastModelMouseEntered = null;
+        this._lastFeatureMouseEntered = null;
     }
 
     getState()
@@ -633,13 +633,12 @@ export class UserInteractions
         // Simulate `mouseenter` events on features
 
         const feature = features[0];
-        if ('properties' in feature && 'models' in feature.properties) {
-            if (this._lastModelMouseEntered !== feature.properties.models) {
+        if ('properties' in feature && 'models' in feature.properties) {  // models, id, class
+            if (this._lastFeatureMouseEntered !== feature.id) {
                 this._flatmap.featureEvent('mouseenter', feature.properties.models);
-                this._lastModelMouseEntered = feature.properties.models
+                this._lastFeatureMouseEntered = feature.id;
             }
-        } else {
-            this._lastModelMouseEntered = null;
+            this._lastFeatureMouseEntered = null;
         }
 
         let html = '';
