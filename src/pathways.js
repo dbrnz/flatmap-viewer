@@ -59,6 +59,7 @@ export class Pathways
     {
         this._pathLines = flatmap.pathways['path-lines'];    // pathId: [lineIds]
         this._pathNerves = flatmap.pathways['path-nerves'];  // pathId: [nerveIds]
+        this._pathNodes = flatmap.pathways['path-nodes'];    // pathId: [nodeIds]
 
         this._linePaths = reverseMap(this._pathLines);       // lineId: [pathIds]
         this._nervePaths = reverseMap(this._pathNerves);     // nerveId: [pathIds]
@@ -73,20 +74,21 @@ export class Pathways
         }
         const featureIds = new Set();
         for (const paths of Object.values(this._nodePaths)) {
-            this.addFeatures_(featureIds, paths);
+            this.addPathsToFeatureSet_(paths, featureIds);
         }
         this._allFeatureIds = featureIds;
 
         this._typePaths = flatmap.pathways['type-paths'];     // nerve-type: [pathIds]
     }
 
-    addFeatures_(featureSet, paths)
-    //=============================
+    addPathsToFeatureSet_(paths, featureSet)
+    //======================================
     {
         for (const path of paths) {
             if (path in this._pathLines) {
                 this._pathLines[path].forEach(lineId => featureSet.add(lineId));
                 this._pathNerves[path].forEach(nerveId => featureSet.add(nerveId));
+                this._pathNodes[path].forEach(nerveId => featureSet.add(nerveId));
             }
         }
     }
@@ -115,7 +117,7 @@ export class Pathways
         const featureIds = new Set();
         for (const lineId of lineIds) {
             if (lineId in this._linePaths) {
-                this.addFeatures_(featureIds, this._linePaths[lineId]);
+                this.addPathsToFeatureSet_(this._linePaths[lineId], featureIds);
             }
         }
         return featureIds;
@@ -126,7 +128,7 @@ export class Pathways
     {
         const featureIds = new Set();
         if (nerveId in this._nervePaths) {
-            this.addFeatures_(featureIds, this._nervePaths[nerveId]);
+            this.addPathsToFeatureSet_(this._nervePaths[nerveId], featureIds);
         }
         return featureIds;
     }
@@ -142,7 +144,7 @@ export class Pathways
     {
         const featureIds = new Set();
         if (nodeId in this._nodePaths) {
-            this.addFeatures_(featureIds, this._nodePaths[nodeId]);
+            this.addPathsToFeatureSet_(this._nodePaths[nodeId], featureIds);
         }
         return featureIds;
     }
@@ -152,7 +154,7 @@ export class Pathways
     {
         const featureIds = new Set();
         if (pathType in this._typePaths) {
-            this.addFeatures_(featureIds, this._typePaths[pathType]);
+            this.addPathsToFeatureSet_(this._typePaths[pathType], featureIds);
         }
         return featureIds;
     }
