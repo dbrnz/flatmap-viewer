@@ -646,7 +646,6 @@ export class UserInteractions
             for (const feature of features) {
                 this.activateFeature_(feature);
             }
-
             html = this._infoControl.featureInformation(features, event.lngLat);
         } else {
             const lineFeatures = features.filter(feature => ('type' in feature.properties
@@ -672,18 +671,22 @@ export class UserInteractions
 
                     if (this._flatmap.options.debug) {
                         const htmlList = [];
+                        const featureIds = [];
                         for (const feature of labelledFeatures) {
-                            this.activateFeature_(feature);
-                            for (const prop of indexedProperties) {
-                                if (prop in feature.properties) {
-                                    htmlList.push(`<span class="info-name">${prop}:</span>`);
-                                    htmlList.push(`<span class="info-value">${feature.properties[prop]}</span>`);
+                            if (featureIds.indexOf(feature.id) < 0) {
+                                featureIds.push(feature.id);
+                                this.activateFeature_(feature);
+                                for (const prop of indexedProperties) {
+                                    if (prop in feature.properties) {
+                                        htmlList.push(`<span class="info-name">${prop}:</span>`);
+                                        htmlList.push(`<span class="info-value">${feature.properties[prop]}</span>`);
+                                    }
                                 }
                             }
-                            htmlList.push(`<span class="info-name">Area:</span>`);
-                            htmlList.push(`<span class="info-value">${feature.properties.area/1000000000}</span>`);
-                            htmlList.push(`<span class="info-name">Scale:</span>`);
-                            htmlList.push(`<span class="info-value">${feature.properties.scale}</span>`);
+                            //htmlList.push(`<span class="info-name">Area:</span>`);
+                            //htmlList.push(`<span class="info-value">${feature.properties.area/1000000000}</span>`);
+                            //htmlList.push(`<span class="info-name">Scale:</span>`);
+                            //htmlList.push(`<span class="info-value">${feature.properties.scale}</span>`);
                         }
                         html = `<div id="info-control-info">${htmlList.join('\n')}</div>`;
                     } else {
