@@ -30,6 +30,49 @@ import { indexedProperties } from './search.js';
 
 //==============================================================================
 
+class InfoDisplay
+{
+    constructor()
+    {
+        this._map = undefined;
+        this._container = undefined;
+    }
+
+    getDefaultPosition()
+    //==================
+    {
+        return 'top-left';
+    }
+
+    onAdd(map)
+    //========
+    {
+        this._map = map;
+        this._container = document.createElement('div');
+        this._container.className = 'mapboxgl-ctrl info-display';
+        return this._container;
+    }
+
+    onRemove()
+    //========
+    {
+        this._container.parentNode.removeChild(this._container);
+        this._map = undefined;
+        this._container = undefined;
+    }
+
+    show(html)
+    //========
+    {
+        if (this._container) {
+            this._container.innerHTML = html;
+        }
+
+    }
+}
+
+//==============================================================================
+
 export class InfoControl
 {
     constructor(flatmap)
@@ -37,6 +80,7 @@ export class InfoControl
         this._flatmap = flatmap;
         this._map = undefined;
         this._active = false;
+        this._infoDisplay = new InfoDisplay();
     }
 
     get active()
@@ -65,12 +109,16 @@ export class InfoControl
      </svg>
     </button>`;
         this._container.onclick = this.onClick_.bind(this);
+        this._map.addControl(this._infoDisplay);
         return this._container;
     }
 
     onRemove()
     //========
     {
+        if (this._map !== undefined) {
+            this._map.removeControl(this._infoDisplay);
+        }
         this._container.parentNode.removeChild(this._container);
         this._map = undefined;
     }
@@ -113,7 +161,7 @@ export class InfoControl
                 'id',
                 'type',
                 'properties',
-                'layer' //,
+//                'layer' //,
                 //'source',
                 //'sourceLayer',
                 //'state'
@@ -123,10 +171,12 @@ export class InfoControl
                 'id',
                 'class',
                 'label',
-                'area',
-                'length',
-                'group',
-                'organ'
+                'models',
+//                'area',
+//                'length',
+//                'group',
+                'organ',
+                'neuron'
             ];
 
             const layerProperties = [
@@ -137,49 +187,53 @@ export class InfoControl
 
             // Do we filter for smallest properties.area (except lines have area == 0)
             // with lines having precedence... ??
-
-            const displayFeatures = featureList.map(feat => {
-                const displayFeat = {};
-                displayProperties.forEach(prop => {
-                    if (prop === 'properties') {
-                        const properties = feat[prop];
-                        const propertiesProps = {};
-                        propertiesProperties.forEach(prop => {
-                            propertiesProps[prop] = properties[prop];
-                        });
-                        displayFeat[prop] = propertiesProps;
-                    } else if (prop === 'layer') {
-                        const layer = feat[prop];
-                        const layerProps = {};
-                        layerProperties.forEach(prop => {
-                            layerProps[prop] = layer[prop];
-                        });
-                        displayFeat[prop] = layerProps;
-                    } else {
-                        displayFeat[prop] = feat[prop];
-                    }
-                });
-                return displayFeat;
-            });
-
+            const featureIds = [];
+            const displayFeatures = [];
+            for (const feat of featureList) {
+                if (featureIds.indexOf(feat['id']) < 0) {
+                    featureIds.push(feat['id']);
+                    const displayFeat = {};
+                    displayProperties.forEach(prop => {
+                        if (prop === 'properties') {
+                            const properties = feat[prop];
+                            const propertiesProps = {};
+                            propertiesProperties.forEach(prop => {
+                                propertiesProps[prop] = properties[prop];
+                            });
+                            displayFeat[prop] = propertiesProps;
+                        } else if (prop === 'layer') {
+                            const layer = feat[prop];
+                            const layerProps = {};
+                            layerProperties.forEach(prop => {
+                                layerProps[prop] = layer[prop];
+                            });
+                            displayFeat[prop] = layerProps;
+                        } else {
+                            displayFeat[prop] = feat[prop];
+                        }
+                    });
+                    displayFeatures.push(displayFeat);
+                }
+            }
             const content = JSON.stringify(
                 displayFeatures,
                 null,
                 2
             );
-
-            html = `<pre class="info-control-features">${JSON.stringify(location)}\n${content}</pre>`;
+            // Only if this._flatmap.options.showPosition ??
+            // html = `<pre class="info-control-features">${JSON.stringify(location)}\n${content}</pre>`;
+            html = `<pre class="info-control-features">${content}</pre>`;
         } else {
             const displayValues = new Map();
             for (const feature of featureList) {
-                if (!displayValues.has(feature.properties.featureId)) {
+                if (!displayValues.has(feature.id)) {
                     const values = {};
                     indexedProperties.forEach(prop => {
                         if (prop in feature.properties) {
                             values[prop] = feature.properties[prop];
                         }
                     });
-                    displayValues.set(feature.properties.featureId, values);
+                    displayValues.set(feature.id, values);
                 }
             }
 
@@ -199,13 +253,23 @@ export class InfoControl
                     }
                 }
             }
-            if (htmlList.length === 0) {
-                return;
+            if (htmlList.length > 0) {
+                html = `<div id="info-control-info">${htmlList.join('\n')}</div>`;
             }
-
-            html = `<div id="info-control-info">${htmlList.join('\n')}</div>`;
         }
         return html;
+    }
+
+    reset()
+    //=====
+    {
+        this._infoDisplay.show('');
+    }
+
+    show(html)
+    //========
+    {
+        this._infoDisplay.show(html);
     }
 }
 

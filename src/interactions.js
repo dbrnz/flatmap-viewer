@@ -617,6 +617,12 @@ export class UserInteractions
 
         this.resetActiveFeatures_();
 
+        // Reset any info display
+        const displayInfo = (this._flatmap.options.debug && this._infoControl);
+        if (displayInfo) {
+            this._infoControl.reset()
+        }
+
         // Get all the features at the current point
 
         const features = this._map.queryRenderedFeatures(event.point);
@@ -637,8 +643,7 @@ export class UserInteractions
         }
 
         let html = '';
-        if (this._flatmap.options.debug && this._infoControl && this._infoControl.active) {
-
+        if (displayInfo && this._infoControl.active) {
             for (const feature of features) {
                 this.activateFeature_(feature);
             }
@@ -694,7 +699,9 @@ export class UserInteractions
             }
         }
 
-        if (html !== '') {
+        if (displayInfo) {
+            this._infoControl.show(html);
+        } else if (html !== '') {
             // Show a tooltip
 
             this._tooltip = new mapboxgl.Popup({
