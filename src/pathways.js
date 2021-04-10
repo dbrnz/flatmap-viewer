@@ -59,8 +59,14 @@ export class Pathways
     {
         this._pathLines = flatmap.pathways['path-lines'];    // pathId: [lineIds]
         this._pathNerves = flatmap.pathways['path-nerves'];  // pathId: [nerveIds]
-        this._pathNodes = flatmap.pathways['path-nodes'];    // pathId: [nodeIds]
-
+        if ('path-nodes' in flatmap.pathways) {
+            this._pathNodes = flatmap.pathways['path-nodes'];    // pathId: [nodeIds]
+        } else {
+            this._pathNodes = {};
+            for (const path of Object.keys(this._pathLines)) {
+                this._pathNodes[path] = [];
+            }
+        }
         this._linePaths = reverseMap(this._pathLines);       // lineId: [pathIds]
         this._nervePaths = reverseMap(this._pathNerves);     // nerveId: [pathIds]
 
