@@ -56,7 +56,9 @@ class InfoDisplay
     onRemove()
     //========
     {
-        this._container.parentNode.removeChild(this._container);
+        if (this._container !== undefined) {
+            this._container.parentNode.removeChild(this._container);
+        }
         this._map = undefined;
         this._container = undefined;
     }
