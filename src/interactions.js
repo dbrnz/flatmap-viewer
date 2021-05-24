@@ -635,7 +635,7 @@ export class UserInteractions
         const feature = features[0];
         if ('properties' in feature && 'models' in feature.properties) {  // models, id, class
             if (this._lastFeatureMouseEntered !== feature.id) {
-                this._flatmap.featureEvent('mouseenter', feature.properties.models);
+                this._flatmap.featureEvent('mouseenter', feature);
                 this._lastFeatureMouseEntered = feature.id;
             }
             this._lastFeatureMouseEntered = null;
@@ -728,7 +728,7 @@ export class UserInteractions
             const feature = this._activeFeatures[0];
             if ('properties' in feature) {
                 if ('models' in feature.properties) {
-                    this._flatmap.featureEvent('click', feature.properties.models);
+                    this._flatmap.featureEvent('click', feature);
                 }
                 if (this._pathways.isNode(feature.properties.featureId)) {
                     for (const featureId of this._pathways.pathFeatureIds(feature.properties.featureId)) {

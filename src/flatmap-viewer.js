@@ -72,10 +72,12 @@ export class FlatMap
             this._searchIndex = new SearchIndex(this);
         }
 
-        this._idToAnnotation = new Map();
-        this._modelToFeatureIds = new Map();
+        this.__idToAnnotation = new Map();
+        this.__datasetToFeatureIds = new Map();
+        this.__modelToFeatureIds = new Map();
+        this.__sourceToFeatureIds = new Map();
         for (const [featureId, annotation] of Object.entries(mapDescription.annotations)) {
-            this.addAnnotation_(featureId, annotation);
+            this.__addAnnotation(featureId, annotation);
             if (this.options.searchable) {
                 this._searchIndex.indexMetadata(featureId, annotation);
             }
@@ -406,44 +408,50 @@ export class FlatMap
     get annotations()
     //===============
     {
-        return this._idToAnnotation;
+        return this.__idToAnnotation;
     }
 
     annotation(featureId)
     //===================
     {
-        return this._idToAnnotation.get(featureId.toString());
+        return this.__idToAnnotation.get(featureId.toString());
     }
 
-    addAnnotation_(featureId, ann)
-    //============================
+    __updateFeatureIdMap(property, featureIdMap, annotation)
+    //======================================================
     {
-        ann.featureId = featureId;
-        this._idToAnnotation.set(featureId, ann);
-        if ('models' in ann) {
-            const modelId = utils.normaliseId(ann.models);
-            if (modelId) {
-                const featureIds = this._modelToFeatureIds.get(modelId);
-                if (featureIds) {
-                    featureIds.push(featureId);
-                } else {
-                    this._modelToFeatureIds.set(modelId, [featureId]);
-                }
+        if (property in annotation) {
+            const id = utils.normaliseId(annotation[property]);
+            const featureIds = featureIdMap.get(id);
+            if (featureIds) {
+                featureIds.push(annotation.featureId);
+            } else {
+                featureIdMap.set(id, [annotation.featureId]);
             }
         }
+    }
+
+    __addAnnotation(featureId, ann)
+    //=============================
+    {
+        ann.featureId = featureId;
+        this.__idToAnnotation.set(featureId, ann);
+        this.__updateFeatureIdMap('dataset', this.__datasetToFeatureIds, ann);
+        this.__updateFeatureIdMap('models', this.__modelToFeatureIds, ann);
+        this.__updateFeatureIdMap('source', this.__sourceToFeatureIds, ann);
     }
 
     modelFeatureIds(anatomicalId)
     //===========================
     {
-        const featureIds = this._modelToFeatureIds.get(utils.normaliseId(anatomicalId));
+        const featureIds = this.__modelToFeatureIds.get(utils.normaliseId(anatomicalId));
         return featureIds ? featureIds : [];
     }
 
     modelForFeature(featureId)
     //========================
     {
-        const ann = this._idToAnnotation.get(featureId);
+        const ann = this.__idToAnnotation.get(featureId);
         return (ann && 'models' in ann) ? utils.normaliseId(ann.models) : null;
     }
 
@@ -473,8 +481,20 @@ export class FlatMap
     get anatomicalIdentifiers()
     //=========================
     {
-        return [...this._modelToFeatureIds.keys()]
+        return [...this.__modelToFeatureIds.keys()]
     }
+
+    /**
+     * Datasets associated with the map.
+     *
+     * @type {string|Array.<string>}
+     */
+    get datasets()
+    //============
+    {
+        return [...this.__datasetToFeatureIds.keys()]
+    }
+
 
     get options()
     //===========
@@ -541,7 +561,7 @@ export class FlatMap
     annotationEvent(eventType, featureId)
     //===================================
     {
-        const ann = this._idToAnnotation.get(featureId);
+        const ann = this.__idToAnnotation.get(featureId);
         if (ann) {
             this.callback(eventType, {
                 type: 'feature',
@@ -724,15 +744,26 @@ export class FlatMap
      * Generate a callback as a result of some event with a flatmap feature.
      *
      * @param      {string}  eventType     The event type
-     * @param      {string}  anatomicalId  The anatomical identifier of the feature
+     * @param      {string}  feature       The flatmap feature
      */
-    featureEvent(eventType, anatomicalId)
-    //===================================
+    featureEvent(eventType, feature)
+    //==============================
     {
-        this.callback(eventType, {
+        const data = {
             type: 'feature',
-            models: anatomicalId
-        });
+            models: feature.properties.models
+        }
+        const exportedProperties = [
+            'dataset',
+            'layer',
+            'source'
+        ];
+        for (const property of exportedProperties) {
+            if (property in feature.properties) {
+                data[property] = feature.properties[property];
+            }
+        }
+        this.callback(eventType, data);
     }
 
     /**
@@ -770,17 +801,22 @@ export class FlatMap
         }
     }
 
-    zoomTo(anatomicalIds, padding=100)
-    //================================
+    zoomTo(externalIds, padding=100)
+    //==============================
     {
         if (this._userInteractions !== null) {
             const featureIds = new utils.List();
-            if (Array.isArray(anatomicalIds)) {
-                for (const id of anatomicalIds) {
+            if (Array.isArray(externalIds)) {
+                for (const id of externalIds) {
                     featureIds.extend(this.modelFeatureIds(id));
                 }
             } else {
-                featureIds.extend(this.modelFeatureIds(anatomicalIds));
+                featureIds.extend(this.modelFeatureIds(externalIds));
+            }
+            if (featureIds.length == 0) {
+                // We couldn't find a feature by anatomical id, so check dataset and source
+                featureIds.extend(this.__datasetToFeatureIds.get(externalIds));
+                featureIds.extend(this.__sourceToFeatureIds.get(externalIds));
             }
             this._userInteractions.zoomToFeatures(featureIds, padding);
         }
