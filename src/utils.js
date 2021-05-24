@@ -41,7 +41,7 @@ export class List extends Array {
     extend(other) {
         if (this === other) {
             throw new Error('Cannot extend a list with itself...');
-        } else {
+        } else if (other) {
             super.push(...other);
         }
         return this;
