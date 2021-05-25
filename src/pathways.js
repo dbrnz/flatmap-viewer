@@ -93,13 +93,13 @@ export class Pathways
                 }
             }
         }
-        this._linePaths = reverseMap(this._pathLines);       // lineId: [pathIds]
-        this._nervePaths = reverseMap(this._pathNerves);     // nerveId: [pathIds]
+        this._linePaths = reverseMap(this._pathLines);               // lineId: [pathIds]
+        this._nervePaths = reverseMap(this._pathNerves);             // nerveId: [pathIds]
 
         const nodePaths = flatmap.pathways['node-paths'];
         if (!('start-paths' in nodePaths)) {
-            this._nodePaths = nodePaths;                     // nodeId: [pathIds]
-        } else {                                             // Original format
+            this._nodePaths = nodePaths;                             // nodeId: [pathIds]
+        } else {   // Original format, deprecated
             this._nodePaths = nodePaths['start-paths'];
             this.extendNodePaths_(nodePaths['through-paths']);
             this.extendNodePaths_(nodePaths['end-paths']);
@@ -110,7 +110,7 @@ export class Pathways
         }
         this._allFeatureIds = featureIds;
 
-        this._typePaths = flatmap.pathways['type-paths'];     // nerve-type: [pathIds]
+        this._typePaths = flatmap.pathways['type-paths'];            // nerve-type: [pathIds]
     }
 
     addPathsToFeatureSet_(paths, featureSet)
