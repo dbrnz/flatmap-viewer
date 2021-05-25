@@ -801,6 +801,10 @@ export class FlatMap
                 featureIds.extend(this.__datasetToFeatureIds.get(externalIds));
                 featureIds.extend(this.__sourceToFeatureIds.get(externalIds));
             }
+            if (featureIds.length == 0) {
+                // We still haven't found a feature, so check connectivity
+                featureIds.extend(this._userInteractions.pathwaysFeatureIds(externalIds));
+            }
             this._userInteractions.zoomToFeatures(featureIds, padding);
         }
     }

@@ -57,14 +57,40 @@ export class Pathways
 {
     constructor(flatmap)
     {
-        this._pathLines = flatmap.pathways['path-lines'];    // pathId: [lineIds]
-        this._pathNerves = flatmap.pathways['path-nerves'];  // pathId: [nerveIds]
-        if ('path-nodes' in flatmap.pathways) {
-            this._pathNodes = flatmap.pathways['path-nodes'];    // pathId: [nodeIds]
+        this._modelPaths = {};                                       // modelId: [pathIds]
+        if ('models' in flatmap.pathways) {
+            for (const path of flatmap.pathways.models) {
+                this._modelPaths[path.id] = path.paths;
+            }
+        }
+        this._populationPaths = {};                                  // populationId: [pathIds]
+        if ('paths' in flatmap.pathways) {
+            this._pathLines = {};                                    // pathId: [lineIds]
+            this._pathNerves = {};                                   // pathId: [nerveIds]
+            this._pathNodes = {};                                    // pathId: [nodeIds]
+            for (const [pathId, path] of Object.entries(flatmap.pathways.paths)) {
+                this._pathLines[pathId] = path.lines;
+                this._pathNerves[pathId] = path.nerves;
+                this._pathNodes[pathId] = path.nodes;
+                if ('models' in path) {
+                    const populationId = path['models'];
+                    if (!(populationId in this._populationPaths)) {
+                        this._populationPaths[populationId] = [];
+                    }
+                    this._populationPaths[populationId].push(pathId)
+                }
+            }
         } else {
-            this._pathNodes = {};
-            for (const path of Object.keys(this._pathLines)) {
-                this._pathNodes[path] = [];
+            // To be deprecated...
+            this._pathLines = flatmap.pathways['path-lines'];        // pathId: [lineIds]
+            this._pathNerves = flatmap.pathways['path-nerves'];      // pathId: [nerveIds]
+            if ('path-nodes' in flatmap.pathways) {
+                this._pathNodes = flatmap.pathways['path-nodes'];    // pathId: [nodeIds]
+            } else {
+                this._pathNodes = {};
+                for (const path of Object.keys(this._pathLines)) {
+                    this._pathNodes[path] = [];
+                }
             }
         }
         this._linePaths = reverseMap(this._pathLines);       // lineId: [pathIds]
@@ -136,6 +162,26 @@ export class Pathways
         if (nerveId in this._nervePaths) {
             this.addPathsToFeatureSet_(this._nervePaths[nerveId], featureIds);
         }
+        return featureIds;
+    }
+
+    modelFeatureIds(modelId)
+    //======================
+    {
+        const featureIds = new Set();
+        if (modelId in this._modelPaths) {
+            this.addPathsToFeatureSet_(this._modelPaths[modelId], featureIds);
+            }
+        return featureIds;
+    }
+
+    neuronPopulationFeatureIds(populationId)
+    //======================================
+    {
+        const featureIds = new Set();
+        if (populationId in this._populationPaths) {
+            this.addPathsToFeatureSet_(this._populationPaths[populationId], featureIds);
+            }
         return featureIds;
     }
 

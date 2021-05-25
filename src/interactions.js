@@ -40,6 +40,8 @@ import {indexedProperties} from './search.js';
 import {SearchControl} from './search.js';
 import {VECTOR_TILES_SOURCE} from './styling.js';
 
+import * as utils from './utils.js';
+
 //==============================================================================
 
 
@@ -763,6 +765,15 @@ export class UserInteractions
         }
 
         this._disabledPathFeatures = true;
+    }
+
+    pathwaysFeatureIds(externalIds)
+    //=============================
+    {
+        const featureIds = new utils.List();
+        featureIds.extend(this._pathways.modelFeatureIds(externalIds));
+        featureIds.extend(this._pathways.neuronPopulationFeatureIds(externalIds));
+        return featureIds;
     }
 
     //==============================================================================
