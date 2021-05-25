@@ -653,8 +653,8 @@ export class UserInteractions
             const lineFeatures = features.filter(feature => ('type' in feature.properties
                                                          && feature.properties.type.startsWith('line')));
             if (lineFeatures.length > 0) {
-                for (const featureId of this._pathways.lineFeatureIds(
-                                                        lineFeatures.map(f => f.properties.featureId))) {
+                const lineIds = new Set(lineFeatures.map(f => f.properties.featureId));
+                for (const featureId of this._pathways.lineFeatureIds(lineIds)) {
                     this.activateFeature_(this.mapFeature_(featureId));
                 }
             } else {
