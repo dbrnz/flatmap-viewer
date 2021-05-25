@@ -558,23 +558,6 @@ export class FlatMap
 
     }
 
-    annotationEvent(eventType, featureId)
-    //===================================
-    {
-        const ann = this.__idToAnnotation.get(featureId);
-        if (ann) {
-            this.callback(eventType, {
-                type: 'feature',
-                id: featureId,
-                label: ann.label,
-                models: ann.models,
-                datasets: ann.datasets,
-                scaffolds: ann.scaffolds,
-                simulations: ann.simulations
-            });
-        }
-    }
-
     close()
     //=====
     {
