@@ -535,11 +535,11 @@ export class FlatMap
         }
     }
 
-    callback(type, features, ...args)
-    //===============================
+    callback(type, data, ...args)
+    //===========================
     {
         if (this._callback) {
-            return this._callback(type, features, ...args);
+            return this._callback(type, data, ...args);
         }
     }
 
@@ -944,7 +944,7 @@ export class MapManager
     * @arg container {string} The id of the HTML container in which to display the map.
     * @arg callback {function(string, Object)} A callback function, invoked when events occur with the map. The
     *                                          first parameter gives the type of event, the second provides
-    *                                          details about the feature(s) the event is for.
+    *                                          details about the event.
     * @arg options {Object} Configurable options for the map.
     * @arg options.background {string} Background colour of flatmap. Defaults to ``white``.
     * @arg options.debug {boolean} Enable debugging mode.
