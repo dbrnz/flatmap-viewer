@@ -727,26 +727,33 @@ export class FlatMap
      * Generate a callback as a result of some event with a flatmap feature.
      *
      * @param      {string}  eventType     The event type
-     * @param      {string}  feature       The flatmap feature
+     * @param      {Object}  properties    Properties associated with the feature
      */
-    featureEvent(eventType, feature)
-    //==============================
+    featureEvent(eventType, properties)
+    //=================================
     {
-        const data = {
-            type: 'feature',
-            models: feature.properties.models
-        }
+        const data = {};
         const exportedProperties = [
+            'connectivity',
             'dataset',
-            'layer',
+            'label',
+            'models',
             'source'
         ];
         for (const property of exportedProperties) {
-            if (property in feature.properties) {
-                data[property] = feature.properties[property];
+            if (property in properties) {
+                const value = properties[property];
+                if (value !== undefined) {
+                    data[property] = properties[property];
+                }
             }
         }
-        this.callback(eventType, data);
+        if (Object.keys(data).length > 0) {
+            data['type'] = 'feature';
+            this.callback(eventType, data);
+            return true;
+        }
+        return false;
     }
 
     /**

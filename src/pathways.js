@@ -22,6 +22,10 @@ limitations under the License.
 
 //==============================================================================
 
+export const PATHWAY_LAYERS = ['pathways', 'autopaths'];
+
+//==============================================================================
+
 export const PATH_TYPES = [
     { type: "cns", label: "CNS", colour: "#9B1FC1"},
     { type: "lcn", label: "Local circuit neuron", colour: "#F19E38"},
@@ -57,13 +61,18 @@ export class Pathways
 {
     constructor(flatmap)
     {
-        this._modelPaths = {};                                       // modelId: [pathIds]
+        this.__connectivityModelPaths = {};                          // modelId: [pathIds]
+        this.__pathToConnectivityModel = {};
         if ('models' in flatmap.pathways) {
-            for (const path of flatmap.pathways.models) {
-                this._modelPaths[path.id] = path.paths;
+            for (const model of flatmap.pathways.models) {
+                this.__connectivityModelPaths[model.id] = model.paths;
+                for (const path of model.paths) {
+                    this.__pathToConnectivityModel[path] = model.id;
+                }
             }
         }
-        this._populationPaths = {};                                  // populationId: [pathIds]
+        this.__pathModelPaths = {};                                  // pathModelId: [pathIds]
+        this.__pathToPathModel = {};
         if ('paths' in flatmap.pathways) {
             this._pathLines = {};                                    // pathId: [lineIds]
             this._pathNerves = {};                                   // pathId: [nerveIds]
@@ -73,11 +82,12 @@ export class Pathways
                 this._pathNerves[pathId] = path.nerves;
                 this._pathNodes[pathId] = path.nodes;
                 if ('models' in path) {
-                    const populationId = path['models'];
-                    if (!(populationId in this._populationPaths)) {
-                        this._populationPaths[populationId] = [];
+                    const modelId = path['models'];
+                    if (!(modelId in this.__pathModelPaths)) {
+                        this.__pathModelPaths[modelId] = [];
                     }
-                    this._populationPaths[populationId].push(pathId)
+                    this.__pathModelPaths[modelId].push(pathId);
+                    this.__pathToPathModel[pathId] = modelId;
                 }
             }
         } else {
@@ -165,22 +175,50 @@ export class Pathways
         return featureIds;
     }
 
-    modelFeatureIds(modelId)
-    //======================
+    pathProperties(feature)
+    //=====================
+    {
+        const properties = Object.assign({}, feature.properties);
+        if (feature.id in this._linePaths) {
+            for (const pathId of this._linePaths[feature.id]) {
+                // There should only be a single path for a line
+                if (pathId in this.__pathToConnectivityModel) {
+                    properties['connectivity'] = this.__pathToConnectivityModel[pathId];
+                }
+                if (pathId in this.__pathToPathModel) {
+                    properties['models'] = this.__pathToPathModel[pathId];
+                }
+            }
+/*
+            if (!('connectivity' in properties)) {
+                for (const pathId of this._nervePaths[feature.id]) {
+                    if (pathId in this.__pathToConnectivityModel) {
+                        properties['connectivity'] = this.__pathToConnectivityModel[pathId];
+                        break;
+                    }
+                }
+            }
+*/
+        }
+        return properties;
+    }
+
+    connectivityModelFeatureIds(modelId)
+    //==================================
     {
         const featureIds = new Set();
-        if (modelId in this._modelPaths) {
-            this.addPathsToFeatureSet_(this._modelPaths[modelId], featureIds);
+        if (modelId in this.__connectivityModelPaths) {
+            this.addPathsToFeatureSet_(this.__connectivityModelPaths[modelId], featureIds);
             }
         return featureIds;
     }
 
-    neuronPopulationFeatureIds(populationId)
-    //======================================
+    pathModelFeatureIds(modelId)
+    //==========================
     {
         const featureIds = new Set();
-        if (populationId in this._populationPaths) {
-            this.addPathsToFeatureSet_(this._populationPaths[populationId], featureIds);
+        if (modelId in this.__pathModelPaths) {
+            this.addPathsToFeatureSet_(this.__pathModelPaths[modelId], featureIds);
             }
         return featureIds;
     }

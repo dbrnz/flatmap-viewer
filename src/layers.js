@@ -22,6 +22,8 @@ limitations under the License.
 
 //==============================================================================
 
+import {PATHWAY_LAYERS} from './pathways.js';
+
 import * as style from './styling.js';
 import * as utils from './utils.js';
 
@@ -42,7 +44,6 @@ class MapFeatureLayer
                 this.addRasterLayer_(raster_layer_id);
             }
         }
-
         this.addStyleLayer_(style.FeatureDividerLineLayer.style);
         this.addStyleLayer_(style.FeatureFillLayer.style);
         this.addStyleLayer_(style.FeatureBorderLayer.style);
@@ -77,9 +78,8 @@ class MapFeatureLayer
     addPathwayStyleLayers_()
     //======================
     {
-        //for (const pathLayer of ['pathways', 'autopaths']) {
         let addedPaths = false;
-        for (const pathLayer of ['autopaths', 'pathways']) {
+        for (const pathLayer of PATHWAY_LAYERS) {
             if (!addedPaths
              && this._map.getSource('vector-tiles')
                     .vectorLayerIds

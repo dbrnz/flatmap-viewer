@@ -33,7 +33,7 @@ import * as turf from '@turf/helpers';
 import {ContextMenu} from './contextmenu.js';
 import {InfoControl} from './info.js';
 import {LayerManager} from './layers.js';
-import {Pathways} from './pathways.js';
+import {PATHWAY_LAYERS, Pathways} from './pathways.js';
 //import {QueryInterface} from './query.js';
 import {NerveKey, PathControl} from './controls.js';
 import {indexedProperties} from './search.js';
@@ -215,6 +215,7 @@ export class UserInteractions
         this._map.on('click', this.clickEvent_.bind(this));
         this._map.on('mousemove', this.mouseMoveEvent_.bind(this));
         this._lastFeatureMouseEntered = null;
+        this._lastFeatureModelsMouse = null;
     }
 
     getState()
@@ -598,6 +599,17 @@ export class UserInteractions
         }
     }
 
+    __featureEvent(type, feature)
+    //===========================
+    {
+        if (PATHWAY_LAYERS.indexOf(feature.sourceLayer) >= 0) {
+            return this._flatmap.featureEvent(type, this._pathways.pathProperties(feature));
+        } else if ('properties' in feature) {
+            return this._flatmap.featureEvent(type, feature.properties);
+        }
+        return false;
+    }
+
     mouseMoveEvent_(event)
     //====================
     {
@@ -629,18 +641,26 @@ export class UserInteractions
 
         const features = this._map.queryRenderedFeatures(event.point);
         if (features.length === 0) {
+            this._lastFeatureMouseEntered = null;
+            this._lastFeatureModelsMouse = null;
             return;
         }
 
         // Simulate `mouseenter` events on features
-
         const feature = features[0];
-        if ('properties' in feature && 'models' in feature.properties) {  // models, id, class
-            if (this._lastFeatureMouseEntered !== feature.id) {
-                this._flatmap.featureEvent('mouseenter', feature);
+        const featureModels = ('properties' in feature && 'models' in feature.properties)
+                            ? feature.properties.models
+                            : null;
+        if (this._lastFeatureMouseEntered !== feature.id
+         && (this._lastFeatureModelsMouse === null
+          || this._lastFeatureModelsMouse !== featureModels)) {
+            if (this.__featureEvent('mouseenter', feature)) {
                 this._lastFeatureMouseEntered = feature.id;
+                this._lastFeatureModelsMouse = featureModels;
+            } else {
+                this._lastFeatureMouseEntered = null;
+                this._lastFeatureModelsMouse = null;
             }
-            this._lastFeatureMouseEntered = null;
         }
 
         let html = '';
@@ -728,14 +748,11 @@ export class UserInteractions
         this.unhighlightFeatures_();
         if (this._activeFeatures.length > 0) {
             const feature = this._activeFeatures[0];
-            if ('properties' in feature) {
-                if ('models' in feature.properties) {
-                    this._flatmap.featureEvent('click', feature);
-                }
-                if (this._pathways.isNode(feature.properties.featureId)) {
-                    for (const featureId of this._pathways.pathFeatureIds(feature.properties.featureId)) {
-                        this.highlightFeature_(this.mapFeature_(featureId));
-                    }
+            this.__featureEvent('click', feature);
+            if ('properties' in feature
+             && this._pathways.isNode(feature.properties.featureId)) {
+                for (const featureId of this._pathways.pathFeatureIds(feature.properties.featureId)) {
+                    this.highlightFeature_(this.mapFeature_(featureId));
                 }
             }
         }
@@ -771,8 +788,8 @@ export class UserInteractions
     //=============================
     {
         const featureIds = new utils.List();
-        featureIds.extend(this._pathways.modelFeatureIds(externalIds));
-        featureIds.extend(this._pathways.neuronPopulationFeatureIds(externalIds));
+        featureIds.extend(this._pathways.connectivityModelFeatureIds(externalIds));
+        featureIds.extend(this._pathways.pathModelFeatureIds(externalIds));
         return featureIds;
     }
 
