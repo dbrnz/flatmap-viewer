@@ -71,7 +71,8 @@ li.flatmap-contextmenu-item:hover {
     grid-template-columns: 1fr 4fr;
     column-gap: 10px;
     row-gap: 0.2em;
-    width: 240px;
+    min-width: 200px;
+    margin: 5px;
     color: #8300bf;
     font-size: 10pt;
 }
