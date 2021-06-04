@@ -22,8 +22,8 @@ limitations under the License.
 
 //==============================================================================
 
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import maplibre from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 //==============================================================================
 
@@ -137,7 +137,7 @@ export class FlatMap
 
         // Create the map
 
-        this._map = new mapboxgl.Map(mapboxOptions);
+        this._map = new maplibre.Map(mapboxOptions);
 
         // Show tile boundaries if debugging
 
@@ -152,7 +152,7 @@ export class FlatMap
         // Do we want a fullscreen control?
 
         if (mapDescription.options.fullscreenControl === true) {
-            this._map.addControl(new mapboxgl.FullscreenControl(), 'top-right');
+            this._map.addControl(new maplibre.FullscreenControl(), 'top-right');
         }
 
         // Disable map rotation

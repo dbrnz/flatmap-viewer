@@ -22,7 +22,7 @@ limitations under the License.
 
 //==============================================================================
 
-import mapboxgl from 'mapbox-gl';
+import maplibre from 'maplibre-gl';
 
 import {default as turfArea} from '@turf/area';
 import {default as turfBBox} from '@turf/bbox';
@@ -113,8 +113,8 @@ export class UserInteractions
         // Mapbox dynamically sets a transform on marker elements so in
         // order to apply a scale transform we need to create marker icons
         // inside the marker container <div>.
-        this._defaultMarkerHTML = new mapboxgl.Marker().getElement().innerHTML;
-        this._simulationMarkerHTML = new mapboxgl.Marker({color: '#005974'}).getElement().innerHTML;
+        this._defaultMarkerHTML = new maplibre.Marker().getElement().innerHTML;
+        this._simulationMarkerHTML = new maplibre.Marker({color: '#005974'}).getElement().innerHTML;
 
         // Fit the map to its initial position
 
@@ -552,7 +552,7 @@ export class UserInteractions
                 this._map.panTo(location);
             }
             this.setModal_();
-            this._currentPopup = new mapboxgl.Popup(options).addTo(this._map);
+            this._currentPopup = new maplibre.Popup(options).addTo(this._map);
             this._currentPopup.on('close', this.clearModal_.bind(this));
             this._currentPopup.setLngLat(location);
             if (typeof content === 'object') {
@@ -728,7 +728,7 @@ export class UserInteractions
         } else if (html !== '') {
             // Show a tooltip
 
-            this._tooltip = new mapboxgl.Popup({
+            this._tooltip = new maplibre.Popup({
                 closeButton: false,
                 closeOnClick: false,
                 maxWidth: 'none',
@@ -821,7 +821,7 @@ export class UserInteractions
                 markerIcon.className = 'flatmap-marker';
                 markerElement.appendChild(markerIcon);
 
-                const marker = new mapboxgl.Marker(markerElement)
+                const marker = new maplibre.Marker(markerElement)
                                            .setLngLat(ann.centroid)
                                            .addTo(this._map);
                 markerElement.addEventListener('mouseenter',
@@ -909,7 +909,7 @@ export class UserInteractions
 
         element.addEventListener('click', e => this.clearActiveMarker_());
 
-        this._tooltip = new mapboxgl.Popup({
+        this._tooltip = new maplibre.Popup({
             closeButton: false,
             closeOnClick: false,
             maxWidth: 'none',

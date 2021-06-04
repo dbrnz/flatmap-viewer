@@ -18,7 +18,7 @@ limitations under the License.
 
 ******************************************************************************/
 
-/* Based on https://github.com/aesqe/mapboxgl-minimap
+/* Based on https://github.com/aesqe/maplibre-minimap
  *
  * MIT License
  *
@@ -49,7 +49,7 @@ limitations under the License.
 
 //==============================================================================
 
-import mapboxgl from 'mapbox-gl';
+import maplibre from 'maplibre-gl';
 
 //==============================================================================
 
@@ -127,7 +127,7 @@ export class MinimapControl
 
         const container = document.createElement('div');
         container.className = 'mapboxgl-ctrl-minimap mapboxgl-ctrl';
-        container.id = 'mapboxgl-minimap';
+        container.id = 'maplibre-minimap';
         this._container = container;
 
         // Set the size of the container
@@ -150,7 +150,7 @@ export class MinimapControl
 
         // Create the actual minimap
 
-        this._miniMap = new mapboxgl.Map({
+        this._miniMap = new maplibre.Map({
             attributionControl: false,
             container: container,
             style: map.getStyle(),

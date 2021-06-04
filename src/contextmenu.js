@@ -22,7 +22,7 @@ limitations under the License.
 
 //==============================================================================
 
-import mapboxgl from 'mapbox-gl';
+import maplibre from 'maplibre-gl';
 
 //==============================================================================
 
@@ -64,7 +64,7 @@ export class ContextMenu
         this._flatmap = flatmap;
         this._map = flatmap.map;
         this._closeCallback = closeCallback;
-        this._popup = new mapboxgl.Popup({
+        this._popup = new maplibre.Popup({
             closeButton: true,
             closeOnClick: true,
             className: 'flatmap-contextmenu-popup',

@@ -22,10 +22,6 @@ limitations under the License.
 
 //==============================================================================
 
-import mapboxgl from 'mapbox-gl';
-
-//==============================================================================
-
 import { indexedProperties } from './search.js';
 
 //==============================================================================
@@ -155,7 +151,7 @@ export class InfoControl
 
         let html = '';
         if (this._flatmap.options.debug) {
-            // See example at https://docs.mapbox.com/mapbox-gl-js/example/queryrenderedfeatures/
+            // See example at https://docs.mapbox.com/maplibre-gl-js/example/queryrenderedfeatures/
 
             // Limit the number of properties we're displaying for
             // legibility and performance
