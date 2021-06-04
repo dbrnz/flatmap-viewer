@@ -845,6 +845,8 @@ export class MapManager
         return await this._initialisingMutex.dispatch(async () => {
             if (!this._initialised) {
                 this._mapList = await this._mapServer.loadJSON('');
+                // Check map schema version (set by mapmaker) and
+                // remove maps we can't view (giving a console warning...)
                 this._initialised = true;
             }
         });
@@ -1057,11 +1059,13 @@ export class MapManager
 
                 // Set zoom range if not specified as an option
 
-                if (!('minZoom' in mapOptions)) {
-                    mapOptions['minZoom'] = mapStyle.sources['vector-tiles'].minzoom;
-                }
-                if (!('maxZoom' in mapOptions)) {
-                    mapOptions['maxZoom'] = mapStyle.sources['vector-tiles'].maxzoom;
+                if ('vector-tiles' in mapStyle.sources) {
+                    if (!('minZoom' in mapOptions)) {
+                        mapOptions['minZoom'] = mapStyle.sources['vector-tiles'].minzoom;
+                    }
+                    if (!('maxZoom' in mapOptions)) {
+                        mapOptions['maxZoom'] = mapStyle.sources['vector-tiles'].maxzoom;
+                    }
                 }
 
                 // Display the map
