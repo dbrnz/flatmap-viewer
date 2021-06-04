@@ -36,24 +36,25 @@ class MapFeatureLayer
         this._map = flatmap.map;
         this._id = layer.id;
         this._styleLayerIds = [];
+        const haveVectorLayers = (typeof this._map.getSource('vector-tiles') !== 'undefined');
 
-        this.addStyleLayer_(style.BodyLayer.style);
-
+        if (haveVectorLayers) {
+            this.addStyleLayer_(style.BodyLayer.style);
+        }
         if (flatmap.details['image_layer']) {
             for (const raster_layer_id of layer['image-layers']) {
                 this.addRasterLayer_(raster_layer_id);
             }
         }
-        this.addStyleLayer_(style.FeatureDividerLineLayer.style);
-        this.addStyleLayer_(style.FeatureFillLayer.style);
-        this.addStyleLayer_(style.FeatureBorderLayer.style);
-        this.addStyleLayer_(style.FeatureLineLayer.style);
-
-        this.addPathwayStyleLayers_();
-
-        this.addStyleLayer_(style.FeatureLargeSymbolLayer.style);
-        if (!flatmap.options.tooltips) {
-            this.addStyleLayer_(style.FeatureSmallSymbolLayer.style);
+        if (haveVectorLayers) {
+            this.addStyleLayer_(style.FeatureFillLayer.style);
+            this.addStyleLayer_(style.FeatureLineLayer.style);
+            this.addStyleLayer_(style.FeatureBorderLayer.style);
+            this.addPathwayStyleLayers_();
+            this.addStyleLayer_(style.FeatureLargeSymbolLayer.style);
+            if (!flatmap.options.tooltips) {
+                this.addStyleLayer_(style.FeatureSmallSymbolLayer.style);
+            }
         }
     }
 
@@ -84,8 +85,8 @@ class MapFeatureLayer
              && this._map.getSource('vector-tiles')
                     .vectorLayerIds
                     .indexOf(pathLayer) >= 0) {
-                this.addStyleLayer_(style.FeatureLineLayer.style, pathLayer);
-                this.addStyleLayer_(style.FeatureLineDashLayer.style, pathLayer);
+                this.addStyleLayer_(style.PathLineLayer.style, pathLayer);
+                this.addStyleLayer_(style.PathDashlineLayer.style, pathLayer);
                 this.addStyleLayer_(style.NervePolygonBorder.style, pathLayer);
                 this.addStyleLayer_(style.NervePolygonFill.style, pathLayer);
                 this.addStyleLayer_(style.FeatureNerveLayer.style, pathLayer);

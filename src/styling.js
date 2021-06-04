@@ -139,7 +139,7 @@ export class FeatureBorderLayer
 
 //==============================================================================
 
-export class FeatureDividerLineLayer
+export class FeatureLineLayer
 {
     static style(mapLayerId, sourceLayer)
     {
@@ -163,7 +163,7 @@ export class FeatureDividerLineLayer
 
 //==============================================================================
 
-export class FeatureLineLayer
+export class PathLineLayer
 {
     static style(mapLayerId, sourceLayer)
     {
@@ -217,7 +217,7 @@ export class FeatureLineLayer
 
 //==============================================================================
 
-export class FeatureLineDashLayer
+export class PathDashlineLayer
 {
     static style(mapLayerId, sourceLayer)
     {
