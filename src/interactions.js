@@ -632,7 +632,7 @@ export class UserInteractions
         this.resetActiveFeatures_();
 
         // Reset any info display
-        const displayInfo = (this._flatmap.options.debug && this._infoControl);
+        const displayInfo = (this._infoControl && this._infoControl.active);
         if (displayInfo) {
             this._infoControl.reset()
         }
@@ -664,7 +664,7 @@ export class UserInteractions
         }
 
         let html = '';
-        if (displayInfo && this._infoControl.active) {
+        if (displayInfo) {
             for (const feature of features) {
                 this.activateFeature_(feature);
             }
