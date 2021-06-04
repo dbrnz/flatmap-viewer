@@ -173,8 +173,8 @@ export class InfoControl
 //                'area',
 //                'length',
 //                'group',
-                'organ',
-                'neuron'
+                'neuron',
+                'type'
             ];
 
             const layerProperties = [
@@ -228,7 +228,10 @@ export class InfoControl
                     const values = {};
                     indexedProperties.forEach(prop => {
                         if (prop in feature.properties) {
-                            values[prop] = feature.properties[prop];
+                            const value = feature.properties[prop];
+                            if (value !== undefined) {
+                                values[prop] = value;
+                            }
                         }
                     });
                     displayValues.set(feature.id, values);

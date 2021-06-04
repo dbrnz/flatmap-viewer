@@ -124,7 +124,8 @@ export const indexedProperties = [
     'id',
     'class',
     'label',
-    'models'
+    'models',
+    'source'
 ];
 
 //==============================================================================
