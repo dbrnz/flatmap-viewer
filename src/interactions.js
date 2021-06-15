@@ -34,7 +34,6 @@ import {ContextMenu} from './contextmenu.js';
 import {InfoControl} from './info.js';
 import {LayerManager} from './layers.js';
 import {PATHWAY_LAYERS, Pathways} from './pathways.js';
-//import {QueryInterface} from './query.js';
 import {NerveKey, PathControl} from './controls.js';
 import {indexedProperties} from './search.js';
 import {SearchControl} from './search.js';
@@ -90,7 +89,6 @@ export class UserInteractions
     {
         this._flatmap = flatmap;
         this._map = flatmap.map;
-//        this._queryInterface = new QueryInterface(flatmap.id);
 
         this._activeFeatures = [];
         this._selectedFeature = null;
