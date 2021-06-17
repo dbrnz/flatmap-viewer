@@ -26,11 +26,21 @@ import MiniSearch from 'minisearch';
 
 //==============================================================================
 
+// The properties of a feature we index and show
+
+export const indexedProperties = [
+    'label',
+    'models',
+    'source'
+];
+
+//==============================================================================
+
 export class SearchControl
 {
-    constructor(index)
+    constructor(flatmap)
     {
-        this._index = index;
+        this.__flatmap = flatmap;
     }
 
     onAdd(map)
@@ -82,7 +92,8 @@ export class SearchControl
         this._input.setAttribute('visible', 'false');
         const text = this._input.value;
         if (search && text !== '') {
-            this._index.search(text);
+            const results = this.__flatmap.search(text);
+            this.__flatmap.showSearchResults(results);
         }
     }
 
@@ -107,7 +118,7 @@ export class SearchControl
                 this._input.setAttribute('visible', 'true');
                 this._input.onkeydown = this.onKeyDown_.bind(this);
                 this._input.value = '';
-                this._index.clearResults();
+                this.__flatmap.clearSearchResults();
                 this._input.focus();
             } else {
                 this.searchMap_();
@@ -118,23 +129,10 @@ export class SearchControl
 
 //==============================================================================
 
-// The properties of a feature we index and show
-
-export const indexedProperties = [
-    'id',
-    'class',
-    'label',
-    'models',
-    'source'
-];
-
-//==============================================================================
-
 export class SearchIndex
 {
-    constructor(flatmap)
+    constructor()
     {
-        this._flatmap = flatmap;
         this._searchEngine =  new MiniSearch({
             fields: ['text'],
             storeFields: ['text'],
@@ -172,7 +170,7 @@ export class SearchIndex
     clearResults()
     //============
     {
-        this._flatmap.clearSearchResults();
+        this._;
     }
 
     search(text)
@@ -181,7 +179,22 @@ export class SearchIndex
         const results = this._searchEngine.search(text, {
             prefix: true
         });
-        this._flatmap.showSearchResults(results.map(result => this._featureIds[result.id]));
+        return new SearchResults(results.map(result => this._featureIds[result.id]));
+    }
+}
+
+//==============================================================================
+
+class SearchResults
+{
+    constructor(featureIds)
+    {
+        this.__featureIds = featureIds;
+    }
+
+    get featureIds()
+    {
+        return this.__featureIds;
     }
 }
 

@@ -121,7 +121,7 @@ export class UserInteractions
         // Add a control to search annotations if option set
 
         if (flatmap.options.searchable) {
-            this._map.addControl(new SearchControl(flatmap.searchIndex));
+            this._map.addControl(new SearchControl(flatmap));
         }
 
         // Show information about features

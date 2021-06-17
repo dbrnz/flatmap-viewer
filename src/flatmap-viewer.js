@@ -67,20 +67,14 @@ export class FlatMap
         this._pathways = mapDescription.pathways;
         this._resolve = resolve;
         this._map = null;
-
-        if (this.options.searchable) {
-            this._searchIndex = new SearchIndex(this);
-        }
-
+        this.__searchIndex = new SearchIndex(this);
         this.__idToAnnotation = new Map();
         this.__datasetToFeatureIds = new Map();
         this.__modelToFeatureIds = new Map();
         this.__sourceToFeatureIds = new Map();
         for (const [featureId, annotation] of Object.entries(mapDescription.annotations)) {
             this.__addAnnotation(featureId, annotation);
-            if (this.options.searchable) {
-                this._searchIndex.indexMetadata(featureId, annotation);
-            }
+            this.__searchIndex.indexMetadata(featureId, annotation);
         }
 
         // Set base of source URLs in map's style
@@ -511,7 +505,7 @@ export class FlatMap
     get searchIndex()
     //===============
     {
-        return this._options.searchable ? this._searchIndex : null;
+        return this.__searchIndex;
     }
 
     get selectedFeatureLayerName()
@@ -775,6 +769,12 @@ export class FlatMap
 
     //==========================================================================
 
+    search(text)
+    //==========
+    {
+        return this.__searchIndex.search(text);
+    }
+
     clearSearchResults()
     //==================
     {
@@ -783,13 +783,15 @@ export class FlatMap
         }
     }
 
-    showSearchResults(featureIds, padding=100)
-    //========================================
+    showSearchResults(searchResults, padding=100)
+    //===========================================
     {
         if (this._userInteractions !== null) {
-            this._userInteractions.zoomToFeatures(featureIds, padding);
+            this._userInteractions.zoomToFeatures(searchResults.featureIds, padding);
         }
     }
+
+    //==========================================================================
 
     zoomTo(externalIds, padding=100)
     //==============================

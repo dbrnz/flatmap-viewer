@@ -26,6 +26,14 @@ import { indexedProperties } from './search.js';
 
 //==============================================================================
 
+const displayedProperties = [
+    'id',
+    'class',
+    ...indexedProperties
+];
+
+//==============================================================================
+
 class InfoDisplay
 {
     constructor()
@@ -226,7 +234,7 @@ export class InfoControl
             for (const feature of featureList) {
                 if (!displayValues.has(feature.id)) {
                     const values = {};
-                    indexedProperties.forEach(prop => {
+                    displayedProperties.forEach(prop => {
                         if (prop in feature.properties) {
                             const value = feature.properties[prop];
                             if (value !== undefined) {
@@ -247,7 +255,7 @@ export class InfoControl
             }
 
             for (const values of displayValues.values()) {
-                for (const prop of indexedProperties) {
+                for (const prop of displayedProperties) {
                     if (prop in values) {
                         htmlList.push(`<span class="info-name">${prop}:</span>`);
                         htmlList.push(`<span class="info-value">${values[prop]}</span>`);
