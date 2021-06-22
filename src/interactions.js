@@ -106,9 +106,10 @@ export class UserInteractions
 
         // Marker placement and interaction
 
-        this._activeMarker = null;
-        this._lastMarkerId = 900000;
-        this._markerIdByMarker = new Map();
+        this.__activeMarker = null;
+        this.__lastMarkerId = 900000;
+        this.__markerIdByMarker = new Map();
+        this.__featureIdByMarkerId = new Map();
 
         // Where to put labels and popups on a feature
         this.__centralPositions = new Map();
@@ -842,8 +843,8 @@ export class UserInteractions
             const ann = this._flatmap.annotation(featureId);
             if (!('marker' in ann)) {
                 if (markerId === -1) {
-                    this._lastMarkerId += 1;
-                    markerId = this._lastMarkerId;
+                    this.__lastMarkerId += 1;
+                    markerId = this.__lastMarkerId;
                 }
 
                 const markerElement = document.createElement('div');
@@ -869,7 +870,8 @@ export class UserInteractions
                 markerElement.addEventListener('click',
                     this.markerMouseEvent_.bind(this, marker, anatomicalId));
 
-                this._markerIdByMarker.set(marker, markerId);
+                this.__markerIdByMarker.set(marker, markerId);
+                this.__featureIdByMarkerId.set(markerId, featureId);
             }
         }
         return markerId;
@@ -878,10 +880,11 @@ export class UserInteractions
     clearMarkers()
     //============
     {
-        for (const marker of this._markerIdByMarker.keys()) {
+        for (const marker of this.__markerIdByMarker.keys()) {
             marker.remove();
         }
-        this._markerIdByMarker.clear();
+        this.__markerIdByMarker.clear();
+        this.__featureIdByMarkerId.clear();
     }
 
     markerMouseEvent_(marker, anatomicalId, event)
@@ -889,12 +892,12 @@ export class UserInteractions
     {
         // No tooltip when context menu is open
         if (this._modal
-         || (this._activeMarker !== null && event.type === 'mouseleave')) {
+         || (this.__activeMarker !== null && event.type === 'mouseleave')) {
             return;
         }
 
         if (['mouseenter', 'mouseleave', 'click'].indexOf(event.type) >= 0) {
-            this._activeMarker = marker;
+            this.__activeMarker = marker;
 
             // Remove any existing tooltips
             this.removeTooltip_();
@@ -904,7 +907,14 @@ export class UserInteractions
             marker.getElement().style.cursor = 'default';
 
             if (['mouseenter', 'click'].indexOf(event.type) >= 0) {
-                this._flatmap.markerEvent(event.type, this._markerIdByMarker.get(marker), anatomicalId);
+                const markerId = this.__markerIdByMarker.get(marker);
+
+                // Highlight the marker's feature
+                const featureId = this.__featureIdByMarkerId.get(markerId);
+                this.resetActiveFeatures_();
+                this.activateFeature_(this.mapFeature_(featureId));
+
+                this._flatmap.markerEvent(event.type, markerId, anatomicalId);
             }
         }
         event.stopPropagation();
@@ -913,17 +923,17 @@ export class UserInteractions
     clearActiveMarker_()
     //==================
     {
-        if (this._activeMarker !== null) {
-            this._activeMarker.setPopup(null);
-            this._activeMarker = null;
+        if (this.__activeMarker !== null) {
+            this.__activeMarker.setPopup(null);
+            this.__activeMarker = null;
         }
     }
 
     showMarkerPopup(markerId, content, options)
     //=========================================
     {
-        const marker = this._activeMarker;
-        if (markerId !== this._markerIdByMarker.get(marker)) {
+        const marker = this.__activeMarker;
+        if (markerId !== this.__markerIdByMarker.get(marker)) {
             this.clearActiveMarker_();
             return false;
         }
