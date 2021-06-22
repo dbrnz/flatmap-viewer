@@ -28,6 +28,8 @@ import {default as turfArea} from '@turf/area';
 import {default as turfBBox} from '@turf/bbox';
 import * as turf from '@turf/helpers';
 
+import polylabel from './thirdparty/polylabel'
+
 //==============================================================================
 
 import {ContextMenu} from './contextmenu.js';
@@ -107,6 +109,9 @@ export class UserInteractions
         this._activeMarker = null;
         this._lastMarkerId = 900000;
         this._markerIdByMarker = new Map();
+
+        // Where to put labels and popups on a feature
+        this.__centralPositions = new Map();
 
         // Mapbox dynamically sets a transform on marker elements so in
         // order to apply a scale transform we need to create marker icons
@@ -540,9 +545,9 @@ export class UserInteractions
             this.unhighlightFeatures_();
             this.highlightFeature_(this.mapFeature_(featureId));
 
-            // Position popup at the feature's centroid
+            // Position popup at the feature's 'centre'
 
-            const location = ann.centroid;
+            const location = this.__centralPosition(featureId, ann);
 
             // Make sure the feature is on screen
 
@@ -793,6 +798,38 @@ export class UserInteractions
 
     //==============================================================================
 
+    // Find where to place a label or popup on a feature
+
+    __centralPosition(featureId, annotation)
+    //======================================
+    {
+        if (this.__centralPositions.has(featureId)) {
+            return this.__centralPositions.get(featureId);
+        }
+        let position = annotation.centroid;
+        const features = this._map.querySourceFeatures(VECTOR_TILES_SOURCE, {
+            'sourceLayer': annotation['tile-layer'],
+            'filter': [
+                'all',
+                [ '==', ['id'], parseInt(featureId) ],
+                [ '==', ['geometry-type'], 'Polygon' ]
+            ]
+        });
+        if (features.length > 0) {
+            const feature= features[0];
+            const polygon = feature.geometry.coordinates;
+            // Rough heuristic. Area is in km^2; below appears to be good enough.
+            const precision = ('area' in feature.properties)
+                                ? Math.sqrt(feature.properties.area)/500000
+                                : 0.1;
+            position = polylabel(polygon, precision);
+        }
+        this.__centralPositions.set(featureId, position);
+        return position;
+    }
+
+    //==============================================================================
+
     // Marker handling
 
     addMarker(anatomicalId, markerType='')
@@ -819,8 +856,9 @@ export class UserInteractions
                 markerIcon.className = 'flatmap-marker';
                 markerElement.appendChild(markerIcon);
 
+                const markerPosition = this.__centralPosition(featureId, ann);
                 const marker = new maplibre.Marker(markerElement)
-                                           .setLngLat(ann.centroid)
+                                           .setLngLat(markerPosition)
                                            .addTo(this._map);
                 markerElement.addEventListener('mouseenter',
                     this.markerMouseEvent_.bind(this, marker, anatomicalId));

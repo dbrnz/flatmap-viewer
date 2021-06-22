@@ -1,0 +1,3 @@
+[submodule "src/thirdparty/polylabel"]
+	path = src/thirdparty/polylabel
+	url = https://github.com/dbrnz/polylabel.git
