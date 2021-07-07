@@ -6,6 +6,7 @@
 
 .maplibregl-map.maplibregl-ctrl-minimap {
     position: relative;
+    background-color: white;
 }
 .maplibregl-ctrl-minimap {
     border: 1px solid #444;
