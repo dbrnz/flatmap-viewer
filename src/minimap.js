@@ -126,7 +126,7 @@ export class MinimapControl
         // Create the container element
 
         const container = document.createElement('div');
-        container.className = 'mapboxgl-ctrl-minimap mapboxgl-ctrl';
+        container.className = 'maplibregl-ctrl-minimap maplibregl-ctrl';
         container.id = 'maplibre-minimap';
         this._container = container;
 

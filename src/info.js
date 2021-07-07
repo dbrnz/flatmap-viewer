@@ -53,7 +53,7 @@ class InfoDisplay
     {
         this._map = map;
         this._container = document.createElement('div');
-        this._container.className = 'mapboxgl-ctrl info-display';
+        this._container.className = 'maplibregl-ctrl info-display';
         return this._container;
     }
 
@@ -106,7 +106,7 @@ export class InfoControl
     {
         this._map = map;
         this._container = document.createElement('div');
-        this._container.className = 'mapboxgl-ctrl info-control';
+        this._container.className = 'maplibregl-ctrl info-control';
         // https://iconmonstr.com/info-6-svg/
         this._container.innerHTML = `<button class="control-button" id="info-control-button"
                                       type="button" title="Show annotation" aria-label="Show annotation">

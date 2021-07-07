@@ -45,7 +45,7 @@ export class NavigationControl
     {
         this._map = map;
         this._container = document.createElement('div');
-        this._container.className = 'mapboxgl-ctrl navigation-group';
+        this._container.className = 'maplibregl-ctrl navigation-group';
         this._container.innerHTML = `<button id="flatmap-zoom-in" class="navigation-zoom-in" type="button" title="Zoom in" aria-label="Zoom in"></button>
 <button id="flatmap-zoom-out" class="navigation-zoom-out" type="button" title="Zoom out" aria-label="Zoom out"></button>
 <button id="flatmap-reset" class="navigation-reset" type="button" title="Reset" aria-label="Reset"></button>`;
@@ -94,7 +94,7 @@ export class NerveKey
     {
         this._map = map;
         this._container = document.createElement('div');
-        this._container.className = 'mapboxgl-ctrl';
+        this._container.className = 'maplibregl-ctrl';
         this._container.id = 'flatmap-nerve-key';
 
         this._legend = document.createElement('div');
@@ -171,7 +171,7 @@ export class PathControl
     {
         this._map = map;
         this._container = document.createElement('div');
-        this._container.className = 'mapboxgl-ctrl';
+        this._container.className = 'maplibregl-ctrl';
         this._container.id = 'flatmap-path-control';
         this._container.innerHTML = `<button class="control-button" id="path-control-button"
                                       type="button" title="Show/hide paths" aria-label="Show/hide paths">PTH</button>`;

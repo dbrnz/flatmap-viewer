@@ -48,7 +48,7 @@ export class SearchControl
     {
         this._map = map;
         this._container = document.createElement('div');
-        this._container.className = 'mapboxgl-ctrl search-control';
+        this._container.className = 'maplibregl-ctrl search-control';
 
         this._input = document.createElement('input');
         this._input.id = 'search-control-input';
