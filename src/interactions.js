@@ -109,7 +109,7 @@ export class UserInteractions
         this.__activeMarker = null;
         this.__lastMarkerId = 900000;
         this.__markerIdByMarker = new Map();
-        this.__featureIdByMarkerId = new Map();
+        this.__AnnotationByMarkerId = new Map();
 
         // Where to put labels and popups on a feature
         this.__centralPositions = new Map();
@@ -579,20 +579,9 @@ export class UserInteractions
     tooltipHtml_(properties, labelSuffix='')
     //======================================
     {
-        if (this._infoControl && this._infoControl.active) {
-            const htmlList = [];
-            htmlList.push(`<span class="info-name">Id:</span>`);
-            htmlList.push(`<span class="info-value">${properties.id}</span>`);
-            htmlList.push(`<span class="info-name">Class:</span>`);
-            htmlList.push(`<span class="info-value">${properties.class}</span>`);
-            for (const prop of indexedProperties) {
-                if (prop in properties) {
-                    htmlList.push(`<span class="info-name">${prop}:</span>`);
-                    htmlList.push(`<span class="info-value">${properties[prop]}</span>`);
-                }
-            }
-            return `<div id="info-control-info">${htmlList.join('\n')}</div>`;
-        } else if (!('labelled' in properties)) {
+        if ('label' in properties
+           && (!('tooltip' in properties) || properties.tooltip)
+           && !('labelled' in properties)) {
             const label = properties.label;
             const capitalisedLabel = label.substr(0, 1).toUpperCase() + label.substr(1);
             if (labelSuffix === '') {
@@ -601,6 +590,7 @@ export class UserInteractions
                 return `<div class='flatmap-feature-label'>${capitalisedLabel} ${labelSuffix}</div>`;
             }
         }
+        return '';
     }
 
     __featureEvent(type, feature)
@@ -667,71 +657,77 @@ export class UserInteractions
             }
         }
 
-        let html = '';
+        let info = '';
+        let tooltip = '';
         if (displayInfo) {
             for (const feature of features) {
                 this.activateFeature_(feature);
             }
-            html = this._infoControl.featureInformation(features, event.lngLat);
+            info = this._infoControl.featureInformation(features, event.lngLat);
+        }
+        const lineFeatures = features.filter(feature => ('type' in feature.properties
+                                                     && feature.properties.type.startsWith('line')));
+        if (lineFeatures.length > 0) {
+            tooltip = this.tooltipHtml_(lineFeatures[0].properties);
+            const lineIds = new Set(lineFeatures.map(f => f.properties.featureId));
+            for (const featureId of this._pathways.lineFeatureIds(lineIds)) {
+                this.activateFeature_(this.mapFeature_(featureId));
+            }
         } else {
-            const lineFeatures = features.filter(feature => ('type' in feature.properties
-                                                         && feature.properties.type.startsWith('line')));
-            if (lineFeatures.length > 0) {
-                const lineIds = new Set(lineFeatures.map(f => f.properties.featureId));
-                for (const featureId of this._pathways.lineFeatureIds(lineIds)) {
-                    this.activateFeature_(this.mapFeature_(featureId));
+            let labelledFeatures = features.filter(feature => ('label' in feature.properties
+                                                         && (!('tooltip' in feature.properties)
+                                                            || feature.properties.tooltip)))
+                                           .sort((a, b) => (a.properties.area - b.properties.area));
+            if (labelledFeatures.length > 0) {
+                // Favour group features at low zoom levels
+                const zoomLevel = this._map.getZoom();
+                const groupFeatures = labelledFeatures.filter(feature => (feature.properties.group
+                                                     && zoomLevel < (feature.properties.scale + 1)));
+                if (groupFeatures.length > 0) {
+                    labelledFeatures = groupFeatures;
                 }
-            } else {
-                let labelledFeatures = features.filter(feature => ('label' in feature.properties
-                                                             && (!('tooltip' in feature.properties)
-                                                                || feature.properties.tooltip)))
-                                               .sort((a, b) => (a.properties.area - b.properties.area));
-                if (labelledFeatures.length > 0) {
-                    // Favour group features at low zoom levels
-                    const zoomLevel = this._map.getZoom();
-                    const groupFeatures = labelledFeatures.filter(feature => (feature.properties.group
-                                                         && zoomLevel < (feature.properties.scale + 1)));
-                    if (groupFeatures.length > 0) {
-                        labelledFeatures = groupFeatures;
-                    }
-
-                    if (this._flatmap.options.debug) {
-                        const htmlList = [];
-                        const featureIds = [];
-                        for (const feature of labelledFeatures) {
-                            if (featureIds.indexOf(feature.id) < 0) {
-                                featureIds.push(feature.id);
-                                this.activateFeature_(feature);
-                                for (const prop of indexedProperties) {
-                                    if (prop in feature.properties) {
-                                        htmlList.push(`<span class="info-name">${prop}:</span>`);
-                                        htmlList.push(`<span class="info-value">${feature.properties[prop]}</span>`);
-                                    }
+                const feature = labelledFeatures[0];
+                tooltip = this.tooltipHtml_(feature.properties);
+                if (this._flatmap.options.debug) {  // Do this when Info on and not debug??
+                    const htmlList = [];
+                    const featureIds = [];
+                    for (const feature of labelledFeatures) {
+                        if (featureIds.indexOf(feature.id) < 0) {
+                            featureIds.push(feature.id);
+                            this.activateFeature_(feature);
+                            for (const prop of indexedProperties) {
+                                if (prop in feature.properties) {
+                                    htmlList.push(`<span class="info-name">${prop}:</span>`);
+                                    htmlList.push(`<span class="info-value">${feature.properties[prop]}</span>`);
                                 }
                             }
-                            //htmlList.push(`<span class="info-name">Area:</span>`);
-                            //htmlList.push(`<span class="info-value">${feature.properties.area/1000000000}</span>`);
-                            //htmlList.push(`<span class="info-name">Scale:</span>`);
-                            //htmlList.push(`<span class="info-value">${feature.properties.scale}</span>`);
                         }
-                        html = `<div id="info-control-info">${htmlList.join('\n')}</div>`;
-                    } else {
-                        const feature = labelledFeatures[0];
-                        html = this.tooltipHtml_(feature.properties);
-                        this.activateFeature_(feature);
-                        if ('nerveId' in feature.properties) {
-                            this.activateNerveFeatures_(feature.properties.nerveId);
-                        }
+                        //htmlList.push(`<span class="info-name">Area:</span>`);
+                        //htmlList.push(`<span class="info-value">${feature.properties.area/1000000000}</span>`);
+                        //htmlList.push(`<span class="info-name">Scale:</span>`);
+                        //htmlList.push(`<span class="info-value">${feature.properties.scale}</span>`);
+                    }
+                    info = `<div id="info-control-info">${htmlList.join('\n')}</div>`;
+                } else {
+                    this.activateFeature_(feature);
+                    if ('nerveId' in feature.properties) {
+                        this.activateNerveFeatures_(feature.properties.nerveId);
                     }
                 }
             }
         }
 
-        if (displayInfo) {
-            this._infoControl.show(html);
-        } else if (html !== '') {
-            // Show a tooltip
+        if (displayInfo || this._flatmap.options.debug) {
+            this._infoControl.show(info);
+        }
+        this.__showToolTip(tooltip, event.lngLat);
+    }
 
+    __showToolTip(html, lngLat)
+    //=========================
+    {
+        // Show a tooltip
+        if (html !== '') {
             this._tooltip = new maplibre.Popup({
                 closeButton: false,
                 closeOnClick: false,
@@ -739,7 +735,7 @@ export class UserInteractions
                 className: 'flatmap-tooltip-popup'
             });
             this._tooltip
-                .setLngLat(event.lngLat)
+                .setLngLat(lngLat)
                 .setHTML(html)
                 .addTo(this._map);
         }
@@ -840,8 +836,8 @@ export class UserInteractions
         let markerId = -1;
 
         for (const featureId of featureIds) {
-            const ann = this._flatmap.annotation(featureId);
-            if (!('marker' in ann)) {
+            const annotation = this._flatmap.annotation(featureId);
+            if (!('marker' in annotation)) {
                 if (markerId === -1) {
                     this.__lastMarkerId += 1;
                     markerId = this.__lastMarkerId;
@@ -857,7 +853,7 @@ export class UserInteractions
                 markerIcon.className = 'flatmap-marker';
                 markerElement.appendChild(markerIcon);
 
-                const markerPosition = this.__centralPosition(featureId, ann);
+                const markerPosition = this.__centralPosition(featureId, annotation);
                 const marker = new maplibre.Marker(markerElement)
                                            .setLngLat(markerPosition)
                                            .addTo(this._map);
@@ -871,7 +867,7 @@ export class UserInteractions
                     this.markerMouseEvent_.bind(this, marker, anatomicalId));
 
                 this.__markerIdByMarker.set(marker, markerId);
-                this.__featureIdByMarkerId.set(markerId, featureId);
+                this.__AnnotationByMarkerId.set(markerId, annotation);
             }
         }
         return markerId;
@@ -884,7 +880,7 @@ export class UserInteractions
             marker.remove();
         }
         this.__markerIdByMarker.clear();
-        this.__featureIdByMarkerId.clear();
+        this.__AnnotationByMarkerId.clear();
     }
 
     markerMouseEvent_(marker, anatomicalId, event)
@@ -910,10 +906,11 @@ export class UserInteractions
                 const markerId = this.__markerIdByMarker.get(marker);
 
                 // Highlight the marker's feature
-                const featureId = this.__featureIdByMarkerId.get(markerId);
+                const annotation = this.__AnnotationByMarkerId.get(markerId);
                 this.resetActiveFeatures_();
-                this.activateFeature_(this.mapFeature_(featureId));
-
+                this.activateFeature_(this.mapFeature_(annotation.featureId));
+                const html = this.tooltipHtml_(annotation);
+                this.__showToolTip(html, marker.getLngLat());
                 this._flatmap.markerEvent(event.type, markerId, anatomicalId);
             }
         }
