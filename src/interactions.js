@@ -669,6 +669,7 @@ export class UserInteractions
                                                      && feature.properties.type.startsWith('line')));
         if (lineFeatures.length > 0) {
             tooltip = this.tooltipHtml_(lineFeatures[0].properties);
+            this.activateFeature_(lineFeatures[0])
             const lineIds = new Set(lineFeatures.map(f => f.properties.featureId));
             for (const featureId of this._pathways.lineFeatureIds(lineIds)) {
                 this.activateFeature_(this.mapFeature_(featureId));
