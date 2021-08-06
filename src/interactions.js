@@ -576,19 +576,15 @@ export class UserInteractions
         }
     }
 
-    tooltipHtml_(properties, labelSuffix='')
-    //======================================
+    tooltipHtml_(properties, forceLabel=false)
+    //========================================
     {
         if ('label' in properties
-           && (!('tooltip' in properties) || properties.tooltip)
+           && (forceLabel || !('tooltip' in properties) || properties.tooltip)
            && !('labelled' in properties)) {
             const label = properties.label;
             const capitalisedLabel = label.substr(0, 1).toUpperCase() + label.substr(1);
-            if (labelSuffix === '') {
-                return `<div class='flatmap-feature-label'>${capitalisedLabel}</div>`;
-            } else {
-                return `<div class='flatmap-feature-label'>${capitalisedLabel} ${labelSuffix}</div>`;
-            }
+            return `<div class='flatmap-feature-label'>${capitalisedLabel}</div>`;
         }
         return '';
     }
@@ -915,7 +911,7 @@ export class UserInteractions
                 const annotation = this.__AnnotationByMarkerId.get(markerId);
                 this.resetActiveFeatures_();
                 this.activateFeature_(this.mapFeature_(annotation.featureId));
-                const html = this.tooltipHtml_(annotation);
+                const html = this.tooltipHtml_(annotation, true);
                 this.__showToolTip(html, marker.getLngLat());
                 this._flatmap.markerEvent(event.type, markerId, anatomicalId);
             }
