@@ -857,7 +857,9 @@ export class UserInteractions
                 markerIcon.className = 'flatmap-marker';
                 markerElement.appendChild(markerIcon);
 
-                const markerPosition = this.__centralPosition(featureId, annotation);
+                const markerPosition = (annotation.geometry === 'Polygon')
+                                     ? this.__centralPosition(featureId, annotation)
+                                     : annotation.centroid;
                 const marker = new maplibre.Marker(markerElement)
                                            .setLngLat(markerPosition)
                                            .addTo(this._map);
