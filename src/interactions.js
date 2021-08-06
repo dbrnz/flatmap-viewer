@@ -872,6 +872,9 @@ export class UserInteractions
                 this.__AnnotationByMarkerId.set(markerId, annotation);
             }
         }
+        if (markerId === -1) {
+            console.warn(`Unable to find feature '${anatomicalId}' on which to place marker`)
+        }
         return markerId;
     }
 
