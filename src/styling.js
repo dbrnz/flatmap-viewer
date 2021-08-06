@@ -85,10 +85,15 @@ export class FeatureFillLayer
                 'fill-sort-key': ['get', 'scale']
             },
             'paint': {
-                'fill-color': 'white',
+                'fill-color': [
+                    'case',
+                    ['boolean', ['feature-state', 'active'], false], '#D88',
+                    ['boolean', ['feature-state', 'highlighted'], false], '#AAA',
+                    'white'
+                ],
                 'fill-opacity': [
                     'case',
-                    ['boolean', ['feature-state', 'active'], false], 0.2,
+                    ['boolean', ['feature-state', 'active'], false], 0.5,
                     ['boolean', ['feature-state', 'highlighted'], false], 0.3,
                     0.01
                 ]
@@ -129,7 +134,7 @@ export class FeatureBorderLayer
                     'case',
                     ['boolean', ['get', 'invisible'], false], 0.2,
                     ['boolean', ['feature-state', 'active'], false], 2,
-                    ['boolean', ['feature-state', 'highlighted'], false], 4,
+                    ['boolean', ['feature-state', 'highlighted'], false], 2,
                     0.5
                 ]
             }
