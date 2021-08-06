@@ -38,7 +38,7 @@ The map server endpoint is specified as ``MAP_ENDPOINT`` in ``src/main.js``. It 
 Package Installation
 ====================
 
-* ``npm install @dbrnz/flatmap-viewer``
+* ``npm install @abi-software/flatmap-viewer``
 
 Documentation
 -------------
