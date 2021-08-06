@@ -838,6 +838,9 @@ export class UserInteractions
 
         for (const featureId of featureIds) {
             const annotation = this._flatmap.annotation(featureId);
+            if (annotation.geometry.indexOf('Polygon') < 0) {
+                continue;
+            }
             if (!('marker' in annotation)) {
                 if (markerId === -1) {
                     this.__lastMarkerId += 1;
