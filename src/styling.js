@@ -163,6 +163,35 @@ export class FeatureLineLayer
 
 //==============================================================================
 
+const PATH_LINE_OPACITY = [
+    'case',
+        ['boolean', ['get', 'invisible'], false], 0.001,
+        ['boolean', ['feature-state', 'active'], false], 1.0,
+        ['boolean', ['feature-state', 'highlighted'], false], 0.9,
+        ['boolean', ['feature-state', 'hidden'], false], 0.1,
+    0.4
+];
+
+const PATH_LINE_WIDTH = [
+    'let',
+    'width', [
+        'case',
+            ['boolean', ['get', 'centreline'], false], 2,
+            ['boolean', ['get', 'invisible'], false], 1,
+            ['boolean', ['feature-state', 'active'], false], 1.2,
+            ['boolean', ['feature-state', 'highlighted'], false], 0.9,
+        0.8
+        ], [
+        'interpolate',
+            ['exponential', 2],
+            ['zoom'],
+             2, ["*", ['var', 'width'], ["^", 2, 0.5]],
+            10, ["*", ['var', 'width'], ["^", 2, 5.5]]
+        ]
+];
+
+//==============================================================================
+
 export class PathLineLayer
 {
     static style(mapLayerId, sourceLayer)
@@ -189,27 +218,8 @@ export class PathLineLayer
                     ['==', ['get', 'kind'], 'symp-pre'], '#EA3423',
                     'red'
                 ],
-                'line-opacity': [
-                    'case',
-                    ['boolean', ['get', 'invisible'], false], 0.001,
-                    ['boolean', ['feature-state', 'active'], false], 0.9,
-                    ['boolean', ['feature-state', 'highlighted'], false], 0.9,
-                    ['boolean', ['feature-state', 'hidden'], false], 0.3,
-                    0.9
-                ],
-                'line-width': [
-                    'let', 'width', ['case',
-                        ['boolean', ['get', 'invisible'], false], 0.1,
-                        ['boolean', ['feature-state', 'active'], false], 0.8,
-                        ['boolean', ['feature-state', 'highlighted'], false], 0.6,
-                        0.4],
-                    [ 'interpolate',
-                        ['exponential', 2],
-                        ['zoom'],
-                         2, ["*", ['var', 'width'], ["^", 2, 1]],
-                        10, ["*", ['var', 'width'], ["^", 2, 4]]
-                    ]
-                ]
+                'line-opacity': PATH_LINE_OPACITY,
+                'line-width': PATH_LINE_WIDTH
             }
         };
     }
@@ -239,28 +249,9 @@ export class PathDashlineLayer
                     ['==', ['get', 'kind'], 'symp-post'], '#EA3423',
                     'red'
                 ],
-                'line-opacity': [
-                    'case',
-                    ['boolean', ['get', 'invisible'], false], 0.001,
-                    ['boolean', ['feature-state', 'active'], false], 1.0,
-                    ['boolean', ['feature-state', 'highlighted'], false], 0.9,
-                    ['boolean', ['feature-state', 'hidden'], false], 0.3,
-                    0.9
-                ],
-                'line-dasharray': [3, 2],
-                'line-width': [
-                    'let', 'width', ['case',
-                        ['boolean', ['get', 'invisible'], false], 0.1,
-                        ['boolean', ['feature-state', 'active'], false], 0.8,
-                        ['boolean', ['feature-state', 'highlighted'], false], 0.6,
-                        0.4],
-                    [ 'interpolate',
-                        ['exponential', 2],
-                        ['zoom'],
-                         2, ["*", ['var', 'width'], ["^", 2, 1]],
-                        10, ["*", ['var', 'width'], ["^", 2, 4]]
-                    ]
-                ]
+                'line-opacity': PATH_LINE_OPACITY,
+                'line-width': PATH_LINE_WIDTH,
+                'line-dasharray': [3, 2]
             }
         };
     }
