@@ -810,7 +810,7 @@ export class UserInteractions
             ]
         });
         if (features.length > 0) {
-            const feature= features[0];
+            const feature = features[0];
             const polygon = feature.geometry.coordinates;
             // Rough heuristic. Area is in km^2; below appears to be good enough.
             const precision = ('area' in feature.properties)
