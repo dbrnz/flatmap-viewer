@@ -183,15 +183,15 @@ const PATH_LINE_WIDTH = [
         'case',
             ['boolean', ['get', 'centreline'], false], 2,
             ['boolean', ['get', 'invisible'], false], 1,
-            ['boolean', ['feature-state', 'active'], false], 1.2,
+            ['boolean', ['feature-state', 'active'], false], 0.8,
             ['boolean', ['feature-state', 'highlighted'], false], 0.9,
         0.8
         ], [
         'interpolate',
             ['exponential', 2],
             ['zoom'],
-             2, ["*", ['var', 'width'], ["^", 2, 0.5]],
-            10, ["*", ['var', 'width'], ["^", 2, 5.5]]
+             2, ["*", ['var', 'width'], ["^", 2, -0.5]],
+             7, ["*", ['var', 'width'], ["^", 2,  2.5]]
         ]
 ];
 
