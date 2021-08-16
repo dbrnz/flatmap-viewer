@@ -248,6 +248,20 @@ export class Pathways
         }
         return featureIds;
     }
+
+    nodePathModels(nodeId)
+    //====================
+    {
+        const modelIds = new Set();
+        if (nodeId in this._nodePaths) {
+            for (const pathId of this._nodePaths[nodeId]) {
+                if (pathId in this.__pathToPathModel) {
+                    modelIds.add(this.__pathToPathModel[pathId]);
+                }
+            }
+        }
+        return modelIds;
+    }
 }
 
 //==============================================================================

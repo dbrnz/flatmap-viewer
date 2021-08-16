@@ -449,6 +449,14 @@ export class FlatMap
         return (ann && 'models' in ann) ? utils.normaliseId(ann.models) : null;
     }
 
+    nodePathModels(nodeId)
+    //====================
+    {
+        if (this._userInteractions !== null) {
+            return this._userInteractions.nodePathModels(nodeId);
+        }
+    }
+
     get layers()
     //==========
     {

@@ -796,6 +796,12 @@ export class UserInteractions
         return featureIds;
     }
 
+    nodePathModels(nodeId)
+    //====================
+    {
+        return this._pathways.nodePathModels(nodeId);
+    }
+
     //==============================================================================
 
     // Find where to place a label or popup on a feature
