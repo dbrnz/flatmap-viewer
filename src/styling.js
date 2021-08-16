@@ -69,7 +69,25 @@ export class BodyLayer
 
 export class FeatureFillLayer
 {
-    static style(mapLayerId, sourceLayer)
+    static paintStyle(coloured=True)
+    {
+        return {
+            'fill-color': [
+                'case',
+                ['boolean', ['feature-state', 'active'], false], coloured ? '#D88' : '#CCC',
+                ['boolean', ['feature-state', 'highlighted'], false], '#AAA',
+                'white'
+            ],
+            'fill-opacity': [
+                'case',
+                ['boolean', ['feature-state', 'active'], false], 0.5,
+                ['boolean', ['feature-state', 'highlighted'], false], 0.3,
+                coloured ? 0.01 : 0.3
+            ]
+        };
+    }
+
+    static style(mapLayerId, sourceLayer, coloured=true)
     {
         return {
             'id': `${mapLayerId}_${sourceLayer}_fill`,
@@ -84,20 +102,7 @@ export class FeatureFillLayer
             'layout': {
                 'fill-sort-key': ['get', 'scale']
             },
-            'paint': {
-                'fill-color': [
-                    'case',
-                    ['boolean', ['feature-state', 'active'], false], '#D88',
-                    ['boolean', ['feature-state', 'highlighted'], false], '#AAA',
-                    'white'
-                ],
-                'fill-opacity': [
-                    'case',
-                    ['boolean', ['feature-state', 'active'], false], 0.5,
-                    ['boolean', ['feature-state', 'highlighted'], false], 0.3,
-                    0.01
-                ]
-            }
+            'paint': FeatureFillLayer.paintStyle(coloured)
         };
     }
 }
@@ -106,7 +111,49 @@ export class FeatureFillLayer
 
 export class FeatureBorderLayer
 {
-    static style(mapLayerId, sourceLayer)
+    static paintStyle(coloured=true)
+    {
+        const lineColour = [ 'case' ];
+        if (coloured) {
+            lineColour.push(['boolean', ['feature-state', 'active'], false]);
+            lineColour.push('blue');
+        }
+        lineColour.push(['boolean', ['feature-state', 'highlighted'], false]);
+        lineColour.push('red');
+        lineColour.push('#444');
+
+        const lineOpacity = [
+            'case',
+            ['boolean', ['get', 'invisible'], false], 0.05,
+            ];
+        if (coloured) {
+            lineOpacity.push(['boolean', ['feature-state', 'active'], false]);
+            lineOpacity.push(0.9);
+        }
+        lineOpacity.push(['boolean', ['feature-state', 'highlighted'], false]);
+        lineOpacity.push(0.9);
+        lineOpacity.push(0.3);
+
+        const lineWidth = [
+            'case',
+            ['boolean', ['get', 'invisible'], false], 0.2,
+            ];
+        if (coloured) {
+            lineWidth.push(['boolean', ['feature-state', 'active'], false]);
+            lineWidth.push(1);
+        }
+        lineWidth.push(['boolean', ['feature-state', 'highlighted'], false]);
+        lineWidth.push(1);
+        lineWidth.push(0.5);
+
+        return {
+            'line-color': lineColour,
+            'line-opacity': lineOpacity,
+            'line-width': lineWidth
+        };
+    }
+
+    static style(mapLayerId, sourceLayer, coloured=true)
     {
         return {
             'id': `${mapLayerId}_${sourceLayer}_border`,
@@ -116,28 +163,7 @@ export class FeatureBorderLayer
             'filter': [
                 '==', '$type', 'Polygon'
             ],
-            'paint': {
-                'line-color': [
-                    'case',
-                    ['boolean', ['feature-state', 'active'], false], 'blue',
-                    ['boolean', ['feature-state', 'highlighted'], false], 'red',
-                    '#444'
-                ],
-                'line-opacity': [
-                    'case',
-                    ['boolean', ['get', 'invisible'], false], 0.05,
-                    ['boolean', ['feature-state', 'active'], false], 0.9,
-                    ['boolean', ['feature-state', 'highlighted'], false], 0.9,
-                    0.3
-                ],
-                'line-width': [
-                    'case',
-                    ['boolean', ['get', 'invisible'], false], 0.2,
-                    ['boolean', ['feature-state', 'active'], false], 2,
-                    ['boolean', ['feature-state', 'highlighted'], false], 2,
-                    0.5
-                ]
-            }
+            'paint': FeatureBorderLayer.paintStyle(coloured)
         };
     }
 }
@@ -463,12 +489,13 @@ export class FeatureSmallSymbolLayer
 
 export class RasterLayer
 {
-    static style(rasterLayerId)
+    static style(rasterLayerId, visible=true)
     {
         return {
             'id': rasterLayerId,
             'source': rasterLayerId,
-            'type': 'raster'
+            'type': 'raster',
+            'visibility': visible ? 'visible' : 'none'
         };
     }
 }

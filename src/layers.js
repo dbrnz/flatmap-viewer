@@ -31,25 +31,37 @@ import * as utils from './utils.js';
 
 class MapFeatureLayer
 {
-    constructor(flatmap, layer)
+    constructor(flatmap, layer, colourOn=true)
     {
         this._map = flatmap.map;
         this._id = layer.id;
-        this._styleLayerIds = [];
-        const haveVectorLayers = (typeof this._map.getSource('vector-tiles') !== 'undefined');
+        this.__featureBorderLayerIds = [];
+        this.__featureFillLayerIds = [];
+        this.__imageLayerIds = [];
+        this.__styleLayerIds = [];
 
+        const haveVectorLayers = (typeof this._map.getSource('vector-tiles') !== 'undefined');
         if (haveVectorLayers) {
             this.addStyleLayer_(style.BodyLayer.style);
         }
         if (flatmap.details['image_layer']) {
             for (const raster_layer_id of layer['image-layers']) {
-                this.addRasterLayer_(raster_layer_id);
+                const layerId = this.addRasterLayer_(raster_layer_id, colourOn);
             }
         }
+        // if no image layers then make feature borders (and lines?) more visible...??
         if (haveVectorLayers) {
-            this.addStyleLayer_(style.FeatureFillLayer.style);
+            const fillLayerId = this.addStyleLayer_(style.FeatureFillLayer.style,
+                    'features', colourOn);
+            if (fillLayerId) {
+                this.__featureFillLayerIds.push(fillLayerId)
+            }
             this.addStyleLayer_(style.FeatureLineLayer.style);
-            this.addStyleLayer_(style.FeatureBorderLayer.style);
+            const borderLayerId = this.addStyleLayer_(style.FeatureBorderLayer.style,
+                    'features', colourOn);
+            if (borderLayerId) {
+                this.__featureBorderLayerIds.push(borderLayerId);
+            }
             this.addPathwayStyleLayers_();
             this.addStyleLayer_(style.FeatureLargeSymbolLayer.style);
             if (!flatmap.options.tooltips) {
@@ -64,13 +76,14 @@ class MapFeatureLayer
         return this._id;
     }
 
-    addRasterLayer_(raster_layer_id)
-    //==============================
+    addRasterLayer_(raster_layer_id, visible=true)
+    //============================================
     {
-        const styleLayer = style.RasterLayer.style(raster_layer_id);
+        const styleLayer = style.RasterLayer.style(raster_layer_id, visible);
         if (styleLayer) {
             this._map.addLayer(styleLayer);
-            this._styleLayerIds.push(styleLayer.id);
+            this.__imageLayerIds.push(styleLayer.id);
+            this.__styleLayerIds.push(styleLayer.id);
             return styleLayer.id;
         }
         return null;
@@ -101,7 +114,7 @@ class MapFeatureLayer
         const styleLayer = styleFunction(this._id, sourceLayer, ...args);
         if (styleLayer) {
             this._map.addLayer(styleLayer);
-            this._styleLayerIds.push(styleLayer.id);
+            this.__styleLayerIds.push(styleLayer.id);
             return styleLayer.id;
         }
         return null;
@@ -111,8 +124,28 @@ class MapFeatureLayer
     //===============
     {
         const beforeTopStyleLayerId = beforeLayer ? beforeLayer.topStyleLayerId : undefined;
-        for (const styleLayerId of this._styleLayerIds) {
+        for (const styleLayerId of this.__styleLayerIds) {
             this._map.moveLayer(styleLayerId, beforeTopStyleLayerId);
+        }
+    }
+
+    setColour(colourOn=true)
+    //======================
+    {
+        for (const layerId of this.__imageLayerIds) {
+            this._map.setLayoutProperty(layerId, 'visibility', colourOn ? 'visible' : 'none');
+        }
+        for (const layerId of this.__featureFillLayerIds) {
+            const paintStyle = style.FeatureFillLayer.paintStyle(colourOn);
+            for (const [property, value] of Object.entries(paintStyle)) {
+                this._map.setPaintProperty(layerId, property, value);
+            }
+        }
+        for (const layerId of this.__featureBorderLayerIds) {
+            const paintStyle = style.FeatureBorderLayer.paintStyle(colourOn);
+            for (const [property, value] of Object.entries(paintStyle)) {
+                this._map.setPaintProperty(layerId, property, value);
+            }
         }
     }
 }
@@ -210,6 +243,14 @@ export class LayerManager
                 delete this._activeLayerNames[index];
                 this._activeLayerNames.splice(index, 1);
             }
+        }
+    }
+
+    setColour(colourOn=true)
+    //======================
+    {
+        for (const layer of this._layers.values()) {
+            layer.setColour(colourOn)
         }
     }
 

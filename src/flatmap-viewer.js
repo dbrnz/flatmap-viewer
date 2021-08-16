@@ -489,7 +489,6 @@ export class FlatMap
         return [...this.__datasetToFeatureIds.keys()]
     }
 
-
     get options()
     //===========
     {
@@ -605,6 +604,14 @@ export class FlatMap
     {
         if (this._userInteractions !== null) {
             this._userInteractions.showPopup(featureId, content, options);
+        }
+    }
+
+    setColour(colourOn=true)
+    //======================
+    {
+        if (this._userInteractions !== null) {
+            this._userInteractions.setColour(colourOn);
         }
     }
 

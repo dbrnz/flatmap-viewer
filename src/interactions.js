@@ -255,6 +255,12 @@ export class UserInteractions
         }
     }
 
+    setColour(colourOn=true)
+    //======================
+    {
+        this._layerManager.setColour(colourOn);
+    }
+
     get activeLayerNames()
     //====================
     {
