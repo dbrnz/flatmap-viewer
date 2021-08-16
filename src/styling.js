@@ -217,7 +217,8 @@ const PATH_LINE_WIDTH = [
             ['exponential', 2],
             ['zoom'],
              2, ["*", ['var', 'width'], ["^", 2, -0.5]],
-             7, ["*", ['var', 'width'], ["^", 2,  2.5]]
+             7, ["*", ['var', 'width'], ["^", 2,  2.5]],
+             9, ["*", ['var', 'width'], ["^", 2,  4.0]]
         ]
 ];
 
