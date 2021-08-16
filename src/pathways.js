@@ -130,7 +130,7 @@ export class Pathways
             if (path in this._pathLines) {
                 this._pathLines[path].forEach(lineId => featureSet.add(lineId));
                 this._pathNerves[path].forEach(nerveId => featureSet.add(nerveId));
-                this._pathNodes[path].forEach(nerveId => featureSet.add(nerveId));
+                this._pathNodes[path].forEach(nodeId => featureSet.add(nodeId));
             }
         }
     }
