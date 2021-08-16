@@ -92,10 +92,8 @@ class MapFeatureLayer
     addPathwayStyleLayers_()
     //======================
     {
-        let addedPaths = false;
         for (const pathLayer of PATHWAY_LAYERS) {
-            if (!addedPaths
-             && this._map.getSource('vector-tiles')
+            if (this._map.getSource('vector-tiles')
                     .vectorLayerIds
                     .indexOf(pathLayer) >= 0) {
                 this.addStyleLayer_(style.PathLineLayer.style, pathLayer);
@@ -103,7 +101,6 @@ class MapFeatureLayer
                 this.addStyleLayer_(style.NervePolygonBorder.style, pathLayer);
                 this.addStyleLayer_(style.NervePolygonFill.style, pathLayer);
                 this.addStyleLayer_(style.FeatureNerveLayer.style, pathLayer);
-                addedPaths = true;
             }
         }
     }
