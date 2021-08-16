@@ -747,6 +747,7 @@ export class FlatMap
             'dataset',
             'label',
             'models',
+            'nodeId',
             'source'
         ];
         for (const property of exportedProperties) {
@@ -759,7 +760,6 @@ export class FlatMap
         }
         if (Object.keys(data).length > 0) {
             data['type'] = 'feature';
-            data['nodeId'] = properties['featureId'];
             this.callback(eventType, data);
             return true;
         }
