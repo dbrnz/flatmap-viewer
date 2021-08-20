@@ -182,7 +182,7 @@ export class UserInteractions
         }
         for (const layer of flatmap.layers) {
             if (layerBackgroundIds.indexOf(layer.id) < 0) {
-                this._layerManager.addLayer(layer);
+                this._layerManager.addLayer(layer, flatmap.options.layerOptions);
             }
         }
 
@@ -255,10 +255,10 @@ export class UserInteractions
         }
     }
 
-    setColour(colourOn=true)
-    //======================
+    setColour(options)
+    //================
     {
-        this._layerManager.setColour(colourOn);
+        this._layerManager.setColour(options);
     }
 
     get activeLayerNames()

@@ -615,11 +615,11 @@ export class FlatMap
         }
     }
 
-    setColour(colourOn=true)
-    //======================
+    setColour(options={colour: true, outline: true})
+    //==============================================
     {
         if (this._userInteractions !== null) {
-            this._userInteractions.setColour(colourOn);
+            this._userInteractions.setColour(options);
         }
     }
 
@@ -979,7 +979,10 @@ export class MapManager
     *                                    on highlighted features and, for non-highlighted features, when the
     *                                    ``info`` control is enabled. More details are shown in debug mode.
     * @arg options.fullscreenControl {boolean} Add a ``Show full screen`` button to the map.
-    * @arg options.minimap {boolean|Object} Display a MiniMap of the flatmap. Defaults to ``False``.
+    * @arg options.layerOptions {Object} Options to control colour and outlines of features
+    * @arg options.layerOptions.colour {boolean} Use colour fill (if available) for features. Defaults to ``true``.
+    * @arg options.layerOptions.outline {boolean} Show the border of features. Defaults to ``true``.
+    * @arg options.minimap {boolean|Object} Display a MiniMap of the flatmap. Defaults to ``false``.
     * @arg options.minimap.position {string} The minimap's position: ``bottom-left`` (default), ``bottom-right``,
     *                                        ``top-left`` or ``top-right``.
     * @arg options.minimap.width {number|string} The width of the minimap. Defaults to ``320px``. Can also
@@ -1084,6 +1087,22 @@ export class MapManager
                     if (!('maxZoom' in mapOptions)) {
                         mapOptions['maxZoom'] = mapStyle.sources['vector-tiles'].maxzoom;
                     }
+                }
+
+                // Make sure ``layerOptions`` are set
+
+                if ('layerOptions' in mapOptions) {
+                    if (!('colour' in mapOptions.layerOptions)) {
+                        mapOptions.layerOptions.colour = true;
+                    }
+                    if (!('outline' in mapOptions.layerOptions)) {
+                        mapOptions.layerOptions.outline = true;
+                    }
+                } else {
+                    mapOptions.layerOptions = {
+                        colour: true,
+                        outline: true
+                    };
                 }
 
                 // Display the map

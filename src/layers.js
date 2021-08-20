@@ -31,7 +31,7 @@ import * as utils from './utils.js';
 
 class MapFeatureLayer
 {
-    constructor(flatmap, layer, colourOn=true)
+    constructor(flatmap, layer, options)
     {
         this._map = flatmap.map;
         this._id = layer.id;
@@ -46,19 +46,19 @@ class MapFeatureLayer
         }
         if (flatmap.details['image_layer']) {
             for (const raster_layer_id of layer['image-layers']) {
-                const layerId = this.addRasterLayer_(raster_layer_id, colourOn);
+                const layerId = this.addRasterLayer_(raster_layer_id, options);
             }
         }
         // if no image layers then make feature borders (and lines?) more visible...??
         if (haveVectorLayers) {
             const fillLayerId = this.addStyleLayer_(style.FeatureFillLayer.style,
-                    'features', colourOn);
+                    'features', options);
             if (fillLayerId) {
                 this.__featureFillLayerIds.push(fillLayerId)
             }
             this.addStyleLayer_(style.FeatureLineLayer.style);
             const borderLayerId = this.addStyleLayer_(style.FeatureBorderLayer.style,
-                    'features', colourOn);
+                    'features', options);
             if (borderLayerId) {
                 this.__featureBorderLayerIds.push(borderLayerId);
             }
@@ -68,6 +68,10 @@ class MapFeatureLayer
                 this.addStyleLayer_(style.FeatureSmallSymbolLayer.style);
             }
         }
+
+        // Make sure our colpur options are set properly, in particular raster layer visibility
+
+        this.setColour(options);
     }
 
     get id()
@@ -76,10 +80,10 @@ class MapFeatureLayer
         return this._id;
     }
 
-    addRasterLayer_(raster_layer_id, visible=true)
-    //============================================
+    addRasterLayer_(raster_layer_id, options)
+    //=======================================
     {
-        const styleLayer = style.RasterLayer.style(raster_layer_id, visible);
+        const styleLayer = style.RasterLayer.style(raster_layer_id, options);
         if (styleLayer) {
             this._map.addLayer(styleLayer);
             this.__imageLayerIds.push(styleLayer.id);
@@ -126,20 +130,21 @@ class MapFeatureLayer
         }
     }
 
-    setColour(colourOn=true)
-    //======================
+    setColour(options)
+    //================
     {
+        const coloured = !('colour' in options) || options.colour;
         for (const layerId of this.__imageLayerIds) {
-            this._map.setLayoutProperty(layerId, 'visibility', colourOn ? 'visible' : 'none');
+            this._map.setLayoutProperty(layerId, 'visibility', coloured ? 'visible' : 'none');
         }
         for (const layerId of this.__featureFillLayerIds) {
-            const paintStyle = style.FeatureFillLayer.paintStyle(colourOn);
+            const paintStyle = style.FeatureFillLayer.paintStyle(options);
             for (const [property, value] of Object.entries(paintStyle)) {
                 this._map.setPaintProperty(layerId, property, value);
             }
         }
         for (const layerId of this.__featureBorderLayerIds) {
-            const paintStyle = style.FeatureBorderLayer.paintStyle(colourOn);
+            const paintStyle = style.FeatureBorderLayer.paintStyle(options);
             for (const [property, value] of Object.entries(paintStyle)) {
                 this._map.setPaintProperty(layerId, property, value);
             }
@@ -174,12 +179,12 @@ export class LayerManager
         return this._activeLayerNames;
     }
 
-    addLayer(layer)
-    //=============
+    addLayer(layer, options)
+    //======================
     {
         this._mapLayers.set(layer.id, layer);
 
-        const layers = new MapFeatureLayer(this._flatmap, layer);
+        const layers = new MapFeatureLayer(this._flatmap, layer, options);
         const layerId = this._flatmap.mapLayerId(layer.id);
         this._layers.set(layerId, layers);
 
@@ -243,11 +248,11 @@ export class LayerManager
         }
     }
 
-    setColour(colourOn=true)
-    //======================
+    setColour(options={colour: true, outline: true})
+    //===============================================
     {
         for (const layer of this._layers.values()) {
-            layer.setColour(colourOn)
+            layer.setColour(options)
         }
     }
 

@@ -69,8 +69,9 @@ export class BodyLayer
 
 export class FeatureFillLayer
 {
-    static paintStyle(coloured=True)
+    static paintStyle(options)
     {
+        const coloured = !('colour' in options) || options.colour;
         return {
             'fill-color': [
                 'case',
@@ -87,7 +88,7 @@ export class FeatureFillLayer
         };
     }
 
-    static style(mapLayerId, sourceLayer, coloured=true)
+    static style(mapLayerId, sourceLayer, options)
     {
         return {
             'id': `${mapLayerId}_${sourceLayer}_fill`,
@@ -102,7 +103,7 @@ export class FeatureFillLayer
             'layout': {
                 'fill-sort-key': ['get', 'scale']
             },
-            'paint': FeatureFillLayer.paintStyle(coloured)
+            'paint': FeatureFillLayer.paintStyle(options)
         };
     }
 }
@@ -111,10 +112,12 @@ export class FeatureFillLayer
 
 export class FeatureBorderLayer
 {
-    static paintStyle(coloured=true)
+    static paintStyle(options)
     {
+        const coloured = !('colour' in options) || options.colour;
+        const outlined = !('outline' in options) || options.outline;
         const lineColour = [ 'case' ];
-        if (coloured) {
+        if (coloured && outlined) {
             lineColour.push(['boolean', ['feature-state', 'active'], false]);
             lineColour.push('blue');
         }
@@ -126,25 +129,25 @@ export class FeatureBorderLayer
             'case',
             ['boolean', ['get', 'invisible'], false], 0.05,
             ];
-        if (coloured) {
+        if (coloured && outlined) {
             lineOpacity.push(['boolean', ['feature-state', 'active'], false]);
             lineOpacity.push(0.9);
         }
         lineOpacity.push(['boolean', ['feature-state', 'highlighted'], false]);
         lineOpacity.push(0.9);
-        lineOpacity.push(0.3);
+        lineOpacity.push(outlined ? 0.3 : 0.01);
 
         const lineWidth = [
             'case',
             ['boolean', ['get', 'invisible'], false], 0.2,
             ];
-        if (coloured) {
+        if (coloured && outlined) {
             lineWidth.push(['boolean', ['feature-state', 'active'], false]);
             lineWidth.push(1);
         }
         lineWidth.push(['boolean', ['feature-state', 'highlighted'], false]);
         lineWidth.push(1);
-        lineWidth.push(0.5);
+        lineWidth.push((coloured && outlined) ? 0.5 : 0.1);
 
         return {
             'line-color': lineColour,
@@ -153,7 +156,7 @@ export class FeatureBorderLayer
         };
     }
 
-    static style(mapLayerId, sourceLayer, coloured=true)
+    static style(mapLayerId, sourceLayer, options)
     {
         return {
             'id': `${mapLayerId}_${sourceLayer}_border`,
@@ -163,7 +166,7 @@ export class FeatureBorderLayer
             'filter': [
                 '==', '$type', 'Polygon'
             ],
-            'paint': FeatureBorderLayer.paintStyle(coloured)
+            'paint': FeatureBorderLayer.paintStyle(options)
         };
     }
 }
@@ -490,13 +493,14 @@ export class FeatureSmallSymbolLayer
 
 export class RasterLayer
 {
-    static style(rasterLayerId, visible=true)
+    static style(rasterLayerId, options)
     {
+        const coloured = !('colour' in options) || options.colour;
         return {
             'id': rasterLayerId,
             'source': rasterLayerId,
             'type': 'raster',
-            'visibility': visible ? 'visible' : 'none'
+            'visibility': coloured ? 'visible' : 'none'
         };
     }
 }
