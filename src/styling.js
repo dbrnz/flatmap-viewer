@@ -199,6 +199,7 @@ export class FeatureLineLayer
 
 const PATH_LINE_OPACITY = [
     'case',
+        ['==', ['get', 'type'], 'bezier'], 0.3,
         ['boolean', ['get', 'invisible'], false], 0.001,
         ['boolean', ['feature-state', 'active'], false], 1.0,
         ['boolean', ['feature-state', 'highlighted'], false], 0.9,
@@ -210,6 +211,7 @@ const PATH_LINE_WIDTH = [
     'let',
     'width', [
         'case',
+            ['==', ['get', 'type'], 'bezier'], 0.2,
             ['boolean', ['get', 'centreline'], false], 2,
             ['boolean', ['get', 'invisible'], false], 1,
             ['boolean', ['feature-state', 'active'], false], 0.8,
@@ -237,14 +239,18 @@ export class PathLineLayer
             'source-layer': sourceLayer,
             'type': 'line',
             'filter': [
-                 'all',
-                 ['==', '$type', 'LineString'],
-                 ['==', 'type', 'line']
+                'all',
+                ['==', '$type', 'LineString'],
+                ['any',
+                    ['==', 'type', 'bezier'],
+                    ['==', 'type', 'line']  // this is where 'line-dash' type comes in...
+                ]
             ],
             'paint': {
                 'line-color': [
                     'case',
                     ['boolean', ['feature-state', 'hidden'], false], '#CCC',
+                    ['==', ['get', 'type'], 'bezier'], 'red',
                     ['==', ['get', 'kind'], 'cns'], '#9B1FC1',
                     ['==', ['get', 'kind'], 'lcn'], '#F19E38',
                     ['==', ['get', 'kind'], 'para-pre'], '#3F8F4A',
@@ -396,13 +402,23 @@ export class NervePolygonFill
                 'all',
                 ['==', '$type', 'Polygon'],
                 ['any',
+                    ['==', 'type', 'bezier'],
                     ['==', 'type', 'nerve'],
                     ['==', 'type', 'nerve-section']
                 ]
             ],
             'paint': {
-                'fill-color': 'white',
-                'fill-opacity': 0.01
+                'fill-color': [
+                    'case',
+                    ['==', ['get', 'kind'], 'bezier-control'], 'red',
+                    ['==', ['get', 'kind'], 'bezier-end'], 'green',
+                    'white'
+                ],
+                'fill-opacity': [
+                    'case',
+                    ['==', ['get', 'type'], 'bezier'], 0.2,
+                    0.01
+                ]
             }
         };
     }
