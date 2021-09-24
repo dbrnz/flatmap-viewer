@@ -107,12 +107,13 @@ class MapFeatureLayer
     {
         const coloured = !('colour' in options) || options.colour;
         for (const rasterLayer of this.__rasterLayers) {
-            this.__map.setLayoutProperty(rasterLayer.id, 'visibility', coloured ? 'visible' : 'none');
+            this.__map.setLayoutProperty(rasterLayer.id, 'visibility', coloured ? 'visible' : 'none',
+                 {validate: false});
         }
         for (const styleLayer of this.__styleLayers) {
             const paintStyle = styleLayer.paintStyle(options, true);
             for (const [property, value] of Object.entries(paintStyle)) {
-                this.__map.setPaintProperty(styleLayer.id, property, value);
+                this.__map.setPaintProperty(styleLayer.id, property, value, {validate: false});
             }
         }
     }
