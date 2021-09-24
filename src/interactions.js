@@ -508,33 +508,6 @@ export class UserInteractions
         }
     }
 
-    queryData_(model)
-    //===============
-    {
-        if (model) {
-            this._flatmap.callback('query-data', model, {
-                describes: this._flatmap.describes
-            });
-        }
-    }
-
-    query_(type, event)
-    //=================
-    {
-        this.unhighlightFeatures_();
-        this._contextMenu.hide();
-        const featureId = event.target.getAttribute('featureId');
-        if (type === 'data') {
-            this.queryData_(this._flatmap.modelForFeature(featureId));
-        } else {
-            const ann = this._flatmap.getAnnotation(featureId);
-            //this._queryInterface.query(type, ann.url, ann.models);
-            this._map.getCanvas().style.cursor = 'progress';
-            this._inQuery = true;
-        }
-        this.clearModal_();
-    }
-
     showPopup(featureId, content, options={})
     //=======================================
     {

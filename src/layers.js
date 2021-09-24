@@ -121,15 +121,6 @@ class MapFeatureLayer
         return null;
     }
 
-    move(beforeLayer)
-    //===============
-    {
-        const beforeTopStyleLayerId = beforeLayer ? beforeLayer.topStyleLayerId : undefined;
-        for (const styleLayerId of this.__styleLayerIds) {
-            this._map.moveLayer(styleLayerId, beforeTopStyleLayerId);
-        }
-    }
-
     setColour(options)
     //================
     {

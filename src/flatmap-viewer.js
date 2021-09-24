@@ -509,18 +509,6 @@ export class FlatMap
         return this._pathways;
     }
 
-    get searchIndex()
-    //===============
-    {
-        return this.__searchIndex;
-    }
-
-    get selectedFeatureLayerName()
-    //============================
-    {
-        return this._userInteractions.selectedFeatureLayerName;
-    }
-
     /**
      * Get the map's zoom settings.
      *
