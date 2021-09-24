@@ -109,7 +109,7 @@ export class UserInteractions
         this.__activeMarker = null;
         this.__lastMarkerId = 900000;
         this.__markerIdByMarker = new Map();
-        this.__AnnotationByMarkerId = new Map();
+        this.__annotationByMarkerId = new Map();
 
         // Where to put labels and popups on a feature
         this.__centralPositions = new Map();
@@ -881,7 +881,7 @@ export class UserInteractions
                     this.markerMouseEvent_.bind(this, marker, anatomicalId));
 
                 this.__markerIdByMarker.set(marker, markerId);
-                this.__AnnotationByMarkerId.set(markerId, annotation);
+                this.__annotationByMarkerId.set(markerId, annotation);
             }
         }
         if (markerId === -1) {
@@ -897,7 +897,7 @@ export class UserInteractions
             marker.remove();
         }
         this.__markerIdByMarker.clear();
-        this.__AnnotationByMarkerId.clear();
+        this.__annotationByMarkerId.clear();
     }
 
     markerMouseEvent_(marker, anatomicalId, event)
@@ -923,7 +923,7 @@ export class UserInteractions
                 const markerId = this.__markerIdByMarker.get(marker);
 
                 // Highlight the marker's feature
-                const annotation = this.__AnnotationByMarkerId.get(markerId);
+                const annotation = this.__annotationByMarkerId.get(markerId);
                 this.resetActiveFeatures_();
                 this.activateFeature_(this.mapFeature_(annotation.featureId));
                 const html = this.tooltipHtml_(annotation, true);
