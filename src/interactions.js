@@ -900,6 +900,20 @@ export class UserInteractions
         this.__annotationByMarkerId.clear();
     }
 
+    removeMarker(markerId)
+    //====================
+    {
+        for (const [marker, id] of this.__markerIdByMarker.entries()) {
+            if (markerId === id) {
+                marker.remove();
+                this.__markerIdByMarker.remove(marker);
+                this.__annotationByMarkerId.remove(id);
+                break;
+            }
+        }
+
+    }
+
     markerMouseEvent_(marker, anatomicalId, event)
     //============================================
     {

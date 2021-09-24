@@ -700,6 +700,20 @@ export class FlatMap
     }
 
     /**
+     * Remove a marker from the map.
+     *
+     * @param      {integer}  markerId  The identifier of the marker, as returned
+     *                                  by ``addMarker()``
+     */
+    removeMarker(markerId)
+    //====================
+    {
+        if (this._userInteractions !== null) {
+            this._userInteractions.removeMarker(markerId);
+        }
+    }
+
+    /**
      * Remove all markers from the map.
      */
     clearMarkers()
