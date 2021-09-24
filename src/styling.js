@@ -113,18 +113,19 @@ export class FeatureFillLayer extends VectorStyleLayer
     paintStyle(options, changes=false)
     {
         const coloured = !('colour' in options) || options.colour;
+        const dimmed = 'dimmed' in options && options.dimmed;
         const paintStyle = {
             'fill-color': [
                 'case',
+                ['boolean', ['feature-state', 'selected'], false], '#0F0',
                 ['boolean', ['feature-state', 'active'], false], coloured ? '#D88' : '#CCC',
-                ['boolean', ['feature-state', 'selected'], false], '#AAA',
-                'white'
+                'white'    // background colour? body colour ??
             ],
             'fill-opacity': [
                 'case',
-                ['boolean', ['feature-state', 'active'], false], 0.5,
-                ['boolean', ['feature-state', 'selected'], false], 0.3,
-                coloured ? 0.01 : 0.3
+                ['boolean', ['feature-state', 'selected'], false], 1.0,
+                ['boolean', ['feature-state', 'active'], false], 0.8,
+                (coloured && !dimmed) ? 0.01 : 0.5
             ]
         };
         return super.changedPaintStyle(paintStyle, changes);
@@ -161,6 +162,7 @@ export class FeatureBorderLayer extends VectorStyleLayer
     {
         const coloured = !('colour' in options) || options.colour;
         const outlined = !('outline' in options) || options.outline;
+        const dimmed = 'dimmed' in options && options.dimmed;
         const lineColour = [ 'case' ];
         if (coloured && outlined) {
             lineColour.push(['boolean', ['feature-state', 'active'], false]);
@@ -180,7 +182,7 @@ export class FeatureBorderLayer extends VectorStyleLayer
         }
         lineOpacity.push(['boolean', ['feature-state', 'selected'], false]);
         lineOpacity.push(0.9);
-        lineOpacity.push(outlined ? 0.3 : 0.01);
+        lineOpacity.push((outlined && !dimmed) ? 0.3 : 0.01);
 
         const lineWidth = [
             'case',
@@ -258,8 +260,7 @@ export class PathLineLayer extends VectorStyleLayer
 
     paintStyle(options, changes=false)
     {
-        const coloured = !('colour' in options) || options.colour;
-        const outlined = !('outline' in options) || options.outline;
+        const dimmed = 'dimmed' in options && options.dimmed;
         const paintStyle = {
             'line-color': [
                 'case',
@@ -280,9 +281,9 @@ export class PathLineLayer extends VectorStyleLayer
                     ['==', ['get', 'type'], 'bezier'], 0.3,
                     ['boolean', ['get', 'invisible'], false], 0.001,
                     ['boolean', ['feature-state', 'active'], false], 1.0,
-                    ['boolean', ['feature-state', 'selected'], false], 0.9,
+                    ['boolean', ['feature-state', 'selected'], false], 1.0,
                     ['boolean', ['feature-state', 'hidden'], false], 0.1,
-                0.4
+                dimmed ? 0.1 : 0.4
             ],
             'line-width': [
                 'let',

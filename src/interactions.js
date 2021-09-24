@@ -287,7 +287,7 @@ export class UserInteractions
     //=====================
     {
         if (this._selectedFeatures.length === 0) {
-            this._layerManager.setColour({colour: false, outline: true});
+            this._layerManager.setColour({...this.__colourOptions, dimmed: true});
         }
         this._map.setFeatureState(feature, { 'selected': true });
         this._selectedFeatures.push(feature);
@@ -300,7 +300,7 @@ export class UserInteractions
             this._map.removeFeatureState(feature, 'selected');
         }
         this._selectedFeatures = [];
-        this._layerManager.setColour(this.__colourOptions);
+        this._layerManager.setColour({...this.__colourOptions, dimmed: false});
     }
 
     activeFeaturesAtEvent_(event)
