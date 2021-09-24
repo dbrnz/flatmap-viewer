@@ -32,6 +32,7 @@ class VectorStyleLayer
     {
         this.__id = `${mapLayerId}_${sourceLayer}_${idPrefix}`;
         this.__sourceLayer = sourceLayer;
+        this.__lastPaintStyle = {};
     }
 
     get id()
@@ -39,9 +40,28 @@ class VectorStyleLayer
         return this.__id;
     }
 
-    paintStyle(options)
+    paintStyle(options, changes=false)
     {
         return {};
+    }
+
+    __paintChanges(newPaintStyle)
+    {
+        const paintChanges = {};
+        for (const [property, value] of Object.entries(newPaintStyle)) {
+            if (!(property in this.__lastPaintStyle)
+             || JSON.stringify(value) !== JSON.stringify(this.__lastPaintStyle[property])) {
+                paintChanges[property] = value;
+            }
+        }
+        return paintChanges;
+    }
+
+    changedPaintStyle(newPaintStyle, changes=false)
+    {
+        const paintStyle = changes ? this.__paintChanges(newPaintStyle) : newPaintStyle;
+        this.__lastPaintStyle = newPaintStyle;
+        return paintStyle;
     }
 
     style()
@@ -90,10 +110,10 @@ export class FeatureFillLayer extends VectorStyleLayer
         super(mapLayerId, sourceLayer, 'fill');
     }
 
-    paintStyle(options)
+    paintStyle(options, changes=false)
     {
         const coloured = !('colour' in options) || options.colour;
-        return {
+        const paintStyle = {
             'fill-color': [
                 'case',
                 ['boolean', ['feature-state', 'active'], false], coloured ? '#D88' : '#CCC',
@@ -107,6 +127,7 @@ export class FeatureFillLayer extends VectorStyleLayer
                 coloured ? 0.01 : 0.3
             ]
         };
+        return super.changedPaintStyle(paintStyle, changes);
     }
 
     style(options)
@@ -136,7 +157,7 @@ export class FeatureBorderLayer extends VectorStyleLayer
         super(mapLayerId, sourceLayer, 'border');
     }
 
-    paintStyle(options)
+    paintStyle(options, changes=false)
     {
         const coloured = !('colour' in options) || options.colour;
         const outlined = !('outline' in options) || options.outline;
@@ -173,11 +194,11 @@ export class FeatureBorderLayer extends VectorStyleLayer
         lineWidth.push(1.5);
         lineWidth.push((coloured && outlined) ? 0.5 : 0.1);
 
-        return {
+        return super.changedPaintStyle({
             'line-color': lineColour,
             'line-opacity': lineOpacity,
             'line-width': lineWidth
-        };
+        }, changes);
     }
 
     style(options)
@@ -235,7 +256,7 @@ export class PathLineLayer extends VectorStyleLayer
         this.__dashed = dashed;
     }
 
-    paintStyle(options)
+    paintStyle(options, changes=false)
     {
         const coloured = !('colour' in options) || options.colour;
         const outlined = !('outline' in options) || options.outline;
@@ -286,7 +307,7 @@ export class PathLineLayer extends VectorStyleLayer
         if (this.__dashed) {
             paintStyle['line-dasharray'] = [3, 2];
         }
-        return paintStyle;
+        return super.changedPaintStyle(paintStyle, changes);
     }
 
     style(options)

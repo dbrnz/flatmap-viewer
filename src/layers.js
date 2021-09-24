@@ -110,7 +110,7 @@ class MapFeatureLayer
             this.__map.setLayoutProperty(rasterLayer.id, 'visibility', coloured ? 'visible' : 'none');
         }
         for (const styleLayer of this.__styleLayers) {
-            const paintStyle = styleLayer.paintStyle(options);
+            const paintStyle = styleLayer.paintStyle(options, true);
             for (const [property, value] of Object.entries(paintStyle)) {
                 this.__map.setPaintProperty(styleLayer.id, property, value);
             }
