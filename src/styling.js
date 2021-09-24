@@ -197,35 +197,58 @@ export class FeatureLineLayer
 
 //==============================================================================
 
-const PATH_LINE_OPACITY = [
-    'case',
-        ['==', ['get', 'type'], 'bezier'], 0.3,
-        ['boolean', ['get', 'invisible'], false], 0.001,
-        ['boolean', ['feature-state', 'active'], false], 1.0,
-        ['boolean', ['feature-state', 'selected'], false], 0.9,
-        ['boolean', ['feature-state', 'hidden'], false], 0.1,
-    0.4
-];
 
-const PATH_LINE_WIDTH = [
-    'let',
-    'width', [
-        'case',
-            ['==', ['get', 'type'], 'bezier'], 0.2,
-            ['boolean', ['get', 'centreline'], false], 2,
-            ['boolean', ['get', 'invisible'], false], 1,
-            ['boolean', ['feature-state', 'active'], false], 0.8,
-            ['boolean', ['feature-state', 'selected'], false], 0.9,
-        0.8
-        ], [
-        'interpolate',
-            ['exponential', 2],
-            ['zoom'],
-             2, ["*", ['var', 'width'], ["^", 2, -0.5]],
-             7, ["*", ['var', 'width'], ["^", 2,  2.5]],
-             9, ["*", ['var', 'width'], ["^", 2,  4.0]]
+function pathPaintStyle(dashed=false)
+{
+    const paintStyle = {
+        'line-color': [
+            'case',
+            ['boolean', ['feature-state', 'hidden'], false], '#CCC',
+            ['==', ['get', 'type'], 'bezier'], 'red',
+            ['==', ['get', 'kind'], 'cns'], '#9B1FC1',
+            ['==', ['get', 'kind'], 'lcn'], '#F19E38',
+            ['==', ['get', 'kind'], 'para-post'], '#3F8F4A',
+            ['==', ['get', 'kind'], 'para-pre'], '#3F8F4A',
+            ['==', ['get', 'kind'], 'somatic'], '#98561D',
+            ['==', ['get', 'kind'], 'sensory'], '#2A62F6',
+            ['==', ['get', 'kind'], 'symp-post'], '#EA3423',
+            ['==', ['get', 'kind'], 'symp-pre'], '#EA3423',
+            'red'
+        ],
+        'line-opacity': [
+            'case',
+                ['==', ['get', 'type'], 'bezier'], 0.3,
+                ['boolean', ['get', 'invisible'], false], 0.001,
+                ['boolean', ['feature-state', 'active'], false], 1.0,
+                ['boolean', ['feature-state', 'selected'], false], 0.9,
+                ['boolean', ['feature-state', 'hidden'], false], 0.1,
+            0.4
+        ],
+        'line-width': [
+            'let',
+            'width', [
+                'case',
+                    ['==', ['get', 'type'], 'bezier'], 0.2,
+                    ['boolean', ['get', 'centreline'], false], 2,
+                    ['boolean', ['get', 'invisible'], false], 1,
+                    ['boolean', ['feature-state', 'active'], false], 0.8,
+                    ['boolean', ['feature-state', 'selected'], false], 0.9,
+                0.8
+                ], [
+                'interpolate',
+                    ['exponential', 2],
+                    ['zoom'],
+                     2, ["*", ['var', 'width'], ["^", 2, -0.5]],
+                     7, ["*", ['var', 'width'], ["^", 2,  2.5]],
+                     9, ["*", ['var', 'width'], ["^", 2,  4.0]]
+                ]
         ]
-];
+    };
+    if (dashed) {
+        paintStyle['line-dasharray'] = [3, 2];
+    }
+    return paintStyle;
+}
 
 //==============================================================================
 
@@ -246,22 +269,7 @@ export class PathLineLayer
                     ['==', 'type', 'line']  // this is where 'line-dash' type comes in...
                 ]
             ],
-            'paint': {
-                'line-color': [
-                    'case',
-                    ['boolean', ['feature-state', 'hidden'], false], '#CCC',
-                    ['==', ['get', 'type'], 'bezier'], 'red',
-                    ['==', ['get', 'kind'], 'cns'], '#9B1FC1',
-                    ['==', ['get', 'kind'], 'lcn'], '#F19E38',
-                    ['==', ['get', 'kind'], 'para-pre'], '#3F8F4A',
-                    ['==', ['get', 'kind'], 'somatic'], '#98561D',
-                    ['==', ['get', 'kind'], 'sensory'], '#2A62F6',
-                    ['==', ['get', 'kind'], 'symp-pre'], '#EA3423',
-                    'red'
-                ],
-                'line-opacity': PATH_LINE_OPACITY,
-                'line-width': PATH_LINE_WIDTH
-            }
+            'paint': pathPaintStyle(false)
         };
     }
 }
@@ -282,18 +290,7 @@ export class PathDashlineLayer
                  ['==', '$type', 'LineString'],
                  ['==', 'type', 'line-dash']
             ],
-            'paint': {
-                'line-color': [
-                    'case',
-                    ['boolean', ['feature-state', 'hidden'], false], '#CCC',
-                    ['==', ['get', 'kind'], 'para-post'], '#3F8F4A',
-                    ['==', ['get', 'kind'], 'symp-post'], '#EA3423',
-                    'red'
-                ],
-                'line-opacity': PATH_LINE_OPACITY,
-                'line-width': PATH_LINE_WIDTH,
-                'line-dasharray': [3, 2]
-            }
+            'paint': pathPaintStyle(true)
         };
     }
 }
