@@ -78,9 +78,10 @@ function bounds(feature)
 function expandBounds(bbox1, bbox2)
 //=================================
 {
-    return [Math.min(bbox1[0], bbox2[0]), Math.min(bbox1[1], bbox2[1]),
-            Math.max(bbox1[2], bbox2[2]), Math.max(bbox1[3], bbox2[3])
-           ];
+    return (bbox1 === null) ? bbox2
+                            : [Math.min(bbox1[0], bbox2[0]), Math.min(bbox1[1], bbox2[1]),
+                               Math.max(bbox1[2], bbox2[2]), Math.max(bbox1[3], bbox2[3])
+                              ];
 }
 
 //==============================================================================
@@ -469,9 +470,14 @@ export class UserInteractions
                 if (annotation) {
                     const feature = this.mapFeature_(featureId);
                     this.selectFeature_(feature);
-                    const bounds = annotation.bounds;
-                    bbox = (bbox === null) ? bounds
-                                           : expandBounds(bbox, bounds);
+                    bbox = expandBounds(bbox, annotation.bounds);
+                    if ('type' in annotation && annotation.type.startsWith('line')) {
+                        for (const pathFeatureId of this._pathways.lineFeatureIds([featureId])) {
+                            this.selectFeature_(this.mapFeature_(pathFeatureId));
+                            const pathAnnotation = this._flatmap.annotation(pathFeatureId)
+                            bbox = expandBounds(bbox, pathAnnotation.bounds);
+                        }
+                    }
                 }
             }
             if (bbox !== null) {
