@@ -886,11 +886,19 @@ export class UserInteractions
 
             if (['mouseenter', 'click'].indexOf(event.type) >= 0) {
                 const markerId = this.__markerIdByMarker.get(marker);
-
-                // Highlight the marker's feature
                 const annotation = this.__annotationByMarkerId.get(markerId);
-                this.resetActiveFeatures_();
-                this.activateFeature_(this.mapFeature_(annotation.featureId));
+                // The marker's feature
+                const feature = this.mapFeature_(annotation.featureId);
+                if (event.type === 'mouseenter') {
+                    // Highlight on mouse enter
+                    this.resetActiveFeatures_();
+                    this.activateFeature_(feature);
+                } else {
+                    // Select on click
+                    this.unselectFeatures_();
+                    this.selectFeature_(feature);
+                }
+                // Show tooltip
                 const html = this.tooltipHtml_(annotation, true);
                 this.__showToolTip(html, marker.getLngLat());
                 this._flatmap.markerEvent(event.type, markerId, anatomicalId);
