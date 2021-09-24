@@ -26,31 +26,47 @@ export const VECTOR_TILES_SOURCE = 'vector-tiles';
 
 //==============================================================================
 
-export class BackgroundLayer
+class VectorStyleLayer
 {
-    static style(backgroundColour)
+    constructor(mapLayerId, sourceLayer, idPrefix)
+    {
+        this.__id = `${mapLayerId}_${sourceLayer}_${idPrefix}`;
+        this.__sourceLayer = sourceLayer;
+    }
+
+    get id()
+    {
+        return this.__id;
+    }
+
+    paintStyle(options)
+    {
+        return {};
+    }
+
+    style()
     {
         return {
-            'id': 'background',
-            'type': 'background',
-            'paint': {
-                'background-color': backgroundColour,
-                'background-opacity': 0.1
-            }
+            'id': this.__id,
+            'source': VECTOR_TILES_SOURCE,
+            'source-layer': this.__sourceLayer
         };
     }
 }
 
 //==============================================================================
 
-export class BodyLayer
+export class BodyLayer extends VectorStyleLayer
 {
-    static style(mapLayerId, sourceLayer)
+    constructor(mapLayerId, sourceLayer)
+    {
+        super(mapLayerId, sourceLayer, 'body');
+    }
+
+    style(options)
     {
         return {
-            'id': `${mapLayerId}_${sourceLayer}_body`,
-            'source': VECTOR_TILES_SOURCE,
-            'source-layer': sourceLayer,
+            ...super.style(),
             'type': 'fill',
             'filter': [
                 'all',
@@ -67,9 +83,14 @@ export class BodyLayer
 
 //==============================================================================
 
-export class FeatureFillLayer
+export class FeatureFillLayer extends VectorStyleLayer
 {
-    static paintStyle(options)
+    constructor(mapLayerId, sourceLayer)
+    {
+        super(mapLayerId, sourceLayer, 'fill');
+    }
+
+    paintStyle(options)
     {
         const coloured = !('colour' in options) || options.colour;
         return {
@@ -88,12 +109,10 @@ export class FeatureFillLayer
         };
     }
 
-    static style(mapLayerId, sourceLayer, options)
+    style(options)
     {
         return {
-            'id': `${mapLayerId}_${sourceLayer}_fill`,
-            'source': VECTOR_TILES_SOURCE,
-            'source-layer': sourceLayer,
+            ...super.style(),
             'type': 'fill',
             'filter': [
                 'all',
@@ -103,16 +122,21 @@ export class FeatureFillLayer
             'layout': {
                 'fill-sort-key': ['get', 'scale']
             },
-            'paint': FeatureFillLayer.paintStyle(options)
+            'paint': this.paintStyle(options)
         };
     }
 }
 
 //==============================================================================
 
-export class FeatureBorderLayer
+export class FeatureBorderLayer extends VectorStyleLayer
 {
-    static paintStyle(options)
+    constructor(mapLayerId, sourceLayer)
+    {
+        super(mapLayerId, sourceLayer, 'border');
+    }
+
+    paintStyle(options)
     {
         const coloured = !('colour' in options) || options.colour;
         const outlined = !('outline' in options) || options.outline;
@@ -156,40 +180,44 @@ export class FeatureBorderLayer
         };
     }
 
-    static style(mapLayerId, sourceLayer, options)
+    style(options)
     {
         return {
-            'id': `${mapLayerId}_${sourceLayer}_border`,
-            'source': VECTOR_TILES_SOURCE,
-            'source-layer': sourceLayer,
+            ...super.style(),
             'type': 'line',
             'filter': [
                 '==', '$type', 'Polygon'
             ],
-            'paint': FeatureBorderLayer.paintStyle(options)
+            'paint': this.paintStyle(options)
         };
     }
 }
 
 //==============================================================================
 
-export class FeatureLineLayer
+export class FeatureLineLayer extends VectorStyleLayer
 {
-    static style(mapLayerId, sourceLayer)
+    constructor(mapLayerId, sourceLayer)
+    {
+        super(mapLayerId, sourceLayer, 'divider-line');
+    }
+
+    style(options)
     {
         return {
-            'id': `${mapLayerId}_${sourceLayer}_divider-line`,
-            'source': VECTOR_TILES_SOURCE,
-            'source-layer': sourceLayer,
+            ...super.style(),
             'type': 'line',
             'filter': [
                  'all',
                  ['==', '$type', 'LineString']
+                 // not for paths...
             ],
             'paint': {
                 'line-color': '#444',
                 'line-opacity': 0.3,
                 'line-width': 0.5
+                // Need to vary width based on zoom??
+                // Or opacity??
             }
         };
     }
@@ -197,114 +225,111 @@ export class FeatureLineLayer
 
 //==============================================================================
 
-
-function pathPaintStyle(dashed=false)
+export class PathLineLayer extends VectorStyleLayer
 {
-    const paintStyle = {
-        'line-color': [
-            'case',
-            ['boolean', ['feature-state', 'hidden'], false], '#CCC',
-            ['==', ['get', 'type'], 'bezier'], 'red',
-            ['==', ['get', 'kind'], 'cns'], '#9B1FC1',
-            ['==', ['get', 'kind'], 'lcn'], '#F19E38',
-            ['==', ['get', 'kind'], 'para-post'], '#3F8F4A',
-            ['==', ['get', 'kind'], 'para-pre'], '#3F8F4A',
-            ['==', ['get', 'kind'], 'somatic'], '#98561D',
-            ['==', ['get', 'kind'], 'sensory'], '#2A62F6',
-            ['==', ['get', 'kind'], 'symp-post'], '#EA3423',
-            ['==', ['get', 'kind'], 'symp-pre'], '#EA3423',
-            'red'
-        ],
-        'line-opacity': [
-            'case',
-                ['==', ['get', 'type'], 'bezier'], 0.3,
-                ['boolean', ['get', 'invisible'], false], 0.001,
-                ['boolean', ['feature-state', 'active'], false], 1.0,
-                ['boolean', ['feature-state', 'selected'], false], 0.9,
-                ['boolean', ['feature-state', 'hidden'], false], 0.1,
-            0.4
-        ],
-        'line-width': [
-            'let',
-            'width', [
-                'case',
-                    ['==', ['get', 'type'], 'bezier'], 0.2,
-                    ['boolean', ['get', 'centreline'], false], 2,
-                    ['boolean', ['get', 'invisible'], false], 1,
-                    ['boolean', ['feature-state', 'active'], false], 0.8,
-                    ['boolean', ['feature-state', 'selected'], false], 0.9,
-                0.8
-                ], [
-                'interpolate',
-                    ['exponential', 2],
-                    ['zoom'],
-                     2, ["*", ['var', 'width'], ["^", 2, -0.5]],
-                     7, ["*", ['var', 'width'], ["^", 2,  2.5]],
-                     9, ["*", ['var', 'width'], ["^", 2,  4.0]]
-                ]
-        ]
-    };
-    if (dashed) {
-        paintStyle['line-dasharray'] = [3, 2];
+    constructor(mapLayerId, sourceLayer, dashed=false)
+    {
+        const filterType = dashed ? 'line-dash' : 'line';
+        super(mapLayerId, sourceLayer, filterType);
+        this.__filterType = filterType;
+        this.__dashed = dashed;
     }
-    return paintStyle;
-}
 
-//==============================================================================
+    paintStyle(options)
+    {
+        const coloured = !('colour' in options) || options.colour;
+        const outlined = !('outline' in options) || options.outline;
+        const paintStyle = {
+            'line-color': [
+                'case',
+                ['boolean', ['feature-state', 'hidden'], false], '#CCC',
+                ['==', ['get', 'type'], 'bezier'], 'red',
+                ['==', ['get', 'kind'], 'cns'], '#9B1FC1',
+                ['==', ['get', 'kind'], 'lcn'], '#F19E38',
+                ['==', ['get', 'kind'], 'para-post'], '#3F8F4A',
+                ['==', ['get', 'kind'], 'para-pre'], '#3F8F4A',
+                ['==', ['get', 'kind'], 'somatic'], '#98561D',
+                ['==', ['get', 'kind'], 'sensory'], '#2A62F6',
+                ['==', ['get', 'kind'], 'symp-post'], '#EA3423',
+                ['==', ['get', 'kind'], 'symp-pre'], '#EA3423',
+                'red'
+            ],
+            'line-opacity': [
+                'case',
+                    ['==', ['get', 'type'], 'bezier'], 0.3,
+                    ['boolean', ['get', 'invisible'], false], 0.001,
+                    ['boolean', ['feature-state', 'active'], false], 1.0,
+                    ['boolean', ['feature-state', 'selected'], false], 0.9,
+                    ['boolean', ['feature-state', 'hidden'], false], 0.1,
+                0.4
+            ],
+            'line-width': [
+                'let',
+                'width', [
+                    'case',
+                        ['==', ['get', 'type'], 'bezier'], 0.2,
+                        ['boolean', ['get', 'centreline'], false], 2,
+                        ['boolean', ['get', 'invisible'], false], 1,
+                        ['boolean', ['feature-state', 'active'], false], 0.8,
+                        ['boolean', ['feature-state', 'selected'], false], 0.9,
+                    0.8
+                    ], [
+                    'interpolate',
+                        ['exponential', 2],
+                        ['zoom'],
+                         2, ["*", ['var', 'width'], ["^", 2, -0.5]],
+                         7, ["*", ['var', 'width'], ["^", 2,  2.5]],
+                         9, ["*", ['var', 'width'], ["^", 2,  4.0]]
+                    ]
+            ]
+        };
+        if (this.__dashed) {
+            paintStyle['line-dasharray'] = [3, 2];
+        }
+        return paintStyle;
+    }
 
-export class PathLineLayer
-{
-    static style(mapLayerId, sourceLayer)
+    style(options)
     {
         return {
-            'id': `${mapLayerId}_${sourceLayer}_line`,
-            'source': VECTOR_TILES_SOURCE,
-            'source-layer': sourceLayer,
+            ...super.style(),
             'type': 'line',
             'filter': [
                 'all',
                 ['==', '$type', 'LineString'],
                 ['any',
                     ['==', 'type', 'bezier'],
-                    ['==', 'type', 'line']  // this is where 'line-dash' type comes in...
+                    ['==', 'type', `${this.__filterType}`]
                 ]
             ],
-            'paint': pathPaintStyle(false)
+            'paint': this.paintStyle(options)
         };
     }
 }
 
 //==============================================================================
 
-export class PathDashlineLayer
+export class PathDashlineLayer extends PathLineLayer
 {
-    static style(mapLayerId, sourceLayer)
+    constructor(mapLayerId, sourceLayer)
     {
-        return {
-            'id': `${mapLayerId}_${sourceLayer}_line-dash`,
-            'source': VECTOR_TILES_SOURCE,
-            'source-layer': sourceLayer,
-            'type': 'line',
-            'filter': [
-                 'all',
-                 ['==', '$type', 'LineString'],
-                 ['==', 'type', 'line-dash']
-            ],
-            'paint': pathPaintStyle(true)
-        };
+        super(mapLayerId, sourceLayer, true);
     }
 }
 
 //==============================================================================
 
-export class FeatureNerveLayer
+export class FeatureNerveLayer extends VectorStyleLayer
 {
-    static style(mapLayerId, sourceLayer)
+    constructor(mapLayerId, sourceLayer)
+    {
+        super(mapLayerId, sourceLayer, 'nerve-path');
+    }
+
+    style(options)
     {
         return {
-            'id': `${mapLayerId}_${sourceLayer}_nerve-path`,
-            'source': VECTOR_TILES_SOURCE,
-            'source-layer': sourceLayer,
+            ...super.style(),
             'type': 'line',
             'filter': [
                  'all',
@@ -347,14 +372,17 @@ export class FeatureNerveLayer
 
 //==============================================================================
 
-export class NervePolygonBorder
+export class NervePolygonBorder extends VectorStyleLayer
 {
-    static style(mapLayerId, sourceLayer)
+    constructor(mapLayerId, sourceLayer)
+    {
+        super(mapLayerId, sourceLayer, 'nerve-border');
+    }
+
+    style(options)
     {
         return {
-            'id': `${mapLayerId}_${sourceLayer}_nerve-border`,
-            'source': VECTOR_TILES_SOURCE,
-            'source-layer': sourceLayer,
+            ...super.style(),
             'type': 'line',
             'filter': [
                 'all',
@@ -386,14 +414,19 @@ export class NervePolygonBorder
     }
 }
 
-export class NervePolygonFill
+//==============================================================================
+
+export class NervePolygonFill extends VectorStyleLayer
 {
-    static style(mapLayerId, sourceLayer)
+    constructor(mapLayerId, sourceLayer)
+    {
+        super(mapLayerId, sourceLayer, 'nerve-fill');
+    }
+
+    style(options)
     {
         return {
-            'id': `${mapLayerId}_${sourceLayer}_nerve-fill`,
-            'source': VECTOR_TILES_SOURCE,
-            'source-layer': sourceLayer,
+            ...super.style(),
             'type': 'fill',
             'filter': [
                 'all',
@@ -423,14 +456,17 @@ export class NervePolygonFill
 
 //==============================================================================
 
-export class FeatureLargeSymbolLayer
+export class FeatureLargeSymbolLayer extends VectorStyleLayer
 {
-    static style(mapLayerId, sourceLayer)
+    constructor(mapLayerId, sourceLayer)
+    {
+        super(mapLayerId, sourceLayer, 'large-symbol');
+    }
+
+    style(options)
     {
         return {
-            'id': `${mapLayerId}_${sourceLayer}_large-symbol`,
-            'source': VECTOR_TILES_SOURCE,
-            'source-layer': sourceLayer,
+            ...super.style(),
             'type': 'symbol',
             'minzoom': 3,
             //'maxzoom': 7,
@@ -464,14 +500,17 @@ export class FeatureLargeSymbolLayer
 
 //==============================================================================
 
-export class FeatureSmallSymbolLayer
+export class FeatureSmallSymbolLayer extends VectorStyleLayer
 {
-    static style(mapLayerId, sourceLayer)
+    constructor(mapLayerId, sourceLayer)
+    {
+        super(mapLayerId, sourceLayer, 'small-symbol');
+    }
+
+    style(options)
     {
         return {
-            'id': `${mapLayerId}_${sourceLayer}_small-symbol`,
-            'source': VECTOR_TILES_SOURCE,
-            'source-layer': sourceLayer,
+            ...super.style(),
             'type': 'symbol',
             'minzoom': 6,
             'filter': [
@@ -504,14 +543,51 @@ export class FeatureSmallSymbolLayer
 
 //==============================================================================
 
+export class BackgroundLayer
+{
+    constructor(rasterLayerId)
+    {
+        this.__id = 'background';
+    }
+
+    get id()
+    {
+        return this.__id;
+    }
+
+    style(backgroundColour)
+    {
+        return {
+            'id': 'background',
+            'type': 'background',
+            'paint': {
+                'background-color': backgroundColour,
+                'background-opacity': 0.1
+            }
+        };
+    }
+}
+
+//==============================================================================
+
 export class RasterLayer
 {
-    static style(rasterLayerId, options)
+    constructor(rasterLayerId)
+    {
+        this.__id = rasterLayerId;
+    }
+
+    get id()
+    {
+        return this.__id;
+    }
+
+    style(options)
     {
         const coloured = !('colour' in options) || options.colour;
         return {
-            'id': rasterLayerId,
-            'source': rasterLayerId,
+            'id': this.__id,
+            'source': this.__id,
             'type': 'raster',
             'visibility': coloured ? 'visible' : 'none'
         };

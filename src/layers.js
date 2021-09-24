@@ -33,39 +33,29 @@ class MapFeatureLayer
 {
     constructor(flatmap, layer, options)
     {
-        this._map = flatmap.map;
-        this._id = layer.id;
-        this.__featureBorderLayerIds = [];
-        this.__featureFillLayerIds = [];
-        this.__imageLayerIds = [];
-        this.__styleLayerIds = [];
+        this.__map = flatmap.map;
+        this.__id = layer.id;
+        this.__rasterLayers = [];
+        this.__styleLayers = [];
 
-        const haveVectorLayers = (typeof this._map.getSource('vector-tiles') !== 'undefined');
+        const haveVectorLayers = (typeof this.__map.getSource('vector-tiles') !== 'undefined');
         if (haveVectorLayers) {
-            this.addStyleLayer_(style.BodyLayer.style);
+            this.__addStyleLayer(style.BodyLayer, options);
         }
         if (flatmap.details['image_layer']) {
             for (const raster_layer_id of layer['image-layers']) {
-                const layerId = this.addRasterLayer_(raster_layer_id, options);
+                const layerId = this.__addRasterLayer(raster_layer_id, options);
             }
         }
         // if no image layers then make feature borders (and lines?) more visible...??
         if (haveVectorLayers) {
-            const fillLayerId = this.addStyleLayer_(style.FeatureFillLayer.style,
-                    'features', options);
-            if (fillLayerId) {
-                this.__featureFillLayerIds.push(fillLayerId)
-            }
-            this.addStyleLayer_(style.FeatureLineLayer.style);
-            const borderLayerId = this.addStyleLayer_(style.FeatureBorderLayer.style,
-                    'features', options);
-            if (borderLayerId) {
-                this.__featureBorderLayerIds.push(borderLayerId);
-            }
-            this.addPathwayStyleLayers_();
-            this.addStyleLayer_(style.FeatureLargeSymbolLayer.style);
+            this.__addStyleLayer(style.FeatureFillLayer, options);
+            this.__addStyleLayer(style.FeatureLineLayer, options);
+            this.__addStyleLayer(style.FeatureBorderLayer, options);
+            this.__addPathwayStyleLayers(options);
+            this.__addStyleLayer(style.FeatureLargeSymbolLayer, options);
             if (!flatmap.options.tooltips) {
-                this.addStyleLayer_(style.FeatureSmallSymbolLayer.style);
+                this.__addStyleLayer(style.FeatureSmallSymbolLayer, options);
             }
         }
 
@@ -77,67 +67,52 @@ class MapFeatureLayer
     get id()
     //======
     {
-        return this._id;
+        return this.__id;
     }
 
-    addRasterLayer_(raster_layer_id, options)
-    //=======================================
+    __addRasterLayer(raster_layer_id, options)
+    //========================================
     {
-        const styleLayer = style.RasterLayer.style(raster_layer_id, options);
-        if (styleLayer) {
-            this._map.addLayer(styleLayer);
-            this.__imageLayerIds.push(styleLayer.id);
-            this.__styleLayerIds.push(styleLayer.id);
-            return styleLayer.id;
-        }
-        return null;
+        const rasterLayer = new style.RasterLayer(raster_layer_id);
+        this.__map.addLayer(rasterLayer.style(options));
+        this.__rasterLayers.push(rasterLayer);
     }
 
-    addPathwayStyleLayers_()
-    //======================
+    __addPathwayStyleLayers(options)
+    //==============================
     {
         for (const pathLayer of PATHWAY_LAYERS) {
-            if (this._map.getSource('vector-tiles')
+            if (this.__map.getSource('vector-tiles')
                     .vectorLayerIds
                     .indexOf(pathLayer) >= 0) {
-                this.addStyleLayer_(style.PathLineLayer.style, pathLayer);
-                this.addStyleLayer_(style.PathDashlineLayer.style, pathLayer);
-                this.addStyleLayer_(style.NervePolygonBorder.style, pathLayer);
-                this.addStyleLayer_(style.NervePolygonFill.style, pathLayer);
-                this.addStyleLayer_(style.FeatureNerveLayer.style, pathLayer);
+                this.__addStyleLayer(style.PathLineLayer, options, pathLayer);
+                this.__addStyleLayer(style.PathDashlineLayer, options, pathLayer);
+                this.__addStyleLayer(style.NervePolygonBorder, options, pathLayer);
+                this.__addStyleLayer(style.NervePolygonFill, options, pathLayer);
+                this.__addStyleLayer(style.FeatureNerveLayer, options, pathLayer);
             }
         }
     }
 
-    addStyleLayer_(styleFunction, sourceLayer='features', ...args)
-    //============================================================
+    __addStyleLayer(styleClass, options, sourceLayer='features')
+    //==========================================================
     {
-        const styleLayer = styleFunction(this._id, sourceLayer, ...args);
-        if (styleLayer) {
-            this._map.addLayer(styleLayer);
-            this.__styleLayerIds.push(styleLayer.id);
-            return styleLayer.id;
-        }
-        return null;
+        const styleLayer = new styleClass(this.__id, sourceLayer);
+        this.__map.addLayer(styleLayer.style(options));
+        this.__styleLayers.push(styleLayer);
     }
 
     setColour(options)
     //================
     {
         const coloured = !('colour' in options) || options.colour;
-        for (const layerId of this.__imageLayerIds) {
-            this._map.setLayoutProperty(layerId, 'visibility', coloured ? 'visible' : 'none');
+        for (const rasterLayer of this.__rasterLayers) {
+            this.__map.setLayoutProperty(rasterLayer.id, 'visibility', coloured ? 'visible' : 'none');
         }
-        for (const layerId of this.__featureFillLayerIds) {
-            const paintStyle = style.FeatureFillLayer.paintStyle(options);
+        for (const styleLayer of this.__styleLayers) {
+            const paintStyle = styleLayer.paintStyle(options);
             for (const [property, value] of Object.entries(paintStyle)) {
-                this._map.setPaintProperty(layerId, property, value);
-            }
-        }
-        for (const layerId of this.__featureBorderLayerIds) {
-            const paintStyle = style.FeatureBorderLayer.paintStyle(options);
-            for (const [property, value] of Object.entries(paintStyle)) {
-                this._map.setPaintProperty(layerId, property, value);
+                this.__map.setPaintProperty(styleLayer.id, property, value);
             }
         }
     }
@@ -149,76 +124,51 @@ export class LayerManager
 {
     constructor(flatmap, switcher=false)
     {
-        this._flatmap = flatmap;
-        this._map = flatmap.map;
-        this._layers = new Map;
-        this._mapLayers = new Map;
-        this._activeLayers = [];
-        this._activeLayerNames = [];
-        this._selectableLayerId = '';
-        this._selectableLayerCount = 0;
+        this.__flatmap = flatmap;
+        this.__map = flatmap.map;
+        this.__layers = new Map;
+        this.__mapLayers = new Map;
+        this.__activeLayers = [];
+        this.__activeLayerNames = [];
+        const backgroundLayer = new style.BackgroundLayer();
         if ('background' in flatmap.options) {
-            this._map.addLayer(style.BackgroundLayer.style(flatmap.options.background));
+            this.__map.addLayer(backgroundLayer.style(flatmap.options.background));
         } else {
-            this._map.addLayer(style.BackgroundLayer.style('white'));
+            this.__map.addLayer(backgroundLayer.style('white'));
         }
     }
 
     get activeLayerNames()
     //====================
     {
-        return this._activeLayerNames;
+        return this.__activeLayerNames;
     }
 
     addLayer(layer, options)
     //======================
     {
-        this._mapLayers.set(layer.id, layer);
+        this.__mapLayers.set(layer.id, layer);
 
-        const layers = new MapFeatureLayer(this._flatmap, layer, options);
-        const layerId = this._flatmap.mapLayerId(layer.id);
-        this._layers.set(layerId, layers);
-
-        if (layer.selectable) {
-            this._selectableLayerId = layerId;
-            this._selectableLayerCount += 1;
-        }
+        const layers = new MapFeatureLayer(this.__flatmap, layer, options);
+        const layerId = this.__flatmap.mapLayerId(layer.id);
+        this.__layers.set(layerId, layers);
     }
 
     get layers()
     //==========
     {
-        return this._layers;
-    }
-
-    get selectableLayerCount()
-    //========================
-    {
-        return this._selectableLayerCount;
-    }
-
-    get lastSelectableLayerId()
-    //=========================
-    {
-        return this._selectableLayerId;
-    }
-
-    layerQueryable(layerName)
-    //========================
-    {
-        const layer = this._mapLayers.get(layerName);
-        return layer['queryable-nodes'];
+        return this.__layers;
     }
 
     activate(layerId)
     //===============
     {
-        const layer = this._layers.get(layerId);
+        const layer = this.__layers.get(layerId);
         if (layer !== undefined) {
             layer.activate();
-            if (this._activeLayers.indexOf(layer) < 0) {
-                this._activeLayers.push(layer);
-                this._activeLayerNames.push(layer.id);
+            if (this.__activeLayers.indexOf(layer) < 0) {
+                this.__activeLayers.push(layer);
+                this.__activeLayerNames.push(layer.id);
             }
         }
     }
@@ -226,15 +176,15 @@ export class LayerManager
     deactivate(layerId)
     //=================
     {
-        const layer = this._layers.get(layerId);
+        const layer = this.__layers.get(layerId);
         if (layer !== undefined) {
             layer.deactivate();
-            const index = this._activeLayers.indexOf(layer);
+            const index = this.__activeLayers.indexOf(layer);
             if (index >= 0) {
-                delete this._activeLayers[index];
-                this._activeLayers.splice(index, 1);
-                delete this._activeLayerNames[index];
-                this._activeLayerNames.splice(index, 1);
+                delete this.__activeLayers[index];
+                this.__activeLayers.splice(index, 1);
+                delete this.__activeLayerNames[index];
+                this.__activeLayerNames.splice(index, 1);
             }
         }
     }
@@ -242,7 +192,7 @@ export class LayerManager
     setColour(options={colour: true, outline: true})
     //===============================================
     {
-        for (const layer of this._layers.values()) {
+        for (const layer of this.__layers.values()) {
             layer.setColour(options)
         }
     }
