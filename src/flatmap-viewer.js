@@ -978,7 +978,7 @@ export class MapManager
     * @arg options.background {string} Background colour of flatmap. Defaults to ``white``.
     * @arg options.debug {boolean} Enable debugging mode.
     * @arg options.featureInfo {boolean} Show information about features as a tooltip. The tooltip is active
-    *                                    on highlighted features and, for non-highlighted features, when the
+    *                                    on selected features and, for non-selected features, when the
     *                                    ``info`` control is enabled. More details are shown in debug mode.
     * @arg options.fullscreenControl {boolean} Add a ``Show full screen`` button to the map.
     * @arg options.layerOptions {Object} Options to control colour and outlines of features

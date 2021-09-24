@@ -93,8 +93,7 @@ export class UserInteractions
         this._map = flatmap.map;
 
         this._activeFeatures = [];
-        this._selectedFeature = null;
-        this._highlightedFeatures = [];
+        this._selectedFeatures = [];
         this._currentPopup = null;
         this._infoControl = null;
         this._tooltip = null;
@@ -282,50 +281,18 @@ export class UserInteractions
     selectFeature_(feature)
     //=====================
     {
-        this.unselectFeatures_(false);
+        }
         this._map.setFeatureState(feature, { 'selected': true });
-        this._selectedFeature = feature;
+        this._selectedFeatures.push(feature);
     }
 
-    unselectFeatures_(reset=true)
-    //===========================
+    unselectFeatures_()
+    //=================
     {
-        if (this._selectedFeature !== null) {
-            this._map.removeFeatureState(this._selectedFeature, 'selected');
-            if (reset) {
-                this._selectedFeature = null;
-            }
+        for (const feature of this._selectedFeatures) {
+            this._map.removeFeatureState(feature, 'selected');
         }
-    }
-
-    get selectedFeatureLayerName()
-    //============================
-    {
-        if (this._selectedFeature !== null) {
-            const layerId = this._selectedFeature.layer.id;
-            if (layerId.includes('-')) {
-                return layerId.split('-').slice(0, -1).join('-');
-            } else {
-                return layerId;
-            }
-        }
-        return null;
-    }
-
-    highlightFeature_(feature)
-    //========================
-    {
-        this._map.setFeatureState(feature, { 'highlighted': true });
-        this._highlightedFeatures.push(feature);
-    }
-
-    unhighlightFeatures_(reset=true)
-    //==============================
-    {
-        for (const feature of this._highlightedFeatures) {
-            this._map.removeFeatureState(feature, 'highlighted');
-        }
-        this._highlightedFeatures = [];
+        this._selectedFeatures = [];
     }
 
     activeFeaturesAtEvent_(event)
@@ -466,7 +433,7 @@ export class UserInteractions
     {
         this.clearModal_();
         this.clearActiveMarker_();
-        this.unhighlightFeatures_();
+        this.unselectFeatures_();
         this.enablePathFeatures_(true, this._pathways.allFeatureIds());
         this._disabledPathFeatures = false;
     }
@@ -474,7 +441,7 @@ export class UserInteractions
     clearSearchResults(reset=true)
     //============================
     {
-        this.unhighlightFeatures_();
+        this.unselectFeatures_();
     }
 
     /**
@@ -487,13 +454,13 @@ export class UserInteractions
     //=====================================
     {
         if (featureIds.length) {
-            this.unhighlightFeatures_();
+            this.unselectFeatures_();
             let bbox = null;
             for (const featureId of featureIds) {
                 const annotation = this._flatmap.annotation(featureId);
                 if (annotation) {
                     const feature = this.mapFeature_(featureId);
-                    this.highlightFeature_(feature);
+                    this.selectFeature_(feature);
                     const bounds = annotation.bounds;
                     bbox = (bbox === null) ? bounds
                                            : expandBounds(bbox, bounds);
@@ -522,8 +489,8 @@ export class UserInteractions
 
             // Highlight the feature
 
-            this.unhighlightFeatures_();
-            this.highlightFeature_(this.mapFeature_(featureId));
+            this.unselectFeatures_();
+            this.selectFeature_(this.mapFeature_(featureId));
 
             // Position popup at the feature's 'centre'
 
@@ -721,14 +688,17 @@ export class UserInteractions
     //================
     {
         this.clearActiveMarker_();
-        this.unhighlightFeatures_();
+        if (!(event.originalEvent.ctrlKey || event.originalEvent.metaKey)) {
+            this.unselectFeatures_();
+        }
         if (this._activeFeatures.length > 0) {
             const feature = this._activeFeatures[0];
+            this.selectFeature_(feature);
             this.__featureEvent('click', feature);
             if ('properties' in feature
              && this._pathways.isNode(feature.properties.featureId)) {
                 for (const featureId of this._pathways.pathFeatureIds(feature.properties.featureId)) {
-                    this.highlightFeature_(this.mapFeature_(featureId));
+                    this.selectFeature_(this.mapFeature_(featureId));
                 }
             }
         }

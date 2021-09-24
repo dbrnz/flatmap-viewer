@@ -76,13 +76,13 @@ export class FeatureFillLayer
             'fill-color': [
                 'case',
                 ['boolean', ['feature-state', 'active'], false], coloured ? '#D88' : '#CCC',
-                ['boolean', ['feature-state', 'highlighted'], false], '#AAA',
+                ['boolean', ['feature-state', 'selected'], false], '#AAA',
                 'white'
             ],
             'fill-opacity': [
                 'case',
                 ['boolean', ['feature-state', 'active'], false], 0.5,
-                ['boolean', ['feature-state', 'highlighted'], false], 0.3,
+                ['boolean', ['feature-state', 'selected'], false], 0.3,
                 coloured ? 0.01 : 0.3
             ]
         };
@@ -121,7 +121,7 @@ export class FeatureBorderLayer
             lineColour.push(['boolean', ['feature-state', 'active'], false]);
             lineColour.push('blue');
         }
-        lineColour.push(['boolean', ['feature-state', 'highlighted'], false]);
+        lineColour.push(['boolean', ['feature-state', 'selected'], false]);
         lineColour.push('red');
         lineColour.push('#444');
 
@@ -133,7 +133,7 @@ export class FeatureBorderLayer
             lineOpacity.push(['boolean', ['feature-state', 'active'], false]);
             lineOpacity.push(0.9);
         }
-        lineOpacity.push(['boolean', ['feature-state', 'highlighted'], false]);
+        lineOpacity.push(['boolean', ['feature-state', 'selected'], false]);
         lineOpacity.push(0.9);
         lineOpacity.push(outlined ? 0.3 : 0.01);
 
@@ -145,8 +145,8 @@ export class FeatureBorderLayer
             lineWidth.push(['boolean', ['feature-state', 'active'], false]);
             lineWidth.push(1);
         }
-        lineWidth.push(['boolean', ['feature-state', 'highlighted'], false]);
         lineWidth.push(1);
+        lineWidth.push(['boolean', ['feature-state', 'selected'], false]);
         lineWidth.push((coloured && outlined) ? 0.5 : 0.1);
 
         return {
@@ -202,7 +202,7 @@ const PATH_LINE_OPACITY = [
         ['==', ['get', 'type'], 'bezier'], 0.3,
         ['boolean', ['get', 'invisible'], false], 0.001,
         ['boolean', ['feature-state', 'active'], false], 1.0,
-        ['boolean', ['feature-state', 'highlighted'], false], 0.9,
+        ['boolean', ['feature-state', 'selected'], false], 0.9,
         ['boolean', ['feature-state', 'hidden'], false], 0.1,
     0.4
 ];
@@ -215,7 +215,7 @@ const PATH_LINE_WIDTH = [
             ['boolean', ['get', 'centreline'], false], 2,
             ['boolean', ['get', 'invisible'], false], 1,
             ['boolean', ['feature-state', 'active'], false], 0.8,
-            ['boolean', ['feature-state', 'highlighted'], false], 0.9,
+            ['boolean', ['feature-state', 'selected'], false], 0.9,
         0.8
         ], [
         'interpolate',
@@ -318,14 +318,14 @@ export class FeatureNerveLayer
                 'line-color': [
                     'case',
                     ['boolean', ['feature-state', 'active'], false], '#222',
-                    ['boolean', ['feature-state', 'highlighted'], false], 'red',
+                    ['boolean', ['feature-state', 'selected'], false], 'red',
                     ['boolean', ['feature-state', 'hidden'], false], '#CCC',
                     '#888'
                 ],
                 'line-opacity': [
                     'case',
                     ['boolean', ['feature-state', 'active'], false], 0.9,
-                    ['boolean', ['feature-state', 'highlighted'], false], 0.9,
+                    ['boolean', ['feature-state', 'selected'], false], 0.9,
                     ['boolean', ['feature-state', 'hidden'], false], 0.3,
                     ['boolean', ['get', 'invisible'], false], 0.001,
                     0.9
@@ -334,7 +334,7 @@ export class FeatureNerveLayer
                 'line-width': [
                     'let', 'width', ['case',
                         ['boolean', ['feature-state', 'active'], false], 0.8,
-                        ['boolean', ['feature-state', 'highlighted'], false], 1.2,
+                        ['boolean', ['feature-state', 'selected'], false], 1.2,
                         0.6],
                     [ 'interpolate',
                         ['exponential', 2],
@@ -368,20 +368,20 @@ export class NervePolygonBorder
                 'line-color': [
                     'case',
                     ['boolean', ['feature-state', 'active'], false], 'blue',
-                    ['boolean', ['feature-state', 'highlighted'], false], 'red',
+                    ['boolean', ['feature-state', 'selected'], false], 'red',
                     '#444'
                 ],
                 'line-opacity': [
                     'case',
                     ['boolean', ['get', 'invisible'], false], 0.05,
                     ['boolean', ['feature-state', 'active'], false], 0.9,
-                    ['boolean', ['feature-state', 'highlighted'], false], 0.9,
+                    ['boolean', ['feature-state', 'selected'], false], 0.9,
                     0.3
                 ],
                 'line-width': [
                     'case',
                     ['boolean', ['get', 'invisible'], false], 0.5,
-                    ['boolean', ['feature-state', 'highlighted'], false], 6,
+                    ['boolean', ['feature-state', 'selected'], false], 6,
                     2
                 ]
             }

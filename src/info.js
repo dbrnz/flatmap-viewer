@@ -148,10 +148,10 @@ export class InfoControl
     featureInformation(features, location)
     //====================================
     {
-        // Get all features if the control is active otherwise just the highlighted ones
+        // Get all features if the control is active otherwise just the selected ones
 
         const featureList = (this._active || this._flatmap.options.debug) ? features
-                            : features.filter(feature => this._map.getFeatureState(feature)['highlighted']);
+                            : features.filter(feature => this._map.getFeatureState(feature)['selected']);
 
         if (featureList.length === 0) {
             return '';
