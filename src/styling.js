@@ -145,8 +145,8 @@ export class FeatureBorderLayer
             lineWidth.push(['boolean', ['feature-state', 'active'], false]);
             lineWidth.push(1);
         }
-        lineWidth.push(1);
         lineWidth.push(['boolean', ['feature-state', 'selected'], false]);
+        lineWidth.push(1.5);
         lineWidth.push((coloured && outlined) ? 0.5 : 0.1);
 
         return {
