@@ -103,6 +103,10 @@ export class UserInteractions
         this._inQuery = false;
         this._modal = false;
 
+        // Default colour settings
+
+        this.__colourOptions = {colour: true, outline: true};
+
         // Marker placement and interaction
 
         this.__activeMarker = null;
@@ -257,6 +261,7 @@ export class UserInteractions
     setColour(options)
     //================
     {
+        this.__colourOptions = options;
         this._layerManager.setColour(options);
     }
 
@@ -281,6 +286,8 @@ export class UserInteractions
     selectFeature_(feature)
     //=====================
     {
+        if (this._selectedFeatures.length === 0) {
+            this._layerManager.setColour({colour: false, outline: true});
         }
         this._map.setFeatureState(feature, { 'selected': true });
         this._selectedFeatures.push(feature);
@@ -293,6 +300,7 @@ export class UserInteractions
             this._map.removeFeatureState(feature, 'selected');
         }
         this._selectedFeatures = [];
+        this._layerManager.setColour(this.__colourOptions);
     }
 
     activeFeaturesAtEvent_(event)
