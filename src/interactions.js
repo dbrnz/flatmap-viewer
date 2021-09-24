@@ -701,14 +701,14 @@ export class UserInteractions
         }
         if (this._activeFeatures.length > 0) {
             const feature = this._activeFeatures[0];
-            this.selectFeature_(feature);
-            this.__featureEvent('click', feature);
-            if ('properties' in feature
-             && this._pathways.isNode(feature.properties.featureId)) {
-                for (const featureId of this._pathways.pathFeatureIds(feature.properties.featureId)) {
-                    this.selectFeature_(this.mapFeature_(featureId));
+            if ('type' in feature.properties && feature.properties.type.startsWith('line')) {
+                for (const feature of this._activeFeatures) {
+                    this.selectFeature_(feature);
                 }
+            } else {
+                this.selectFeature_(feature);
             }
+            this.__featureEvent('click', feature);
         }
     }
 
