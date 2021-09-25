@@ -43,5 +43,5 @@ Package Installation
 Documentation
 -------------
 
-Documentation for the API is available `here <https://celldl.org/docs/flatmap-viewer/API.html>`_.
+The API is documented at `Read the Docs <https://flatmap-viewer.readthedocs.io/en/mapmaker-v2/>`_.
 
