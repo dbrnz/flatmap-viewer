@@ -280,8 +280,8 @@ export class PathLineLayer extends VectorStyleLayer
                 'case',
                     ['==', ['get', 'type'], 'bezier'], 0.3,
                     ['boolean', ['get', 'invisible'], false], 0.001,
-                    ['boolean', ['feature-state', 'active'], false], 1.0,
                     ['boolean', ['feature-state', 'selected'], false], 1.0,
+                    ['boolean', ['feature-state', 'active'], false], 0.8,
                     ['boolean', ['feature-state', 'hidden'], false], 0.1,
                 dimmed ? 0.1 : 0.4
             ],
@@ -290,10 +290,10 @@ export class PathLineLayer extends VectorStyleLayer
                 'width', [
                     'case',
                         ['==', ['get', 'type'], 'bezier'], 0.2,
-                        ['boolean', ['get', 'centreline'], false], 2,
-                        ['boolean', ['get', 'invisible'], false], 1,
+                        ['boolean', ['get', 'centreline'], false], 0.5,
+                        ['boolean', ['get', 'invisible'], false], 0.1,
+                        ['boolean', ['feature-state', 'selected'], false], 1.2,
                         ['boolean', ['feature-state', 'active'], false], 0.8,
-                        ['boolean', ['feature-state', 'selected'], false], 0.9,
                     0.8
                     ], [
                     'interpolate',
