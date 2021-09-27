@@ -1014,7 +1014,7 @@ export class MapManager
             try {
                 const map = await this.findMap_(identifier);
                 if (map === null) {
-                    throw new Error(`Unknown map for ${JSON.stringify(identifier)}`);
+                    reject(`Unknown map for ${JSON.stringify(identifier)}`);
                 };
 
                 // Load the maps index file
