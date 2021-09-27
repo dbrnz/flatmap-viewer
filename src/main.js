@@ -27,9 +27,17 @@ export { MapManager };
 
 //==============================================================================
 
-    const mapManager = new MapManager(MAP_ENDPOINT, {
 export async function standaloneViewer(map_endpoint=null, map_options={})
 {
+    const requestUrl = new URL(window.location.href);
+    if (map_endpoint == null) {
+        const parts = requestUrl.pathname.split('/');
+        map_endpoint = requestUrl.origin + (parts.slice(0, (parts[parts.length - 1] === '') ? -2 : -1)
+                                            .concat([''])
+                                            .join('/'));
+    }
+
+    const mapManager = new MapManager(map_endpoint, {
         images: [
             {
                 id: 'label-background',
@@ -43,103 +51,111 @@ export async function standaloneViewer(map_endpoint=null, map_options={})
         ]
     });
 
-    const maps = await mapManager.allMaps();
+    let currentMap = null;
 
-    const viewerUrl = new URL(document.URL);
-    const viewMapId = viewerUrl.searchParams.get('map');
+    function loadMap(id, taxon)
+    //=========================
+    {
+        if (currentMap !== null) {
+            currentMap.close();
+        }
+
+        if (id !== null) {
+            requestUrl.searchParams.set('map', id);
+            requestUrl.searchParams.delete('taxon');
+        } else if (taxon !== null) {
+            id = taxon;
+            requestUrl.searchParams.set('taxon', taxon);
+            requestUrl.searchParams.delete('map');
+        }
+        window.history.pushState('data', document.title, requestUrl);
+
+        const options = Object.assign({
+            tooltips: true,
+            background: '#EEF',
+            debug: false,
+            minimap: false,
+            navigationControl: 'top-right',
+            searchable: true,
+            featureInfo: true
+        }, map_options);
+
+        mapManager.loadMap(id, 'map-canvas', (...args) => console.log(...args), options)
+            .then(map => {
+                map.addMarker('UBERON:0000948'); // Heart
+                map.addMarker('UBERON:0002048'); // Lung
+                map.addMarker('UBERON:0000945'); // Stomach
+                map.addMarker('UBERON:0001155'); // Colon
+                map.addMarker('UBERON:0001255'); // Bladder
+                currentMap = map;
+            })
+            .catch(error => {
+                console.log(error);
+                alert(error);
+            });
+    }
+
+    const viewMapId = requestUrl.searchParams.get('map');
+    const viewMapTaxon = requestUrl.searchParams.get('taxon');
 
     let mapId = null;
-    const options = [];
-    const selector = document.getElementById('map-selector');
+    let mapTaxon = null;
+    const latestMaps = new Map();
+    const maps = await mapManager.allMaps();
     for (const map of Object.values(maps)) {
         const text = [];
         if ('describes' in map) {
             text.push(map.describes);
         }
-        let sortKey = '';
-        if ('created' in map) {
-            text.push(map.created);
-            sortKey = map.created;
+        if ('name' in map) {
+            text.push(map.name);
+        } else {
+            text.push(map.id);
         }
-        text.push(map.id);
-
+        const mapName = text.join(' -- ')
+        if (!latestMaps.has(mapName)) {
+            latestMaps.set(mapName, map);
+        } else if (latestMaps.get(mapName).created < map.created) {
+            latestMaps.set(mapName, map);
+        }
+    }
+    // Sort in created order with most recent first
+    const sortedMaps = new Map([...latestMaps].sort((a, b) => (a[1].created < b[1].created) ? 1
+                                                            : (a[1].created > b[1].created) ? -1
+                                                            : 0));
+    const options = [];
+    for (const [name, map] of sortedMaps.entries()) {
+        const text = [ name, map.created ];
         let selected = '';
-        if (map.id === viewMapId) {
+        if (mapId === null && map.id === viewMapId) {
             mapId = map.id;
             selected = 'selected';
+        } else if (mapId === null && mapTaxon === null && map.describes === viewMapTaxon) {
+            mapTaxon = viewMapTaxon;
+            selected = 'selected';
         }
-        options.push({
-            option: `<option value="${map.id}" ${selected}>${text.join(' -- ')}</option>`,
-            sortKey: sortKey
-        });
+        options.push(`<option value="${map.id}" ${selected}>${text.join(' -- ')}</option>`);
     }
-    selector.innerHTML = options.sort((a, b) => (a.sortKey < b.sortKey) ?  1
-                                              : (a.sortKey > b.sortKey) ? -1
-                                              : 0)
-                                .map(o => o.option).join('');
+    options.splice(0, 0, '<option value="">Select flatmap...</option>');
 
-    if (mapId === null) {
-        mapId = selector.options[0].value;
-        selector.options[0].selected = true;
-    }
-
-    let currentMap = null;
-
-    function markerPopupContent()
-    {
-        const element = document.createElement('div');
-
-        element.innerHTML = `<button data-v-6e7795b6="" type="button" class="el-button button el-button--default is-round">
-    <span>View 3D scaffold</span>
-</button>
-<br/>
-<button data-v-6e7795b6="" type="button" class="el-button button el-button--default is-round" id="popover-button-1">
-    <span>Search for datasets</span>
-</button>`;
-
-        return element;
-    }
-
-    let nextColour = '#FF0';
-
-    function callback(event, options)
-    {
-        console.log(event, options);
-        return;
-    }
-
-    const loadMap = (id) => {
-        if (currentMap !== null) {
-            currentMap.close();
+    const selector = document.getElementById('map-selector');
+    selector.innerHTML = options.join('');
+    selector.onchange = (e) => {
+        if (e.target.value !== '') {
+            loadMap(e.target.value);
         }
+    }
 
-        viewerUrl.searchParams.set('map', id);
-        window.history.pushState('data', document.title, viewerUrl);
+    if (mapId == null) {
+        mapId = viewMapId;
+    }
+    if (mapTaxon == null) {
+        mapTaxon = viewMapTaxon;
+    }
+    if (mapId === null && mapTaxon == null) {
+        mapId = selector.options[1].value;
+        selector.options[1].selected = true;
+    }
 
-        mapManager.loadMap(id, 'map-canvas', (event, options) => callback(event, options), {
-            tooltips: true,
-            background: '#EEF',
-            debug: DEBUG,
-            minimap: MINIMAP,
-            navigationControl: 'top-right',
-            searchable: true,
-            featureInfo: true
-        }).then(map => {
-            map.addMarker('UBERON:0000948'); // Heart
-            map.addMarker('UBERON:0002048'); // Lung
-            map.addMarker('UBERON:0000945'); // Stomach
-            map.addMarker('UBERON:0001155'); // Colon
-            map.addMarker('UBERON:0001255'); // Bladder
-            if (id == 'whole-rat') {
-                //map.setState(RAT_STATE);
-                map.zoomTo(['UBERON:945', 'UBERON:1255']);
-                console.log(map.anatomicalIdentifiers);
-            }
-            currentMap = map;
-        });
-    };
-
-    selector.onchange = (e) => loadMap(e.target.value);
-
-    loadMap(mapId);
+    loadMap(mapId, mapTaxon);
 }
