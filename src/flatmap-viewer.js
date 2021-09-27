@@ -49,7 +49,7 @@ import * as utils from './utils.js';
 * Maps are not created directly but instead are created and loaded by
 * :meth:`LoadMap` of :class:`MapManager`.
 */
-export class FlatMap
+class FlatMap
 {
     constructor(container, mapBaseUrl, mapDescription, resolve)
     {
