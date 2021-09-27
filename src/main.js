@@ -61,12 +61,12 @@ export async function standaloneViewer(map_endpoint=null, map_options={})
         }
 
         if (id !== null) {
-            requestUrl.searchParams.set('map', id);
+            requestUrl.searchParams.set('id', id);
             requestUrl.searchParams.delete('taxon');
         } else if (taxon !== null) {
             id = taxon;
             requestUrl.searchParams.set('taxon', taxon);
-            requestUrl.searchParams.delete('map');
+            requestUrl.searchParams.delete('id');
         }
         window.history.pushState('data', document.title, requestUrl);
 
@@ -95,7 +95,7 @@ export async function standaloneViewer(map_endpoint=null, map_options={})
             });
     }
 
-    const viewMapId = requestUrl.searchParams.get('map');
+    const viewMapId = requestUrl.searchParams.get('id');
     const viewMapTaxon = requestUrl.searchParams.get('taxon');
 
     let mapId = null;
