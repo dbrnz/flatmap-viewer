@@ -94,7 +94,7 @@ export class UserInteractions
         this._map = flatmap.map;
 
         this._activeFeatures = [];
-        this._selectedFeatures = [];
+        this._selectedFeatureIds = new Map();
         this._currentPopup = null;
         this._infoControl = null;
         this._tooltip = null;
@@ -277,30 +277,61 @@ export class UserInteractions
     {
         const ann = this._flatmap.annotation(featureId);
         return {
-            id: (typeof featureId === 'string' && featureId.indexOf('#') >= 0)
-                 ? featureId.split('#')[1] : featureId,
+            id: featureId,
             source: VECTOR_TILES_SOURCE,
             sourceLayer: ann['tile-layer']
         };
     }
 
-    selectFeature_(feature)
-    //=====================
+    featureSelected_(featureId)
+    //=========================
     {
-        if (this._selectedFeatures.length === 0) {
+        return this._selectedFeatureIds.has(+featureId);
+    }
+
+    selectFeature_(featureId)
+    //=======================
+    {
+        featureId = +featureId;   // Ensure numeric
+        if (this._selectedFeatureIds.size === 0) {
             this._layerManager.setColour({...this.__colourOptions, dimmed: true});
         }
-        this._map.setFeatureState(feature, { 'selected': true });
-        this._selectedFeatures.push(feature);
+        if (this._selectedFeatureIds.has(featureId)) {
+            this._selectedFeatureIds.set(featureId, this._selectedFeatureIds.get(featureId) + 1);
+        } else {
+            const feature = this.mapFeature_(featureId);
+            this._map.setFeatureState(feature, { 'selected': true });
+            this._selectedFeatureIds.set(featureId, 1);
+        }
+    }
+
+    unselectFeature_(featureId)
+    //=========================
+    {
+        featureId = +featureId;   // Ensure numeric
+        if (this._selectedFeatureIds.has(featureId)) {
+            const references = this._selectedFeatureIds.get(featureId);
+            if (references > 1) {
+                this._selectedFeatureIds.set(featureId, references - 1);
+            } else {
+                const feature = this.mapFeature_(featureId);
+                this._map.removeFeatureState(feature, 'selected');
+                this._selectedFeatureIds.delete(+featureId);
+            }
+        }
+        if (this._selectedFeatureIds.size === 0) {
+            this._layerManager.setColour({...this.__colourOptions, dimmed: false});
+        }
     }
 
     unselectFeatures_()
     //=================
     {
-        for (const feature of this._selectedFeatures) {
+        for (const featureId of this._selectedFeatureIds.keys()) {
+            const feature = this.mapFeature_(featureId);
             this._map.removeFeatureState(feature, 'selected');
         }
-        this._selectedFeatures = [];
+        this._selectedFeatureIds.clear();
         this._layerManager.setColour({...this.__colourOptions, dimmed: false});
     }
 
@@ -371,7 +402,7 @@ export class UserInteractions
             // Remove any tooltip
             this.removeTooltip_();
 
-            const featureId = feature.properties.featureId;
+            const featureId = feature.id;
             if (this._pathways.isNode(featureId)) {
                 const items = [
                     {
@@ -468,12 +499,11 @@ export class UserInteractions
             for (const featureId of featureIds) {
                 const annotation = this._flatmap.annotation(featureId);
                 if (annotation) {
-                    const feature = this.mapFeature_(featureId);
-                    this.selectFeature_(feature);
+                    this.selectFeature_(featureId);
                     bbox = expandBounds(bbox, annotation.bounds);
                     if ('type' in annotation && annotation.type.startsWith('line')) {
                         for (const pathFeatureId of this._pathways.lineFeatureIds([featureId])) {
-                            this.selectFeature_(this.mapFeature_(pathFeatureId));
+                            this.selectFeature_(pathFeatureId);
                             const pathAnnotation = this._flatmap.annotation(pathFeatureId)
                             bbox = expandBounds(bbox, pathAnnotation.bounds);
                         }
@@ -504,7 +534,7 @@ export class UserInteractions
             // Highlight the feature
 
             this.unselectFeatures_();
-            this.selectFeature_(this.mapFeature_(featureId));
+            this.selectFeature_(featureId);
 
             // Position popup at the feature's 'centre'
 
@@ -582,6 +612,7 @@ export class UserInteractions
         this.resetActiveFeatures_();
 
         // Reset any info display
+
         const displayInfo = (this._infoControl && this._infoControl.active);
         if (displayInfo) {
             this._infoControl.reset()
@@ -597,6 +628,7 @@ export class UserInteractions
         }
 
         // Simulate `mouseenter` events on features
+
         const feature = features[0];
         const featureModels = ('properties' in feature && 'models' in feature.properties)
                             ? feature.properties.models
@@ -624,11 +656,15 @@ export class UserInteractions
         const lineFeatures = features.filter(feature => ('type' in feature.properties
                                                      && feature.properties.type.startsWith('line')));
         if (lineFeatures.length > 0) {
-            tooltip = this.tooltipHtml_(lineFeatures[0].properties);
-            this.activateFeature_(lineFeatures[0])
+            const lineFeature = lineFeatures[0];
+            const lineFeatureId = +lineFeature.properties.featureId;  // Ensure numeric
+            tooltip = this.tooltipHtml_(lineFeature.properties);
+            this.activateFeature_(lineFeature);
             const lineIds = new Set(lineFeatures.map(f => f.properties.featureId));
             for (const featureId of this._pathways.lineFeatureIds(lineIds)) {
-                this.activateFeature_(this.mapFeature_(featureId));
+                if (+featureId !== lineFeatureId) {
+                    this.activateFeature_(this.mapFeature_(featureId));
+                }
             }
         } else {
             let labelledFeatures = features.filter(feature => ('label' in feature.properties
@@ -698,22 +734,42 @@ export class UserInteractions
         }
     }
 
+    selectionEvent_(domEvent, feature)
+    //================================
+    {
+        const multipleSelect = event.ctrlKey || event.metaKey;
+        if (!multipleSelect) {
+            this.unselectFeatures_();
+        }
+        if (feature !== undefined) {
+            const featureId = feature.id;
+            const selecting = !this.featureSelected_(featureId);
+            if ('properties' in feature
+             && 'type' in feature.properties
+             && feature.properties.type.startsWith('line')) {
+                for (const feature of this._activeFeatures) {
+                    const featureId = feature.id;
+                    if (selecting) {
+                        this.selectFeature_(featureId);
+                    } else {
+                        this.unselectFeature_(featureId);
+                    }
+                }
+            } else if (selecting) {
+                this.selectFeature_(featureId);
+            } else {
+                this.unselectFeature_(featureId);
+            }
+        }
+    }
+
     clickEvent_(event)
     //================
     {
         this.clearActiveMarker_();
-        if (!(event.originalEvent.ctrlKey || event.originalEvent.metaKey)) {
-            this.unselectFeatures_();
-        }
-        if (this._activeFeatures.length > 0) {
-            const feature = this._activeFeatures[0];
-            if ('type' in feature.properties && feature.properties.type.startsWith('line')) {
-                for (const feature of this._activeFeatures) {
-                    this.selectFeature_(feature);
-                }
-            } else {
-                this.selectFeature_(feature);
-            }
+        const feature = this._activeFeatures[0]
+        this.selectionEvent_(event.originalEvent, feature);
+        if (feature !== undefined) {
             this.__featureEvent('click', feature);
         }
     }
@@ -900,13 +956,14 @@ export class UserInteractions
                     this.resetActiveFeatures_();
                     this.activateFeature_(feature);
                 } else {
-                    // Select on click
-                    this.unselectFeatures_();
-                    this.selectFeature_(feature);
+                    this.selectionEvent_(event, feature)
                 }
+
                 // Show tooltip
                 const html = this.tooltipHtml_(annotation, true);
                 this.__showToolTip(html, marker.getLngLat());
+
+                // Send marker event message
                 this._flatmap.markerEvent(event.type, markerId, anatomicalId);
             }
         }
