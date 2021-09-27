@@ -12,7 +12,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node app",
     "build": "webpack --mode production",
-    "docs": "cd docs; pipenv run make html"
+    "docs": "cd docs; poetry run make html"
   },
   "author": "David Brooks",
   "license": "MIT",
