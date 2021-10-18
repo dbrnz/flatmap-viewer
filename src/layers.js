@@ -22,7 +22,7 @@ limitations under the License.
 
 //==============================================================================
 
-import {PATHWAY_LAYERS} from './pathways.js';
+import {PATHWAYS_LAYER} from './pathways.js';
 
 import * as style from './styling.js';
 import * as utils from './utils.js';
@@ -81,16 +81,14 @@ class MapFeatureLayer
     __addPathwayStyleLayers(options)
     //==============================
     {
-        for (const pathLayer of PATHWAY_LAYERS) {
-            if (this.__map.getSource('vector-tiles')
-                    .vectorLayerIds
-                    .indexOf(pathLayer) >= 0) {
-                this.__addStyleLayer(style.PathLineLayer, options, pathLayer);
-                this.__addStyleLayer(style.PathDashlineLayer, options, pathLayer);
-                this.__addStyleLayer(style.NervePolygonBorder, options, pathLayer);
-                this.__addStyleLayer(style.NervePolygonFill, options, pathLayer);
-                this.__addStyleLayer(style.FeatureNerveLayer, options, pathLayer);
-            }
+        if (this.__map.getSource('vector-tiles')
+                .vectorLayerIds
+                .indexOf(PATHWAYS_LAYER) >= 0) {
+            this.__addStyleLayer(style.PathLineLayer, options, PATHWAYS_LAYER);
+            this.__addStyleLayer(style.PathDashlineLayer, options, PATHWAYS_LAYER);
+            this.__addStyleLayer(style.NervePolygonBorder, options, PATHWAYS_LAYER);
+            this.__addStyleLayer(style.NervePolygonFill, options, PATHWAYS_LAYER);
+            this.__addStyleLayer(style.FeatureNerveLayer, options, PATHWAYS_LAYER);
         }
     }
 

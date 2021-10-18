@@ -36,7 +36,7 @@ import {ContextMenu} from './contextmenu.js';
 import {displayedProperties} from './info.js';
 import {InfoControl} from './info.js';
 import {LayerManager} from './layers.js';
-import {PATHWAY_LAYERS, Pathways} from './pathways.js';
+import {PATHWAYS_LAYER, Pathways} from './pathways.js';
 import {NerveKey, PathControl} from './controls.js';
 import {SearchControl} from './search.js';
 import {VECTOR_TILES_SOURCE} from './styling.js';
@@ -582,7 +582,7 @@ export class UserInteractions
     __featureEvent(type, feature)
     //===========================
     {
-        if (PATHWAY_LAYERS.indexOf(feature.sourceLayer) >= 0) {
+        if (feature.sourceLayer === PATHWAYS_LAYER) {
             return this._flatmap.featureEvent(type, this._pathways.pathProperties(feature));
         } else if ('properties' in feature) {
             return this._flatmap.featureEvent(type, feature.properties);

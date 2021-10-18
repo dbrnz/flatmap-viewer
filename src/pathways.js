@@ -22,7 +22,7 @@ limitations under the License.
 
 //==============================================================================
 
-export const PATHWAY_LAYERS = ['pathways', 'autopaths'];
+export const PATHWAYS_LAYER = 'pathways';
 
 //==============================================================================
 
