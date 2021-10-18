@@ -5,7 +5,7 @@ import { standaloneViewer } from '../src/main.js';
 //==============================================================================
 
 const DEBUG = false;
-const MINIMAP = true; // { width: '10%', background: '#FCC' };
+const MINIMAP = false; // { width: '10%', background: '#FCC' };
 
 //const MAP_ENDPOINT = 'https://mapcore-demo.org/flatmaps/';
 const MAP_ENDPOINT = 'http:localhost:8000/';
