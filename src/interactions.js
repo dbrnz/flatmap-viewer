@@ -694,7 +694,6 @@ export class UserInteractions
                     for (const feature of labelledFeatures) {
                         if (featureIds.indexOf(feature.id) < 0) {
                             featureIds.push(feature.id);
-                            this.activateFeature_(feature);
                             for (const prop of debugProperties) {
                                 if (prop in feature.properties) {
                                     htmlList.push(`<span class="info-name">${prop}:</span>`);
@@ -708,9 +707,10 @@ export class UserInteractions
                         //htmlList.push(`<span class="info-value">${feature.properties.scale}</span>`);
                     }
                     info = `<div id="info-control-info">${htmlList.join('\n')}</div>`;
-                } else {
-                    this.activateFeature_(feature);
-                    if ('nerveId' in feature.properties) {
+                }
+                this.activateFeature_(feature);
+                if ('nerveId' in feature.properties) {
+                    if (feature.properties.nerveId !== feature.properties.featureId) {
                         this.activateNerveFeatures_(feature.properties.nerveId);
                     }
                 }
