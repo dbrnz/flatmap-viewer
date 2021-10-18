@@ -892,7 +892,9 @@ export class MapManager
             await this.ensureInitialised_();
             const latestMaps = {};
             for (const map of this._mapList) {
-                const describes = ('describes' in map) ? map.describes : map.id;
+                const describes = ('taxon' in map) ? map.taxon
+                                : ('describes' in map) ? map.describes
+                                : map.id;
                 if (!(describes in latestMaps)) {
                     latestMaps[describes] = map;
                 } else if ('created' in map) {
