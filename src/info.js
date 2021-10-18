@@ -26,7 +26,7 @@ import { indexedProperties } from './search.js';
 
 //==============================================================================
 
-const displayedProperties = [
+export const displayedProperties = [
     'id',
     'class',
     ...indexedProperties

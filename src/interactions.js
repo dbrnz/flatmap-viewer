@@ -33,11 +33,11 @@ import polylabel from './thirdparty/polylabel'
 //==============================================================================
 
 import {ContextMenu} from './contextmenu.js';
+import {displayedProperties} from './info.js';
 import {InfoControl} from './info.js';
 import {LayerManager} from './layers.js';
 import {PATHWAY_LAYERS, Pathways} from './pathways.js';
 import {NerveKey, PathControl} from './controls.js';
-import {indexedProperties} from './search.js';
 import {SearchControl} from './search.js';
 import {VECTOR_TILES_SOURCE} from './styling.js';
 
@@ -682,13 +682,20 @@ export class UserInteractions
                 const feature = labelledFeatures[0];
                 tooltip = this.tooltipHtml_(feature.properties);
                 if (this._flatmap.options.debug) {  // Do this when Info on and not debug??
+                    const debugProperties = [
+                        'featureId',
+                        'nerveId',
+                        'tile-layer',
+                        'type',
+                        ...displayedProperties
+                    ];
                     const htmlList = [];
                     const featureIds = [];
                     for (const feature of labelledFeatures) {
                         if (featureIds.indexOf(feature.id) < 0) {
                             featureIds.push(feature.id);
                             this.activateFeature_(feature);
-                            for (const prop of indexedProperties) {
+                            for (const prop of debugProperties) {
                                 if (prop in feature.properties) {
                                     htmlList.push(`<span class="info-name">${prop}:</span>`);
                                     htmlList.push(`<span class="info-value">${feature.properties[prop]}</span>`);
