@@ -648,9 +648,7 @@ export class UserInteractions
         let info = '';
         let tooltip = '';
         if (displayInfo) {
-            for (const feature of features) {
-                this.activateFeature_(feature);
-            }
+            this.activateFeature_(features[0]);
             info = this._infoControl.featureInformation(features, event.lngLat);
         }
         const lineFeatures = features.filter(feature => ('type' in feature.properties
