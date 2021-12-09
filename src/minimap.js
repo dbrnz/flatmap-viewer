@@ -430,4 +430,22 @@ export class MinimapControl
             this._opacity = opacity;
         }
     }
+
+    /**
+     * Show and hide the minimap.
+     *
+     * @param {boolean}  showMinimap  Set false to hide minimap
+     */
+    show(showMinimap)
+    //===============
+    {
+        if (this._container) {
+            if (showMinimap) {
+                this._container.style.display = "block";
+                this.update_();
+            } else {
+                this._container.style.display = "none";
+            }
+        }
+    }
 }

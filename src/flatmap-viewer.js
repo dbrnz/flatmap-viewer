@@ -665,6 +665,20 @@ class FlatMap
         }
     }
 
+    /**
+     * Show and hide the minimap.
+     *
+     * @param {boolean}  show  Set false to hide minimap
+     */
+    showMinimap(show)
+    //===============
+    {
+        if (this._minimap) {
+            this._minimap.show(show);
+        }
+
+    }
+
     //==========================================================================
 
     /**
