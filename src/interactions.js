@@ -362,6 +362,19 @@ export class UserInteractions
         }
     }
 
+    highlightFeature_(featureId)
+    //==========================
+    {
+        featureId = +featureId;   // Ensure numeric
+        this.activateFeature_(this.mapFeature_(featureId));
+    }
+
+    unhighlightFeatures_()
+    //====================
+    {
+        this.resetActiveFeatures_();
+    }
+
     smallestAnnotatedPolygonFeature_(features)
     //========================================
     {
@@ -488,22 +501,37 @@ export class UserInteractions
      * Zoom map to features.
      *
      * @param      {Array.<string>}  featureIds   An array of feature identifiers
-     * @param      {number}  [padding=100]  Padding around the composite bounding box
+     * @param      {Object}  [options]
+     * @param      {boolean} [options.select=true]  Select the features zoomed to
+     * @param      {boolean} [options.highlight=false]  Highlight the features zoomed to
+     * @param      {number}  [options.padding=100]  Padding around the composite bounding box
      */
-    zoomToFeatures(featureIds, padding=100)
-    //=====================================
+    zoomToFeatures(featureIds, options={select: true, highlight: false, padding:100})
+    //===============================================================================
     {
+        const select = (options.select === true);
+        const highlight = (options.highlight === true);
+        const padding = options.padding || 100;
         if (featureIds.length) {
-            this.unselectFeatures_();
+            this.unhighlightFeatures_();
+            if (select) this.unselectFeatures_();
             let bbox = null;
             for (const featureId of featureIds) {
                 const annotation = this._flatmap.annotation(featureId);
                 if (annotation) {
-                    this.selectFeature_(featureId);
+                    if (select) {
+                        this.selectFeature_(featureId);
+                    } else if (highlight) {
+                        this.highlightFeature_(featureId);
+                    }
                     bbox = expandBounds(bbox, annotation.bounds);
                     if ('type' in annotation && annotation.type.startsWith('line')) {
                         for (const pathFeatureId of this._pathways.lineFeatureIds([featureId])) {
-                            this.selectFeature_(pathFeatureId);
+                            if (select) {
+                                this.selectFeature_(pathFeatureId);
+                            } else if (highlight) {
+                                this.highlightFeature_(pathFeatureId);
+                            }
                             const pathAnnotation = this._flatmap.annotation(pathFeatureId)
                             bbox = expandBounds(bbox, pathAnnotation.bounds);
                         }

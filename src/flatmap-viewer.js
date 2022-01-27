@@ -819,14 +819,23 @@ class FlatMap
     //===========================================
     {
         if (this._userInteractions !== null) {
-            this._userInteractions.zoomToFeatures(searchResults.featureIds, padding);
+            this._userInteractions.zoomToFeatures(searchResults.featureIds, {padding: padding});
         }
     }
 
     //==========================================================================
 
-    zoomTo(externalIds, padding=100)
-    //==============================
+    /**
+     * Zoom map to features.
+     *
+     * @param      {Array.<string>}  featureIds   An array of feature identifiers
+     * @param      {Object}  [options]
+     * @param      {boolean} [options.select=true]  Select the features zoomed to
+     * @param      {boolean} [options.highlight=false]  Highlight the features zoomed to
+     * @param      {number}  [options.padding=100]  Padding around the composite bounding box
+     */
+    zoomTo(externalIds, options={select:true, highlight:false, padding:100})
+    //======================================================================
     {
         if (this._userInteractions !== null) {
             const featureIds = new utils.List();
@@ -846,7 +855,7 @@ class FlatMap
                 // We still haven't found a feature, so check connectivity
                 featureIds.extend(this._userInteractions.pathwaysFeatureIds(externalIds));
             }
-            this._userInteractions.zoomToFeatures(featureIds, padding);
+            this._userInteractions.zoomToFeatures(featureIds, options);
         }
     }
 }
