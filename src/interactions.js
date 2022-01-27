@@ -28,7 +28,7 @@ import {default as turfArea} from '@turf/area';
 import {default as turfBBox} from '@turf/bbox';
 import * as turf from '@turf/helpers';
 
-import polylabel from './thirdparty/polylabel'
+import polylabel from 'polylabel';
 
 //==============================================================================
 
