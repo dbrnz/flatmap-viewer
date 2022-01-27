@@ -118,7 +118,7 @@ export class UserInteractions
         // Where to put labels and popups on a feature
         this.__centralPositions = new Map();
 
-        // Mapbox dynamically sets a transform on marker elements so in
+        // MapLibre dynamically sets a transform on marker elements so in
         // order to apply a scale transform we need to create marker icons
         // inside the marker container <div>.
         this._defaultMarkerHTML = new maplibre.Marker().getElement().innerHTML;

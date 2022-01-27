@@ -110,28 +110,28 @@ class FlatMap
             }
         }
 
-        // Set options for the Mapbox map
+        // Set options for the map
 
-        const mapboxOptions = {
+        const mapOptions = {
             style: mapDescription.style,
             container: container,
             attributionControl: false
         };
 
         if ('maxZoom' in mapDescription.options) {
-            mapboxOptions.maxZoom = mapDescription.options.maxZoom;
+            mapOptions.maxZoom = mapDescription.options.maxZoom;
         }
         if ('minZoom' in mapDescription.options) {
-            mapboxOptions.minZoom = mapDescription.options.minZoom;
+            mapOptions.minZoom = mapDescription.options.minZoom;
         }
 
         // Only show location in address bar when debugging
 
-        mapboxOptions.hash = (mapDescription.options.debug === true);
+        mapOptions.hash = (mapDescription.options.debug === true);
 
         // Create the map
 
-        this._map = new maplibre.Map(mapboxOptions);
+        this._map = new maplibre.Map(mapOptions);
 
         // Show tile boundaries if debugging
 
@@ -737,7 +737,7 @@ class FlatMap
      * @param      {Object}  options
      * @returns    {boolean} Return true if the popup is shown
      *
-     * The resulting Mapbox-gl popup is given a class name of ``flatmap-tooltip-popup``.
+     * The resulting popup is given a class name of ``flatmap-tooltip-popup``.
      */
     showMarkerPopup(markerId, content, options={})
     //============================================

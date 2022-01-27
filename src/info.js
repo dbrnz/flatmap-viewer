@@ -159,7 +159,7 @@ export class InfoControl
 
         let html = '';
         if (this._flatmap.options.debug) {
-            // See example at https://docs.mapbox.com/maplibre-gl-js/example/queryrenderedfeatures/
+            // See example at https://maplibre.org/maplibre-gl-js-docs/example/queryrenderedfeatures/
 
             // Limit the number of properties we're displaying for
             // legibility and performance
