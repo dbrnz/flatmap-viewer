@@ -176,7 +176,11 @@ class FlatMap
                 this.setupUserInteractions_();
             } else if (this._initialState === null) {
                 this._bounds = this._map.getBounds();
-
+                this._map.setMaxBounds(this._bounds);
+                const sw = maplibregl.MercatorCoordinate.fromLngLat(this._bounds.toArray()[0]);
+                const ne = maplibregl.MercatorCoordinate.fromLngLat(this._bounds.toArray()[1]);
+                this.__normalised_origin = [sw.x, ne.y];
+                this.__normalised_size = [ne.x - sw.x, sw.y - ne.y];
                 if ('state' in this._options) {
                     this._userInteractions.setState(this._options.state);
                 }
@@ -820,6 +824,52 @@ class FlatMap
             id: markerId,
             models: anatomicalId
         });
+    }
+
+    /**
+     * Generate a callback as a result of panning/zooming the map.
+     *
+     * @param {string}         type    The event type, ``pan`` or ``zoom``.
+     * @param {Array.<float>}  origin  The map's normalised top-left corner
+     * @param {Array.<float>}  size    The map's normalised size
+     */
+    panZoomEvent(type)
+    //================
+    {
+        const bounds = this._map.getBounds();
+        if (this.__normalised_origin !== undefined) {
+            const sw = maplibregl.MercatorCoordinate.fromLngLat(bounds.toArray()[0]);
+            const ne = maplibregl.MercatorCoordinate.fromLngLat(bounds.toArray()[1]);
+            const top_left = [(sw.x - this.__normalised_origin[0])/this.__normalised_size[0],
+                              (ne.y - this.__normalised_origin[1])/this.__normalised_size[1]];
+            const size = [(ne.x - sw.x)/this.__normalised_size[0],
+                          (sw.y - ne.y)/this.__normalised_size[1]];
+            this.callback('pan-zoom', {
+                type: type,
+                origin: top_left,
+                size: size
+            });
+        }
+    }
+
+    /**
+     * Pan/zoom the map to a new view
+     *
+     * @param {Array.<float>}  origin  The map's normalised top-left corner
+     * @param {Array.<float>}  size    The map's normalised size
+     */
+    panZoomTo(origin, size)
+    //=====================
+    {
+        if (this.__normalised_origin !== undefined) {
+            const sw_x = origin[0]*this.__normalised_size[0] + this.__normalised_origin[0];
+            const ne_y = origin[1]*this.__normalised_size[1] + this.__normalised_origin[1];
+            const ne_x = sw_x + size[0]*this.__normalised_size[0];
+            const sw_y = ne_y + size[1]*this.__normalised_size[1];
+            const sw = (new maplibregl.MercatorCoordinate(sw_x, sw_y, 0)).toLngLat();
+            const ne = (new maplibregl.MercatorCoordinate(ne_x, ne_y, 0)).toLngLat();
+            this._map.fitBounds([sw, ne], {animate: false});
+        }
     }
 
     //==========================================================================

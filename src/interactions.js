@@ -224,6 +224,10 @@ export class UserInteractions
         this._map.on('mousemove', this.mouseMoveEvent_.bind(this));
         this._lastFeatureMouseEntered = null;
         this._lastFeatureModelsMouse = null;
+
+        // Handle pan/zoom events
+        this._map.on('move', this.panZoomEvent_.bind(this, 'pan'));
+        this._map.on('zoom', this.panZoomEvent_.bind(this, 'zoom'));
     }
 
     getState()
@@ -1102,6 +1106,12 @@ export class UserInteractions
         marker.togglePopup();
 
         return true;
+    }
+
+    panZoomEvent_(type)
+    //=================
+    {
+        this._flatmap.panZoomEvent(type);
     }
 }
 
