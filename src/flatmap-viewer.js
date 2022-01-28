@@ -563,7 +563,7 @@ class FlatMap
     //==================
     {
         if ('bounds' in this._options) {
-            this._map.fitBounds(this._options['bounds']);
+            this._map.fitBounds(this._options['bounds'], {animate: false});
         }
         if ('center' in this._options) {
             this._map.setCenter(this._options['center']);
