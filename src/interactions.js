@@ -498,6 +498,54 @@ export class UserInteractions
     }
 
     /**
+     * Highlight features on the map.
+     *
+     * @param {Array.<string>}  featureIds  An array of feature identifiers to highlight
+     */
+    highlightFeatures(featureIds)
+    //===========================
+    {
+        if (featureIds.length) {
+            this.unhighlightFeatures_();
+            for (const featureId of featureIds) {
+                const annotation = this._flatmap.annotation(featureId);
+                if (annotation) {
+                    this.highlightFeature_(featureId);
+                    if ('type' in annotation && annotation.type.startsWith('line')) {
+                        for (const pathFeatureId of this._pathways.lineFeatureIds([featureId])) {
+                            this.highlightFeature_(pathFeatureId);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Select features on the map.
+     *
+     * @param {Array.<string>}  featureIds  An array of feature identifiers to highlight
+     */
+    selectFeatures(featureIds)
+    //========================
+    {
+        if (featureIds.length) {
+            this.unselectFeatures_();
+            for (const featureId of featureIds) {
+                const annotation = this._flatmap.annotation(featureId);
+                if (annotation) {
+                    this.selectFeature_(featureId);
+                    if ('type' in annotation && annotation.type.startsWith('line')) {
+                        for (const pathFeatureId of this._pathways.lineFeatureIds([featureId])) {
+                            this.selectFeature_(pathFeatureId);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /**
      * Zoom map to features.
      *
      * @param      {Array.<string>}  featureIds   An array of feature identifiers

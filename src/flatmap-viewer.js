@@ -442,6 +442,29 @@ class FlatMap
         return featureIds ? featureIds : [];
     }
 
+    modelFeatureIdList(anatomicalIds)
+    //===============================
+    {
+        const featureIds = new utils.List();
+        if (Array.isArray(anatomicalIds)) {
+            for (const id of anatomicalIds) {
+                featureIds.extend(this.modelFeatureIds(id));
+            }
+        } else {
+            featureIds.extend(this.modelFeatureIds(anatomicalIds));
+        }
+        if (featureIds.length == 0) {
+            // We couldn't find a feature by anatomical id, so check dataset and source
+            featureIds.extend(this.__datasetToFeatureIds.get(anatomicalIds));
+            featureIds.extend(this.__sourceToFeatureIds.get(anatomicalIds));
+        }
+        if (featureIds.length == 0 && this._userInteractions !== null) {
+            // We still haven't found a feature, so check connectivity
+            featureIds.extend(this._userInteractions.pathwaysFeatureIds(anatomicalIds));
+        }
+        return featureIds;
+    }
+
     modelForFeature(featureId)
     //========================
     {
@@ -826,35 +849,47 @@ class FlatMap
     //==========================================================================
 
     /**
+     * Highlight features on the map.
+     *
+     * @param {Array.<string>}  externalIds  An array of anaotomical terms identifing features to highlight
+     */
+    highlightFeatures(externalIds)
+    //============================
+    {
+        if (this._userInteractions !== null) {
+            const featureIds = this.modelFeatureIdList(externalIds);
+            this._userInteractions.highlightFeatures(featureIds);
+        }
+    }
+
+    /**
+     * Select features on the map.
+     *
+     * @param {Array.<string>}  externalIds  An array of anaotomical terms identifing features to select
+     */
+    selectFeatures(externalIds)
+    //=========================
+    {
+        if (this._userInteractions !== null) {
+            const featureIds = this.modelFeatureIdList(externalIds);
+            this._userInteractions.selectFeatures(featureIds);
+        }
+    }
+
+    /**
      * Zoom map to features.
      *
-     * @param      {Array.<string>}  featureIds   An array of feature identifiers
+     * @param      {Array.<string>}  externalIds   An array of anaotomical terms identifing features
      * @param      {Object}  [options]
      * @param      {boolean} [options.select=true]  Select the features zoomed to
      * @param      {boolean} [options.highlight=false]  Highlight the features zoomed to
      * @param      {number}  [options.padding=100]  Padding around the composite bounding box
      */
-    zoomTo(externalIds, options={select:true, highlight:false, padding:100})
-    //======================================================================
+    zoomToFeatures(externalIds, options={select:true, highlight:false, padding:100})
+    //==============================================================================
     {
         if (this._userInteractions !== null) {
-            const featureIds = new utils.List();
-            if (Array.isArray(externalIds)) {
-                for (const id of externalIds) {
-                    featureIds.extend(this.modelFeatureIds(id));
-                }
-            } else {
-                featureIds.extend(this.modelFeatureIds(externalIds));
-            }
-            if (featureIds.length == 0) {
-                // We couldn't find a feature by anatomical id, so check dataset and source
-                featureIds.extend(this.__datasetToFeatureIds.get(externalIds));
-                featureIds.extend(this.__sourceToFeatureIds.get(externalIds));
-            }
-            if (featureIds.length == 0) {
-                // We still haven't found a feature, so check connectivity
-                featureIds.extend(this._userInteractions.pathwaysFeatureIds(externalIds));
-            }
+            const featureIds = this.modelFeatureIdList(externalIds);
             this._userInteractions.zoomToFeatures(featureIds, options);
         }
     }
