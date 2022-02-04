@@ -254,7 +254,17 @@ export class PathLineLayer extends VectorStyleLayer
     {
         const filterType = dashed ? 'line-dash' : 'line';
         super(mapLayerId, sourceLayer, filterType);
-        this.__filterType = filterType;
+        this.__filter = dashed ?
+            [
+                'any',
+                ['==', 'type', `line-dash`]
+            ]
+        :
+            [
+                'any',
+                ['==', 'type', 'bezier'],
+                ['==', 'type', `line`]
+            ];
         this.__dashed = dashed;
     }
 
@@ -278,7 +288,7 @@ export class PathLineLayer extends VectorStyleLayer
             ],
             'line-opacity': [
                 'case',
-                    ['==', ['get', 'type'], 'bezier'], 0.3,
+                    ['==', ['get', 'type'], 'bezier'], 1.0,
                     ['boolean', ['get', 'invisible'], false], 0.001,
                     ['boolean', ['feature-state', 'selected'], false], 1.0,
                     ['boolean', ['feature-state', 'active'], false], 0.8,
@@ -289,7 +299,7 @@ export class PathLineLayer extends VectorStyleLayer
                 'let',
                 'width', [
                     'case',
-                        ['==', ['get', 'type'], 'bezier'], 0.2,
+                        ['==', ['get', 'type'], 'bezier'], 0.1,
                         ['boolean', ['get', 'centreline'], false], 0.5,
                         ['boolean', ['get', 'invisible'], false], 0.1,
                         ['boolean', ['feature-state', 'selected'], false], 1.2,
@@ -319,10 +329,7 @@ export class PathLineLayer extends VectorStyleLayer
             'filter': [
                 'all',
                 ['==', '$type', 'LineString'],
-                ['any',
-                    ['==', 'type', 'bezier'],
-                    ['==', 'type', `${this.__filterType}`]
-                ]
+                this.__filter
             ],
             'paint': this.paintStyle(options)
         };
@@ -477,7 +484,7 @@ export class NervePolygonFill extends VectorStyleLayer
                 ],
                 'fill-opacity': [
                     'case',
-                    ['==', ['get', 'type'], 'bezier'], 0.2,
+                    ['==', ['get', 'type'], 'bezier'], 0.9,
                     ['==', ['get', 'type'], 'junction'], 0.4,
                     0.01
                 ]
