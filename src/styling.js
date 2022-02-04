@@ -455,6 +455,7 @@ export class NervePolygonFill extends VectorStyleLayer
                 ['==', '$type', 'Polygon'],
                 ['any',
                     ['==', 'type', 'bezier'],
+                    ['==', 'type', 'junction'],
                     ['==', 'type', 'nerve'],
                     ['==', 'type', 'nerve-section']
                 ]
@@ -462,13 +463,22 @@ export class NervePolygonFill extends VectorStyleLayer
             'paint': {
                 'fill-color': [
                     'case',
-                    ['==', ['get', 'kind'], 'bezier-control'], 'red',
-                    ['==', ['get', 'kind'], 'bezier-end'], 'green',
+                    ['==', ['get', 'kind'], 'bezier-end'], 'red',
+                    ['==', ['get', 'kind'], 'bezier-control'], 'green',
+                    ['==', ['get', 'kind'], 'cns'], '#9B1FC1',
+                    ['==', ['get', 'kind'], 'lcn'], '#F19E38',
+                    ['==', ['get', 'kind'], 'para-post'], '#3F8F4A',
+                    ['==', ['get', 'kind'], 'para-pre'], '#3F8F4A',
+                    ['==', ['get', 'kind'], 'somatic'], '#98561D',
+                    ['==', ['get', 'kind'], 'sensory'], '#2A62F6',
+                    ['==', ['get', 'kind'], 'symp-post'], '#EA3423',
+                    ['==', ['get', 'kind'], 'symp-pre'], '#EA3423',
                     'white'
                 ],
                 'fill-opacity': [
                     'case',
                     ['==', ['get', 'type'], 'bezier'], 0.2,
+                    ['==', ['get', 'type'], 'junction'], 0.4,
                     0.01
                 ]
             }
