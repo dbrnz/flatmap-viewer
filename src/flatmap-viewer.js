@@ -788,6 +788,7 @@ class FlatMap
         const exportedProperties = [
             'connectivity',
             'dataset',
+            'kind',
             'label',
             'models',
             'nodeId',
