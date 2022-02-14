@@ -121,7 +121,7 @@ export class FeatureFillLayer extends VectorStyleLayer
                       ['==', ['get', 'kind'], 'scaffold'],
                       ['==', ['get', 'kind'], 'tissue'],
                       ['==', ['get', 'kind'], 'cell-type']
-                ], "#CCC",
+                ], "white",
                 ['boolean', ['feature-state', 'selected'], false], '#0F0',
                 ['boolean', ['feature-state', 'active'], false], coloured ? '#D88' : '#CCC',
                 'white'    // background colour? body colour ??
@@ -132,7 +132,7 @@ export class FeatureFillLayer extends VectorStyleLayer
                       ['==', ['get', 'kind'], 'scaffold'],
                       ['==', ['get', 'kind'], 'tissue'],
                       ['==', ['get', 'kind'], 'cell-type']
-                ], 0.4,
+                ], 0.1,
                 ['boolean', ['feature-state', 'selected'], false], 1.0,
                 ['boolean', ['feature-state', 'active'], false], 0.8,
                 (coloured && !dimmed) ? 0.01 : 0.5
