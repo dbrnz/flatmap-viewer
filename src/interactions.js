@@ -294,12 +294,12 @@ export class UserInteractions
         return this._selectedFeatureIds.has(+featureId);
     }
 
-    selectFeature_(featureId)
-    //=======================
+    selectFeature_(featureId, dim=true)
+    //=================================
     {
         featureId = +featureId;   // Ensure numeric
         if (this._selectedFeatureIds.size === 0) {
-            this._layerManager.setColour({...this.__colourOptions, dimmed: true});
+            this._layerManager.setColour({...this.__colourOptions, dimmed: dim});
         }
         if (this._selectedFeatureIds.has(featureId)) {
             this._selectedFeatureIds.set(featureId, this._selectedFeatureIds.get(featureId) + 1);
@@ -842,7 +842,10 @@ export class UserInteractions
                     }
                 }
             } else if (selecting) {
-                this.selectFeature_(featureId);
+                const dim = !('properties' in feature
+                             && 'kind' in feature.properties
+                             && ['cell-type', 'scaffold', 'tissue'].indexOf(feature.properties.kind) >= 0);
+                this.selectFeature_(featureId, dim);
             } else {
                 this.unselectFeature_(featureId);
             }
