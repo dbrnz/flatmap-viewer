@@ -174,12 +174,12 @@ export class FeatureBorderLayer extends VectorStyleLayer
         const outlined = !('outline' in options) || options.outline;
         const dimmed = 'dimmed' in options && options.dimmed;
         const lineColour = [ 'case' ];
+        lineColour.push(['boolean', ['feature-state', 'selected'], false]);
+        lineColour.push('red');
         if (coloured && outlined) {
             lineColour.push(['boolean', ['feature-state', 'active'], false]);
             lineColour.push('blue');
         }
-        lineColour.push(['boolean', ['feature-state', 'selected'], false]);
-        lineColour.push('red');
         lineColour.push('#444');
 
         const lineOpacity = [
