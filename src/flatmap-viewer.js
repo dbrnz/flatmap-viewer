@@ -827,6 +827,20 @@ class FlatMap
     }
 
     /**
+     * Generate callbacks as a result of panning/zooming the map.
+     *
+     * @param {boolean}   enabled  Generate callbacks when ``true``,
+     *                             otherwise disable them.
+     */
+    enablePanZoomEvents(enabled=true)
+    //===============================
+    {
+        if (this._userInteractions !== null) {
+            this._userInteractions.enablePanZoomEvents(enabled);
+        }
+    }
+
+    /**
      * Generate a callback as a result of panning/zooming the map.
      *
      * @param {string}         type    The event type, ``pan`` or ``zoom``.

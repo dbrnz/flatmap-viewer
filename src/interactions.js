@@ -228,6 +228,7 @@ export class UserInteractions
         // Handle pan/zoom events
         this._map.on('move', this.panZoomEvent_.bind(this, 'pan'));
         this._map.on('zoom', this.panZoomEvent_.bind(this, 'zoom'));
+        this.__pan_zoom_enabled = false;
     }
 
     getState()
@@ -1108,10 +1109,18 @@ export class UserInteractions
         return true;
     }
 
+    enablePanZoomEvents(enabled=true)
+    //===============================
+    {
+        this.__pan_zoom_enabled = enabled;
+    }
+
     panZoomEvent_(type)
     //=================
     {
-        this._flatmap.panZoomEvent(type);
+        if (this.__pan_zoom_enabled) {
+            this._flatmap.panZoomEvent(type);
+        }
     }
 }
 
