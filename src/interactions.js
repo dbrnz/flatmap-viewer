@@ -1013,7 +1013,22 @@ export class UserInteractions
                 break;
             }
         }
+    }
 
+    visibleMarkerAnatomicalIds()
+    //==========================
+    {
+        const anatomicalIds = [];
+        const visibleBounds = this._map.getBounds();
+        for (const [marker, id] of this.__markerIdByMarker.entries()) {
+            if (visibleBounds.contains(marker.getLngLat())) {
+                const annotation = this.__annotationByMarkerId.get(id);
+                if (anatomicalIds.indexOf(annotation.models) < 0) {
+                    anatomicalIds.push(annotation.models);
+                }
+            }
+        }
+        return anatomicalIds;
     }
 
     markerMouseEvent_(marker, anatomicalId, event)

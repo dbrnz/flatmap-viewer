@@ -571,7 +571,6 @@ class FlatMap
         if ('zoom' in this._options) {
             this._map.setZoom(this._options['zoom']);
         }
-
     }
 
     close()
@@ -750,6 +749,19 @@ class FlatMap
     {
         if (this._userInteractions !== null) {
             this._userInteractions.clearMarkers();
+        }
+    }
+
+    /**
+     * Return the set of anatomical identifiers visible in the current map view.
+     *
+     * @return {Array.<string>} A list of identifiers
+     */
+    visibleMarkerAnatomicalIds()
+    //==========================
+    {
+        if (this._userInteractions !== null) {
+            return this._userInteractions.visibleMarkerAnatomicalIds();
         }
     }
 
