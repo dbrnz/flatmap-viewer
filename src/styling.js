@@ -246,9 +246,27 @@ export class FeatureLineLayer extends VectorStyleLayer
                  // not for paths...
             ],
             'paint': {
-                'line-color': '#444',
+                'line-color': [
+                    'case',
+                    ['==', ['get', 'type'], 'network'], '#AFA202',
+                    '#444'
+                ],
                 'line-opacity': 0.3,
-                'line-width': 0.5
+                'line-width': [
+                    'let',
+                    'width', [
+                        'case',
+                            ['==', ['get', 'type'], 'network'], 1.2,
+                        0.1
+                        ], [
+                        'interpolate',
+                            ['exponential', 2],
+                            ['zoom'],
+                             2, ["*", ['var', 'width'], ["^", 2, -0.5]],
+                             7, ["*", ['var', 'width'], ["^", 2,  2.5]],
+                             9, ["*", ['var', 'width'], ["^", 2,  4.0]]
+                        ]
+                ]
                 // Need to vary width based on zoom??
                 // Or opacity??
             }
@@ -310,7 +328,6 @@ export class PathLineLayer extends VectorStyleLayer
                 'width', [
                     'case',
                         ['==', ['get', 'type'], 'bezier'], 0.1,
-                        ['boolean', ['get', 'centreline'], false], 0.5,
                         ['boolean', ['get', 'invisible'], false], 0.1,
                         ['boolean', ['feature-state', 'selected'], false], 1.2,
                         ['boolean', ['feature-state', 'active'], false], 0.8,
