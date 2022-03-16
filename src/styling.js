@@ -321,7 +321,7 @@ export class PathLineLayer extends VectorStyleLayer
                     ['boolean', ['feature-state', 'selected'], false], 1.0,
                     ['boolean', ['feature-state', 'active'], false], 0.8,
                     ['boolean', ['feature-state', 'hidden'], false], 0.1,
-                dimmed ? 0.1 : 0.4
+                dimmed ? 0.1 : 0.5
             ],
             'line-width': [
                 'let',
@@ -330,7 +330,7 @@ export class PathLineLayer extends VectorStyleLayer
                         ['==', ['get', 'type'], 'bezier'], 0.1,
                         ['boolean', ['get', 'invisible'], false], 0.1,
                         ['boolean', ['feature-state', 'selected'], false], 1.2,
-                        ['boolean', ['feature-state', 'active'], false], 0.8,
+                        ['boolean', ['feature-state', 'active'], false], 1.0,
                     0.8
                     ], [
                     'interpolate',
@@ -358,6 +358,9 @@ export class PathLineLayer extends VectorStyleLayer
                 ['==', '$type', 'LineString'],
                 this.__filter
             ],
+            'layout': {
+                'line-cap': 'butt'
+            },
             'paint': this.paintStyle(options)
         };
     }
