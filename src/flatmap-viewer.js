@@ -629,9 +629,10 @@ class FlatMap
         }
     }
 
-    setColour(options={colour: true, outline: true})
-    //==============================================
+    setColour(options=null)
+    //=====================
     {
+        options = utils.setDefaultOptions(options, {colour: true, outline: true});
         if (this._userInteractions !== null) {
             this._userInteractions.setColour(options);
         }
@@ -962,9 +963,10 @@ class FlatMap
      * @param      {boolean} [options.highlight=false]  Highlight the features zoomed to
      * @param      {number}  [options.padding=100]  Padding around the composite bounding box
      */
-    zoomToFeatures(externalIds, options={select:true, highlight:false, padding:100})
-    //==============================================================================
+    zoomToFeatures(externalIds, options=null)
+    //=======================================
     {
+        options = utils.setDefaultOptions(options, {select: true, highlight: false, padding:100});
         if (this._userInteractions !== null) {
             const featureIds = this.modelFeatureIdList(externalIds);
             this._userInteractions.zoomToFeatures(featureIds, options);

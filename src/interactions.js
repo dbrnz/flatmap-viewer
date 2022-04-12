@@ -559,9 +559,10 @@ export class UserInteractions
      * @param      {boolean} [options.highlight=false]  Highlight the features zoomed to
      * @param      {number}  [options.padding=100]  Padding around the composite bounding box
      */
-    zoomToFeatures(featureIds, options={select: true, highlight: false, padding:100})
-    //===============================================================================
+    zoomToFeatures(featureIds, options=null)
+    //======================================
     {
+        options = utils.setDefaultOptions(options, {select: true, highlight: false, padding:100});
         const select = (options.select === true);
         const highlight = (options.highlight === true);
         const padding = options.padding || 100;

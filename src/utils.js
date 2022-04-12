@@ -109,3 +109,18 @@ export function normaliseId(id)
 }
 
 //==============================================================================
+
+export function setDefaultOptions(options, defaultOptions)
+{
+    if (options === undefined || options === null) {
+        return defaultOptions;
+    }
+    for (const [key, value] of Object.entries(defaultOptions)) {
+        if (!(key in options)) {
+            options[key] = value;
+        }
+    }
+    return options;
+}
+
+//==============================================================================

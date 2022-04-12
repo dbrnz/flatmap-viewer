@@ -188,9 +188,10 @@ export class LayerManager
         }
     }
 
-    setColour(options={colour: true, outline: true})
-    //===============================================
+    setColour(options=null)
+    //=====================
     {
+        options = utils.setDefaultOptions(options, {colour: true, outline: true});
         for (const layer of this.__layers.values()) {
             layer.setColour(options)
         }
