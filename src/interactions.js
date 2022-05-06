@@ -656,7 +656,7 @@ export class UserInteractions
            && !('labelled' in properties)) {
             const label = properties.label;
             const capitalisedLabel = label.substr(0, 1).toUpperCase() + label.substr(1);
-            return `<div class='flatmap-feature-label'>${capitalisedLabel}</div>`;
+            return `<div class='flatmap-feature-label'>${capitalisedLabel.replaceAll("\n", "<br/>")}</div>`;
         }
         return '';
     }
@@ -735,8 +735,9 @@ export class UserInteractions
             }
             info = this._infoControl.featureInformation(features, event.lngLat);
         }
-        const lineFeatures = features.filter(feature => ('type' in feature.properties
-                                                     && feature.properties.type.startsWith('line')));
+        const lineFeatures = features.filter(feature => (('type' in feature.properties
+                                                     && feature.properties.type.startsWith('line'))
+                                                       || 'centreline' in feature.properties));
         if (lineFeatures.length > 0) {
             const lineFeature = lineFeatures[0];
             const lineFeatureId = +lineFeature.properties.featureId;  // Ensure numeric
@@ -749,7 +750,8 @@ export class UserInteractions
                 }
             }
         } else {
-            let labelledFeatures = features.filter(feature => ('label' in feature.properties
+            let labelledFeatures = features.filter(feature => (('label' in feature.properties
+                                                             || 'node' in feature.properties)
                                                          && (!('tooltip' in feature.properties)
                                                             || feature.properties.tooltip)))
                                            .sort((a, b) => (a.properties.area - b.properties.area));

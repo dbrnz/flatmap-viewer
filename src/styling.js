@@ -118,10 +118,10 @@ export class FeatureFillLayer extends VectorStyleLayer
             'fill-color': [
                 'case',
                 ['any',
-                      ['==', ['get', 'kind'], 'scaffold'],
-                      ['==', ['get', 'kind'], 'tissue'],
-                      ['==', ['get', 'kind'], 'cell-type']
-                ], "white",
+                      ['==', ['get', 'kind'], 'scaffold']
+                ], 'white',
+                ['has', 'colour'], ['get', 'colour'],
+                ['has', 'node'], '#AFA202',
                 ['boolean', ['feature-state', 'selected'], false], '#0F0',
                 ['boolean', ['feature-state', 'active'], false], coloured ? '#D88' : '#CCC',
                 'white'    // background colour? body colour ??
@@ -131,8 +131,10 @@ export class FeatureFillLayer extends VectorStyleLayer
                 ['any',
                       ['==', ['get', 'kind'], 'scaffold'],
                       ['==', ['get', 'kind'], 'tissue'],
-                      ['==', ['get', 'kind'], 'cell-type']
+                      ['==', ['get', 'kind'], 'cell-type'],
                 ], 0.1,
+                ['has', 'colour'], 0.8,
+                ['has', 'node'], 0.3,
                 ['boolean', ['feature-state', 'selected'], false], 1.0,
                 ['boolean', ['feature-state', 'active'], false], 0.8,
                 (coloured && !dimmed) ? 0.01 : 0.5
@@ -180,6 +182,10 @@ export class FeatureBorderLayer extends VectorStyleLayer
             lineColour.push(['boolean', ['feature-state', 'active'], false]);
             lineColour.push('blue');
         }
+        lineColour.push(['has', 'colour']);
+        lineColour.push(['get', 'colour']);
+        lineColour.push(['has', 'node']);
+        lineColour.push('#AFA202');
         lineColour.push('#444');
 
         const lineOpacity = [
@@ -249,6 +255,7 @@ export class FeatureLineLayer extends VectorStyleLayer
                 'line-color': [
                     'case',
                     ['==', ['get', 'type'], 'network'], '#AFA202',
+                    ['has', 'centreline'], '#888',
                     '#444'
                 ],
                 'line-opacity': 0.3,
@@ -256,6 +263,7 @@ export class FeatureLineLayer extends VectorStyleLayer
                     'let',
                     'width', [
                         'case',
+                            ['has', 'centreline'], 1.2,
                             ['==', ['get', 'type'], 'network'], 1.2,
                         0.1
                         ], [
@@ -312,7 +320,7 @@ export class PathLineLayer extends VectorStyleLayer
                 ['==', ['get', 'kind'], 'sensory'], '#2A62F6',
                 ['==', ['get', 'kind'], 'symp-post'], '#EA3423',
                 ['==', ['get', 'kind'], 'symp-pre'], '#EA3423',
-                'red'
+                '#888'
             ],
             'line-opacity': [
                 'case',
@@ -321,7 +329,7 @@ export class PathLineLayer extends VectorStyleLayer
                     ['boolean', ['feature-state', 'selected'], false], 1.0,
                     ['boolean', ['feature-state', 'active'], false], 0.8,
                     ['boolean', ['feature-state', 'hidden'], false], 0.1,
-                dimmed ? 0.1 : 0.5
+                dimmed ? 0.1 : 0.4
             ],
             'line-width': [
                 'let',
@@ -330,7 +338,7 @@ export class PathLineLayer extends VectorStyleLayer
                         ['==', ['get', 'type'], 'bezier'], 0.1,
                         ['boolean', ['get', 'invisible'], false], 0.1,
                         ['boolean', ['feature-state', 'selected'], false], 1.2,
-                        ['boolean', ['feature-state', 'active'], false], 1.0,
+                        ['boolean', ['feature-state', 'active'], false], 0.9,
                     0.8
                     ], [
                     'interpolate',
