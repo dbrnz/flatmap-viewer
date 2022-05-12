@@ -243,6 +243,7 @@ export class FeatureLineLayer extends VectorStyleLayer
 
     style(options)
     {
+        const coloured = !('colour' in options) || options.colour;
         return {
             ...super.style(),
             'type': 'line',
@@ -254,6 +255,8 @@ export class FeatureLineLayer extends VectorStyleLayer
             'paint': {
                 'line-color': [
                     'case',
+                    ['boolean', ['feature-state', 'active'], false], coloured ? '#D88' : '#CCC',
+                    ['boolean', ['feature-state', 'selected'], false], '#0F0',
                     ['==', ['get', 'type'], 'network'], '#AFA202',
                     ['has', 'centreline'], '#888',
                     '#444'
