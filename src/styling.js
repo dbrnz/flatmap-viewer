@@ -117,13 +117,13 @@ export class FeatureFillLayer extends VectorStyleLayer
         const paintStyle = {
             'fill-color': [
                 'case',
+                ['boolean', ['feature-state', 'active'], false], coloured ? '#D88' : '#CCC',
+                ['boolean', ['feature-state', 'selected'], false], '#0F0',
                 ['any',
                       ['==', ['get', 'kind'], 'scaffold']
                 ], 'white',
                 ['has', 'colour'], ['get', 'colour'],
                 ['has', 'node'], '#AFA202',
-                ['boolean', ['feature-state', 'selected'], false], '#0F0',
-                ['boolean', ['feature-state', 'active'], false], coloured ? '#D88' : '#CCC',
                 'white'    // background colour? body colour ??
             ],
             'fill-opacity': [
