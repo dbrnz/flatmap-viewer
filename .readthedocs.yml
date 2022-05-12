@@ -8,8 +8,9 @@ version: 2
 sphinx:
   configuration: docs/conf.py
 
+# poetry export --dev -f requirements.txt --output docs/requirements.txt
+
 python:
   version: 3.8
   install:
-    - method: pip
-      path: .
+    - requirements: docs/requirements.txt

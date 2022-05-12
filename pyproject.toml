@@ -11,8 +11,3 @@ python = "^3.8"
 sphinx = "4.5.0"
 sphinx-js = "*"
 sphinx-rtd-theme = "*"
-
-[build-system]
-# See https://github.com/chrahunt/rtd-poetry/issues/3
-requires = ["poetry_core>=1.0.0", "rtd-poetry @ https://github.com/dbrnz/rtd-poetry/archive/refs/tags/v0.1.2.tar.gz"]
-build-backend = "rtd_poetry"
