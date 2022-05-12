@@ -1060,7 +1060,9 @@ export class MapManager
         let latestMap = null;
         let lastCreatedTime = '';
         for (const map of this._mapList) {
-            if (mapDescribes === map.describes
+            if (mapDescribes === (('taxon' in map) ? map.taxon
+                                : ('describes' in map) ? map.describes
+                                : map.id)
              || mapDescribes === map.id
              || mapDescribes === map.source) {
                 if ('created' in map) {
@@ -1087,7 +1089,9 @@ export class MapManager
                     return flatmap;
                 }
             }
-            if ('describes' in identifier) {
+            if ('taxon' in identifier) {
+                mapDescribes = identifier.taxon;
+            } else if ('describes' in identifier) {
                 mapDescribes = identifier.describes;
             }
         } else {
@@ -1104,8 +1108,8 @@ export class MapManager
     *                                 or a taxon identifier of the species that the map represents. The
     *                                 latest version of a map is loaded unless it has been identified
     *                                 by ``source`` (see below).
-    * @arg identifier.describes {string} The taxon identifier of the map. This is specified as metadata
-    *                                    in the map's source file.)
+    * @arg identifier.taxon {string} The taxon identifier of the map. This is specified as metadata
+    *                                in the map's source file.)
     * @arg identifier.source {string} The URL of the source file from which the map has
     *                                 been generated. If given then this exact map will be
     *                                 loaded.
@@ -1140,7 +1144,7 @@ export class MapManager
     *
     * const humanMap2 = mapManager.loadMap('NCBITaxon:9606', 'div-2');
     *
-    * const humanMap3 = mapManager.loadMap({describes: 'NCBITaxon:9606'}, 'div-3');
+    * const humanMap3 = mapManager.loadMap({taxon: 'NCBITaxon:9606'}, 'div-3');
     *
     * const humanMap4 = mapManager.loadMap(
     *                     {source: 'https://models.physiomeproject.org/workspace/585/rawfile/650adf9076538a4bf081609df14dabddd0eb37e7/Human_Body.pptx'},
