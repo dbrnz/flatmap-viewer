@@ -96,6 +96,10 @@ li.flatmap-contextmenu-item:hover {
     overflow: scroll;
 }
 
+.info-control-entry {
+    border-bottom: 1px solid gray;
+}
+
 /* Navigation control buttons */
 
 .maplibregl-ctrl button.navigation-zoom-in {
