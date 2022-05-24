@@ -224,6 +224,7 @@ export class UserInteractions
         this._map.on('mousemove', this.mouseMoveEvent_.bind(this));
         this._lastFeatureMouseEntered = null;
         this._lastFeatureModelsMouse = null;
+        this.__lastClickLngLat = null;
 
         // Handle pan/zoom events
         this._map.on('move', this.panZoomEvent_.bind(this, 'pan'));
@@ -618,9 +619,17 @@ export class UserInteractions
             this.unselectFeatures_();
             this.selectFeature_(featureId);
 
-            // Position popup at the feature's 'centre'
+            // Find the pop-up's postion
 
-            const location = this.__centralPosition(featureId, ann);
+            let location = null;
+            if ('positionAtLastClick' in options
+               && options.positionAtLastClick
+               && this.__lastClickLngLat !== null) {
+                location = this.__lastClickLngLat;
+            } else {
+                // Position popup at the feature's 'centre'
+                location = this.__centralPosition(featureId, ann);
+            }
 
             // Make sure the feature is on screen
 
