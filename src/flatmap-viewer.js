@@ -1249,6 +1249,7 @@ export class MapManager
                         outline: true
                     };
                 }
+                mapOptions.layerOptions.authoring = ('authoring' in mapIndex && mapIndex.authoring);
 
                 // Display the map
 

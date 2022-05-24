@@ -259,7 +259,7 @@ export class FeatureLineLayer extends VectorStyleLayer
                     ['boolean', ['feature-state', 'selected'], false], '#0F0',
                     ['==', ['get', 'type'], 'network'], '#AFA202',
                     ['has', 'centreline'], '#888',
-                    '#444'
+                    ('authoring' in options && options.authoring) ? '#F44' : '#444'
                 ],
                 'line-opacity': 0.3,
                 'line-width': [
@@ -268,7 +268,7 @@ export class FeatureLineLayer extends VectorStyleLayer
                         'case',
                             ['has', 'centreline'], 1.2,
                             ['==', ['get', 'type'], 'network'], 1.2,
-                        0.1
+                        ('authoring' in options && options.authoring) ? 0.4 : 0.1
                         ], [
                         'interpolate',
                             ['exponential', 2],
