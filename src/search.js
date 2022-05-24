@@ -180,7 +180,7 @@ export class SearchIndex
         let results = [];
         text = text.trim()
         if (text.length > 2 && ["'", '"'].indexOf(text.slice(0, 1)) >= 0) {
-            text = (text.slice(0, 1) === text.slice(-1)) ? text.slice(1, -1) : text.slice(1)
+            text = text.replaceAll(text.slice(0, 1), '');
             results = this._searchEngine.search(text, {prefix: true, combineWith: 'AND'});
         } else if (text.length > 1) {
             results = this._searchEngine.search(text, {prefix: true});
