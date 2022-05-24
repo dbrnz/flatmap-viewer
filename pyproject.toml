@@ -6,6 +6,7 @@ authors = ["David Brooks <d.brooks@auckland.ac.nz>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
+markupsafe = "2.0.1"
 sphinx = "4.5.0"
 sphinx-js = "*"
 sphinx-rtd-theme = "*"
