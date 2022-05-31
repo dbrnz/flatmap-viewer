@@ -133,7 +133,7 @@ export class FeatureFillLayer extends VectorStyleLayer
                       ['==', ['get', 'kind'], 'tissue'],
                       ['==', ['get', 'kind'], 'cell-type'],
                 ], 0.1,
-                ['has', 'colour'], 0.8,
+                ['has', 'colour'], 0.008,
                 ['has', 'node'], 0.3,
                 ['boolean', ['feature-state', 'selected'], false], 1.0,
                 ['boolean', ['feature-state', 'active'], false], 0.8,
@@ -259,16 +259,21 @@ export class FeatureLineLayer extends VectorStyleLayer
                     ['boolean', ['feature-state', 'selected'], false], '#0F0',
                     ['==', ['get', 'type'], 'network'], '#AFA202',
                     ['has', 'centreline'], '#888',
-                    ('authoring' in options && options.authoring) ? '#F44' : '#444'
+                    ('authoring' in options && options.authoring) ? '#C44' : '#444'
                 ],
-                'line-opacity': 0.3,
+                'line-opacity': [
+                    'case',
+                    ['boolean', ['feature-state', 'active'], false], 1.0,
+                        0.3
+                    ],
                 'line-width': [
                     'let',
                     'width', [
                         'case',
                             ['has', 'centreline'], 1.2,
                             ['==', ['get', 'type'], 'network'], 1.2,
-                        ('authoring' in options && options.authoring) ? 0.4 : 0.1
+                            ['boolean', ['feature-state', 'active'], false], 1.2,
+                        ('authoring' in options && options.authoring) ? 0.7 : 0.1
                         ], [
                         'interpolate',
                             ['exponential', 2],
