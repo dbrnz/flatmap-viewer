@@ -28,9 +28,9 @@ export const VECTOR_TILES_SOURCE = 'vector-tiles';
 
 class VectorStyleLayer
 {
-    constructor(mapLayerId, sourceLayer, idPrefix)
+    constructor(sourceLayer, idPrefix)
     {
-        this.__id = `${mapLayerId}_${sourceLayer}_${idPrefix}`;
+        this.__id = `${sourceLayer}_${idPrefix}`;
         this.__sourceLayer = sourceLayer;
         this.__lastPaintStyle = {};
     }
@@ -78,9 +78,9 @@ class VectorStyleLayer
 
 export class BodyLayer extends VectorStyleLayer
 {
-    constructor(mapLayerId, sourceLayer)
+    constructor(sourceLayer)
     {
-        super(mapLayerId, sourceLayer, 'body');
+        super(sourceLayer, 'body');
     }
 
     style(options)
@@ -105,9 +105,9 @@ export class BodyLayer extends VectorStyleLayer
 
 export class FeatureFillLayer extends VectorStyleLayer
 {
-    constructor(mapLayerId, sourceLayer)
+    constructor(sourceLayer)
     {
-        super(mapLayerId, sourceLayer, 'fill');
+        super(sourceLayer, 'fill');
     }
 
     paintStyle(options, changes=false)
@@ -165,9 +165,9 @@ export class FeatureFillLayer extends VectorStyleLayer
 
 export class FeatureBorderLayer extends VectorStyleLayer
 {
-    constructor(mapLayerId, sourceLayer)
+    constructor(sourceLayer)
     {
-        super(mapLayerId, sourceLayer, 'border');
+        super(sourceLayer, 'border');
     }
 
     paintStyle(options, changes=false)
@@ -236,9 +236,9 @@ export class FeatureBorderLayer extends VectorStyleLayer
 
 export class FeatureLineLayer extends VectorStyleLayer
 {
-    constructor(mapLayerId, sourceLayer)
+    constructor(sourceLayer)
     {
-        super(mapLayerId, sourceLayer, 'divider-line');
+        super(sourceLayer, 'divider-line');
     }
 
     style(options)
@@ -294,10 +294,10 @@ export class FeatureLineLayer extends VectorStyleLayer
 
 export class PathLineLayer extends VectorStyleLayer
 {
-    constructor(mapLayerId, sourceLayer, dashed=false)
+    constructor(sourceLayer, dashed=false)
     {
         const filterType = dashed ? 'line-dash' : 'line';
-        super(mapLayerId, sourceLayer, filterType);
+        super(sourceLayer, filterType);
         this.__filter = dashed ?
             [
                 'any',
@@ -386,9 +386,9 @@ export class PathLineLayer extends VectorStyleLayer
 
 export class PathDashlineLayer extends PathLineLayer
 {
-    constructor(mapLayerId, sourceLayer)
+    constructor(sourceLayer)
     {
-        super(mapLayerId, sourceLayer, true);
+        super(sourceLayer, true);
     }
 }
 
@@ -396,9 +396,9 @@ export class PathDashlineLayer extends PathLineLayer
 
 export class FeatureNerveLayer extends VectorStyleLayer
 {
-    constructor(mapLayerId, sourceLayer)
+    constructor(sourceLayer)
     {
-        super(mapLayerId, sourceLayer, 'nerve-path');
+        super(sourceLayer, 'nerve-path');
     }
 
     style(options)
@@ -449,9 +449,9 @@ export class FeatureNerveLayer extends VectorStyleLayer
 
 export class NervePolygonBorder extends VectorStyleLayer
 {
-    constructor(mapLayerId, sourceLayer)
+    constructor(sourceLayer)
     {
-        super(mapLayerId, sourceLayer, 'nerve-border');
+        super(sourceLayer, 'nerve-border');
     }
 
     style(options)
@@ -493,9 +493,9 @@ export class NervePolygonBorder extends VectorStyleLayer
 
 export class NervePolygonFill extends VectorStyleLayer
 {
-    constructor(mapLayerId, sourceLayer)
+    constructor(sourceLayer)
     {
-        super(mapLayerId, sourceLayer, 'nerve-fill');
+        super(sourceLayer, 'nerve-fill');
     }
 
     style(options)
@@ -543,9 +543,9 @@ export class NervePolygonFill extends VectorStyleLayer
 
 export class FeatureLargeSymbolLayer extends VectorStyleLayer
 {
-    constructor(mapLayerId, sourceLayer)
+    constructor(sourceLayer)
     {
-        super(mapLayerId, sourceLayer, 'large-symbol');
+        super(sourceLayer, 'large-symbol');
     }
 
     style(options)
@@ -587,9 +587,9 @@ export class FeatureLargeSymbolLayer extends VectorStyleLayer
 
 export class FeatureSmallSymbolLayer extends VectorStyleLayer
 {
-    constructor(mapLayerId, sourceLayer)
+    constructor(sourceLayer)
     {
-        super(mapLayerId, sourceLayer, 'small-symbol');
+        super(sourceLayer, 'small-symbol');
     }
 
     style(options)
