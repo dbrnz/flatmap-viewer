@@ -45,6 +45,10 @@ import * as utils from './utils.js';
 
 //==============================================================================
 
+const MIN_MAKER_MAP_VERSION = 1.4;
+
+//==============================================================================
+
 /**
 * Maps are not created directly but instead are created and loaded by
 * :meth:`LoadMap` of :class:`MapManager`.
@@ -1001,9 +1005,17 @@ export class MapManager
     {
         return await this._initialisingMutex.dispatch(async () => {
             if (!this._initialised) {
-                this._mapList = await this._mapServer.loadJSON('');
+                this._mapList = [];
+                const maps = await this._mapServer.loadJSON('');
                 // Check map schema version (set by mapmaker) and
                 // remove maps we can't view (giving a console warning...)
+                for (const map of maps) {
+                    if ('version' in map && map.version >= MIN_MAKER_MAP_VERSION) {
+                        this._mapList.push(map);
+                    } else {
+                        console.log('Map needs regenerating to upgrade version:\n    ', map);
+                    }
+                }
                 this._initialised = true;
             }
         });
