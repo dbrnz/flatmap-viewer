@@ -285,7 +285,7 @@ export class UserInteractions
         return {
             id: featureId,
             source: VECTOR_TILES_SOURCE,
-            sourceLayer: ann['tile-layer']
+            sourceLayer: `${ann['layer']}_${ann['tile-layer']}`
         };
     }
 
@@ -930,7 +930,7 @@ export class UserInteractions
         }
         let position = annotation.centroid;
         const features = this._map.querySourceFeatures(VECTOR_TILES_SOURCE, {
-            'sourceLayer': annotation['tile-layer'],
+            'sourceLayer': `${annotation['layer']}_${annotation['tile-layer']}`,
             'filter': [
                 'all',
                 [ '==', ['id'], parseInt(featureId) ],
