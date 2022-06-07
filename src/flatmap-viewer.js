@@ -1169,7 +1169,7 @@ export class MapManager
             try {
                 const map = await this.findMap_(identifier);
                 if (map === null) {
-                    reject(`Unknown map for ${JSON.stringify(identifier)}`);
+                    reject(`Unknown map: ${JSON.stringify(identifier)}`);
                 };
 
                 // Load the maps index file
