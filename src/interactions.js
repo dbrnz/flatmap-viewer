@@ -873,6 +873,7 @@ export class UserInteractions
         const feature = this._activeFeatures[0]
         this.selectionEvent_(event.originalEvent, feature);
         if (feature !== undefined) {
+            this.__lastClickLngLat = event.lngLat;
             this.__featureEvent('click', feature);
         }
     }
