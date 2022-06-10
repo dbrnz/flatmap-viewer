@@ -45,7 +45,7 @@ import * as utils from './utils.js';
 
 //==============================================================================
 
-const MIN_MAKER_MAP_VERSION = 1.4;
+const MAP_MAKER_SEPARATE_LAYERS_VERSION = 1.4;
 
 //==============================================================================
 
@@ -1010,11 +1010,9 @@ export class MapManager
                 // Check map schema version (set by mapmaker) and
                 // remove maps we can't view (giving a console warning...)
                 for (const map of maps) {
-                    if ('version' in map && map.version >= MIN_MAKER_MAP_VERSION) {
-                        this._mapList.push(map);
-                    } else {
-                        console.log('Map needs regenerating to upgrade version:\n    ', map);
-                    }
+                    // Are features in separate vector tile source layers?
+                    map.separateLayers = ('version' in map && map.version >= MAP_MAKER_SEPARATE_LAYERS_VERSION);
+                    this._mapList.push(map);
                 }
                 this._initialised = true;
             }
@@ -1262,6 +1260,10 @@ export class MapManager
                     };
                 }
                 mapOptions.layerOptions.authoring = ('authoring' in mapIndex && mapIndex.authoring);
+
+                // Are features in separate vector tile source layers?
+
+                mapOptions.separateLayers = map.separateLayers;
 
                 // Display the map
 

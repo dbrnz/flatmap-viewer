@@ -28,9 +28,9 @@ export const VECTOR_TILES_SOURCE = 'vector-tiles';
 
 class VectorStyleLayer
 {
-    constructor(sourceLayer, idPrefix)
+    constructor(id, suffix, sourceLayer)
     {
-        this.__id = `${sourceLayer}_${idPrefix}`;
+        this.__id = `${id}_${suffix}`;
         this.__sourceLayer = sourceLayer;
         this.__lastPaintStyle = {};
     }
@@ -78,9 +78,9 @@ class VectorStyleLayer
 
 export class BodyLayer extends VectorStyleLayer
 {
-    constructor(sourceLayer)
+    constructor(id, sourceLayer)
     {
-        super(sourceLayer, 'body');
+        super(id, 'body', sourceLayer);
     }
 
     style(options)
@@ -105,9 +105,9 @@ export class BodyLayer extends VectorStyleLayer
 
 export class FeatureFillLayer extends VectorStyleLayer
 {
-    constructor(sourceLayer)
+    constructor(id, sourceLayer)
     {
-        super(sourceLayer, 'fill');
+        super(id, 'fill', sourceLayer);
     }
 
     paintStyle(options, changes=false)
@@ -165,9 +165,9 @@ export class FeatureFillLayer extends VectorStyleLayer
 
 export class FeatureBorderLayer extends VectorStyleLayer
 {
-    constructor(sourceLayer)
+    constructor(id, sourceLayer)
     {
-        super(sourceLayer, 'border');
+        super(id, 'border', sourceLayer);
     }
 
     paintStyle(options, changes=false)
@@ -236,9 +236,9 @@ export class FeatureBorderLayer extends VectorStyleLayer
 
 export class FeatureLineLayer extends VectorStyleLayer
 {
-    constructor(sourceLayer)
+    constructor(id, sourceLayer)
     {
-        super(sourceLayer, 'divider-line');
+        super(id, 'divider-line', sourceLayer);
     }
 
     style(options)
@@ -294,10 +294,10 @@ export class FeatureLineLayer extends VectorStyleLayer
 
 export class PathLineLayer extends VectorStyleLayer
 {
-    constructor(sourceLayer, dashed=false)
+    constructor(id, sourceLayer, dashed=false)
     {
         const filterType = dashed ? 'line-dash' : 'line';
-        super(sourceLayer, filterType);
+        super(id, filterType, sourceLayer);
         this.__filter = dashed ?
             [
                 'any',
@@ -386,9 +386,9 @@ export class PathLineLayer extends VectorStyleLayer
 
 export class PathDashlineLayer extends PathLineLayer
 {
-    constructor(sourceLayer)
+    constructor(id, sourceLayer)
     {
-        super(sourceLayer, true);
+        super(id, sourceLayer, true);
     }
 }
 
@@ -396,9 +396,9 @@ export class PathDashlineLayer extends PathLineLayer
 
 export class FeatureNerveLayer extends VectorStyleLayer
 {
-    constructor(sourceLayer)
+    constructor(id, sourceLayer)
     {
-        super(sourceLayer, 'nerve-path');
+        super(id, 'nerve-path', sourceLayer);
     }
 
     style(options)
@@ -449,9 +449,9 @@ export class FeatureNerveLayer extends VectorStyleLayer
 
 export class NervePolygonBorder extends VectorStyleLayer
 {
-    constructor(sourceLayer)
+    constructor(id, sourceLayer)
     {
-        super(sourceLayer, 'nerve-border');
+        super(id, 'nerve-border', sourceLayer);
     }
 
     style(options)
@@ -493,9 +493,9 @@ export class NervePolygonBorder extends VectorStyleLayer
 
 export class NervePolygonFill extends VectorStyleLayer
 {
-    constructor(sourceLayer)
+    constructor(id, sourceLayer)
     {
-        super(sourceLayer, 'nerve-fill');
+        super(id, 'nerve-fill', sourceLayer);
     }
 
     style(options)
@@ -543,9 +543,9 @@ export class NervePolygonFill extends VectorStyleLayer
 
 export class FeatureLargeSymbolLayer extends VectorStyleLayer
 {
-    constructor(sourceLayer)
+    constructor(id, sourceLayer)
     {
-        super(sourceLayer, 'large-symbol');
+        super(id, 'large-symbol', sourceLayer);
     }
 
     style(options)
@@ -587,9 +587,9 @@ export class FeatureLargeSymbolLayer extends VectorStyleLayer
 
 export class FeatureSmallSymbolLayer extends VectorStyleLayer
 {
-    constructor(sourceLayer)
+    constructor(id, sourceLayer)
     {
-        super(sourceLayer, 'small-symbol');
+        super(id, 'small-symbol', sourceLayer);
     }
 
     style(options)
@@ -630,7 +630,7 @@ export class FeatureSmallSymbolLayer extends VectorStyleLayer
 
 export class BackgroundLayer
 {
-    constructor(rasterLayerId)
+    constructor()
     {
         this.__id = 'background';
     }
@@ -643,7 +643,7 @@ export class BackgroundLayer
     style(backgroundColour)
     {
         return {
-            'id': 'background',
+            'id': this.__id,
             'type': 'background',
             'paint': {
                 'background-color': backgroundColour,
@@ -657,9 +657,9 @@ export class BackgroundLayer
 
 export class RasterLayer
 {
-    constructor(rasterLayerId)
+    constructor(id)
     {
-        this.__id = rasterLayerId;
+        this.__id = id;
     }
 
     get id()
