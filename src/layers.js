@@ -27,6 +27,8 @@ import {PATHWAYS_LAYER} from './pathways.js';
 import * as style from './styling.js';
 import * as utils from './utils.js';
 
+const FEATURES_LAYER = 'features'
+
 //==============================================================================
 
 class MapFeatureLayer
@@ -34,12 +36,19 @@ class MapFeatureLayer
     constructor(flatmap, layer, options)
     {
         this.__map = flatmap.map;
+        this.__separateLayers = flatmap.options.separateLayers;
         this.__id = layer.id;
         this.__rasterLayers = [];
         this.__styleLayers = [];
 
-        const haveVectorLayers = (typeof this.__map.getSource('vector-tiles') !== 'undefined');
-        if (haveVectorLayers) {
+        const vectorTileSource = this.__map.getSource('vector-tiles');
+        const haveVectorLayers = (typeof vectorTileSource !== 'undefined');
+        const featuresVectorLayerId = this.__separateLayers
+                                    ? `${this.__id}_${FEATURES_LAYER}`
+                                    : FEATURES_LAYER;
+        const vectorFeatures = haveVectorLayers
+                             && vectorTileSource.vectorLayerIds.indexOf(featuresVectorLayerId) >= 0;
+        if (vectorFeatures) {
             this.__addStyleLayer(style.BodyLayer, options);
         }
         if (flatmap.details['image_layer']) {
@@ -49,13 +58,17 @@ class MapFeatureLayer
         }
         // if no image layers then make feature borders (and lines?) more visible...??
         if (haveVectorLayers) {
-            this.__addStyleLayer(style.FeatureFillLayer, options);
-            this.__addStyleLayer(style.FeatureLineLayer, options);
-            this.__addStyleLayer(style.FeatureBorderLayer, options);
+            if (vectorFeatures) {
+                this.__addStyleLayer(style.FeatureFillLayer, options);
+                this.__addStyleLayer(style.FeatureLineLayer, options);
+                this.__addStyleLayer(style.FeatureBorderLayer, options);
+            }
             this.__addPathwayStyleLayers(options);
-            this.__addStyleLayer(style.FeatureLargeSymbolLayer, options);
-            if (!flatmap.options.tooltips) {
-                this.__addStyleLayer(style.FeatureSmallSymbolLayer, options);
+            if (vectorFeatures) {
+                this.__addStyleLayer(style.FeatureLargeSymbolLayer, options);
+                if (!flatmap.options.tooltips) {
+                    this.__addStyleLayer(style.FeatureSmallSymbolLayer, options);
+                }
             }
         }
 
@@ -81,9 +94,12 @@ class MapFeatureLayer
     __addPathwayStyleLayers(options)
     //==============================
     {
+        const pathwaysVectorLayerId = this.__separateLayers
+                                    ? `${this.__id}_${PATHWAYS_LAYER}`
+                                    : PATHWAYS_LAYER;
         if (this.__map.getSource('vector-tiles')
                 .vectorLayerIds
-                .indexOf(PATHWAYS_LAYER) >= 0) {
+                .indexOf(pathwaysVectorLayerId) >= 0) {
             this.__addStyleLayer(style.PathLineLayer, options, PATHWAYS_LAYER);
             this.__addStyleLayer(style.PathDashlineLayer, options, PATHWAYS_LAYER);
             this.__addStyleLayer(style.NervePolygonBorder, options, PATHWAYS_LAYER);
@@ -92,10 +108,12 @@ class MapFeatureLayer
         }
     }
 
-    __addStyleLayer(styleClass, options, sourceLayer='features')
-    //==========================================================
+    __addStyleLayer(styleClass, options, sourceLayer=FEATURES_LAYER)
+    //==============================================================
     {
-        const styleLayer = new styleClass(this.__id, sourceLayer);
+        const layerId = `${this.__id}_${sourceLayer}`;
+        const source = this.__separateLayers ? layerId : sourceLayer;
+        const styleLayer = new styleClass(layerId, source);
         this.__map.addLayer(styleLayer.style(options));
         this.__styleLayers.push(styleLayer);
     }

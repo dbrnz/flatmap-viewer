@@ -45,6 +45,10 @@ import * as utils from './utils.js';
 
 //==============================================================================
 
+const MAP_MAKER_SEPARATE_LAYERS_VERSION = 1.4;
+
+//==============================================================================
+
 /**
 * Maps are not created directly but instead are created and loaded by
 * :meth:`LoadMap` of :class:`MapManager`.
@@ -1001,9 +1005,15 @@ export class MapManager
     {
         return await this._initialisingMutex.dispatch(async () => {
             if (!this._initialised) {
-                this._mapList = await this._mapServer.loadJSON('');
+                this._mapList = [];
+                const maps = await this._mapServer.loadJSON('');
                 // Check map schema version (set by mapmaker) and
                 // remove maps we can't view (giving a console warning...)
+                for (const map of maps) {
+                    // Are features in separate vector tile source layers?
+                    map.separateLayers = ('version' in map && map.version >= MAP_MAKER_SEPARATE_LAYERS_VERSION);
+                    this._mapList.push(map);
+                }
                 this._initialised = true;
             }
         });
@@ -1250,6 +1260,10 @@ export class MapManager
                     };
                 }
                 mapOptions.layerOptions.authoring = ('authoring' in mapIndex && mapIndex.authoring);
+
+                // Are features in separate vector tile source layers?
+
+                mapOptions.separateLayers = map.separateLayers;
 
                 // Display the map
 
