@@ -1,6 +1,6 @@
 {
   "name": "@abi-software/flatmap-viewer",
-  "version": "2.2.1-alpha.1",
+  "version": "2.2.1-beta.1",
   "description": "Flatmap viewer using Maplibre GL",
   "repository": "https://github.com/AnatomicMaps/flatmap-viewer.git",
   "main": "src/main.js",
