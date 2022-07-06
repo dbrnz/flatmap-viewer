@@ -236,57 +236,91 @@ export class FeatureBorderLayer extends VectorStyleLayer
 
 export class FeatureLineLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id, sourceLayer, dashed=false)
     {
-        super(id, 'divider-line', sourceLayer);
+        const filterType = dashed ? 'line-dash' : 'line';
+        super(id, `divider-${filterType}`, sourceLayer);
+        this.__filter = dashed ?
+            [
+                'any',
+                ['==', 'type', `line-dash`]
+            ]
+        :
+            [
+                'any',
+                ['==', 'type', 'bezier'],
+                ['==', 'type', `line`]
+            ];
+        this.__dashed = dashed;
+    }
+
+    paintStyle(options)
+    {
+        const coloured = !('colour' in options) || options.colour;
+        const paintStyle = {
+            'line-color': [
+                'case',
+                ['has', 'colour'], ['get', 'colour'],
+                ['boolean', ['feature-state', 'active'], false], coloured ? '#D88' : '#CCC',
+                ['boolean', ['feature-state', 'selected'], false], '#0F0',
+                ['==', ['get', 'type'], 'network'], '#AFA202',
+                ['has', 'centreline'], '#888',
+                ('authoring' in options && options.authoring) ? '#C44' : '#444'
+            ],
+            'line-opacity': [
+                'case',
+                ['boolean', ['feature-state', 'active'], false], 1.0,
+                    0.3
+                ],
+            'line-width': [
+                'let',
+                'width', [
+                    'case',
+                        ['has', 'centreline'], 1.2,
+                        ['==', ['get', 'type'], 'network'], 1.2,
+                        ['boolean', ['feature-state', 'active'], false], 1.2,
+                    ('authoring' in options && options.authoring) ? 0.7 : 0.5
+                    ], [
+                    'interpolate',
+                        ['exponential', 2],
+                        ['zoom'],
+                         2, ["*", ['var', 'width'], ["^", 2, -0.5]],
+                         7, ["*", ['var', 'width'], ["^", 2,  2.5]],
+                         9, ["*", ['var', 'width'], ["^", 2,  4.0]]
+                    ]
+            ]
+            // Need to vary width based on zoom??
+            // Or opacity??
+        };
+        if (this.__dashed) {
+            paintStyle['line-dasharray'] = [3, 2];
+        }
+        return paintStyle;
     }
 
     style(options)
     {
-        const coloured = !('colour' in options) || options.colour;
         return {
             ...super.style(),
             'type': 'line',
             'filter': [
-                 'all',
-                 ['==', '$type', 'LineString']
+                'all',
+                ['==', '$type', 'LineString'],
+                this.__filter
                  // not for paths...
             ],
-            'paint': {
-                'line-color': [
-                    'case',
-                    ['boolean', ['feature-state', 'active'], false], coloured ? '#D88' : '#CCC',
-                    ['boolean', ['feature-state', 'selected'], false], '#0F0',
-                    ['==', ['get', 'type'], 'network'], '#AFA202',
-                    ['has', 'centreline'], '#888',
-                    ('authoring' in options && options.authoring) ? '#C44' : '#444'
-                ],
-                'line-opacity': [
-                    'case',
-                    ['boolean', ['feature-state', 'active'], false], 1.0,
-                        0.3
-                    ],
-                'line-width': [
-                    'let',
-                    'width', [
-                        'case',
-                            ['has', 'centreline'], 1.2,
-                            ['==', ['get', 'type'], 'network'], 1.2,
-                            ['boolean', ['feature-state', 'active'], false], 1.2,
-                        ('authoring' in options && options.authoring) ? 0.7 : 0.1
-                        ], [
-                        'interpolate',
-                            ['exponential', 2],
-                            ['zoom'],
-                             2, ["*", ['var', 'width'], ["^", 2, -0.5]],
-                             7, ["*", ['var', 'width'], ["^", 2,  2.5]],
-                             9, ["*", ['var', 'width'], ["^", 2,  4.0]]
-                        ]
-                ]
-                // Need to vary width based on zoom??
-                // Or opacity??
-            }
+            'paint': this.paintStyle(options)
         };
+    }
+}
+
+//==============================================================================
+
+export class FeatureDashLineLayer extends FeatureLineLayer
+{
+    constructor(id, sourceLayer)
+    {
+        super(id, sourceLayer, true);
     }
 }
 

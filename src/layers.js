@@ -60,6 +60,7 @@ class MapFeatureLayer
         if (haveVectorLayers) {
             if (vectorFeatures) {
                 this.__addStyleLayer(style.FeatureFillLayer, options);
+                this.__addStyleLayer(style.FeatureDashLineLayer, options);
                 this.__addStyleLayer(style.FeatureLineLayer, options);
                 this.__addStyleLayer(style.FeatureBorderLayer, options);
             }
