@@ -33,7 +33,7 @@ const FEATURES_LAYER = 'features'
 
 class MapFeatureLayer
 {
-    constructor(flatmap, layer, options)
+    constructor(flatmap, layer)
     {
         this.__map = flatmap.map;
         this.__separateLayers = flatmap.options.separateLayers;
@@ -41,6 +41,7 @@ class MapFeatureLayer
         this.__rasterLayers = [];
         this.__styleLayers = [];
 
+        const layerOptions = flatmap.options.layerOptions;
         const vectorTileSource = this.__map.getSource('vector-tiles');
         const haveVectorLayers = (typeof vectorTileSource !== 'undefined');
         const featuresVectorLayerId = this.__separateLayers
@@ -49,33 +50,33 @@ class MapFeatureLayer
         const vectorFeatures = haveVectorLayers
                              && vectorTileSource.vectorLayerIds.indexOf(featuresVectorLayerId) >= 0;
         if (vectorFeatures) {
-            this.__addStyleLayer(style.BodyLayer, options);
+            this.__addStyleLayer(style.BodyLayer, layerOptions);
         }
         if (flatmap.details['image_layer']) {
             for (const raster_layer_id of layer['image-layers']) {
-                const layerId = this.__addRasterLayer(raster_layer_id, options);
+                this.__addRasterLayer(raster_layer_id, layerOptions);
             }
         }
         // if no image layers then make feature borders (and lines?) more visible...??
         if (haveVectorLayers) {
             if (vectorFeatures) {
-                this.__addStyleLayer(style.FeatureFillLayer, options);
-                this.__addStyleLayer(style.FeatureDashLineLayer, options);
-                this.__addStyleLayer(style.FeatureLineLayer, options);
-                this.__addStyleLayer(style.FeatureBorderLayer, options);
+                this.__addStyleLayer(style.FeatureFillLayer, layerOptions);
+                this.__addStyleLayer(style.FeatureDashLineLayer, layerOptions);
+                this.__addStyleLayer(style.FeatureLineLayer, layerOptions);
+                this.__addStyleLayer(style.FeatureBorderLayer, layerOptions);
             }
-            this.__addPathwayStyleLayers(options);
+            this.__addPathwayStyleLayers(layerOptions);
             if (vectorFeatures) {
-                this.__addStyleLayer(style.FeatureLargeSymbolLayer, options);
+                this.__addStyleLayer(style.FeatureLargeSymbolLayer, layerOptions);
                 if (!flatmap.options.tooltips) {
-                    this.__addStyleLayer(style.FeatureSmallSymbolLayer, options);
+                    this.__addStyleLayer(style.FeatureSmallSymbolLayer, layerOptions);
                 }
             }
         }
 
-        // Make sure our colpur options are set properly, in particular raster layer visibility
+        // Make sure our colour options are set properly, in particular raster layer visibility
 
-        this.setColour(options);
+        this.setColour(layerOptions);
     }
 
     get id()
@@ -154,6 +155,10 @@ export class LayerManager
         } else {
             this.__map.addLayer(backgroundLayer.style('white'));
         }
+        // Add the map's layers
+        for (const layer of flatmap.layers) {
+            this.addLayer(layer);
+        }
     }
 
     get activeLayerNames()
@@ -162,12 +167,12 @@ export class LayerManager
         return this.__activeLayerNames;
     }
 
-    addLayer(layer, options)
-    //======================
+    addLayer(layer)
+    //=============
     {
         this.__mapLayers.set(layer.id, layer);
 
-        const layers = new MapFeatureLayer(this.__flatmap, layer, options);
+        const layers = new MapFeatureLayer(this.__flatmap, layer);
         const layerId = this.__flatmap.mapLayerId(layer.id);
         this.__layers.set(layerId, layers);
     }

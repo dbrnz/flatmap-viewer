@@ -162,34 +162,6 @@ export class UserInteractions
 
         this._layerManager = new LayerManager(flatmap);
 
-        // Add the map's layers
-
-        // Layers have an id, either layer-N or an assigned name
-        // Some layers might have a description. These are the selectable layers,
-        // unless they are flagged as `no-select`
-        // Selectable layers have opacity 0 unless active, in which case they have opacity 1.
-        // `no-select` layers have opacity 0.5
-        // Background layer has opacity 0.2
-
-        const layersById = new Map();
-        const layerBackgroundIds = [];
-        for (const layer of flatmap.layers) {
-            layer.backgroundLayers = [];
-            layersById.set(layer.id, layer);
-        }
-        for (const layer of flatmap.layers) {
-            if (layer.background_for) {
-                const l = layersById.get(layer.background_for);
-                l.backgroundLayers.push(layer);
-                layerBackgroundIds.push(layer.id);
-            }
-        }
-        for (const layer of flatmap.layers) {
-            if (layerBackgroundIds.indexOf(layer.id) < 0) {
-                this._layerManager.addLayer(layer, flatmap.options.layerOptions);
-            }
-        }
-
         // Flag features that have annotations
         // Also flag those features that are models of something
 
