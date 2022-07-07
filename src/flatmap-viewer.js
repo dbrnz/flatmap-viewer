@@ -1259,7 +1259,13 @@ export class MapManager
                         outline: true
                     };
                 }
-                mapOptions.layerOptions.authoring = ('authoring' in mapIndex && mapIndex.authoring);
+                if ('authoring' in mapIndex) {
+                    mapOptions.layerOptions.style == 'authoring'
+                } else if ('style' in mapIndex) {
+                    mapOptions.layerOptions.style = mapIndex.style;
+                } else {
+                    mapOptions.layerOptions.style = 'flatmap';
+                }
 
                 // Are features in separate vector tile source layers?
 
