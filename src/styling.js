@@ -674,14 +674,14 @@ export class BackgroundLayer
         return this.__id;
     }
 
-    style(backgroundColour)
+    style(backgroundColour, opacity=0.1)
     {
         return {
             'id': this.__id,
             'type': 'background',
             'paint': {
                 'background-color': backgroundColour,
-                'background-opacity': 0.1
+                'background-opacity': opacity
             }
         };
     }

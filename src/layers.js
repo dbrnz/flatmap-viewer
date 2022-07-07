@@ -152,15 +152,18 @@ export class LayerManager
         this.__activeLayers = [];
         this.__activeLayerNames = [];
         this.__rasterLayers = [];
+        const layerOptions = flatmap.options.layerOptions;
+        const fcDiagram = ('style' in layerOptions && layerOptions.style == 'fcdiagram');
         const backgroundLayer = new style.BackgroundLayer();
-        if ('background' in flatmap.options) {
+        if (fcDiagram) {
+            this.__map.addLayer(backgroundLayer.style('black', 1));
+        }
+        else if ('background' in flatmap.options) {
             this.__map.addLayer(backgroundLayer.style(flatmap.options.background));
         } else {
             this.__map.addLayer(backgroundLayer.style('white'));
         }
         // Add the map's layers
-        const layerOptions = flatmap.options.layerOptions;
-        const fcDiagram = ('style' in layerOptions && layerOptions.style == 'fcdiagram');
         if (fcDiagram && flatmap.details['image_layer']) {
             for (const layer of flatmap.layers) {
                 for (const raster_layer_id of layer['image-layers']) {
