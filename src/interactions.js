@@ -634,12 +634,21 @@ export class UserInteractions
     tooltipHtml_(properties, forceLabel=false)
     //========================================
     {
-        if ('label' in properties
+        if (('label' in properties || 'hyperlink' in properties)
            && (forceLabel || !('tooltip' in properties) || properties.tooltip)
            && !('labelled' in properties)) {
-            const label = properties.label;
-            const capitalisedLabel = label.substr(0, 1).toUpperCase() + label.substr(1);
-            return `<div class='flatmap-feature-label'>${capitalisedLabel.replaceAll("\n", "<br/>")}</div>`;
+            let tooltip = '';
+            if ('label' in properties) {
+                const label = properties.label;
+                tooltip = (label.substr(0, 1).toUpperCase() + label.substr(1)).replaceAll("\n", "<br/>");
+            } else {
+                tooltip = properties.hyperlink
+            }
+            if ('hyperlink' in properties) {
+                return `<div class='flatmap-feature-label'><a href='{properties.hyperlink}'>${tooltip}</a></div>`;
+            } else {
+                return `<div class='flatmap-feature-label'>${tooltip}</div>`;
+            }
         }
         return '';
     }
@@ -733,7 +742,8 @@ export class UserInteractions
                 }
             }
         } else {
-            let labelledFeatures = features.filter(feature => (('label' in feature.properties
+            let labelledFeatures = features.filter(feature => (('hyperlink' in feature.properties
+                                                             || 'label' in feature.properties
                                                              || 'node' in feature.properties)
                                                          && (!('tooltip' in feature.properties)
                                                             || feature.properties.tooltip)))
@@ -780,6 +790,9 @@ export class UserInteractions
                     if (feature.properties.nerveId !== feature.properties.featureId) {
                         this.activateNerveFeatures_(feature.properties.nerveId);
                     }
+                }
+                if ('hyperlink' in feature.properties) {
+                    this._map.getCanvas().style.cursor = 'pointer';
                 }
             }
         }
@@ -849,6 +862,9 @@ export class UserInteractions
         if (feature !== undefined) {
             this.__lastClickLngLat = event.lngLat;
             this.__featureEvent('click', feature);
+            if ('hyperlink' in feature.properties) {
+                window.open(feature.properties.hyperlink, '_blank');
+            }
         }
     }
 
