@@ -117,9 +117,9 @@ export class FeatureFillLayer extends VectorStyleLayer
         const paintStyle = {
             'fill-color': [
                 'case',
+                ['boolean', ['feature-state', 'selected'], false], '#0F0',
                 ['has', 'colour'], ['get', 'colour'],
                 ['boolean', ['feature-state', 'active'], false], coloured ? '#D88' : '#CCC',
-                ['boolean', ['feature-state', 'selected'], false], '#0F0',
                 ['any',
                       ['==', ['get', 'kind'], 'scaffold']
                 ], 'white',
@@ -260,15 +260,16 @@ export class FeatureLineLayer extends VectorStyleLayer
         const paintStyle = {
             'line-color': [
                 'case',
+                ['boolean', ['feature-state', 'selected'], false], '#0F0',
                 ['has', 'colour'], ['get', 'colour'],
                 ['boolean', ['feature-state', 'active'], false], coloured ? '#D88' : '#CCC',
-                ['boolean', ['feature-state', 'selected'], false], '#0F0',
                 ['==', ['get', 'type'], 'network'], '#AFA202',
                 ['has', 'centreline'], '#888',
                 ('style' in options && options.style === 'authoring') ? '#C44' : '#444'
             ],
             'line-opacity': [
                 'case',
+                ['boolean', ['feature-state', 'selected'], false], 1.0,
                 ['boolean', ['feature-state', 'active'], false], 1.0,
                     0.3
                 ],
@@ -278,6 +279,7 @@ export class FeatureLineLayer extends VectorStyleLayer
                     'case',
                         ['has', 'centreline'], 1.2,
                         ['==', ['get', 'type'], 'network'], 1.2,
+                        ['boolean', ['feature-state', 'selected'], false], 1.2,
                         ['boolean', ['feature-state', 'active'], false], 1.2,
                     ('style' in options && options.style === 'authoring') ? 0.7 : 0.5
                     ], [
