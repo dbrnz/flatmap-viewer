@@ -631,6 +631,26 @@ export class UserInteractions
         }
     }
 
+    lineTooltip_(lineFeatures)
+    //========================
+    {
+        const tooltips = [];
+        for (const lineFeature of lineFeatures) {
+            const properties = lineFeature.properties;
+            if ('label' in properties
+               && (!('tooltip' in properties) || properties.tooltip)
+               && !('labelled' in properties)) {
+                let tooltip = '';
+                const label = properties.label;
+                tooltips.push((label.substr(0, 1).toUpperCase() + label.substr(1)).replaceAll("\n", "<br/>"));
+            }
+        }
+        if (tooltips.length === 0) {
+            return '';
+        }
+        return tooltips.join('<hr/>');
+    }
+
     tooltipHtml_(properties, forceLabel=false)
     //========================================
     {
@@ -731,14 +751,15 @@ export class UserInteractions
                                                      && feature.properties.type.startsWith('line'))
                                                        || 'centreline' in feature.properties));
         if (lineFeatures.length > 0) {
-            const lineFeature = lineFeatures[0];
-            const lineFeatureId = +lineFeature.properties.featureId;  // Ensure numeric
-            tooltip = this.tooltipHtml_(lineFeature.properties);
-            this.activateFeature_(lineFeature);
-            const lineIds = new Set(lineFeatures.map(f => f.properties.featureId));
-            for (const featureId of this._pathways.lineFeatureIds(lineIds)) {
-                if (+featureId !== lineFeatureId) {
-                    this.activateFeature_(this.mapFeature_(featureId));
+            tooltip = this.lineTooltip_(lineFeatures);
+            for (const lineFeature of lineFeatures) {
+                const lineFeatureId = +lineFeature.properties.featureId;  // Ensure numeric
+                this.activateFeature_(lineFeature);
+                const lineIds = new Set(lineFeatures.map(f => f.properties.featureId));
+                for (const featureId of this._pathways.lineFeatureIds(lineIds)) {
+                    if (+featureId !== lineFeatureId) {
+                        this.activateFeature_(this.mapFeature_(featureId));
+                    }
                 }
             }
         } else {
