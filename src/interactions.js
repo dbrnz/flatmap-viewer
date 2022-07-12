@@ -648,7 +648,7 @@ export class UserInteractions
         if (tooltips.length === 0) {
             return '';
         }
-        return tooltips.join('<hr/>');
+        return `<div class='flatmap-feature-label'>${tooltips.join('<hr/>')}</div>`;
     }
 
     tooltipHtml_(properties, forceLabel=false)
