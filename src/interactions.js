@@ -612,7 +612,7 @@ export class UserInteractions
             }
             this.setModal_();
             this._currentPopup = new maplibre.Popup(options).addTo(this._map);
-            this._currentPopup.on('close', this.__clearModal.bind(this));
+            this._currentPopup.on('close', this.__clearPopup.bind(this));
             this._currentPopup.setLngLat(location);
             if (typeof content === 'object') {
                 this._currentPopup.setDOMContent(content);
@@ -620,6 +620,13 @@ export class UserInteractions
                 this._currentPopup.setText(content);
             }
         }
+    }
+
+    __clearPopup()
+    //============
+    {
+        this.__clearModal();
+        this.__unselectFeatures();
     }
 
     removeTooltip_()
