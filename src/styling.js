@@ -248,6 +248,7 @@ export class FeatureLineLayer extends VectorStyleLayer
         :
             [
                 'any',
+                ['has', 'centreline'],
                 ['==', 'type', 'bezier'],
                 ['==', 'type', `line`]
             ];
