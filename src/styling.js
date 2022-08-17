@@ -239,7 +239,7 @@ export class FeatureLineLayer extends VectorStyleLayer
     constructor(id, sourceLayer, dashed=false)
     {
         const filterType = dashed ? 'line-dash' : 'line';
-        super(id, `divider-${filterType}`, sourceLayer);
+        super(id, `feature-${filterType}`, sourceLayer);
         this.__filter = dashed ?
             [
                 'any',
@@ -333,7 +333,7 @@ export class PathLineLayer extends VectorStyleLayer
     constructor(id, sourceLayer, dashed=false)
     {
         const filterType = dashed ? 'line-dash' : 'line';
-        super(id, filterType, sourceLayer);
+        super(id, `path-${filterType}`, sourceLayer);
         this.__filter = dashed ?
             [
                 'any',
