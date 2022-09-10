@@ -1191,6 +1191,12 @@ export class MapManager
                     mapOptions['pathControls'] = true;
                 }
 
+                // Mapmaker's changed the name of the field to indicate that indicates if
+                // there are raster layers
+                if (!('image-layers' in mapIndex) && ('image_layer' in mapIndex)) {
+                    mapIndex['image-layers'] = mapIndex['image_layer'];
+                }
+
                 // Get details about the map's layers
 
                 let mapLayers = [];

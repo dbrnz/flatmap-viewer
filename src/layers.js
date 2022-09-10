@@ -53,7 +53,7 @@ class MapFeatureLayer
             if (vectorFeatures) {
                 this.__addStyleLayer(style.BodyLayer, layerOptions);
             }
-            if (flatmap.details['image_layer']) {
+            if (flatmap.details['image-layers']) {
                 for (const raster_layer_id of layer['image-layers']) {
                     this.__addRasterLayer(raster_layer_id, layerOptions);
                 }
@@ -164,7 +164,7 @@ export class LayerManager
             this.__map.addLayer(backgroundLayer.style('white'));
         }
         // Add the map's layers
-        if (fcDiagram && flatmap.details['image_layer']) {
+        if (fcDiagram && flatmap.details['image-layers']) {
             for (const layer of flatmap.layers) {
                 for (const raster_layer_id of layer['image-layers']) {
                     const rasterLayer = new style.RasterLayer(raster_layer_id);
