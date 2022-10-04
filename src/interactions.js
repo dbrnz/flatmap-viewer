@@ -814,11 +814,17 @@ export class UserInteractions
                     }
                     info = `<div id="info-control-info">${htmlList.join('\n')}</div>`;
                 }
-                this.activateFeature_(feature);
                 if ('nerveId' in feature.properties) {
+                    if (feature.properties.active) {
+                        this.activateFeature_(feature);
+                    } else {
+                        tooltip = '';
+                    }
                     if (feature.properties.nerveId !== feature.properties.featureId) {
                         this.activateNerveFeatures_(feature.properties.nerveId);
                     }
+                } else {
+                    this.activateFeature_(feature);
                 }
                 if ('hyperlink' in feature.properties) {
                     this._map.getCanvas().style.cursor = 'pointer';

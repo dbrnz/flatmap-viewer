@@ -454,7 +454,8 @@ export class FeatureNerveLayer extends VectorStyleLayer
                     ['boolean', ['feature-state', 'active'], false], '#222',
                     ['boolean', ['feature-state', 'selected'], false], 'red',
                     ['boolean', ['feature-state', 'hidden'], false], '#CCC',
-                    '#888'
+                    ['boolean', ['get', 'active'], false], '#888',
+                    '#FFF'
                 ],
                 'line-opacity': [
                     'case',
