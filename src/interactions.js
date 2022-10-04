@@ -649,7 +649,10 @@ export class UserInteractions
                && !('labelled' in properties)) {
                 let tooltip = '';
                 const label = properties.label;
-                tooltips.push((label.substr(0, 1).toUpperCase() + label.substr(1)).replaceAll("\n", "<br/>"));
+                const cleanLabel = (label.substr(0, 1).toUpperCase() + label.substr(1)).replaceAll("\n", "<br/>");
+                if (!tooltips.includes(cleanLabel)) {
+                    tooltips.push(cleanLabel);
+                }
             }
         }
         if (tooltips.length === 0) {
