@@ -263,7 +263,7 @@ export class FeatureLineLayer extends VectorStyleLayer
                 'case',
                 ['boolean', ['feature-state', 'selected'], false], '#0F0',
                 ['has', 'colour'], ['get', 'colour'],
-                ['boolean', ['feature-state', 'active'], false], coloured ? '#D88' : '#CCC',
+                ['boolean', ['feature-state', 'active'], false], coloured ? '#888' : '#CCC',
                 ['==', ['get', 'type'], 'network'], '#AFA202',
                 ['has', 'centreline'], '#888',
                 ('style' in options && options.style === 'authoring') ? '#C44' : '#444'
