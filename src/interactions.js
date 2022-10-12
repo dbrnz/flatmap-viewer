@@ -37,7 +37,7 @@ import {displayedProperties} from './info.js';
 import {InfoControl} from './info.js';
 import {LayerManager} from './layers.js';
 import {PATHWAYS_LAYER, Pathways} from './pathways.js';
-import {NerveKey, PathControl} from './controls.js';
+import {PathControl} from './controls.js';
 import {SearchControl} from './search.js';
 import {VECTOR_TILES_SOURCE} from './styling.js';
 
@@ -152,10 +152,6 @@ export class UserInteractions
             // Add controls to manage our pathways
 
             this._map.addControl(new PathControl(flatmap));
-
-            // Add a key showing nerve types
-
-            this._map.addControl(new NerveKey(flatmap));
         }
 
         // Manage our layers
@@ -919,6 +915,12 @@ export class UserInteractions
         }
     }
 
+    enablePath(pathType, enable=true)
+    //===============================
+    {
+        this.enablePathFeatures_(enable, this._pathways.typeFeatureIds(pathType));
+    }
+
     showPaths(pathTypes, enable=true)
     //===============================
     {
@@ -928,10 +930,10 @@ export class UserInteractions
 
         if (Array.isArray(pathTypes)) {
             for (const pathType of pathTypes) {
-                this.enablePathFeatures_(enable, this._pathways.typeFeatureIds(pathType));
+                this.enablePath(pathType, enable);
             }
         } else {
-            this.enablePathFeatures_(enable, this._pathways.typeFeatureIds(pathTypes));
+            this.enablePath(pathTypes, enable);
         }
 
         this._disabledPathFeatures = true;

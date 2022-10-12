@@ -75,7 +75,7 @@ export class NavigationControl
 
 //==============================================================================
 
-export class NerveKey
+export class PathControl
 {
     constructor(flatmap)
     {
@@ -102,10 +102,13 @@ export class NerveKey
         this._legend.className = 'flatmap-nerve-grid';
 
         const innerHTML = [];
+        innerHTML.push(`<label for="path-all-paths">ALL PATHS:</label><input id="path-all-paths" type="checkbox" checked/><div class="nerve-line"></div>`);
         for (const path of pathways.PATH_TYPES) {
-            innerHTML.push(`<div type="${path.type}">${path.label}</div><div type="${path.type}" class="nerve-line nerve-${path.type}"></div>`);
+            innerHTML.push(`<label for="path-${path.type}">${path.label}</label><input id="path-${path.type}" type="checkbox" checked/><div class="nerve-line nerve-${path.type}"></div>`);
         }
         this._legend.innerHTML = innerHTML.join('\n');
+        this.__checkedCount = pathways.PATH_TYPES.length;
+        this.__halfCount = Math.trunc(this.__checkedCount/2);
 
         this._button = document.createElement('button');
         this._button.id = 'nerve-key-button';
@@ -114,7 +117,7 @@ export class NerveKey
         this._button.setAttribute('type', 'button');
         this._button.setAttribute('aria-label', 'Nerve paths legend');
         this._button.setAttribute('legend-visible', 'false');
-        this._button.textContent = 'LGD';
+        this._button.textContent = 'PTH';
         this._container.appendChild(this._button);
 
         this._container.addEventListener('click', this.onClick_.bind(this));
@@ -140,56 +143,45 @@ export class NerveKey
                 this._legend = this._container.removeChild(this._legend);
                 this._button.setAttribute('legend-visible', 'false');
             }
-        } else {
-            const pathType = event.target.getAttribute('type');
-            if (pathType) {
-                this._flatmap.showPaths(pathType);
+        } else if (event.target.tagName === 'INPUT') {
+            if (event.target.id === 'path-all-paths') {
+                if (event.target.indeterminate) {
+                    event.target.checked = (this.__checkedCount >= this.__halfCount);
+                    event.target.indeterminate = false;
+                }
+                if (event.target.checked) {
+                    this.__checkedCount = pathways.PATH_TYPES.length;
+                } else {
+                    this.__checkedCount = 0;
+                }
+                for (const path of pathways.PATH_TYPES) {
+                    const pathCheckbox = document.getElementById(`path-${path.type}`);
+                    if (pathCheckbox) {
+                        pathCheckbox.checked = event.target.checked;
+                        this._flatmap.enablePath(path.type, event.target.checked);
+                    }
+                }
+            } else if (event.target.id.startsWith('path-')) {
+                const pathType = event.target.id.substring(5);
+                this._flatmap.enablePath(pathType, event.target.checked);
+                if (event.target.checked) {
+                    this.__checkedCount += 1;
+                } else {
+                    this.__checkedCount -= 1;
+                }
+                const allPathsCheckbox = document.getElementById('path-all-paths');
+                if (this.__checkedCount === 0) {
+                    allPathsCheckbox.checked = false;
+                    allPathsCheckbox.indeterminate = false;
+                } else if (this.__checkedCount === pathways.PATH_TYPES.length) {
+                    allPathsCheckbox.checked = true;
+                    allPathsCheckbox.indeterminate = false;
+                } else {
+                    allPathsCheckbox.indeterminate = true;
+                }
             }
         }
         event.stopPropagation();
-    }
-}
-
-//==============================================================================
-
-export class PathControl
-{
-    constructor(flatmap)
-    {
-        this._flatmap = flatmap;
-        this._map = undefined;
-    }
-
-    getDefaultPosition()
-    //==================
-    {
-        return 'top-right';
-    }
-
-    onAdd(map)
-    //========
-    {
-        this._map = map;
-        this._container = document.createElement('div');
-        this._container.className = 'maplibregl-ctrl';
-        this._container.id = 'flatmap-path-control';
-        this._container.innerHTML = `<button class="control-button" id="path-control-button"
-                                      type="button" title="Show/hide paths" aria-label="Show/hide paths">PTH</button>`;
-        this._container.onclick = this.onClick_.bind(this);
-        return this._container;
-    }
-
-    onRemove()
-    //========
-    {
-        this._container.parentNode.removeChild(this._container);
-        this._map = undefined;
-    }
-
-    onClick_(event)
-    //=============
-    {
-        this._flatmap.togglePaths();
     }
 }
 
