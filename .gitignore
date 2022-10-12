@@ -3,3 +3,5 @@ dist/
 docs/_build/
 node_modules
 out/
+.DS_Store
+map-viewer.sublime-workspace
