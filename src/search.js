@@ -173,6 +173,12 @@ export class SearchIndex
         this._;
     }
 
+    auto_suggest(text)
+    //================
+    {
+        return this._searchEngine.autoSuggest(text, {prefix: true});
+    }
+
     search(text)
     //==========
     {
@@ -185,7 +191,14 @@ export class SearchIndex
         } else if (text.length > 1) {
             results = this._searchEngine.search(text, {prefix: true});
         }
-        return new SearchResults(results.map(result => this._featureIds[result.id]));
+        const featureResults = results.map(r => {
+            return {
+                featureId: this._featureIds[r.id],
+                score: r.score,
+                terms: r.terms,
+                text: r.text
+            }});
+        return new SearchResults(featureResults);
     }
 }
 
@@ -193,14 +206,20 @@ export class SearchIndex
 
 class SearchResults
 {
-    constructor(featureIds)
+    constructor(results)
     {
-        this.__featureIds = featureIds;
+        this.__results = results.sort((a, b) => (b.score - a.score));
+        this.__featureIds = results.map(r => r.featureId);
     }
 
     get featureIds()
     {
         return this.__featureIds;
+    }
+
+    get results()
+    {
+        return this.__results;
     }
 }
 

@@ -36,7 +36,7 @@ import '../static/flatmap-viewer.css';
 import {MapServer} from './mapserver.js';
 import {MinimapControl} from './minimap.js';
 import {NavigationControl} from './controls.js';
-import {SearchIndex} from './search.js';
+import {SearchIndex, SearchResults} from './search.js';
 import {UserInteractions} from './interactions.js';
 
 import * as images from './images.js';
@@ -921,10 +921,24 @@ class FlatMap
 
     //==========================================================================
 
-    search(text)
-    //==========
+    /**
+     * Find features with labels or terms matching ``text``.
+     *
+     * @param      {string}   text          The text to search
+     * @param      {boolean}  [auto=false]  If ``true`` return suggestions of text to search for.
+     * @return     Either a ``Searchresults`` object with fields of ``featureIds`` and ``results``,
+     *             where ``results`` has ``featureId``, ``score``, ``terms`` and ``text`` fields,
+     *             or a ``Suggestion`` object containing suggested matches
+     *             (see https://lucaong.github.io/minisearch/modules/_minisearch_.html#suggestion).
+     */
+    search(text, auto=false)
+    //======================
     {
-        return this.__searchIndex.search(text);
+        if (auto) {
+            return this.__searchIndex.auto_suggest(text);
+        } else {
+            return this.__searchIndex.search(text);
+        }
     }
 
     clearSearchResults()
