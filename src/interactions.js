@@ -423,40 +423,6 @@ export class UserInteractions
         this._modal = false;
     }
 
-    enablePaths_(enable, event)
-    //=========================
-    {
-        this._contextMenu.hide();
-        const nodeId = event.target.getAttribute('featureId');
-        this.enablePathFeatures_(enable, this._pathways.pathFeatureIds(nodeId));
-        this.__clearModal();
-    }
-
-    enablePathFeatures_(enable, featureIds)
-    //=====================================
-    {
-        for (const featureId of featureIds) {
-            const feature = this.mapFeature_(featureId);
-            if (enable) {
-                this._map.removeFeatureState(feature, 'hidden');
-            } else {
-                this._map.setFeatureState(feature, { 'hidden': true });
-                this._disabledPathFeatures = true;
-            }
-        }
-    }
-
-    togglePaths()
-    //===========
-    {
-        if (this._disabledPathFeatures){
-            this.enablePathFeatures_(true, this._pathways.allFeatureIds());
-            this._disabledPathFeatures = false;
-        } else {
-            this.enablePathFeatures_(false, this._pathways.allFeatureIds());
-        }
-    }
-
     reset()
     //=====
     {
@@ -912,6 +878,40 @@ export class UserInteractions
     {
         for (const featureId of this._pathways.nerveFeatureIds(nerveId)) {
             this.activateFeature_(this.mapFeature_(featureId));
+        }
+    }
+
+    enablePaths_(enable, event)
+    //=========================
+    {
+        this._contextMenu.hide();
+        const nodeId = event.target.getAttribute('featureId');
+        this.enablePathFeatures_(enable, this._pathways.pathFeatureIds(nodeId));
+        this.__clearModal();
+    }
+
+    enablePathFeatures_(enable, featureIds)
+    //=====================================
+    {
+        for (const featureId of featureIds) {
+            const feature = this.mapFeature_(featureId);
+            if (enable) {
+                this._map.removeFeatureState(feature, 'hidden');
+            } else {
+                this._map.setFeatureState(feature, { 'hidden': true });
+                this._disabledPathFeatures = true;
+            }
+        }
+    }
+
+    togglePaths()
+    //===========
+    {
+        if (this._disabledPathFeatures){
+            this.enablePathFeatures_(true, this._pathways.allFeatureIds());
+            this._disabledPathFeatures = false;
+        } else {
+            this.enablePathFeatures_(false, this._pathways.allFeatureIds());
         }
     }
 
