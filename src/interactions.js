@@ -782,12 +782,8 @@ export class UserInteractions
                 if ('nerveId' in feature.properties) {
                     if (feature.properties.active) {
                         this.activateFeature_(feature);
-                    } else {
-                        tooltip = '';
                     }
-                    if (feature.properties.nerveId !== feature.properties.featureId) {
-                        this.activateNerveFeatures_(feature.properties.nerveId);
-                    }
+                    this.activateNerveFeatures_(feature.properties.nerveId);
                 } else {
                     this.activateFeature_(feature);
                 }
