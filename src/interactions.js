@@ -323,7 +323,7 @@ export class UserInteractions
         );
     }
 
-    activateFeature_(feature)
+    __activateFeature(feature)
     //=======================
     {
         this._map.setFeatureState(feature, { active: true });
@@ -342,7 +342,7 @@ export class UserInteractions
     //==========================
     {
         featureId = +featureId;   // Ensure numeric
-        this.activateFeature_(this.mapFeature_(featureId));
+        this.__activateFeature(this.mapFeature_(featureId));
     }
 
     unhighlightFeatures_()
@@ -732,7 +732,7 @@ export class UserInteractions
         let tooltip = '';
         if (displayInfo) {
             if (!'tooltip' in features[0].properties) {
-                this.activateFeature_(features[0]);
+                this.__activateFeature(features[0]);
             }
             info = this._infoControl.featureInformation(features, event.lngLat);
         }
@@ -746,11 +746,11 @@ export class UserInteractions
                 tooltip = this.lineTooltip_(enabledFeatures);
                 for (const lineFeature of enabledFeatures) {
                     const lineFeatureId = +lineFeature.properties.featureId;  // Ensure numeric
-                    this.activateFeature_(lineFeature);
+                    this.__activateFeature(lineFeature);
                     const lineIds = new Set(enabledFeatures.map(f => f.properties.featureId));
                     for (const featureId of this._pathways.lineFeatureIds(lineIds)) {
                         if (+featureId !== lineFeatureId) {
-                            this.activateFeature_(this.mapFeature_(featureId));
+                            this.__activateFeature(this.mapFeature_(featureId));
                         }
                     }
                 }
@@ -799,14 +799,8 @@ export class UserInteractions
                     }
                     info = `<div id="info-control-info">${htmlList.join('\n')}</div>`;
                 }
-                if ('nerveId' in feature.properties) {
-                    if (feature.properties.active) {
-                        this.activateFeature_(feature);
-                    }
-                    this.activateNerveFeatures_(feature.properties.nerveId);
-                } else {
-                    this.activateFeature_(feature);
-                }
+                this.__activateFeature(feature);
+                this.__activateRelatedFeatures(feature);
                 if ('hyperlink' in feature.properties) {
                     this._map.getCanvas().style.cursor = 'pointer';
                 }
@@ -900,11 +894,18 @@ export class UserInteractions
         }
     }
 
-    activateNerveFeatures_(nerveId)
-    //=============================
+    __activateRelatedFeatures(feature)
+    //================================
     {
-        for (const featureId of this._pathways.nerveFeatureIds(nerveId)) {
-            this.activateFeature_(this.mapFeature_(featureId));
+        if ('nerveId' in feature.properties) {
+            for (const featureId of this._pathways.nerveFeatureIds(feature.properties.nerveId)) {
+                this.__activateFeature(this.mapFeature_(featureId));
+            }
+        }
+        if ('nodeId' in feature.properties) {
+            for (const featureId of this._pathways.nodeFeatureIds(feature.properties.nodeId)) {
+                this.__activateFeature(this.mapFeature_(featureId));
+            }
         }
     }
 
@@ -1144,7 +1145,7 @@ export class UserInteractions
                 if (event.type === 'mouseenter') {
                     // Highlight on mouse enter
                     this.resetActiveFeatures_();
-                    this.activateFeature_(feature);
+                    this.__activateFeature(feature);
                 } else {
                     this.selectionEvent_(event, feature)
                 }
