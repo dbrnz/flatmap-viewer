@@ -117,7 +117,6 @@ export class FeatureFillLayer extends VectorStyleLayer
         const paintStyle = {
             'fill-color': [
                 'case',
-                ['boolean', ['feature-state', 'selected'], false], '#0F0',
                 ['has', 'colour'], ['get', 'colour'],
                 ['boolean', ['feature-state', 'active'], false], coloured ? '#D88' : '#CCC',
                 ['any',
@@ -134,10 +133,10 @@ export class FeatureFillLayer extends VectorStyleLayer
                       ['==', ['get', 'kind'], 'cell-type'],
                 ], 0.1,
                 ['has', 'node'], 0.3,
-                ['boolean', ['feature-state', 'selected'], false], 1.0,
                 ['boolean', ['feature-state', 'active'], false], 0.8,
+                ['boolean', ['feature-state', 'selected'], false], 0.01,
                 ['has', 'colour'], 0.008,
-                (coloured && !dimmed) ? 0.01 : 0.5
+                (coloured && !dimmed) ? 0.01 : 0.1
             ]
         };
         return super.changedPaintStyle(paintStyle, changes);
@@ -198,18 +197,18 @@ export class FeatureBorderLayer extends VectorStyleLayer
         }
         lineOpacity.push(['boolean', ['feature-state', 'selected'], false]);
         lineOpacity.push(0.9);
-        lineOpacity.push((outlined && !dimmed) ? 0.3 : 0.01);
+        lineOpacity.push((outlined && !dimmed) ? 0.3 : 0.1);
 
         const lineWidth = [
             'case',
             ['boolean', ['get', 'invisible'], false], 0.2,
             ];
+        lineWidth.push(['boolean', ['feature-state', 'selected'], false]);
+        lineWidth.push(2.5);
         if (coloured && outlined) {
             lineWidth.push(['boolean', ['feature-state', 'active'], false]);
             lineWidth.push(1);
         }
-        lineWidth.push(['boolean', ['feature-state', 'selected'], false]);
-        lineWidth.push(1.5);
         lineWidth.push((coloured && outlined) ? 0.5 : 0.1);
 
         return super.changedPaintStyle({
