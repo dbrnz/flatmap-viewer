@@ -487,6 +487,12 @@ export class UserInteractions
         }
     }
 
+    showSearchResults(featureIds)
+    //===========================
+    {
+        this.zoomToFeatures(featureIds, {highlight: true, noZoomIn: true});
+    }
+
     /**
      * Zoom map to features.
      *
@@ -494,19 +500,23 @@ export class UserInteractions
      * @param      {Object}  [options]
      * @param      {boolean} [options.select=true]  Select the features zoomed to
      * @param      {boolean} [options.highlight=false]  Highlight the features zoomed to
-     * @param      {number}  [options.padding=100]  Padding around the composite bounding box
+     * @param      {boolean} [options.noZoomIn=false]  Don't zoom in (although zoom out as necessary)
+     * @param      {number}  [options.padding=10]  Padding in pixels around the composite bounding box
      */
     zoomToFeatures(featureIds, options=null)
     //======================================
     {
-        options = utils.setDefaultOptions(options, {select: true, highlight: false, padding:100});
+        options = utils.setDefaultOptions(options, {select: true, highlight: false, noZoomIn: false, padding:10});
         const select = (options.select === true);
         const highlight = (options.highlight === true);
-        const padding = options.padding || 100;
         if (featureIds.length) {
             this.unhighlightFeatures_();
             if (select) this.__unselectFeatures();
             let bbox = null;
+            if (options.noZoomIn) {
+                const bounds = this._map.getBounds().toArray();
+                bbox = [...bounds[0], ...bounds[1]];
+            }
             for (const featureId of featureIds) {
                 const annotation = this._flatmap.annotation(featureId);
                 if (annotation) {
@@ -531,7 +541,7 @@ export class UserInteractions
             }
             if (bbox !== null) {
                 this._map.fitBounds(bbox, {
-                    padding: padding,
+                    padding: options.padding,
                     animate: false
                 });
             }

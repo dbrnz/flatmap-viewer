@@ -949,11 +949,11 @@ class FlatMap
         }
     }
 
-    showSearchResults(searchResults, padding=100)
-    //===========================================
+    showSearchResults(searchResults)
+    //==============================
     {
         if (this._userInteractions !== null) {
-            this._userInteractions.zoomToFeatures(searchResults.featureIds, {padding: padding});
+            this._userInteractions.showSearchResults(searchResults.featureIds);
         }
     }
 
