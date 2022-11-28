@@ -837,8 +837,8 @@ export class UserInteractions
         }
     }
 
-    selectionEvent_(domEvent, feature)
-    //================================
+    selectionEvent_(event, feature)
+    //=============================
     {
         const multipleSelect = event.ctrlKey || event.metaKey;
         if (!multipleSelect) {
@@ -874,9 +874,14 @@ export class UserInteractions
     {
         this.clearActiveMarker_();
         const clickedFeature = this._map.queryRenderedFeatures(event.point)[0];
+        const originalEvent = event.originalEvent;
         if (clickedFeature === undefined || this._activeFeatures.length === 1) {
-            this.selectionEvent_(event.originalEvent, clickedFeature);
+            this.selectionEvent_(originalEvent, clickedFeature);
         } else if (this._activeFeatures.length > 1) {
+            const multipleSelect = originalEvent.ctrlKey || originalEvent.metaKey;
+            if (!multipleSelect) {
+                this.__unselectFeatures();
+            }
             for (const feature of this._activeFeatures) {
                 this.selectFeature_(feature.id);
             }
