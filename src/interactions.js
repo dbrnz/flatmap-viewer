@@ -648,10 +648,13 @@ export class UserInteractions
     __featureEvent(type, feature)
     //===========================
     {
-        if (feature.sourceLayer === PATHWAYS_LAYER) {
-            return this._flatmap.featureEvent(type, this._pathways.pathProperties(feature));
-        } else if ('properties' in feature) {
-            return this._flatmap.featureEvent(type, feature.properties);
+        if (this.__enabledFeature(feature)) {
+            if (feature.sourceLayer === PATHWAYS_LAYER) {  // I suspect this is never true as source layer
+                                                           // names are like `neural_routes_pathways`
+                return this._flatmap.featureEvent(type, this._pathways.pathProperties(feature));
+            } else if ('properties' in feature) {
+                return this._flatmap.featureEvent(type, feature.properties);
+            }
         }
         return false;
     }
@@ -720,18 +723,22 @@ export class UserInteractions
             }
             info = this._infoControl.featureInformation(features, event.lngLat);
         }
-        const lineFeatures = features.filter(feature => (('type' in feature.properties
-                                                     && feature.properties.type.startsWith('line'))
-                                                       || 'centreline' in feature.properties));
+        const lineFeatures = features.filter(feature => ('centreline' in feature.properties
+                                                      || ('type' in feature.properties
+                                                        && feature.properties.type.startsWith('line')) ));
         if (lineFeatures.length > 0) {
             tooltip = this.lineTooltip_(lineFeatures);
-            for (const lineFeature of lineFeatures) {
-                const lineFeatureId = +lineFeature.properties.featureId;  // Ensure numeric
-                this.activateFeature_(lineFeature);
-                const lineIds = new Set(lineFeatures.map(f => f.properties.featureId));
-                for (const featureId of this._pathways.lineFeatureIds(lineIds)) {
-                    if (+featureId !== lineFeatureId) {
-                        this.activateFeature_(this.mapFeature_(featureId));
+            const enabledFeatures = lineFeatures.filter(feature => this.__enabledFeature(feature));
+            if (enabledFeatures.length > 0) {
+                tooltip = this.lineTooltip_(enabledFeatures);
+                for (const lineFeature of enabledFeatures) {
+                    const lineFeatureId = +lineFeature.properties.featureId;  // Ensure numeric
+                    this.activateFeature_(lineFeature);
+                    const lineIds = new Set(enabledFeatures.map(f => f.properties.featureId));
+                    for (const featureId of this._pathways.lineFeatureIds(lineIds)) {
+                        if (+featureId !== lineFeatureId) {
+                            this.activateFeature_(this.mapFeature_(featureId));
+                        }
                     }
                 }
             }
@@ -853,18 +860,24 @@ export class UserInteractions
     //================
     {
         this.clearActiveMarker_();
-        const feature = this._activeFeatures[0]
-        this.selectionEvent_(event.originalEvent, feature);
+        const clickedFeature = this._map.queryRenderedFeatures(event.point)[0];
+        if (clickedFeature === undefined || this._activeFeatures.length === 1) {
+            this.selectionEvent_(event.originalEvent, clickedFeature);
+        } else if (this._activeFeatures.length > 1) {
+            for (const feature of this._activeFeatures) {
+                this.selectFeature_(feature.id);
+            }
+        }
         if (this._modal) {
            // Remove tooltip, reset active features, etc
             this.__resetFeatureDisplay();
             this.__unselectFeatures();
             this.__clearModal();
-        } else if (feature !== undefined) {
+        } else if (clickedFeature !== undefined) {
             this.__lastClickLngLat = event.lngLat;
-            this.__featureEvent('click', feature);
-            if ('hyperlink' in feature.properties) {
-                window.open(feature.properties.hyperlink, '_blank');
+            this.__featureEvent('click', clickedFeature);
+            if ('properties' in clickedFeature && 'hyperlink' in clickedFeature.properties) {
+                window.open(clickedFeature.properties.hyperlink, '_blank');
             }
         }
     }
@@ -875,6 +888,13 @@ export class UserInteractions
         for (const featureId of this._pathways.nerveFeatureIds(nerveId)) {
             this.activateFeature_(this.mapFeature_(featureId));
         }
+    }
+
+    __enabledFeature(feature)
+    //=======================
+    {
+        const state = this._map.getFeatureState(feature);
+        return !(('hidden' in state && state.hidden));
     }
 
     enablePaths_(enable, event)
