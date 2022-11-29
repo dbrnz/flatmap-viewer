@@ -913,7 +913,7 @@ export class UserInteractions
     //=======================
     {
         const state = this._map.getFeatureState(feature);
-        return !(('hidden' in state && state.hidden));
+        return true;
     }
 
     enablePaths_(enable, event)
