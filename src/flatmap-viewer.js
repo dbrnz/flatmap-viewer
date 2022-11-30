@@ -1178,6 +1178,7 @@ export class MapManager
     * @arg options.navigationControl {boolean} Add navigation controls (zoom buttons) to the map.
     * @arg options.pathControl {boolean} Add buttons to control pathways including via a color-coded legend.
     * @arg options.searchable {boolean} Add a control to search for features on a map.
+    * @arg options.showPosition {boolean} Show ``position`` of tooltip.
     * @example
     * const humanMap1 = mapManager.loadMap('humanV1', 'div-1');
     *

@@ -77,7 +77,8 @@ export async function standaloneViewer(map_endpoint=null, map_options={})
             minimap: false,
             navigationControl: 'top-right',
             searchable: true,
-            featureInfo: true
+            featureInfo: true,
+            showPosition: false
         }, map_options);
 
         mapManager.loadMap(id, 'map-canvas', (...args) => console.log(...args), options)

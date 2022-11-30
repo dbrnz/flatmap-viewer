@@ -27,6 +27,7 @@ import maplibre from 'maplibre-gl';
 import {default as turfArea} from '@turf/area';
 import {default as turfBBox} from '@turf/bbox';
 import * as turf from '@turf/helpers';
+import * as turfProjection from '@turf/projection';
 
 import polylabel from 'polylabel';
 
@@ -824,6 +825,12 @@ export class UserInteractions
                 maxWidth: 'none',
                 className: 'flatmap-tooltip-popup'
             });
+            if (this._flatmap.options.showPosition) {
+                const pt = turf.point(lngLat.toArray());
+                const gps = turfProjection.toMercator(pt);
+                const coords = gps.geometry.coordinates;
+                html = `<span>${JSON.stringify(coords)}</span><br/>${html}`;
+            }
             this._tooltip
                 .setLngLat(lngLat)
                 .setHTML(html)
