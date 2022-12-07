@@ -53,19 +53,22 @@ export async function standaloneViewer(map_endpoint=null, map_options={})
 
     let currentMap = null;
 
-    function loadMap(id, taxon)
-    //=========================
+    function loadMap(id, taxon, sex)
+    //==============================
     {
         if (currentMap !== null) {
             currentMap.close();
         }
-
         if (id !== null) {
             requestUrl.searchParams.set('id', id);
             requestUrl.searchParams.delete('taxon');
+            requestUrl.searchParams.delete('sex');
         } else if (taxon !== null) {
             id = taxon;
             requestUrl.searchParams.set('taxon', taxon);
+            if (sex !== null) {
+                requestUrl.searchParams.set('sex', sex);
+            }
             requestUrl.searchParams.delete('id');
         }
         window.history.pushState('data', document.title, requestUrl);
@@ -98,9 +101,8 @@ export async function standaloneViewer(map_endpoint=null, map_options={})
 
     const viewMapId = requestUrl.searchParams.get('id');
     const viewMapTaxon = requestUrl.searchParams.get('taxon');
+    const viewMapSex = requestUrl.searchParams.get('sex');
 
-    let mapId = null;
-    let mapTaxon = null;
     const latestMaps = new Map();
     const maps = await mapManager.allMaps();
     for (const map of Object.values(maps)) {
@@ -124,18 +126,26 @@ export async function standaloneViewer(map_endpoint=null, map_options={})
     const sortedMaps = new Map([...latestMaps].sort((a, b) => (a[1].created < b[1].created) ? 1
                                                             : (a[1].created > b[1].created) ? -1
                                                             : 0));
+    let mapId = null;
+    let mapTaxon = null;
+    let mapSex = null;
     const options = [];
     for (const [name, map] of sortedMaps.entries()) {
         const text = [ name, map.created ];
         let selected = '';
-        if (mapId === null && map.id === viewMapId) {
-            mapId = map.id;
+        const id = ('uuid' in map) ? map.uuid : map.id;
+        if (mapId === null && id === viewMapId) {
+            mapId = id;
             selected = 'selected';
-        } else if (mapId === null && mapTaxon === null && map.describes === viewMapTaxon) {
+        } else if (mapId === null
+                && mapTaxon === null
+                && map.taxon === viewMapTaxon
+                && !('biologicalSex' in map || map.biologicalSex === viewMapSex)) {
             mapTaxon = viewMapTaxon;
+            mapSex = viewMapSex;
             selected = 'selected';
         }
-        options.push(`<option value="${map.id}" ${selected}>${text.join(' -- ')}</option>`);
+        options.push(`<option value="${id}" ${selected}>${text.join(' -- ')}</option>`);
     }
     options.splice(0, 0, '<option value="">Select flatmap...</option>');
 
@@ -147,16 +157,19 @@ export async function standaloneViewer(map_endpoint=null, map_options={})
         }
     }
 
-    if (mapId == null) {
+    if (mapId === null) {
         mapId = viewMapId;
     }
-    if (mapTaxon == null) {
+    if (mapTaxon === null) {
         mapTaxon = viewMapTaxon;
+    }
+    if (mapSex === null) {
+        mapTaxon = viewMapSex;
     }
     if (mapId === null && mapTaxon == null) {
         mapId = selector.options[1].value;
         selector.options[1].selected = true;
     }
 
-    loadMap(mapId, mapTaxon);
+    loadMap(mapId, mapTaxon, mapSex);
 }

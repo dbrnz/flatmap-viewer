@@ -60,9 +60,9 @@ class FlatMap
         this._baseUrl = mapBaseUrl;
         this._id = mapDescription.id;
         this._details = mapDescription.details;
-        this._source = mapDescription.source;
         this._created = mapDescription.created;
-        this._describes = mapDescription.describes;
+        this.__taxon = mapDescription.taxon;
+        this.__biologicalSex = mapDescription.biologicalSex;
         this._mapNumber = mapDescription.number;
         this._callback = mapDescription.callback;
         this._layers = mapDescription.layers;
@@ -75,7 +75,7 @@ class FlatMap
         this.__idToAnnotation = new Map();
         this.__datasetToFeatureIds = new Map();
         this.__modelToFeatureIds = new Map();
-        this.__sourceToFeatureIds = new Map();
+        this.___mapIdToFeatureIds = new Map();
         for (const [featureId, annotation] of Object.entries(mapDescription.annotations)) {
             this.__addAnnotation(featureId, annotation);
             this.__searchIndex.indexMetadata(featureId, annotation);
@@ -366,10 +366,21 @@ class FlatMap
      *
      * @type string
      */
-    get describes()
-    //=============
+    get taxon()
+    //=========
     {
-        return this._describes;
+        return this.__taxon;
+    }
+
+    /**
+     * The biological sex identifier of the species described by the map.
+     *
+     * @type string
+     */
+    get biologicalSex()
+    //=================
+    {
+        return this.__biologicalSex;
     }
 
     /**
@@ -455,7 +466,7 @@ class FlatMap
         this.__idToAnnotation.set(featureId, ann);
         this.__updateFeatureIdMap('dataset', this.__datasetToFeatureIds, ann);
         this.__updateFeatureIdMap('models', this.__modelToFeatureIds, ann);
-        this.__updateFeatureIdMap('source', this.__sourceToFeatureIds, ann);
+        this.__updateFeatureIdMap('source', this.___mapIdToFeatureIds, ann);
     }
 
     modelFeatureIds(anatomicalId)
@@ -479,7 +490,7 @@ class FlatMap
         if (featureIds.length == 0) {
             // We couldn't find a feature by anatomical id, so check dataset and source
             featureIds.extend(this.__datasetToFeatureIds.get(anatomicalIds));
-            featureIds.extend(this.__sourceToFeatureIds.get(anatomicalIds));
+            featureIds.extend(this.___mapIdToFeatureIds.get(anatomicalIds));
         }
         if (featureIds.length == 0 && this._userInteractions !== null) {
             // We still haven't found a feature, so check connectivity
@@ -621,8 +632,9 @@ class FlatMap
         // Return identifiers for reloading the map
 
         return {
-            describes: this._describes,
-            source: this._source
+            taxon: this.__taxon,
+            biologicalSex: this.__biologicalSex,
+            id: this._id
         };
     }
 
@@ -1055,32 +1067,10 @@ export class MapManager
             await this.ensureInitialised_();
             const allMaps = {};
             for (const map of this._mapList) {
-                allMaps[map.id] = map;
+                const id = ('uuid' in map) ? map.uuid : map.id;
+                allMaps[id] = map;
             }
             resolve(allMaps);
-        });
-    }
-
-    latestMaps()
-    //==========
-    {
-        return new Promise(async(resolve, reject) => {
-            await this.ensureInitialised_();
-            const latestMaps = {};
-            for (const map of this._mapList) {
-                const describes = ('taxon' in map) ? map.taxon
-                                : ('describes' in map) ? map.describes
-                                : map.id;
-                if (!(describes in latestMaps)) {
-                    latestMaps[describes] = map;
-                } else if ('created' in map) {
-                    if (!('created' in latestMaps[describes])
-                      || (latestMaps[describes].created < map.created)) {
-                    latestMaps[describes] = map;
-                    }
-                }
-            }
-            resolve(latestMaps);
         });
     }
 
@@ -1093,16 +1083,21 @@ export class MapManager
         });
     }
 
-    latestMap_(mapDescribes)
-    //======================
+    latestMap_(identifier)
+    //====================
     {
+        const mapDescribes = ('uuid' in identifier) ? identifier.uuid
+                           : ('taxon' in identifier) ? identifier.taxon
+                           : null;
+        if (mapDescribes === null) {
+            return null;
+        }
         let latestMap = null;
         let lastCreatedTime = '';
         for (const map of this._mapList) {
-            if (mapDescribes === (('taxon' in map) ? map.taxon
-                                : ('describes' in map) ? map.describes
-                                : map.id)
+            if ('uuid' in map && mapDescribes === map.uuid
              || mapDescribes === map.id
+             || 'taxon' in map && mapDescribes === map.taxon
              || mapDescribes === map.source) {
                 if ('created' in map) {
                     if (lastCreatedTime < map.created) {
@@ -1110,8 +1105,16 @@ export class MapManager
                         latestMap = map;
                     }
                 } else {
-                    return map;
+                    latestMap = map;
+                    break;
                 }
+            }
+        }
+        if (latestMap !== null) {
+            if ('biologicalSex' in identifier
+             && 'biologicalSex' in latestMap
+             && identifier.biologicalSex !== latestMap.biologicalSex) {
+                latestMap = null;
             }
         }
         return latestMap;
@@ -1120,38 +1123,26 @@ export class MapManager
     lookupMap_(identifier)
     //====================
     {
-        let mapDescribes = null;
-        if (typeof identifier === 'object') {
-            if ('source' in identifier) {
-                const flatmap = this.latestMap_(identifier.source);
-                if (flatmap !== null) {
-                    return flatmap;
-                }
-            }
-            if ('taxon' in identifier) {
-                mapDescribes = identifier.taxon;
-            } else if ('describes' in identifier) {
-                mapDescribes = identifier.describes;
-            }
-        } else {
-            mapDescribes = identifier;
+         if (typeof identifier === 'object') {
+            return this.latestMap_(identifier);
         }
-        return this.latestMap_(mapDescribes);
+        return this.latestMap_({uuid: identifier});
     }
 
    /**
     * Load and display a FlatMap.
     *
     * @arg identifier {string|Object} A string or object identifying the map to load. If a string its
-    *                                 value can be either the map's ``id``, assigned at generation time,
-    *                                 or a taxon identifier of the species that the map represents. The
-    *                                 latest version of a map is loaded unless it has been identified
-    *                                 by ``source`` (see below).
-    * @arg identifier.taxon {string} The taxon identifier of the map. This is specified as metadata
-    *                                in the map's source file.)
-    * @arg identifier.source {string} The URL of the source file from which the map has
-    *                                 been generated. If given then this exact map will be
-    *                                 loaded.
+    *                                 value can be either the map's ``uuid``, assigned at generation time,
+    *                                 or taxon and biological sex identifiers of the species that the map
+    *                                 represents. The latest version of a map is loaded unless it has been
+    *                                 identified using a ``uuid`` (see below).
+    * @arg identifier.taxon {string} The taxon identifier of the species represented by the map. This is
+    *                                specified as metadata in the map's source file.)
+    * @arg identifier.biologicalSex {string} The biological sex of the species represented by the map.
+    *                                 This is specified as metadatain the map's source file.)
+    * @arg identifier.uuid {string} The unique uuid the flatmap. If given then this exact map will
+    *                                be loaded, overriding ``taxon`` and ``biologicalSex``.
     * @arg container {string} The id of the HTML container in which to display the map.
     * @arg callback {function(string, Object)} A callback function, invoked when events occur with the map. The
     *                                          first parameter gives the type of event, the second provides
@@ -1187,7 +1178,7 @@ export class MapManager
     * const humanMap3 = mapManager.loadMap({taxon: 'NCBITaxon:9606'}, 'div-3');
     *
     * const humanMap4 = mapManager.loadMap(
-    *                     {source: 'https://models.physiomeproject.org/workspace/585/rawfile/650adf9076538a4bf081609df14dabddd0eb37e7/Human_Body.pptx'},
+    *                     {uuid: 'a563be90-9225-51c1-a84d-00ed2d03b7dc'},
     *                     'div-4');
     */
     loadMap(identifier, container, callback, options={})
@@ -1202,11 +1193,12 @@ export class MapManager
 
                 // Load the maps index file
 
-                const mapIndex = await this._mapServer.loadJSON(`flatmap/${map.id}/`);
-                if (map.id !== mapIndex.id) {
-                    throw new Error(`Map '${map.id}' has wrong ID in index`);
+                const mapId = ('uuid' in map) ? map.uuid : map.id;
+                const mapIndex = await this._mapServer.loadJSON(`flatmap/${mapId}/`);
+                const mapIndexId = ('uuid' in mapIndex) ? mapIndex.uuid : mapIndex.id;
+                if (mapId !== mapIndexId) {
+                    throw new Error(`Map '${mapId}' has wrong ID in index`);
                 }
-
                 const mapOptions = Object.assign({}, this._options, options);
 
                 // If bounds are not specified in options then set them
@@ -1244,12 +1236,12 @@ export class MapManager
                         }
                     }
                 } else {
-                    mapLayers = await this._mapServer.loadJSON(`flatmap/${map.id}/layers`);
+                    mapLayers = await this._mapServer.loadJSON(`flatmap/${mapId}/layers`);
                 }
 
                 // Get the map's style file
 
-                const mapStyle = await this._mapServer.loadJSON(`flatmap/${map.id}/style`);
+                const mapStyle = await this._mapServer.loadJSON(`flatmap/${mapId}/style`);
 
                 // Make sure the style has glyphs defined
 
@@ -1259,15 +1251,15 @@ export class MapManager
 
                 // Get the map's pathways
 
-                const pathways = await this._mapServer.loadJSON(`flatmap/${map.id}/pathways`);
+                const pathways = await this._mapServer.loadJSON(`flatmap/${mapId}/pathways`);
 
                 // Get the map's annotations
 
-                const annotations = await this._mapServer.loadJSON(`flatmap/${map.id}/annotations`);
+                const annotations = await this._mapServer.loadJSON(`flatmap/${mapId}/annotations`);
 
                 // Get additional marker details for the map
 
-                const mapMarkers = await this._mapServer.loadJSON(`flatmap/${map.id}/markers`);
+                const mapMarkers = await this._mapServer.loadJSON(`flatmap/${mapId}/markers`);
 
                 // Set zoom range if not specified as an option
 
@@ -1312,10 +1304,10 @@ export class MapManager
                 this._mapNumber += 1;
                 const flatmap = new FlatMap(container, this._mapServer.url(),
                     {
-                        id: map.id,
+                        id: mapId,
                         details: mapIndex,
-                        source: map.source,
-                        describes: map.describes,
+                        taxon: map.taxon,
+                        biologicalSex: map.biologicalSex,
                         style: mapStyle,
                         options: mapOptions,
                         layers: mapLayers,
