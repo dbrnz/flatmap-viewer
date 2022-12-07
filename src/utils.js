@@ -101,7 +101,7 @@ export function normaliseId(id)
     }
     const parts = id.split(':')
     const lastPart = parts[parts.length - 1]
-    if ('0123456789'.indexOf(lastPart[0]) < 0) {
+    if (['http', 'https', 'urn'].indexOf(parts[0]) >= 0 || '0123456789'.indexOf(lastPart[0]) < 0) {
         return id;
     }
     parts[parts.length - 1] = lastPart.padStart(8, '0');
