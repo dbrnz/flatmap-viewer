@@ -165,10 +165,6 @@ export class UserInteractions
         for (const [id, ann] of flatmap.annotations) {
             const feature = this.mapFeature_(id);
             this._map.setFeatureState(feature, { 'annotated': true });
-            if ('error' in ann) {
-                this._map.setFeatureState(feature, { 'annotation-error': true });
-                console.log(`Annotation error, ${ann.layer}: ${ann.error} (${ann.text})`);
-            }
         }
 
         // Display a context menu on right-click
