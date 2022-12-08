@@ -373,12 +373,12 @@ export class PathLineLayer extends VectorStyleLayer
             ],
             'line-opacity': [
                 'case',
+                    ['boolean', ['feature-state', 'hidden'], false], 0.1,
                     ['==', ['get', 'type'], 'bezier'], 1.0,
                     ['boolean', ['get', 'invisible'], false], 0.001,
                     ['boolean', ['feature-state', 'selected'], false], 1.0,
                     ['boolean', ['feature-state', 'active'], false], 0.8,
-                    ['boolean', ['feature-state', 'hidden'], false], 0.1,
-                dimmed ? 0.1 : 0.4
+                dimmed ? 0.1 : 0.5
             ],
             'line-width': [
                 'let',
@@ -457,17 +457,17 @@ export class FeatureNerveLayer extends VectorStyleLayer
             'paint': {
                 'line-color': [
                     'case',
+                    ['boolean', ['feature-state', 'hidden'], false], '#CCC',
                     ['boolean', ['feature-state', 'active'], false], '#222',
                     ['boolean', ['feature-state', 'selected'], false], 'red',
-                    ['boolean', ['feature-state', 'hidden'], false], '#CCC',
                     '#888'
                 ],
                 'line-opacity': [
                     'case',
-                    ['boolean', ['feature-state', 'active'], false], 0.9,
-                    ['boolean', ['feature-state', 'selected'], false], 0.9,
                     ['boolean', ['feature-state', 'hidden'], false], 0.3,
                     ['boolean', ['get', 'invisible'], false], 0.001,
+                    ['boolean', ['feature-state', 'active'], false], 0.9,
+                    ['boolean', ['feature-state', 'selected'], false], 0.9,
                     0.9
                 ],
                 'line-dasharray': [2, 1],
