@@ -164,7 +164,9 @@ export class UserInteractions
 
         for (const [id, ann] of flatmap.annotations) {
             const feature = this.mapFeature_(id);
-            this._map.setFeatureState(feature, { 'annotated': true });
+            if (feature !== undefined) {
+                this._map.setFeatureState(feature, { 'annotated': true });
+            }
         }
 
         // Display a context menu on right-click
@@ -247,13 +249,15 @@ export class UserInteractions
     //====================
     {
         const ann = this._flatmap.annotation(featureId);
-        return {
-            id: featureId,
-            source: VECTOR_TILES_SOURCE,
-            sourceLayer: this._flatmap.options.separateLayers
-                         ? `${ann['layer']}_${ann['tile-layer']}`
-                         : ann['tile-layer']
-        };
+        if (ann !== undefined) {
+            return {
+                id: featureId,
+                source: VECTOR_TILES_SOURCE,
+                sourceLayer: this._flatmap.options.separateLayers
+                             ? `${ann['layer']}_${ann['tile-layer']}`
+                             : ann['tile-layer']
+            };
+        }
     }
 
     featureSelected_(featureId)
@@ -273,8 +277,10 @@ export class UserInteractions
             this._selectedFeatureIds.set(featureId, this._selectedFeatureIds.get(featureId) + 1);
         } else {
             const feature = this.mapFeature_(featureId);
-            this._map.setFeatureState(feature, { 'selected': true });
-            this._selectedFeatureIds.set(featureId, 1);
+            if (feature !== undefined) {
+                this._map.setFeatureState(feature, { 'selected': true });
+                this._selectedFeatureIds.set(featureId, 1);
+            }
         }
     }
 
@@ -288,8 +294,10 @@ export class UserInteractions
                 this._selectedFeatureIds.set(featureId, references - 1);
             } else {
                 const feature = this.mapFeature_(featureId);
-                this._map.removeFeatureState(feature, 'selected');
-                this._selectedFeatureIds.delete(+featureId);
+                if (feature !== undefined) {
+                    this._map.removeFeatureState(feature, 'selected');
+                    this._selectedFeatureIds.delete(+featureId);
+                }
             }
         }
         if (this._selectedFeatureIds.size === 0) {
@@ -302,7 +310,9 @@ export class UserInteractions
     {
         for (const featureId of this._selectedFeatureIds.keys()) {
             const feature = this.mapFeature_(featureId);
-            this._map.removeFeatureState(feature, 'selected');
+            if (feature !== undefined) {
+                this._map.removeFeatureState(feature, 'selected');
+            }
         }
         this._selectedFeatureIds.clear();
         this._layerManager.setColour({...this.__colourOptions, dimmed: false});
@@ -323,8 +333,10 @@ export class UserInteractions
     __activateFeature(feature)
     //=======================
     {
-        this._map.setFeatureState(feature, { active: true });
-        this._activeFeatures.push(feature);
+        if (feature !== undefined) {
+            this._map.setFeatureState(feature, { active: true });
+            this._activeFeatures.push(feature);
+        }
     }
 
     resetActiveFeatures_()
@@ -933,11 +945,13 @@ export class UserInteractions
     {
         for (const featureId of featureIds) {
             const feature = this.mapFeature_(featureId);
-            if (enable) {
-                this._map.removeFeatureState(feature, 'hidden');
-            } else {
-                this._map.setFeatureState(feature, { 'hidden': true });
-                this._disabledPathFeatures = true;
+            if (feature !== undefined) {
+                if (enable) {
+                    this._map.removeFeatureState(feature, 'hidden');
+                } else {
+                    this._map.setFeatureState(feature, { 'hidden': true });
+                    this._disabledPathFeatures = true;
+                }
             }
         }
     }
@@ -1145,14 +1159,15 @@ export class UserInteractions
                 const annotation = this.__annotationByMarkerId.get(markerId);
                 // The marker's feature
                 const feature = this.mapFeature_(annotation.featureId);
-                if (event.type === 'mouseenter') {
-                    // Highlight on mouse enter
-                    this.resetActiveFeatures_();
-                    this.__activateFeature(feature);
-                } else {
-                    this.selectionEvent_(event, feature)
+                if (feature !== undefined) {
+                    if (event.type === 'mouseenter') {
+                        // Highlight on mouse enter
+                        this.resetActiveFeatures_();
+                        this.__activateFeature(feature);
+                    } else {
+                        this.selectionEvent_(event, feature)
+                    }
                 }
-
                 // Show tooltip
                 const html = this.tooltipHtml_(annotation, true);
                 this.__showToolTip(html, marker.getLngLat());
