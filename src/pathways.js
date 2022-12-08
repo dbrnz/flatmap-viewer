@@ -34,7 +34,8 @@ export const PATH_TYPES = [
     { type: "sensory", label: "Sensory (afferent) neuron", colour: "#2A62F6"},
     { type: "somatic", label: "Somatic lower motor", colour: "#98561D"},
     { type: "symp-pre", label: "Sympathetic pre-ganglionic", colour: "#EA3423"},
-    { type: "symp-post", label: "Sympathetic post-ganglionic", colour: "#EA3423"}
+    { type: "symp-post", label: "Sympathetic post-ganglionic", colour: "#EA3423"},
+    { type: "other", label: "Other neuron type", colour: "#888"}
 ];
 
 //==============================================================================
@@ -120,7 +121,21 @@ export class Pathways
         }
         this._allFeatureIds = featureIds;
 
-        this._typePaths = flatmap.pathways['type-paths'];            // nerve-type: [pathIds]
+        // Construct a list of path types we know about
+        const pathTypes = [];
+        for (const pathType of PATH_TYPES) {
+            pathTypes.push(pathType.type);
+        }
+        // Map unknown path types to ``other``
+        this.__typePaths = {};
+        this.__typePaths['other'] = [];
+        for (const [pathType, paths] of Object.entries(flatmap.pathways['type-paths'])) {
+            if (pathTypes.indexOf(pathType) >= 0) {
+                this.__typePaths[pathType] = paths;
+            } else {
+                this.__typePaths['other'].push(...paths);
+            }
+        }
     }
 
     addPathsToFeatureSet_(paths, featureSet)
@@ -253,8 +268,8 @@ export class Pathways
     //======================
     {
         const featureIds = new Set();
-        if (pathType in this._typePaths) {
-            this.addPathsToFeatureSet_(this._typePaths[pathType], featureIds);
+        if (pathType in this.__typePaths) {
+            this.addPathsToFeatureSet_(this.__typePaths[pathType], featureIds);
         }
         return featureIds;
     }

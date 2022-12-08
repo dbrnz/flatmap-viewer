@@ -204,6 +204,9 @@ label[for=path-all-paths] {
 .nerve-lcn {
     background: #F19E38;
 }
+.nerve-other {
+    background: #888;
+}
 .nerve-para-pre {
     background: #3F8F4A;
 }
