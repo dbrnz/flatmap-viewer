@@ -1087,7 +1087,8 @@ export class MapManager
     latestMap_(identifier)
     //====================
     {
-        const mapDescribes = ('uuid' in identifier) ? identifier.uuid
+        const mapDescribes = (identifier.constructor.name === "String") ? identifier
+                           : ('uuid' in identifier) ? identifier.uuid
                            : ('taxon' in identifier) ? identifier.taxon
                            : null;
         if (mapDescribes === null) {
