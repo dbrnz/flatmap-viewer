@@ -1136,7 +1136,7 @@ export class MapManager
     * @arg identifier.taxon {string} The taxon identifier of the species represented by the map. This is
     *                                specified as metadata in the map's source file.)
     * @arg identifier.biologicalSex {string} The biological sex of the species represented by the map.
-    *                                 This is specified as metadatain the map's source file.)
+    *                                 This is specified as metadata in the map's source file.)
     * @arg identifier.uuid {string} The unique uuid the flatmap. If given then this exact map will
     *                                be loaded, overriding ``taxon`` and ``biologicalSex``.
     * @arg container {string} The id of the HTML container in which to display the map.
