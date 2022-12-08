@@ -1095,10 +1095,13 @@ export class MapManager
         let latestMap = null;
         let lastCreatedTime = '';
         for (const map of this._mapList) {
-            if ('uuid' in map && mapDescribes === map.uuid
+            if (('uuid' in map && mapDescribes === map.uuid
              || mapDescribes === map.id
              || 'taxon' in map && mapDescribes === map.taxon
-             || mapDescribes === map.source) {
+             || mapDescribes === map.source)
+            && (!('biologicalSex' in identifier)
+             || ('biologicalSex' in map
+               && identifier.biologicalSex === map.biologicalSex))) {
                 if ('created' in map) {
                     if (lastCreatedTime < map.created) {
                         lastCreatedTime = map.created;
@@ -1108,13 +1111,6 @@ export class MapManager
                     latestMap = map;
                     break;
                 }
-            }
-        }
-        if (latestMap !== null) {
-            if ('biologicalSex' in identifier
-             && 'biologicalSex' in latestMap
-             && identifier.biologicalSex !== latestMap.biologicalSex) {
-                latestMap = null;
             }
         }
         return latestMap;
