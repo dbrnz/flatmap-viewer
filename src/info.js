@@ -247,13 +247,6 @@ export class InfoControl
             }
 
             const htmlList = [];
-
-            if (this._flatmap.options.showPosition) {
-                const position = location;
-                htmlList.push(`<span class="info-name">Position:</span>`);
-                htmlList.push(`<span class="info-value">(${position.lng}, ${position.lat})</span>`);
-            }
-
             for (const values of displayValues.values()) {
                 for (const prop of displayedProperties) {
                     if (prop in values) {
