@@ -58,7 +58,8 @@ class FlatMap
     constructor(container, mapBaseUrl, mapDescription, resolve)
     {
         this._baseUrl = mapBaseUrl;
-        this._id = mapDescription.id;
+        this.__id = mapDescription.id;
+        this.__uuid = mapDescription.uuid;
         this._details = mapDescription.details;
         this._created = mapDescription.created;
         this.__taxon = mapDescription.taxon;
@@ -75,7 +76,7 @@ class FlatMap
         this.__idToAnnotation = new Map();
         this.__datasetToFeatureIds = new Map();
         this.__modelToFeatureIds = new Map();
-        this.___mapIdToFeatureIds = new Map();
+        this.__mapSourceToFeatureIds = new Map();
         for (const [featureId, annotation] of Object.entries(mapDescription.annotations)) {
             this.__addAnnotation(featureId, annotation);
             this.__searchIndex.indexMetadata(featureId, annotation);
@@ -354,7 +355,7 @@ class FlatMap
     //==============
     {
         if (url.startsWith('/')) {
-            return `${this._baseUrl}flatmap/${this._id}${url}`; // We don't want embedded `{` and `}` characters escaped
+            return `${this._baseUrl}flatmap/${this.__uuid}${url}`; // We don't want embedded `{` and `}` characters escaped
         } else if (!url.startsWith('http://') && !url.startsWith('https://')) {
             console.log(`Invalid URL (${url}) in map's sources`);
         }
@@ -402,7 +403,7 @@ class FlatMap
     get id()
     //======
     {
-        return this._id;
+        return this.__uuid;
     }
 
     /**
@@ -424,7 +425,7 @@ class FlatMap
     get uniqueId()
     //============
     {
-        return `${this._id}-${this._mapNumber}`;
+        return `${this.__uuid}-${this._mapNumber}`;
     }
 
     get activeLayerNames()
@@ -466,7 +467,7 @@ class FlatMap
         this.__idToAnnotation.set(featureId, ann);
         this.__updateFeatureIdMap('dataset', this.__datasetToFeatureIds, ann);
         this.__updateFeatureIdMap('models', this.__modelToFeatureIds, ann);
-        this.__updateFeatureIdMap('source', this.___mapIdToFeatureIds, ann);
+        this.__updateFeatureIdMap('source', this.__mapSourceToFeatureIds, ann);
     }
 
     modelFeatureIds(anatomicalId)
@@ -490,7 +491,7 @@ class FlatMap
         if (featureIds.length == 0) {
             // We couldn't find a feature by anatomical id, so check dataset and source
             featureIds.extend(this.__datasetToFeatureIds.get(anatomicalIds));
-            featureIds.extend(this.___mapIdToFeatureIds.get(anatomicalIds));
+            featureIds.extend(this.__mapSourceToFeatureIds.get(anatomicalIds));
         }
         if (featureIds.length == 0 && this._userInteractions !== null) {
             // We still haven't found a feature, so check connectivity
@@ -634,7 +635,7 @@ class FlatMap
         return {
             taxon: this.__taxon,
             biologicalSex: this.__biologicalSex,
-            id: this._id
+            uuid: this.__uuid
         };
     }
 
@@ -1300,7 +1301,8 @@ export class MapManager
                 this._mapNumber += 1;
                 const flatmap = new FlatMap(container, this._mapServer.url(),
                     {
-                        id: mapId,
+                        id: map,
+                        uuid: mapId,
                         details: mapIndex,
                         taxon: map.taxon,
                         biologicalSex: map.biologicalSex,
