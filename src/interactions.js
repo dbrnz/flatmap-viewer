@@ -842,31 +842,34 @@ export class UserInteractions
     selectionEvent_(event, feature)
     //=============================
     {
-        const multipleSelect = event.ctrlKey || event.metaKey;
-        if (!multipleSelect) {
-            this.__unselectFeatures();
-        }
         if (feature !== undefined) {
-            const featureId = feature.id;
-            const selecting = !this.featureSelected_(featureId);
-            if ('properties' in feature
-             && 'type' in feature.properties
-             && feature.properties.type.startsWith('line')) {
-                for (const feature of this._activeFeatures) {
-                    const featureId = feature.id;
-                    if (selecting) {
-                        this.selectFeature_(featureId);
-                    } else {
-                        this.unselectFeature_(featureId);
+            const clickedFeatureId = feature.id;
+            const dim = !('properties' in feature
+                       && 'kind' in feature.properties
+                       && ['cell-type', 'scaffold', 'tissue'].indexOf(feature.properties.kind) >= 0);
+            if (!(event.ctrlKey || event.metaKey)) {
+                let selecting = true;
+                for (const featureId of this._selectedFeatureIds.keys()) {
+                    if (featureId === clickedFeatureId) {
+                        selecting = false;
+                        break;
                     }
                 }
-            } else if (selecting) {
-                const dim = !('properties' in feature
-                             && 'kind' in feature.properties
-                             && ['cell-type', 'scaffold', 'tissue'].indexOf(feature.properties.kind) >= 0);
-                this.selectFeature_(featureId, dim);
+                this.__unselectFeatures();
+                if (selecting) {
+                    for (const feature of this._activeFeatures) {
+                        this.selectFeature_(feature.id, dim);
+                    }
+                }
             } else {
-                this.unselectFeature_(featureId);
+                const clickedSelected = this.featureSelected_(clickedFeatureId);
+                for (const feature of this._activeFeatures) {
+                    if (clickedSelected) {
+                        this.unselectFeature_(feature.id);
+                    } else {
+                        this.selectFeature_(feature.id, dim);
+                    }
+                }
             }
         }
     }
@@ -875,24 +878,14 @@ export class UserInteractions
     //================
     {
         this.clearActiveMarker_();
-        const clickedFeatures = this._map.queryRenderedFeatures(event.point)
-                                    .filter(feature => this.__enabledFeature(feature));
+        const clickedFeatures = this._map.queryRenderedFeatures(event.point);
         if (clickedFeatures.length == 0){
+            this.__unselectFeatures();
             return;
         }
         const clickedFeature = clickedFeatures[0];
         const originalEvent = event.originalEvent;
-        if (clickedFeature === undefined || this._activeFeatures.length === 1) {
-            this.selectionEvent_(originalEvent, clickedFeature);
-        } else if (this._activeFeatures.length > 1) {
-            const multipleSelect = originalEvent.ctrlKey || originalEvent.metaKey;
-            if (!multipleSelect) {
-                this.__unselectFeatures();
-            }
-            for (const feature of this._activeFeatures) {
-                this.selectFeature_(feature.id);
-            }
-        }
+        this.selectionEvent_(originalEvent, clickedFeature);
         if (this._modal) {
            // Remove tooltip, reset active features, etc
             this.__resetFeatureDisplay();
