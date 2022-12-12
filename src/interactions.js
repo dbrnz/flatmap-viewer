@@ -42,6 +42,7 @@ import {PathControl} from './controls.js';
 import {SearchControl} from './search.js';
 import {VECTOR_TILES_SOURCE} from './styling.js';
 
+import * as pathways from './pathways.js';
 import * as utils from './utils.js';
 
 //==============================================================================
@@ -969,18 +970,23 @@ export class UserInteractions
     //===============================
     {
         // Disable/enable all paths except those with `pathTypes`
-
-        this.enablePathFeatures_(!enable, this._pathways.allFeatureIds());
-
         if (Array.isArray(pathTypes)) {
-            for (const pathType of pathTypes) {
-                this.enablePath(pathType, enable);
+            for (const pathType of pathways.PATH_TYPES) {
+                if (pathTypes.indexOf(pathType.type) >= 0) {
+                    this.enablePath(pathType.type, enable)
+                } else {
+                    this.enablePath(pathType.type, !enable)
+                }
             }
         } else {
-            this.enablePath(pathTypes, enable);
+            for (const pathType of pathways.PATH_TYPES) {
+                if (pathType.type === pathTypes) {
+                    this.enablePath(pathType.type, enable)
+                } else {
+                    this.enablePath(pathType.type, !enable)
+                }
+            }
         }
-
-        this._disabledPathFeatures = true;
     }
 
     pathwaysFeatureIds(externalIds)
