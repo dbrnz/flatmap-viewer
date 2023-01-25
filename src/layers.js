@@ -40,6 +40,7 @@ class MapFeatureLayer
         this.__id = layer.id;
         this.__rasterLayers = [];
         this.__styleLayers = [];
+        this.__active = true;
 
         const layerOptions = flatmap.options.layerOptions;
         const vectorTileSource = this.__map.getSource('vector-tiles');
@@ -85,6 +86,30 @@ class MapFeatureLayer
     //======
     {
         return this.__id;
+    }
+
+    get active()
+    //==========
+    {
+        return this.__active;
+    }
+
+    __show_layer(layer, visible=true)
+    //===============================
+    {
+        this.__map.setLayoutProperty(layer.id, 'visibility', visible ? 'visible' : 'none');
+    }
+
+    activate(enable=true)
+    //===================
+    {
+        for (const layer of this.__rasterLayers) {
+            this.__show_layer(layer, enable);
+        }
+        for (const layer of this.__styleLayers) {
+            this.__show_layer(layer, enable);
+        }
+        this.__active = enable;
     }
 
     __addRasterLayer(raster_layer_id, options)
@@ -143,14 +168,12 @@ class MapFeatureLayer
 
 export class LayerManager
 {
-    constructor(flatmap, switcher=false)
+    constructor(flatmap)
     {
         this.__flatmap = flatmap;
         this.__map = flatmap.map;
         this.__layers = new Map;
         this.__mapLayers = new Map;
-        this.__activeLayers = [];
-        this.__activeLayerNames = [];
         this.__rasterLayers = [];
         const layerOptions = flatmap.options.layerOptions;
         const fcDiagram = ('style' in layerOptions && layerOptions.style == 'fcdiagram');
@@ -174,58 +197,41 @@ export class LayerManager
             }
         }
         for (const layer of flatmap.layers) {
-            this.addLayer(layer, !fcDiagram);
+            this.__addLayer(layer, !fcDiagram);
         }
     }
 
     get activeLayerNames()
     //====================
     {
-        return this.__activeLayerNames;
+        const activeNames = [];
+        for (const layer of this.__layers.values()) {
+            if (layer.active) {
+                activeNames.push(layer.id);
+            }
+        }
+        return activeNames;
     }
 
-    addLayer(layer, background_layers=true)
-    //=====================================
+    __addLayer(layer, background_layers=true)
+    //=======================================
     {
-        this.__mapLayers.set(layer.id, layer);
-
-        const layers = new MapFeatureLayer(this.__flatmap, layer, background_layers);
-        const layerId = this.__flatmap.mapLayerId(layer.id);
-        this.__layers.set(layerId, layers);
+        this.__layers.set(layer.id, layer);
+        this.__mapLayers.set(layer.id, new MapFeatureLayer(this.__flatmap, layer, background_layers));
     }
 
     get layers()
     //==========
     {
-        return this.__layers;
+        return Array.from(this.__layers.values());
     }
 
-    activate(layerId)
-    //===============
+    activate(layerId, enable=true)
+    //============================
     {
-        const layer = this.__layers.get(layerId);
-        if (layer !== undefined) {
-            layer.activate();
-            if (this.__activeLayers.indexOf(layer) < 0) {
-                this.__activeLayers.push(layer);
-                this.__activeLayerNames.push(layer.id);
-            }
-        }
-    }
-
-    deactivate(layerId)
-    //=================
-    {
-        const layer = this.__layers.get(layerId);
-        if (layer !== undefined) {
-            layer.deactivate();
-            const index = this.__activeLayers.indexOf(layer);
-            if (index >= 0) {
-                delete this.__activeLayers[index];
-                this.__activeLayers.splice(index, 1);
-                delete this.__activeLayerNames[index];
-                this.__activeLayerNames.splice(index, 1);
-            }
+        const mapLayer = this.__mapLayers.get(layerId);
+        if (mapLayer !== undefined) {
+            mapLayer.activate(enable);
         }
     }
 
@@ -236,31 +242,6 @@ export class LayerManager
         for (const layer of this.__layers.values()) {
             layer.setColour(options)
         }
-    }
-
-    makeUppermost(layerId)
-    //====================
-    {
-        // position before top layer
-    }
-
-    makeLowest(layerId)
-    //=================
-    {
-        // position after bottom layer (before == undefined)
-    }
-
-
-    lower(layerId)
-    //============
-    {
-        // position before second layer underneath...
-    }
-
-    raise(layerId)
-    //============
-    {
-        // position before layer above...
     }
 }
 

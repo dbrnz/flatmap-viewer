@@ -38,7 +38,7 @@ import {displayedProperties} from './info.js';
 import {InfoControl} from './info.js';
 import {LayerManager} from './layers.js';
 import {PATHWAYS_LAYER, Pathways} from './pathways.js';
-import {PathControl} from './controls.js';
+import {LayerControl, PathControl} from './controls.js';
 import {SearchControl} from './search.js';
 import {VECTOR_TILES_SOURCE} from './styling.js';
 
@@ -151,7 +151,7 @@ export class UserInteractions
         this._pathways = new Pathways(flatmap);
 
         if (flatmap.options.pathControls) {
-            // Add controls to manage our pathways
+            // Add a control to manage our pathways
 
             this._map.addControl(new PathControl(flatmap));
         }
@@ -159,6 +159,12 @@ export class UserInteractions
         // Manage our layers
 
         this._layerManager = new LayerManager(flatmap);
+
+        if (flatmap.options.layerControl) {
+            // Add a control to manage our layers
+
+            this._map.addControl(new LayerControl(flatmap, this._layerManager));
+        }
 
         // Flag features that have annotations
         // Also flag those features that are models of something

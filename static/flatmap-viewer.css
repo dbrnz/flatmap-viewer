@@ -51,6 +51,10 @@ li.flatmap-contextmenu-item:hover {
     margin-top: 2px;
 }
 
+.text-button {
+    width: 64px;
+}
+
 /* Search box */
 
 #search-control-input {
@@ -226,6 +230,32 @@ label[for=path-all-paths] {
     background: repeating-linear-gradient(to right,#EA3423 0,#EA3423 6px,transparent 6px,transparent 9px)
 }
 
+/* Layer control */
+
+#flatmap-layer-control {
+    text-align: right;
+}
+.flatmap-layer-grid {
+    margin-top: 10px;
+    display: grid;
+    grid-template-columns: 3.8fr 0.2fr;
+    column-gap: 10px;
+    row-gap: 0.2em;
+    width: 300px;
+    font-size: 10pt;
+    cursor: pointer;
+    text-align: left;
+    background: white;
+    border: 1px solid gray;
+    padding: 4px;
+    opacity: 0.8;
+}
+.flatmap-layer-grid input {
+    height:  1.1em;
+}
+label[for=layer-all-layers] {
+    font-weight: bold;
+}
 
 /* Markers */
 
