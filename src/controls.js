@@ -102,9 +102,9 @@ export class PathControl
         this._legend.className = 'flatmap-nerve-grid';
 
         const innerHTML = [];
-        innerHTML.push(`<label for="path-all-paths">ALL PATHS:</label><input id="path-all-paths" type="checkbox" checked/><div class="nerve-line"></div>`);
+        innerHTML.push(`<label for="path-all-paths">ALL PATHS:</label><div class="nerve-line"></div><input id="path-all-paths" type="checkbox" checked/>`);
         for (const path of pathways.PATH_TYPES) {
-            innerHTML.push(`<label for="path-${path.type}">${path.label}</label><input id="path-${path.type}" type="checkbox" checked/><div class="nerve-line nerve-${path.type}"></div>`);
+            innerHTML.push(`<label for="path-${path.type}">${path.label}</label><div class="nerve-line nerve-${path.type}"></div><input id="path-${path.type}" type="checkbox" checked/>`);
         }
         this._legend.innerHTML = innerHTML.join('\n');
         this.__checkedCount = pathways.PATH_TYPES.length;
@@ -112,7 +112,7 @@ export class PathControl
 
         this._button = document.createElement('button');
         this._button.id = 'nerve-key-button';
-        this._button.className = 'control-button';
+        this._button.className = 'control-button text-button';
         this._button.setAttribute('type', 'button');
         this._button.setAttribute('aria-label', 'Nerve paths legend');
         this._button.setAttribute('legend-visible', 'false');
