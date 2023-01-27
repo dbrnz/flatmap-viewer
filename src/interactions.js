@@ -151,7 +151,7 @@ export class UserInteractions
 
         // Control background colour (NB. this depends on having map layers created)
 
-        if ('background' in flatmap.options) {
+        if (flatmap.options.backgroundControl) {
             this._map.addControl(new BackgroundControl(flatmap));
         }
 
