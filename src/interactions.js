@@ -38,7 +38,7 @@ import {displayedProperties} from './info.js';
 import {InfoControl} from './info.js';
 import {LayerManager} from './layers.js';
 import {PATHWAYS_LAYER, Pathways} from './pathways.js';
-import {LayerControl, PathControl} from './controls.js';
+import {BackgroundControl, LayerControl, PathControl} from './controls.js';
 import {SearchControl} from './search.js';
 import {VECTOR_TILES_SOURCE} from './styling.js';
 
@@ -145,6 +145,16 @@ export class UserInteractions
             }
         }
 
+        // Add and manage our layers
+
+        this._layerManager = new LayerManager(flatmap);
+
+        // Control background colour (NB. this depends on having map layers created)
+
+        if ('background' in flatmap.options) {
+            this._map.addControl(new BackgroundControl(flatmap));
+        }
+
         // Neural pathways which are either controlled externally
         // or by our local controls
 
@@ -156,12 +166,9 @@ export class UserInteractions
             this._map.addControl(new PathControl(flatmap));
         }
 
-        // Manage our layers
-
-        this._layerManager = new LayerManager(flatmap);
+        // Add a control to manage our layers
 
         if (flatmap.options.layerControl) {
-            // Add a control to manage our layers
 
             this._map.addControl(new LayerControl(flatmap, this._layerManager));
         }

@@ -26,6 +26,17 @@ import * as pathways from './pathways.js';
 
 //==============================================================================
 
+// Make sure colour string is in `#rrggbb` form.
+// from https://stackoverflow.com/a/47355187
+
+function standardize_color(str){
+    var ctx = document.createElement("canvas").getContext("2d");
+    ctx.fillStyle = str;
+    return ctx.fillStyle;
+}
+
+//==============================================================================
+
 export class NavigationControl
 {
     constructor(flatmap)
@@ -302,3 +313,51 @@ export class LayerControl
 
 //==============================================================================
 
+export class BackgroundControl
+{
+    constructor(flatmap)
+    {
+        this.__flatmap = flatmap;
+        this.__map = undefined;
+    }
+
+    getDefaultPosition()
+    //==================
+    {
+        return 'top-right';
+    }
+
+    onAdd(map)
+    //========
+    {
+        this.__map = map;
+        this.__container = document.createElement('div');
+        this.__container.className = 'maplibregl-ctrl';
+        this.__colourDiv = document.createElement('div');
+        this.__colourDiv.setAttribute('aria-label', 'Change background colour');
+        this.__colourDiv.title = 'Change background colour';
+        const background = standardize_color(this.__flatmap.getBackgroundColour());
+        this.__colourDiv.innerHTML = `<input type="color" id="colourPicker" value="${background}">`;
+        this.__container.appendChild(this.__colourDiv);
+        this.__colourDiv.addEventListener('input', this.__updateColour.bind(this), false);
+        this.__colourDiv.addEventListener('change', this.__updateColour.bind(this), false);
+        return this.__container;
+    }
+
+    onRemove()
+    //========
+    {
+        this.__container.parentNode.removeChild(this.__container);
+        this.__map = undefined;
+    }
+
+    __updateColour(event)
+    //===================
+    {
+        const colour = event.target.value;
+        this.__flatmap.setBackgroundColour(colour);
+        event.stopPropagation();
+    }
+}
+
+//==============================================================================
