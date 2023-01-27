@@ -126,7 +126,7 @@ export class PathControl
         this._button.className = 'control-button text-button';
         this._button.setAttribute('type', 'button');
         this._button.setAttribute('aria-label', 'Nerve paths legend');
-        this._button.setAttribute('legend-visible', 'false');
+        this._button.setAttribute('control-visible', 'false');
         this._button.textContent = 'PATHS';
         this._button.title = 'Show/hide neuron paths';
         this._container.appendChild(this._button);
@@ -146,13 +146,13 @@ export class PathControl
     //=============
     {
         if (event.target.id === 'nerve-key-button') {
-            if (this._button.getAttribute('legend-visible') === 'false') {
+            if (this._button.getAttribute('control-visible') === 'false') {
                 this._container.appendChild(this._legend);
-                this._button.setAttribute('legend-visible', 'true');
+                this._button.setAttribute('control-visible', 'true');
                 this._legend.focus();
             } else {
                 this._legend = this._container.removeChild(this._legend);
-                this._button.setAttribute('legend-visible', 'false');
+                this._button.setAttribute('control-visible', 'false');
             }
         } else if (event.target.tagName === 'INPUT') {
             if (event.target.id === 'path-all-paths') {
