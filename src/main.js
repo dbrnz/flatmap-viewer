@@ -27,7 +27,7 @@ export { MapManager };
 
 //==============================================================================
 
-export async function standaloneViewer(map_endpoint=null, map_options={})
+export async function standaloneViewer(map_endpoint=null, options={})
 {
     const requestUrl = new URL(window.location.href);
     if (map_endpoint == null) {
@@ -52,6 +52,17 @@ export async function standaloneViewer(map_endpoint=null, map_options={})
     });
 
     let currentMap = null;
+    let defaultBackground = 'black';
+
+    const mapOptions = Object.assign({
+        tooltips: true,
+        background: defaultBackground,
+        debug: false,
+        minimap: false,
+        searchable: true,
+        featureInfo: true,
+        showPosition: false
+    }, options);
 
     function loadMap(id, taxon, sex)
     //==============================
@@ -71,20 +82,15 @@ export async function standaloneViewer(map_endpoint=null, map_options={})
             }
             requestUrl.searchParams.delete('id');
         }
+
+        // Update address bar URL to current map
         window.history.pushState('data', document.title, requestUrl);
 
-        const options = Object.assign({
-            tooltips: true,
-            background: '#EEF',
-            debug: false,
-            minimap: false,
-            navigationControl: 'top-right',
-            searchable: true,
-            featureInfo: true,
-            showPosition: false
-        }, map_options);
-
-        mapManager.loadMap(id, 'map-canvas', (...args) => console.log(...args), options)
+        mapManager.loadMap(id, 'map-canvas', (eventType, ...args) => {
+                if (args[0].type === 'control' && args[0].control === 'background') {
+                    mapOptions.background = args[0].value;
+                }
+            }, mapOptions)
             .then(map => {
                 map.addMarker('UBERON:0000948'); // Heart
                 map.addMarker('UBERON:0002048'); // Lung
@@ -129,7 +135,7 @@ export async function standaloneViewer(map_endpoint=null, map_options={})
     let mapId = null;
     let mapTaxon = null;
     let mapSex = null;
-    const options = [];
+    const mapList = [];
     for (const [name, map] of sortedMaps.entries()) {
         const text = [ name, map.created ];
         let selected = '';
@@ -145,12 +151,12 @@ export async function standaloneViewer(map_endpoint=null, map_options={})
             mapSex = viewMapSex;
             selected = 'selected';
         }
-        options.push(`<option value="${id}" ${selected}>${text.join(' -- ')}</option>`);
+        mapList.push(`<option value="${id}" ${selected}>${text.join(' -- ')}</option>`);
     }
-    options.splice(0, 0, '<option value="">Select flatmap...</option>');
+    mapList.splice(0, 0, '<option value="">Select flatmap...</option>');
 
     const selector = document.getElementById('map-selector');
-    selector.innerHTML = options.join('');
+    selector.innerHTML = mapList.join('');
     selector.onchange = (e) => {
         if (e.target.value !== '') {
             loadMap(e.target.value);

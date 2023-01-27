@@ -356,6 +356,7 @@ export class BackgroundControl
     {
         const colour = event.target.value;
         this.__flatmap.setBackgroundColour(colour);
+        this.__flatmap.controlEvent('change', 'background', colour)
         event.stopPropagation();
     }
 }

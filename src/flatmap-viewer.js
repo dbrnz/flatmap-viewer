@@ -873,6 +873,23 @@ class FlatMap
     }
 
     /**
+     * Generate a callback as a result of some event in a control.
+     *
+     * @param      {string}  eventType     The event type
+     * @param      {string}  control       The name of the control
+     * @param      {string}  value         The value of the control
+     */
+    controlEvent(eventType, control, value)
+    //=====================================
+    {
+        this.callback(eventType, {
+            type: 'control',
+            control: control,
+            value: value
+        });
+    }
+
+    /**
      * Generate callbacks as a result of panning/zooming the map.
      *
      * @param {boolean}   enabled  Generate callbacks when ``true``,
