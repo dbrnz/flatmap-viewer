@@ -27,12 +27,15 @@ import * as pathways from './pathways.js';
 //==============================================================================
 
 // Make sure colour string is in `#rrggbb` form.
-// from https://stackoverflow.com/a/47355187
+// Based on https://stackoverflow.com/a/47355187
 
-function standardize_color(str){
-    var ctx = document.createElement("canvas").getContext("2d");
+function standardise_color(str){
+    const canvas = document.createElement("canvas");
+    const ctx = canvas.getContext("2d");
     ctx.fillStyle = str;
-    return ctx.fillStyle;
+    const colour = ctx.fillStyle;
+    canvas.remove()
+    return colour;
 }
 
 //==============================================================================
@@ -336,7 +339,7 @@ export class BackgroundControl
         this.__colourDiv = document.createElement('div');
         this.__colourDiv.setAttribute('aria-label', 'Change background colour');
         this.__colourDiv.title = 'Change background colour';
-        const background = standardize_color(this.__flatmap.getBackgroundColour());
+        const background = standardise_color(this.__flatmap.getBackgroundColour());
         this.__colourDiv.innerHTML = `<input type="color" id="colourPicker" value="${background}">`;
         this.__container.appendChild(this.__colourDiv);
         this.__colourDiv.addEventListener('input', this.__updateColour.bind(this), false);
