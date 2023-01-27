@@ -160,16 +160,15 @@ export class UserInteractions
 
         this._pathways = new Pathways(flatmap);
 
-        if (flatmap.options.pathControls) {
-            // Add a control to manage our pathways
+        // Add a control to manage our pathways
 
+        if (flatmap.options.pathControls) {
             this._map.addControl(new PathControl(flatmap));
         }
 
         // Add a control to manage our layers
 
         if (flatmap.options.layerControl) {
-
             this._map.addControl(new LayerControl(flatmap, this._layerManager));
         }
 
