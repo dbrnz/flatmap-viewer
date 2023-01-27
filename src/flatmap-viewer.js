@@ -621,12 +621,6 @@ class FlatMap
         this._map.resize();
     }
 
-    mapLayerId(name)
-    //==============
-    {
-        return `${this.uniqueId}/${name}`;
-    }
-
     getIdentifier()
     //=============
     {
