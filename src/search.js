@@ -158,7 +158,10 @@ export class SearchIndex
 
     addTerm_(featureId, text)
     //=======================
-    {    if (text) {
+    {
+        text = text.replace(new RegExp('<br/>', 'g'), ' ')
+                   .replace('\n', ' ');
+        if (text) {
             this._searchEngine.add({
                 id: this._featureIds.length,
                 text: text
