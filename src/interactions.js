@@ -662,17 +662,17 @@ export class UserInteractions
         if (('label' in properties || 'hyperlink' in properties)
            && (forceLabel || !('tooltip' in properties) || properties.tooltip)
            && !('labelled' in properties)) {
-            let tooltip = '';
-            if ('label' in properties) {
-                const label = properties.label;
-                tooltip = (label.substr(0, 1).toUpperCase() + label.substr(1)).replaceAll("\n", "<br/>");
-            } else {
-                tooltip = properties.hyperlink
-            }
+            const label = ('label' in properties) ? (properties.label.substr(0, 1).toUpperCase()
+                                                   + properties.label.substr(1)).replaceAll("\n", "<br/>")
+                                                  : '';
             if ('hyperlink' in properties) {
-                return `<div class='flatmap-feature-label'><a href='{properties.hyperlink}'>${tooltip}</a></div>`;
+                if (label === '') {
+                    return `<div class='flatmap-feature-label'><a href='{properties.hyperlink}'>${properties.hyperlink}</a></div>`;
+                } else {
+                    return `<div class='flatmap-feature-label'><a href='{properties.hyperlink}'>${properties.hyperlink}</a><br/>${label}</div>`;
+                }
             } else {
-                return `<div class='flatmap-feature-label'>${tooltip}</div>`;
+                return `<div class='flatmap-feature-label'>${label}</div>`;
             }
         }
         return '';
