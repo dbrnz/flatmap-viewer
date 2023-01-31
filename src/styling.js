@@ -226,8 +226,7 @@ export class FeatureBorderLayer extends VectorStyleLayer
             'type': 'line',
             'filter': [
                 'all',
-                ['==', '$type', 'Polygon'],
-                ['has', 'id']
+                ['==', '$type', 'Polygon']
             ],
             'paint': this.paintStyle(options)
         };
