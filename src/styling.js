@@ -356,6 +356,7 @@ export class PathLineLayer extends VectorStyleLayer
         const paintStyle = {
             'line-color': [
                 'case',
+                ['boolean', ['feature-state', 'selected'], false], '#0F0',
                 ['boolean', ['feature-state', 'hidden'], false], '#CCC',
                 ['==', ['get', 'type'], 'bezier'], 'red',
                 ['==', ['get', 'kind'], 'error'], '#FFFE0E',
