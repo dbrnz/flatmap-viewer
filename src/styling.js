@@ -683,7 +683,7 @@ export class BackgroundLayer
         return this.__id;
     }
 
-    style(backgroundColour, opacity=0.1)
+    style(backgroundColour, opacity=1.0)
     {
         return {
             'id': this.__id,
