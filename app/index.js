@@ -15,7 +15,7 @@ const MAP_ENDPOINT = 'http:localhost:8000/';
 window.onload = standaloneViewer(MAP_ENDPOINT, {
     debug: DEBUG,
     minimap: MINIMAP,
-    showPosition: true
+//    showPosition: true
 });
 
 //==============================================================================
