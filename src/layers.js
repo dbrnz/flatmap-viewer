@@ -192,9 +192,10 @@ class MapRasterLayers extends MapStylingLayers
     {
         const coloured = !('colour' in options) || options.colour;
         for (const layer of this.__layers) {
-            // Check active status when reseting to visible....
-            this.__map.setLayoutProperty(layer.id, 'visibility', coloured ? 'visible' : 'none',
-                 {validate: false});
+            // Check active status when resetting to visible....
+            this.__map.setLayoutProperty(layer.id, 'visibility',
+                                                   (coloured && this.active) ? 'visible' : 'none',
+                                         {validate: false});
         }
     }
 }
