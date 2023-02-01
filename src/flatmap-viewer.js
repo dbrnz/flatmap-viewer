@@ -1225,19 +1225,7 @@ export class MapManager
                     mapOptions['bounds'] = mapIndex['bounds'];
                 }
 
-                // Default is to show path controls
-
-                if (!('pathControls' in mapOptions)) {
-                    mapOptions['pathControls'] = true;
-                }
-
-                // Default is to show layer controls
-
-                if (!('layerControl' in mapOptions)) {
-                    mapOptions['layerControl'] = true;
-                }
-
-                // Mapmaker's changed the name of the field to indicate that indicates if
+                // Mapmaker has changed the name of the field to indicate that indicates if
                 // there are raster layers
                 if (!('image-layers' in mapIndex) && ('image_layer' in mapIndex)) {
                     mapIndex['image-layers'] = mapIndex['image_layer'];

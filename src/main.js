@@ -62,7 +62,9 @@ export async function standaloneViewer(map_endpoint=null, options={})
         minimap: false,
         searchable: true,
         featureInfo: true,
-        showPosition: false
+        showPosition: false,
+        pathControls: true,
+        layerControl: true
     }, options);
 
     function loadMap(id, taxon, sex)
