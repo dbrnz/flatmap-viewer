@@ -327,7 +327,7 @@ export class BackgroundControl
     getDefaultPosition()
     //==================
     {
-        return 'top-right';
+        return 'bottom-right';
     }
 
     onAdd(map)
