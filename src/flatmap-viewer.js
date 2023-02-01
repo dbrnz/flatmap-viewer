@@ -696,6 +696,8 @@ class FlatMap
     setBackgroundColour(colour)
     //=========================
     {
+        localStorage.setItem('flatmap-background-colour', colour);
+
         this._map.setPaintProperty('background', 'background-color', colour);
 
         if (this._minimap) {

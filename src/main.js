@@ -52,7 +52,7 @@ export async function standaloneViewer(map_endpoint=null, options={})
     });
 
     let currentMap = null;
-    let defaultBackground = 'black';
+    let defaultBackground = localStorage.getItem('flatmap-background-colour') || 'black';
 
     const mapOptions = Object.assign({
         tooltips: true,
