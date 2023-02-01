@@ -27,20 +27,21 @@ import {PATHWAYS_LAYER} from './pathways.js';
 import * as style from './styling.js';
 import * as utils from './utils.js';
 
-const FEATURES_LAYER = 'features'
-const RASTER_LAYERS_NAME = 'Background image layer'
+const FEATURES_LAYER = 'features';
+const RASTER_LAYERS_NAME = 'Background image layer';
+const RASTER_LAYERS_ID = 'background-image-layer';
 
 //==============================================================================
 
 class MapStylingLayers
 {
-    constructor(flatmap, layerId)
+    constructor(flatmap, layerId, options)
     {
         this.__map = flatmap.map;
         this.__id = layerId;
         this.__layers = [];
         this.__active = true;
-        this.__layerOptions = flatmap.options.layerOptions;
+        this.__layerOptions = options;
         this.__separateLayers = flatmap.options.separateLayers;
     }
 
@@ -90,9 +91,9 @@ class MapStylingLayers
 
 class MapFeatureLayers extends MapStylingLayers
 {
-    constructor(flatmap, layer)
+    constructor(flatmap, layer, options)
     {
-        super(flatmap, layer.id);
+        super(flatmap, layer.id, options);
         const vectorTileSource = this.__map.getSource('vector-tiles');
         const haveVectorLayers = (typeof vectorTileSource !== 'undefined');
 
@@ -161,9 +162,9 @@ class MapFeatureLayers extends MapStylingLayers
 
 class MapRasterLayers extends MapStylingLayers
 {
-    constructor(flatmap, bodyLayerId=null)
+    constructor(flatmap, options, bodyLayerId=null)
     {
-        super(flatmap, 'background-image-layer');
+        super(flatmap, RASTER_LAYERS_ID, options);
         if (bodyLayerId !== null) {
             const layerId = `${bodyLayerId}_${FEATURES_LAYER}`;
             const source = flatmap.options.separateLayers ? layerId : FEATURES_LAYER;
@@ -210,7 +211,10 @@ export class LayerManager
         this.__map = flatmap.map;
         this.__layers = new Map;
         this.__mapLayers = new Map;
-        const layerOptions = flatmap.options.layerOptions;
+        this.__layerOptions = utils.setDefaults(flatmap.options.layerOptions, {
+            colour: true,
+            outline: true
+        });;
         const backgroundLayer = new style.BackgroundLayer();
         if ('background' in flatmap.options) {
             this.__map.addLayer(backgroundLayer.style(flatmap.options.background));
@@ -220,20 +224,23 @@ export class LayerManager
 
         // Add the map's layers
         if (flatmap.details['image-layers']) {
+            this.__layerOptions.activeRasterLayer = true;
+
             // Image layers are below all feature layers
-
             const bodyLayer = flatmap.layers[0];
-
-            const rasterLayers = new MapRasterLayers(this.__flatmap, bodyLayer.id);  // body layer if not FC??
-
+            const rasterLayers = new MapRasterLayers(this.__flatmap,
+                                                     this.__layerOptions,
+                                                     bodyLayer.id);  // body layer if not FC??
             for (const layer of flatmap.layers) {
                 rasterLayers.addLayer(layer);
             }
-            this.__layers.set(RASTER_LAYERS_NAME, {
-                id: RASTER_LAYERS_NAME,
+            this.__layers.set(RASTER_LAYERS_ID, {
+                id: RASTER_LAYERS_ID,
                 description: RASTER_LAYERS_NAME
             });
-            this.__mapLayers.set(RASTER_LAYERS_NAME, rasterLayers);
+            this.__mapLayers.set(RASTER_LAYERS_ID, rasterLayers);
+        } else {
+            this.__layerOptions.activeRasterLayer = false;
         }
         for (const layer of flatmap.layers) {
            this.__addFeatureLayer(layer);
@@ -256,7 +263,9 @@ export class LayerManager
     //======================
     {
         this.__layers.set(layer.id, layer);
-        this.__mapLayers.set(layer.id, new MapFeatureLayers(this.__flatmap, layer));
+        this.__mapLayers.set(layer.id, new MapFeatureLayers(this.__flatmap,
+                                                            layer,
+                                                            this.__layerOptions));
     }
 
     get layers()
@@ -268,21 +277,26 @@ export class LayerManager
     activate(layerId, enable=true)
     //============================
     {
-        const mapLayer = this.__mapLayers.get(layerId);
-        if (mapLayer !== undefined) {
-            mapLayer.activate(enable);
+        const layer = this.__mapLayers.get(layerId);
+        if (layer !== undefined) {
+            layer.activate(enable);
+            if (layer.id === RASTER_LAYERS_ID) {
+                this.__layerOptions.activeRasterLayer = enable;
+                for (const mapLayer of this.__mapLayers.values()) {
+                    if (mapLayer.id !== RASTER_LAYERS_ID) {
+                        mapLayer.setColour(this.__layerOptions);
+                    }
+                }
+            }
         }
     }
 
     setColour(options=null)
     //=====================
     {
-        options = utils.setDefaults(options, {
-            colour: true,
-            outline: true
-        });
+        this.__layerOptions = utils.setDefaults(options, this.__layerOptions);
         for (const mapLayer of this.__mapLayers.values()) {
-            mapLayer.setColour(options)
+            mapLayer.setColour(this.__layerOptions);
         }
     }
 }

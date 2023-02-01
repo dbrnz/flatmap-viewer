@@ -114,6 +114,7 @@ export class FeatureFillLayer extends VectorStyleLayer
     {
         const coloured = !('colour' in options) || options.colour;
         const dimmed = 'dimmed' in options && options.dimmed;
+        const activeRasterLayer = 'activeRasterLayer' in options && options.activeRasterLayer;
         const paintStyle = {
             'fill-color': [
                 'case',
@@ -128,15 +129,15 @@ export class FeatureFillLayer extends VectorStyleLayer
             ],
             'fill-opacity': [
                 'case',
+                ['boolean', ['feature-state', 'selected'], false], 0.7,
+                ['has', 'colour'], activeRasterLayer ? 0.008 : 1.0,
+                ['boolean', ['feature-state', 'active'], false], 0.7,
+                ['has', 'node'], 0.3,
                 ['any',
                       ['==', ['get', 'kind'], 'scaffold'],
                       ['==', ['get', 'kind'], 'tissue'],
                       ['==', ['get', 'kind'], 'cell-type'],
                 ], 0.1,
-                ['has', 'node'], 0.3,
-                ['boolean', ['feature-state', 'active'], false], 0.8,
-                ['boolean', ['feature-state', 'selected'], false], 0.01,
-                ['has', 'colour'], 0.008,
                 (coloured && !dimmed) ? 0.01 : 0.1
             ]
         };
@@ -175,6 +176,7 @@ export class FeatureBorderLayer extends VectorStyleLayer
         const coloured = !('colour' in options) || options.colour;
         const outlined = !('outline' in options) || options.outline;
         const dimmed = 'dimmed' in options && options.dimmed;
+        const activeRasterLayer = 'activeRasterLayer' in options && options.activeRasterLayer;
         const lineColour = [ 'case' ];
         lineColour.push(['boolean', ['feature-state', 'selected'], false]);
         lineColour.push('red');
@@ -183,7 +185,7 @@ export class FeatureBorderLayer extends VectorStyleLayer
             lineColour.push('blue');
         }
         lineColour.push(['has', 'colour']);
-        lineColour.push(['get', 'colour']);
+        lineColour.push('#000');
         lineColour.push(['has', 'node']);
         lineColour.push('#AFA202');
         lineColour.push('#444');
@@ -198,7 +200,11 @@ export class FeatureBorderLayer extends VectorStyleLayer
         }
         lineOpacity.push(['boolean', ['feature-state', 'selected'], false]);
         lineOpacity.push(0.9);
-        lineOpacity.push((outlined && !dimmed) ? 0.3 : 0.1);
+        if (activeRasterLayer) {
+            lineOpacity.push((outlined && !dimmed) ? 0.3 : 0.1);
+        } else {
+            lineOpacity.push(0.5);
+        }
 
         const lineWidth = [
             'case',
@@ -208,8 +214,10 @@ export class FeatureBorderLayer extends VectorStyleLayer
         lineWidth.push(2.5);
         if (coloured && outlined) {
             lineWidth.push(['boolean', ['feature-state', 'active'], false]);
-            lineWidth.push(1);
+            lineWidth.push(1.5);
         }
+        lineWidth.push(['has', 'colour']);
+        lineWidth.push(0.7);
         lineWidth.push((coloured && outlined) ? 0.5 : 0.1);
 
         return super.changedPaintStyle({
@@ -271,8 +279,9 @@ export class FeatureLineLayer extends VectorStyleLayer
             ],
             'line-opacity': [
                 'case',
-                ['boolean', ['feature-state', 'selected'], false], 1.0,
-                ['boolean', ['feature-state', 'active'], false], 1.0,
+                    ['boolean', ['feature-state', 'selected'], false], 1.0,
+                    ['has', 'colour'], 1.0,
+                    ['boolean', ['feature-state', 'active'], false], 1.0,
                     0.3
                 ],
             'line-width': [
@@ -360,7 +369,7 @@ export class PathLineLayer extends VectorStyleLayer
                 ['boolean', ['feature-state', 'hidden'], false], '#CCC',
                 ['==', ['get', 'type'], 'bezier'], 'red',
                 ['==', ['get', 'kind'], 'error'], '#FFFE0E',
-                ['==', ['get', 'kind'], 'unknown'], '#FFC1DE',
+                ['==', ['get', 'kind'], 'unknown'], '#888',
                 ['==', ['get', 'kind'], 'cns'], '#9B1FC1',
                 ['==', ['get', 'kind'], 'lcn'], '#F19E38',
                 ['==', ['get', 'kind'], 'para-post'], '#3F8F4A',
