@@ -277,7 +277,10 @@ export class LayerManager
     setColour(options=null)
     //=====================
     {
-        options = utils.setDefaultOptions(options, {colour: true, outline: true});
+        options = utils.setDefaults(options, {
+            colour: true,
+            outline: true
+        });
         for (const mapLayer of this.__mapLayers.values()) {
             mapLayer.setColour(options)
         }

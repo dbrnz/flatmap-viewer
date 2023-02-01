@@ -658,7 +658,10 @@ class FlatMap
     setColour(options=null)
     //=====================
     {
-        options = utils.setDefaultOptions(options, {colour: true, outline: true});
+        options = utils.setDefaults(options, {
+            colour: true,
+            outline: true
+        });
         if (this._userInteractions !== null) {
             this._userInteractions.setColour(options);
         }
@@ -1025,7 +1028,11 @@ class FlatMap
     zoomToFeatures(externalIds, options=null)
     //=======================================
     {
-        options = utils.setDefaultOptions(options, {select: true, highlight: false, padding:100});
+        options = utils.setDefaults(options, {
+            select: true,
+            highlight: false,
+            padding:100
+        });
         if (this._userInteractions !== null) {
             const featureIds = this.modelFeatureIdList(externalIds);
             this._userInteractions.zoomToFeatures(featureIds, options);

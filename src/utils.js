@@ -110,7 +110,7 @@ export function normaliseId(id)
 
 //==============================================================================
 
-export function setDefaultOptions(options, defaultOptions)
+export function setDefaults(options, defaultOptions)
 {
     if (options === undefined || options === null) {
         return defaultOptions;

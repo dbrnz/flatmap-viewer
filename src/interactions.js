@@ -529,7 +529,12 @@ export class UserInteractions
     zoomToFeatures(featureIds, options=null)
     //======================================
     {
-        options = utils.setDefaultOptions(options, {select: true, highlight: false, noZoomIn: false, padding:10});
+        options = utils.setDefaults(options, {
+            select: true,
+            highlight:
+            false, noZoomIn:
+            false, padding:10
+        });
         const select = (options.select === true);
         const highlight = (options.highlight === true);
         if (featureIds.length) {
