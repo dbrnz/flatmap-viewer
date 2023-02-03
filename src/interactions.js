@@ -37,7 +37,7 @@ import {ContextMenu} from './contextmenu.js';
 import {displayedProperties} from './info.js';
 import {InfoControl} from './info.js';
 import {LayerManager} from './layers.js';
-import {PATHWAYS_LAYER, Pathways} from './pathways.js';
+import {PATH_TYPES, PATHWAYS_LAYER, Pathways} from './pathways.js';
 import {BackgroundControl, LayerControl, PathControl} from './controls.js';
 import {SearchControl} from './search.js';
 import {VECTOR_TILES_SOURCE} from './styling.js';
@@ -163,7 +163,8 @@ export class UserInteractions
         // Add a control to manage our pathways
 
         if (flatmap.options.pathControls) {
-            this._map.addControl(new PathControl(flatmap));
+            // Restrict to path types that are on the map...
+            this._map.addControl(new PathControl(flatmap, this._pathways.pathTypes));
         }
 
         // Add a control to manage our layers

@@ -22,7 +22,6 @@ limitations under the License.
 
 //==============================================================================
 
-import * as pathways from './pathways.js';
 
 //==============================================================================
 
@@ -91,10 +90,11 @@ export class NavigationControl
 
 export class PathControl
 {
-    constructor(flatmap)
+    constructor(flatmap, pathTypes)
     {
         this._flatmap = flatmap;
         this._map = undefined;
+        this.__pathTypes = pathTypes;
     }
 
     getDefaultPosition()
@@ -117,11 +117,11 @@ export class PathControl
 
         const innerHTML = [];
         innerHTML.push(`<label for="path-all-paths">ALL PATHS:</label><div class="nerve-line"></div><input id="path-all-paths" type="checkbox" checked/>`);
-        for (const path of pathways.PATH_TYPES) {
+        for (const path of this.__pathTypes) {
             innerHTML.push(`<label for="path-${path.type}">${path.label}</label><div class="nerve-line nerve-${path.type}"></div><input id="path-${path.type}" type="checkbox" checked/>`);
         }
         this._legend.innerHTML = innerHTML.join('\n');
-        this.__checkedCount = pathways.PATH_TYPES.length;
+        this.__checkedCount = this.__pathTypes.length;
         this.__halfCount = Math.trunc(this.__checkedCount/2);
 
         this._button = document.createElement('button');
@@ -164,11 +164,11 @@ export class PathControl
                     event.target.indeterminate = false;
                 }
                 if (event.target.checked) {
-                    this.__checkedCount = pathways.PATH_TYPES.length;
+                    this.__checkedCount = this.__pathTypes.length;
                 } else {
                     this.__checkedCount = 0;
                 }
-                for (const path of pathways.PATH_TYPES) {
+                for (const path of this.__pathTypes) {
                     const pathCheckbox = document.getElementById(`path-${path.type}`);
                     if (pathCheckbox) {
                         pathCheckbox.checked = event.target.checked;
@@ -187,7 +187,7 @@ export class PathControl
                 if (this.__checkedCount === 0) {
                     allPathsCheckbox.checked = false;
                     allPathsCheckbox.indeterminate = false;
-                } else if (this.__checkedCount === pathways.PATH_TYPES.length) {
+                } else if (this.__checkedCount === this.__pathTypes.length) {
                     allPathsCheckbox.checked = true;
                     allPathsCheckbox.indeterminate = false;
                 } else {

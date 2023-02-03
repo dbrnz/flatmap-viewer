@@ -138,6 +138,19 @@ export class Pathways
         }
     }
 
+    get pathTypes()
+    //=============
+    {
+        const pathTypes = [];
+        for (const pathType of PATH_TYPES) {
+            if (pathType.type in this.__typePaths
+            && this.__typePaths[pathType.type].length > 0) {
+                pathTypes.push(pathType);
+            }
+        }
+        return pathTypes;
+    }
+
     addPathsToFeatureSet_(paths, featureSet)
     //======================================
     {
