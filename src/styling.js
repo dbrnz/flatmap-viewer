@@ -379,7 +379,7 @@ export class PathLineLayer extends VectorStyleLayer
             ],
             'line-opacity': [
                 'case',
-                    ['boolean', ['feature-state', 'hidden'], false], 0.1,
+                    ['boolean', ['feature-state', 'hidden'], false], 0.05,
                     ['==', ['get', 'type'], 'bezier'], 1.0,
                     ['boolean', ['get', 'invisible'], false], 0.001,
                     ['boolean', ['feature-state', 'selected'], false], 1.0,
