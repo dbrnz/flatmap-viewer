@@ -26,6 +26,10 @@ export const VECTOR_TILES_SOURCE = 'vector-tiles';
 
 //==============================================================================
 
+import {PATH_STYLE_RULES} from './pathways.js';
+
+//==============================================================================
+
 class VectorStyleLayer
 {
     constructor(id, suffix, sourceLayer)
@@ -370,14 +374,7 @@ export class PathLineLayer extends VectorStyleLayer
                 ['==', ['get', 'type'], 'bezier'], 'red',
                 ['==', ['get', 'kind'], 'error'], '#FFFE0E',
                 ['==', ['get', 'kind'], 'unknown'], '#888',
-                ['==', ['get', 'kind'], 'cns'], '#9B1FC1',
-                ['==', ['get', 'kind'], 'lcn'], '#F19E38',
-                ['==', ['get', 'kind'], 'para-post'], '#3F8F4A',
-                ['==', ['get', 'kind'], 'para-pre'], '#3F8F4A',
-                ['==', ['get', 'kind'], 'somatic'], '#98561D',
-                ['==', ['get', 'kind'], 'sensory'], '#2A62F6',
-                ['==', ['get', 'kind'], 'symp-post'], '#EA3423',
-                ['==', ['get', 'kind'], 'symp-pre'], '#EA3423',
+                ...PATH_STYLE_RULES,
                 '#888'
             ],
             'line-opacity': [
@@ -570,14 +567,7 @@ export class NervePolygonFill extends VectorStyleLayer
                     'case',
                     ['==', ['get', 'kind'], 'bezier-end'], 'red',
                     ['==', ['get', 'kind'], 'bezier-control'], 'green',
-                    ['==', ['get', 'kind'], 'cns'], '#9B1FC1',
-                    ['==', ['get', 'kind'], 'lcn'], '#F19E38',
-                    ['==', ['get', 'kind'], 'para-post'], '#3F8F4A',
-                    ['==', ['get', 'kind'], 'para-pre'], '#3F8F4A',
-                    ['==', ['get', 'kind'], 'somatic'], '#98561D',
-                    ['==', ['get', 'kind'], 'sensory'], '#2A62F6',
-                    ['==', ['get', 'kind'], 'symp-post'], '#EA3423',
-                    ['==', ['get', 'kind'], 'symp-pre'], '#EA3423',
+                    ...PATH_STYLE_RULES,
                     'white'
                 ],
                 'fill-opacity': [

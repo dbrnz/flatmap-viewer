@@ -38,6 +38,9 @@ export const PATH_TYPES = [
     { type: "other", label: "Other neuron type", colour: "#888"}
 ];
 
+export const PATH_STYLE_RULES =
+    PATH_TYPES.flatMap(pathType => [['==', ['get', 'kind'], pathType.type], pathType.colour]);
+
 //==============================================================================
 
 function reverseMap(mapping)
