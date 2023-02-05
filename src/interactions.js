@@ -673,9 +673,9 @@ export class UserInteractions
                                                   : '';
             if ('hyperlink' in properties) {
                 if (label === '') {
-                    return `<div class='flatmap-feature-label'><a href='{properties.hyperlink}'>${properties.hyperlink}</a></div>`;
+                    return `<div class='flatmap-feature-label'><a href='${properties.hyperlink}'>${properties.hyperlink}</a></div>`;
                 } else {
-                    return `<div class='flatmap-feature-label'><a href='{properties.hyperlink}'>${properties.hyperlink}</a><br/>${label}</div>`;
+                    return `<div class='flatmap-feature-label'><a href='${properties.hyperlink}'>${label}</a></div>`;
                 }
             } else {
                 return `<div class='flatmap-feature-label'>${label}</div>`;
