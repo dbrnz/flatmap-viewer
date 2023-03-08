@@ -836,13 +836,21 @@ class FlatMap
             'label',
             'models',
             'nodeId',
-            'source'
+            'source',
+            'hyperlinks'
+        ];
+        const jsonProperties = [
+            'hyperlinks'
         ];
         for (const property of exportedProperties) {
             if (property in properties) {
                 const value = properties[property];
                 if (value !== undefined) {
-                    data[property] = properties[property];
+                    if (jsonProperties.indexOf(property) >= 0) {
+                        data[property] = JSON.parse(properties[property])
+                    } else {
+                        data[property] = properties[property];
+                    }
                 }
             }
         }
