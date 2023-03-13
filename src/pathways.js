@@ -35,7 +35,8 @@ export const PATH_TYPES = [
     { type: "somatic", label: "Somatic lower motor", colour: "#98561D"},
     { type: "symp-pre", label: "Sympathetic pre-ganglionic", colour: "#EA3423"},
     { type: "symp-post", label: "Sympathetic post-ganglionic", colour: "#EA3423"},
-    { type: "other", label: "Other neuron type", colour: "#888"}
+    { type: "other", label: "Other neuron type", colour: "#888"},
+    { type: "centreline", label: "Nerve centrelines", colour: "#2F6EBA", enabled: false}
 ];
 
 export const PATH_STYLE_RULES =

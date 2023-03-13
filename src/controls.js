@@ -117,12 +117,16 @@ export class PathControl
 
         const innerHTML = [];
         innerHTML.push(`<label for="path-all-paths">ALL PATHS:</label><div class="nerve-line"></div><input id="path-all-paths" type="checkbox" checked/>`);
+        this.__checkedCount = 0;
         for (const path of this.__pathTypes) {
-            innerHTML.push(`<label for="path-${path.type}">${path.label}</label><div class="nerve-line nerve-${path.type}"></div><input id="path-${path.type}" type="checkbox" checked/>`);
+            const checked =  !('enabled' in path) || path.enabled ? 'checked' : '';
+            if (checked != '') {
+                this.__checkedCount += 1;
+            }
+            innerHTML.push(`<label for="path-${path.type}">${path.label}</label><div class="nerve-line nerve-${path.type}"></div><input id="path-${path.type}" type="checkbox" ${checked}/>`);
         }
         this._legend.innerHTML = innerHTML.join('\n');
-        this.__checkedCount = this.__pathTypes.length;
-        this.__halfCount = Math.trunc(this.__checkedCount/2);
+        this.__halfCount = Math.trunc(this.__pathTypes.length/2);
 
         this._button = document.createElement('button');
         this._button.id = 'nerve-key-button';
@@ -152,6 +156,9 @@ export class PathControl
             if (this._button.getAttribute('control-visible') === 'false') {
                 this._container.appendChild(this._legend);
                 this._button.setAttribute('control-visible', 'true');
+                const allPathsCheckbox = document.getElementById('path-all-paths');
+                allPathsCheckbox.indeterminate = this.__checkedCount < this.__pathTypes.length
+                                              && this.__checkedCount > 0;
                 this._legend.focus();
             } else {
                 this._legend = this._container.removeChild(this._legend);

@@ -155,8 +155,12 @@ class MapFeatureLayers extends MapStylingLayers
         if (this.__map.getSource('vector-tiles')
                 .vectorLayerIds
                 .indexOf(pathwaysVectorSource) >= 0) {
+            this.__addStyleLayer(style.CentrelineEdgeLayer, PATHWAYS_LAYER);
+            this.__addStyleLayer(style.CentrelineTrackLayer, PATHWAYS_LAYER);
+
             this.__addStyleLayer(style.PathLineLayer, PATHWAYS_LAYER);
             this.__addStyleLayer(style.PathDashlineLayer, PATHWAYS_LAYER);
+
             this.__addStyleLayer(style.NervePolygonBorder, PATHWAYS_LAYER);
             this.__addStyleLayer(style.NervePolygonFill, PATHWAYS_LAYER);
             this.__addStyleLayer(style.FeatureNerveLayer, PATHWAYS_LAYER);

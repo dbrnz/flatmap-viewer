@@ -138,6 +138,16 @@ export class UserInteractions
 
         this._pathways = new Pathways(flatmap);
 
+        // The path types in this map
+        const mapPathTypes = this._pathways.pathTypes;
+
+        // Disable paths that are not initially shown
+        for (const path of mapPathTypes) {
+            if ('enabled' in path && !path.enabled) {
+                this.enablePath(path.type, false);
+            }
+        }
+
         // Add various controls when running standalone
 
         if (flatmap.options.standalone) {
@@ -152,7 +162,7 @@ export class UserInteractions
             this._map.addControl(new BackgroundControl(flatmap));
 
             // Add a control to manage our paths
-            this._map.addControl(new PathControl(flatmap, this._pathways.pathTypes));
+            this._map.addControl(new PathControl(flatmap, mapPathTypes));
 
             // Add a control to manage our layers
             this._map.addControl(new LayerControl(flatmap, this._layerManager));

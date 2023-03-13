@@ -289,7 +289,6 @@ export class FeatureLineLayer extends VectorStyleLayer
                 ['has', 'colour'], ['get', 'colour'],
                 ['boolean', ['feature-state', 'active'], false], coloured ? '#888' : '#CCC',
                 ['==', ['get', 'type'], 'network'], '#AFA202',
-                ['has', 'centreline'], '#888',
                 options.authoring ? '#C44' : '#444'
             ],
             'line-opacity': [
@@ -303,7 +302,6 @@ export class FeatureLineLayer extends VectorStyleLayer
                 'let',
                 'width', [
                     'case',
-                        ['has', 'centreline'], 1.2,
                         ['==', ['get', 'type'], 'network'], 1.2,
                         ['boolean', ['feature-state', 'selected'], false], 1.2,
                         ['boolean', ['feature-state', 'active'], false], 1.2,
@@ -483,6 +481,91 @@ export class PathDashlineLayer extends PathLineLayer
 
 //==============================================================================
 
+class CentrelineLayer extends VectorStyleLayer
+{
+    constructor(id, type, sourceLayer)
+    {
+        super(id, `centreline-${type}`, sourceLayer);
+        this.__type = type;
+    }
+
+    paintStyle(options, changes=false)
+    {
+        const coloured = !('colour' in options) || options.colour;
+        const paintStyle = {
+            'line-color': (this.__type == 'edge') ? '#000' : [
+                'case',
+                ['boolean', ['feature-state', 'selected'], false], '#0F0',
+                ['boolean', ['feature-state', 'active'], false], '#444',
+                '#CCC'
+            ],
+            'line-opacity': [
+                'case',
+                    ['boolean', ['feature-state', 'hidden'], false], 0.01,
+                    ['boolean', ['feature-state', 'selected'], false], 1.0,
+                    ['boolean', ['feature-state', 'active'], false], 1.0,
+                0.8
+            ],
+            'line-width': [
+                'let',
+                'width',
+                    (this.__type == 'edge') ? 1.6 : 1.2,
+                    [
+                    'interpolate',
+                        ['exponential', 2],
+                        ['zoom'],
+                         2, ["*", ['var', 'width'], ["^", 2, -0.5]],
+                         7, ["*", ['var', 'width'], ["^", 2,  2.5]],
+                         9, ["*", ['var', 'width'], ["^", 2,  4.0]]
+                ]
+            ]
+            // Need to vary width based on zoom??
+            // Or opacity??
+        };
+        return super.changedPaintStyle(paintStyle, changes);
+    }
+
+    style(options)
+    {
+        return {
+            ...super.style(),
+            'type': 'line',
+            'filter': [
+                'all',
+                ['==', '$type', 'LineString'],
+                ['==', 'kind', 'centreline']
+            ],
+            'paint': this.paintStyle(options),
+            'layout': {
+                'line-cap': 'square',
+                'line-join': 'bevel'
+            }
+        };
+    }
+}
+
+
+export class CentrelineEdgeLayer extends CentrelineLayer
+{
+    constructor(id, sourceLayer)
+    {
+        super(id, 'edge', sourceLayer);
+    }
+
+}
+
+export class CentrelineTrackLayer extends CentrelineLayer
+{
+    constructor(id, sourceLayer)
+    {
+        super(id, 'track', sourceLayer);
+    }
+
+
+}
+
+//==============================================================================
+
 export class FeatureNerveLayer extends VectorStyleLayer
 {
     constructor(id, sourceLayer)
@@ -498,6 +581,7 @@ export class FeatureNerveLayer extends VectorStyleLayer
             'filter': [
                  'all',
                  ['==', '$type', 'LineString'],
+                 ['!=', 'kind', 'centreline'],
                  ['==', 'type', 'nerve']
             ],
             'paint': {
