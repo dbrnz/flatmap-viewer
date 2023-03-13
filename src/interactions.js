@@ -211,7 +211,7 @@ export class UserInteractions
         return {
             center: this._map.getCenter().toArray(),
             zoom: this._map.getZoom(),
-            layers: this.activeLayerNames
+            layers: this.layers
         };
     }
 
@@ -243,10 +243,16 @@ export class UserInteractions
         this._layerManager.setColour(options);
     }
 
-    get activeLayerNames()
-    //====================
+    getLayers()
+    //=========
     {
-        return this._layerManager.activeLayerNames;
+        return this._layerManager.layers;
+    }
+
+    enableLayer(layerId, enable=true)
+    //===============================
+    {
+        this._layerManager.activate(layerId, enable);
     }
 
     mapFeature_(featureId)

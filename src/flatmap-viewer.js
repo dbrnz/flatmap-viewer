@@ -443,12 +443,6 @@ class FlatMap
         return `${this.__uuid}-${this._mapNumber}`;
     }
 
-    get activeLayerNames()
-    //====================
-    {
-        return this._userInteractions.activeLayerNames;
-    }
-
     get annotations()
     //===============
     {
@@ -750,6 +744,34 @@ class FlatMap
             this._minimap.show(show);
         }
 
+    }
+
+    //==========================================================================
+
+    /**
+     * Get a list of the flatmap's layers.
+     *
+     * @return {Array.Object.<{id: string, description: string, enabled: boolean}>}  An array with layer details
+     */
+    getLayers()
+    //=========
+    {
+        if (this._userInteractions !== null) {
+            return this._userInteractions.getLayers();
+        }
+    }
+
+    /**
+     * @param {string}  layerId  The layer identifier to enable
+     * @param {boolean}  enable  Show or hide the layer. Defaults to ``true`` (show)
+     *
+     */
+    enableLayer(layerId, enable=true)
+    //===============================
+    {
+        if (this._userInteractions !== null) {
+            return this._userInteractions.enableLayer(layerId, enable);
+        }
     }
 
     //==========================================================================

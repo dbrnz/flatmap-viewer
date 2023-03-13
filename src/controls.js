@@ -206,7 +206,7 @@ export class LayerControl
     constructor(flatmap, layerManager)
     {
         this.__flatmap = flatmap;
-        this.__manager = layerManager;
+        this.__layers = layerManager.layers;
         this.__map = undefined;
     }
 
@@ -224,18 +224,18 @@ export class LayerControl
         this.__container.className = 'maplibregl-ctrl';
         this.__container.id = 'flatmap-layer-control';
 
-        this.__layers = document.createElement('div');
-        this.__layers.id = 'layer-control-text';
-        this.__layers.className = 'flatmap-layer-grid';
+        this.__layersControl = document.createElement('div');
+        this.__layersControl.id = 'layer-control-text';
+        this.__layersControl.className = 'flatmap-layer-grid';
 
         const innerHTML = [];
         innerHTML.push(`<label for="layer-all-layers">ALL LAYERS:</label><input id="layer-all-layers" type="checkbox" checked/>`);
-        for (const layer of this.__manager.layers) {
+        for (const layer of this.__layers) {
             innerHTML.push(`<label for="layer-${layer.id}">${layer.description}</label><input id="layer-${layer.id}" type="checkbox" checked/>`);
         }
-        this.__layers.innerHTML = innerHTML.join('\n');
+        this.__layersControl.innerHTML = innerHTML.join('\n');
 
-        this.__layersCount = this.__manager.layers.length;
+        this.__layersCount = this.__layers;
         this.__checkedCount = this.__layersCount;
         this.__halfCount = Math.trunc(this.__checkedCount/2);
 
@@ -265,11 +265,11 @@ export class LayerControl
     {
         if (event.target.id === 'map-layers-button') {
             if (this.__button.getAttribute('control-visible') === 'false') {
-                this.__container.appendChild(this.__layers);
+                this.__container.appendChild(this.__layersControl);
                 this.__button.setAttribute('control-visible', 'true');
-                this.__layers.focus();
+                this.__layersControl.focus();
             } else {
-                this.__layers = this.__container.removeChild(this.__layers);
+                this.__layersControl = this.__container.removeChild(this.__layersControl);
                 this.__button.setAttribute('control-visible', 'false');
             }
         } else if (event.target.tagName === 'INPUT') {
@@ -283,16 +283,16 @@ export class LayerControl
                 } else {
                     this.__checkedCount = 0;
                 }
-                for (const layer of this.__manager.layers) {
+                for (const layer of this.__layers) {
                     const layerCheckbox = document.getElementById(`layer-${layer.id}`);
                     if (layerCheckbox) {
                         layerCheckbox.checked = event.target.checked;
-                        this.__manager.activate(layer.id, event.target.checked);
+                        this.__flatmap.enableLayer(layer.id, event.target.checked);
                     }
                 }
             } else if (event.target.id.startsWith('layer-')) {
                 const layerId = event.target.id.substring(6);
-                this.__manager.activate(layerId, event.target.checked);
+                this.__flatmap.enableLayer(layerId, event.target.checked);
                 if (event.target.checked) {
                     this.__checkedCount += 1;
                 } else {

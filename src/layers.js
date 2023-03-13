@@ -35,12 +35,13 @@ const RASTER_LAYERS_ID = 'background-image-layer';
 
 class MapStylingLayers
 {
-    constructor(flatmap, layerId, options)
+    constructor(flatmap, layer, options)
     {
         this.__map = flatmap.map;
-        this.__id = layerId;
-        this.__layers = [];
+        this.__id = layer.id;
+        this.__description = layer.description;
         this.__active = true;
+        this.__layers = [];
         this.__layerOptions = options;
         this.__separateLayers = flatmap.options.separateLayers;
     }
@@ -49,6 +50,12 @@ class MapStylingLayers
     //======
     {
         return this.__id;
+    }
+
+    get description()
+    //===============
+    {
+        return this.__description;
     }
 
     get active()
@@ -103,7 +110,7 @@ class MapFeatureLayers extends MapStylingLayers
 {
     constructor(flatmap, layer, options)
     {
-        super(flatmap, layer.id, options);
+        super(flatmap, layer, options);
         const vectorTileSource = this.__map.getSource('vector-tiles');
         const haveVectorLayers = (typeof vectorTileSource !== 'undefined');
 
@@ -118,7 +125,7 @@ class MapFeatureLayers extends MapStylingLayers
                 this.__addStyleLayer(style.FeatureLineLayer);
                 this.__addStyleLayer(style.FeatureBorderLayer);
             }
-            this.__addPathwayStyleLayers(this.__layerOptions);
+            this.__addPathwayStyleLayers();
             if (vectorFeatures) {
                 this.__addStyleLayer(style.FeatureLargeSymbolLayer);
                 if (!flatmap.options.tooltips) {
@@ -185,7 +192,11 @@ class MapRasterLayers extends MapStylingLayers
 {
     constructor(flatmap, options, bodyLayerId=null)
     {
-        super(flatmap, RASTER_LAYERS_ID, options);
+        const rasterLayer = {
+            id: RASTER_LAYERS_ID,
+            description: RASTER_LAYERS_NAME
+        };
+        super(flatmap, rasterLayer, options);
         if (bodyLayerId !== null) {
             const layerId = `${bodyLayerId}_${FEATURES_LAYER}`;
             const source = flatmap.options.separateLayers ? layerId : FEATURES_LAYER;
@@ -230,7 +241,6 @@ export class LayerManager
     {
         this.__flatmap = flatmap;
         this.__map = flatmap.map;
-        this.__layers = new Map;
         this.__mapLayers = new Map;
         this.__layerOptions = utils.setDefaults(flatmap.options.layerOptions, {
             colour: true,
@@ -256,44 +266,29 @@ export class LayerManager
             for (const layer of flatmap.layers) {
                 rasterLayers.addLayer(layer);
             }
-            this.__layers.set(RASTER_LAYERS_ID, {
-                id: RASTER_LAYERS_ID,
-                description: RASTER_LAYERS_NAME
-            });
             this.__mapLayers.set(RASTER_LAYERS_ID, rasterLayers);
         } else {
             this.__layerOptions.activeRasterLayer = false;
         }
         for (const layer of flatmap.layers) {
-           this.__addFeatureLayer(layer);
+            this.__mapLayers.set(layer.id, new MapFeatureLayers(this.__flatmap,
+                                                                layer,
+                                                                this.__layerOptions));
         }
-    }
-
-    get activeLayerNames()
-    //====================
-    {
-        const activeNames = [];
-        for (const mapLayer of this.__mapLayers.values()) {
-            if (mapLayer.active) {
-                activeNames.push(mapLayer.id);
-            }
-        }
-        return activeNames;
-    }
-
-    __addFeatureLayer(layer)
-    //======================
-    {
-        this.__layers.set(layer.id, layer);
-        this.__mapLayers.set(layer.id, new MapFeatureLayers(this.__flatmap,
-                                                            layer,
-                                                            this.__layerOptions));
     }
 
     get layers()
     //==========
     {
-        return Array.from(this.__layers.values());
+        const layers = [];
+        for (const mapLayer of this.__mapLayers.values()) {
+            layers.push({
+                id: mapLayer.id,
+                description: mapLayer.description,
+                enabled: mapLayer.active
+            });
+        }
+        return layers;
     }
 
     activate(layerId, enable=true)
