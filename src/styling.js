@@ -139,7 +139,8 @@ export class FeatureFillLayer extends VectorStyleLayer
             'fill-opacity': [
                 'case',
                 ['boolean', ['feature-state', 'selected'], false], 0.7,
-                ['has', 'colour'], activeRasterLayer ? 0.008 : 1.0,
+                ['has', 'opacity'], ['get', 'opacity'],
+                ['has', 'colour'], 1.0,
                 ['boolean', ['feature-state', 'active'], false], 0.7,
                 ['has', 'node'], 0.3,
                 ['any',
