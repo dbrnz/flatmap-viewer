@@ -238,7 +238,11 @@ export class InfoControl
                         if (prop in feature.properties) {
                             const value = feature.properties[prop];
                             if (value !== undefined) {
-                                values[prop] = value;
+                                if (prop === 'label') {
+                                    values[prop] = value.replaceAll("\n", "<br/>");
+                                } else {
+                                    values[prop] = value;
+                                }
                             }
                         }
                     });
