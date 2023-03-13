@@ -130,46 +130,31 @@ export class UserInteractions
 
         flatmap.setInitialPosition();
 
-        // Add a control to search annotations if option set
-
-        if (flatmap.options.searchable) {
-            this._map.addControl(new SearchControl(flatmap));
-        }
-
-        // Show information about features
-
-        if (flatmap.options.featureInfo || flatmap.options.searchable) {
-            this._infoControl = new InfoControl(flatmap);
-            if (flatmap.options.featureInfo) {
-                this._map.addControl(this._infoControl);
-            }
-        }
-
         // Add and manage our layers
 
         this._layerManager = new LayerManager(flatmap);
 
-        // Control background colour (NB. this depends on having map layers created)
-
-        if (flatmap.options.backgroundControl) {
-            this._map.addControl(new BackgroundControl(flatmap));
-        }
-
-        // Neural pathways which are either controlled externally
-        // or by our local controls
+        // Path visibility is either controlled externally or by a local control
 
         this._pathways = new Pathways(flatmap);
 
-        // Add a control to manage our pathways
+        // Add various controls when running standalone
 
-        if (flatmap.options.pathControls) {
-            // Restrict to path types that are on the map...
+        if (flatmap.options.standalone) {
+            // Add a control to search annotations if option set
+            this._map.addControl(new SearchControl(flatmap));
+
+            // Show information about features
+            this._infoControl = new InfoControl(flatmap);
+            this._map.addControl(this._infoControl);
+
+            // Control background colour (NB. this depends on having map layers created)
+            this._map.addControl(new BackgroundControl(flatmap));
+
+            // Add a control to manage our paths
             this._map.addControl(new PathControl(flatmap, this._pathways.pathTypes));
-        }
 
-        // Add a control to manage our layers
-
-        if (flatmap.options.layerControl) {
+            // Add a control to manage our layers
             this._map.addControl(new LayerControl(flatmap, this._layerManager));
         }
 

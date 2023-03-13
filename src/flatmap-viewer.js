@@ -1191,9 +1191,6 @@ export class MapManager
     * @arg options {Object} Configurable options for the map.
     * @arg options.background {string} Background colour of flatmap. Defaults to ``white``.
     * @arg options.debug {boolean} Enable debugging mode.
-    * @arg options.featureInfo {boolean} Show information about features as a tooltip. The tooltip is active
-    *                                    on selected features and, for non-selected features, when the
-    *                                    ``info`` control is enabled. More details are shown in debug mode.
     * @arg options.fullscreenControl {boolean} Add a ``Show full screen`` button to the map.
     * @arg options.layerOptions {Object} Options to control colour and outlines of features
     * @arg options.layerOptions.colour {boolean} Use colour fill (if available) for features. Defaults to ``true``.
@@ -1210,9 +1207,9 @@ export class MapManager
     * @arg options.maxZoom {number} The maximum zoom level of the map.
     * @arg options.minZoom {number} The minimum zoom level of the map.
     * @arg options.navigationControl {boolean} Add navigation controls (zoom buttons) to the map.
-    * @arg options.pathControl {boolean} Add buttons to control pathways including via a color-coded legend.
-    * @arg options.searchable {boolean} Add a control to search for features on a map.
     * @arg options.showPosition {boolean} Show ``position`` of tooltip.
+    * @arg options.standalone {boolean} Viewer is running ``standalone``, as opposed to integrated into
+    *                                   another application so show a number of controls. Defaults to ``false``.
     * @example
     * const humanMap1 = mapManager.loadMap('humanV1', 'div-1');
     *

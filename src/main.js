@@ -57,14 +57,10 @@ export async function standaloneViewer(map_endpoint=null, options={})
     const mapOptions = Object.assign({
         tooltips: true,
         background: defaultBackground,
-        backgroundControl: true,
         debug: false,
         minimap: false,
-        searchable: true,
-        featureInfo: true,
         showPosition: false,
-        pathControls: true,
-        layerControl: true
+        standalone: true
     }, options);
 
     function loadMap(id, taxon, sex)
