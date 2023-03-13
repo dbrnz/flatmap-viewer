@@ -415,7 +415,7 @@ export class PathLineLayer extends VectorStyleLayer
                 ['boolean', ['feature-state', 'selected'], false], '#0F0',
                 ['boolean', ['feature-state', 'hidden'], false], '#CCC',
                 ['==', ['get', 'type'], 'bezier'], 'red',
-                ['==', ['get', 'kind'], 'error'], '#FFFE0E',
+                ['has', 'error'], '#FFFE0E',
                 ['==', ['get', 'kind'], 'unknown'], '#888',
                 ...PATH_STYLE_RULES,
                 '#888'
