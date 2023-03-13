@@ -85,6 +85,16 @@ class MapStylingLayers
         return this.__separateLayers ? `${this.__id}_${sourceLayer}`
                                      : sourceLayer;
     }
+
+    setColour(options)
+    {
+
+    }
+
+    setFilter(options)
+    {
+
+    }
 }
 
 //==============================================================================
@@ -156,6 +166,17 @@ class MapFeatureLayers extends MapStylingLayers
             }
         }
     }
+
+    setFilter(options)
+    //================
+    {
+        for (const layer of this.__layers) {
+            const filter = layer.makeFilter(options);
+            if (filter !== null) {
+                this.__map.setFilter(layer.id, filter, {validate: true});
+            }
+        }
+    }
 }
 
 //==============================================================================
@@ -213,7 +234,8 @@ export class LayerManager
         this.__mapLayers = new Map;
         this.__layerOptions = utils.setDefaults(flatmap.options.layerOptions, {
             colour: true,
-            outline: true
+            outline: true,
+            sckan: 'valid'
         });;
         const backgroundLayer = new style.BackgroundLayer();
         if ('background' in flatmap.options) {
@@ -297,6 +319,15 @@ export class LayerManager
         this.__layerOptions = utils.setDefaults(options, this.__layerOptions);
         for (const mapLayer of this.__mapLayers.values()) {
             mapLayer.setColour(this.__layerOptions);
+        }
+    }
+
+    setFilter(options={})
+    //===================
+    {
+        this.__layerOptions = utils.setDefaults(options, this.__layerOptions);
+        for (const mapLayer of this.__mapLayers.values()) {
+            mapLayer.setFilter(this.__layerOptions);
         }
     }
 }

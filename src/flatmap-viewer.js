@@ -315,6 +315,21 @@ class FlatMap
     }
 
     /**
+     * Hide or show all paths valid in SCKAN.
+     *
+     * @param      {string}   validity Either ``VALID`` or ``INVALID``
+     * @param      {boolean}  [enable=true]  If ``true`` then only show the paths
+     *                                       of the type(s) otherwise only hide the paths
+     */
+    showSckanPaths(state='valid')
+    //===========================
+    {
+        if (this._userInteractions !== null) {
+            this._userInteractions.showSckanPaths(state);
+        }
+    }
+
+    /**
      * Load images and patterns/textures referenced in style rules.
      *
      * @private
@@ -1183,6 +1198,8 @@ export class MapManager
     * @arg options.layerOptions {Object} Options to control colour and outlines of features
     * @arg options.layerOptions.colour {boolean} Use colour fill (if available) for features. Defaults to ``true``.
     * @arg options.layerOptions.outline {boolean} Show the border of features. Defaults to ``true``.
+    * @arg options.layerOptions.sckan {string} Show neuron paths known to SCKAN: values are ``valid`` (default),
+    *                                        ``invalid``, ``all`` or ``none``.
     * @arg options.minimap {boolean|Object} Display a MiniMap of the flatmap. Defaults to ``false``.
     * @arg options.minimap.position {string} The minimap's position: ``bottom-left`` (default), ``bottom-right``,
     *                                        ``top-left`` or ``top-right``.

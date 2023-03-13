@@ -1022,6 +1022,12 @@ export class UserInteractions
         return this._pathways.nodePathModels(nodeId);
     }
 
+    showSckanPaths(state='valid')
+    //===========================
+    {
+        this._layerManager.setFilter({sckan: state});
+    }
+
     //==============================================================================
 
     // Find where to place a label or popup on a feature

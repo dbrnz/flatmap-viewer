@@ -44,6 +44,11 @@ class VectorStyleLayer
         return this.__id;
     }
 
+    makeFilter(options)
+    {
+        return null;
+    }
+
     paintStyle(options, changes=false)
     {
         return {};
@@ -249,23 +254,29 @@ export class FeatureBorderLayer extends VectorStyleLayer
 
 export class FeatureLineLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer, dashed=false)
+    constructor(id, sourceLayer, options={})
     {
+        const dashed = ('dashed' in options && options.dashed);
         const filterType = dashed ? 'line-dash' : 'line';
         super(id, `feature-${filterType}`, sourceLayer);
-        this.__filter = dashed ?
+        this.__dashed = dashed;
+    }
+
+    makeFilter(options={})
+    {
+        return this.__dashed ? [
+            'all',
+            ['==', '$type', 'LineString'],
+            ['==', 'type', `line-dash`]
+        ] : [
+            'all',
+            ['==', '$type', 'LineString'],
             [
                 'any',
-                ['==', 'type', `line-dash`]
-            ]
-        :
-            [
-                'any',
-                ['has', 'centreline'],
                 ['==', 'type', 'bezier'],
                 ['==', 'type', `line`]
-            ];
-        this.__dashed = dashed;
+            ]
+        ];
     }
 
     paintStyle(options)
@@ -320,12 +331,7 @@ export class FeatureLineLayer extends VectorStyleLayer
         return {
             ...super.style(),
             'type': 'line',
-            'filter': [
-                'all',
-                ['==', '$type', 'LineString'],
-                this.__filter
-                 // not for paths...
-            ],
+            'filter': this.makeFilter(options),
             'paint': this.paintStyle(options)
         };
     }
@@ -337,7 +343,7 @@ export class FeatureDashLineLayer extends FeatureLineLayer
 {
     constructor(id, sourceLayer)
     {
-        super(id, sourceLayer, true);
+        super(id, sourceLayer, {dashed: true});
     }
 }
 
@@ -345,22 +351,60 @@ export class FeatureDashLineLayer extends FeatureLineLayer
 
 export class PathLineLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer, dashed=false)
+    constructor(id, sourceLayer, options={})
     {
+        const dashed = ('dashed' in options && options.dashed);
         const filterType = dashed ? 'line-dash' : 'line';
         super(id, `path-${filterType}`, sourceLayer);
-        this.__filter = dashed ?
-            [
+        this.__dashed = dashed;
+    }
+
+    makeFilter(options={})
+    {
+        const sckanState = !'sckan' in options ? 'all'
+                         : options.sckan.toLowerCase();
+        const sckan_filter =
+            sckanState == 'none' ? [
+                ['!has', 'sckan']
+            ] :
+            sckanState == 'valid' ? [[
                 'any',
-                ['==', 'type', `line-dash`]
-            ]
-        :
+                ['!has', 'sckan'],
+                [
+                    'all',
+                    ['has', 'sckan'],
+                    ['==', 'sckan', true]
+                ]
+            ]] :
+            sckanState == 'invalid' ? [[
+                'any',
+                ['!has', 'sckan'],
+                [
+                    'all',
+                    ['has', 'sckan'],
+                    ['!=', 'sckan', true]
+                ]
+            ]] :
+            [ ];
+
+        return this.__dashed ? [
+            'all',
+            ['==', '$type', 'LineString'],
+            ['==', 'type', `line-dash`],
+            ...sckan_filter
+        ] : [
+            'all',
+            ['==', '$type', 'LineString'],
             [
                 'any',
                 ['==', 'type', 'bezier'],
-                ['==', 'type', `line`]
-            ];
-        this.__dashed = dashed;
+                [
+                    'all',
+                    ['==', 'type', `line`],
+                    ...sckan_filter
+                ]
+            ]
+        ];
     }
 
     paintStyle(options, changes=false)
@@ -413,16 +457,12 @@ export class PathLineLayer extends VectorStyleLayer
         return super.changedPaintStyle(paintStyle, changes);
     }
 
-    style(options)
+    style(options={})
     {
         return {
             ...super.style(),
             'type': 'line',
-            'filter': [
-                'all',
-                ['==', '$type', 'LineString'],
-                this.__filter
-            ],
+            'filter': this.makeFilter(options),
             'layout': {
                 'line-cap': 'butt'
             },
@@ -437,7 +477,7 @@ export class PathDashlineLayer extends PathLineLayer
 {
     constructor(id, sourceLayer)
     {
-        super(id, sourceLayer, true);
+        super(id, sourceLayer, {dashed: true});
     }
 }
 
