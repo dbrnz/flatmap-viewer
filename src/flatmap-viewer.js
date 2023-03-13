@@ -1233,6 +1233,14 @@ export class MapManager
                     mapOptions['bounds'] = mapIndex['bounds'];
                 }
 
+                // Note the kind of map
+
+                if ('style' in mapIndex) {
+                    mapOptions.style = mapIndex.style;  // Currently ``flatmap`` or ``fcdiagram``
+                } else {
+                    mapOptions.style = 'flatmap';
+                }
+
                 // Mapmaker has changed the name of the field to indicate that indicates if
                 // there are raster layers
                 if (!('image-layers' in mapIndex) && ('image_layer' in mapIndex)) {
@@ -1308,11 +1316,6 @@ export class MapManager
                     };
                 }
                 mapOptions.layerOptions.authoring = ('authoring' in mapIndex) ? mapIndex.authoring : false;
-                if ('style' in mapIndex) {
-                    mapOptions.layerOptions.style = mapIndex.style;
-                } else {
-                    mapOptions.layerOptions.style = 'flatmap';
-                }
 
                 // Are features in separate vector tile source layers?
 
