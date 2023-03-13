@@ -38,7 +38,7 @@ import {displayedProperties} from './info.js';
 import {InfoControl} from './info.js';
 import {LayerManager} from './layers.js';
 import {PATH_TYPES, PATHWAYS_LAYER, Pathways} from './pathways.js';
-import {BackgroundControl, LayerControl, PathControl} from './controls.js';
+import {BackgroundControl, LayerControl, PathControl, SCKANControl} from './controls.js';
 import {SearchControl} from './search.js';
 import {VECTOR_TILES_SOURCE} from './styling.js';
 
@@ -156,6 +156,11 @@ export class UserInteractions
 
             // Add a control to manage our layers
             this._map.addControl(new LayerControl(flatmap, this._layerManager));
+
+            // A SCKAN path control for FC maps
+            if (flatmap.options.style === 'fcdiagram') {
+                this._map.addControl(new SCKANControl(flatmap));
+            }
         }
 
         // Flag features that have annotations
