@@ -279,7 +279,7 @@ export class FeatureLineLayer extends VectorStyleLayer
         ];
     }
 
-    paintStyle(options)
+    paintStyle(options, changes=false)
     {
         const coloured = !('colour' in options) || options.colour;
         const paintStyle = {
@@ -321,7 +321,7 @@ export class FeatureLineLayer extends VectorStyleLayer
         if (this.__dashed) {
             paintStyle['line-dasharray'] = [3, 2];
         }
-        return paintStyle;
+        return super.changedPaintStyle(paintStyle, changes);
     }
 
     style(options)
@@ -405,7 +405,7 @@ export class PathLineLayer extends VectorStyleLayer
         ];
     }
 
-    paintStyle(options, changes=false)
+    paintStyle(options={}, changes=false)
     {
         const dimmed = 'dimmed' in options && options.dimmed;
         const paintStyle = {

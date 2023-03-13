@@ -312,8 +312,8 @@ export class LayerManager
         }
     }
 
-    setColour(options=null)
-    //=====================
+    setColour(options={})
+    //===================
     {
         this.__layerOptions = utils.setDefaults(options, this.__layerOptions);
         for (const mapLayer of this.__mapLayers.values()) {
