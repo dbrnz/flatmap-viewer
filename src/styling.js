@@ -452,7 +452,7 @@ export class PathLineLayer extends VectorStyleLayer
             ]
         };
         if (this.__dashed) {
-            paintStyle['line-dasharray'] = [3, 2];
+            paintStyle['line-dasharray'] = [1, 1];
         }
         return super.changedPaintStyle(paintStyle, changes);
     }
