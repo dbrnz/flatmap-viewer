@@ -431,17 +431,18 @@ export class PathLineLayer extends VectorStyleLayer
             ],
             'line-width': [
                 'let',
-                'width', [
+                'width', ["*", [
                     'case',
                         ['==', ['get', 'type'], 'bezier'], 0.1,
-                        ['==', ['get', 'kind'], 'error'], 1,
+                        ['has', 'error'], 1,
                         ['==', ['get', 'kind'], 'unknown'], 1,
                         ['boolean', ['get', 'invisible'], false], 0.1,
-                        ['boolean', ['feature-state', 'selected'], false], 1.2,
-                        ['boolean', ['feature-state', 'active'], false], 1.2,
-                    0.8
-                    ], [
-                    'interpolate',
+                        ['boolean', ['feature-state', 'selected'], false], 0.6,
+                        ['boolean', ['feature-state', 'active'], false], 0.9,
+                    0.6
+                    ],
+                    ['case', ['has', 'stroke-width'], ['get', 'stroke-width'], 1.0]],
+                    ['interpolate',
                         ['exponential', 2],
                         ['zoom'],
                          2, ["*", ['var', 'width'], ["^", 2, -0.5]],
