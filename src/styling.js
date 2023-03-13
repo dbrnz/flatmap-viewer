@@ -189,7 +189,7 @@ export class FeatureBorderLayer extends VectorStyleLayer
         const activeRasterLayer = 'activeRasterLayer' in options && options.activeRasterLayer;
         const lineColour = [ 'case' ];
         lineColour.push(['boolean', ['feature-state', 'selected'], false]);
-        lineColour.push('red');
+        lineColour.push('black');
         if (coloured && outlined) {
             lineColour.push(['boolean', ['feature-state', 'active'], false]);
             lineColour.push('blue');
