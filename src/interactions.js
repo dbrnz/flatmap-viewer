@@ -120,12 +120,6 @@ export class UserInteractions
         // Where to put labels and popups on a feature
         this.__centralPositions = new Map();
 
-        // MapLibre dynamically sets a transform on marker elements so in
-        // order to apply a scale transform we need to create marker icons
-        // inside the marker container <div>.
-        this._defaultMarkerHTML = new maplibre.Marker().getElement().innerHTML;
-        this._simulationMarkerHTML = new maplibre.Marker({color: '#005974'}).getElement().innerHTML;
-
         // Fit the map to its initial position
 
         flatmap.setInitialPosition();
@@ -1072,8 +1066,8 @@ export class UserInteractions
 
     // Marker handling
 
-    addMarker(anatomicalId, markerType='')
-    //====================================
+    addMarker(anatomicalId, htmlElement=null)
+    //=======================================
     {
         const featureIds = this._flatmap.modelFeatureIds(anatomicalId);
         let markerId = -1;
@@ -1089,13 +1083,15 @@ export class UserInteractions
                     markerId = this.__lastMarkerId;
                 }
 
+                // MapLibre dynamically sets a transform on marker elements so in
+                // order to apply a scale transform we need to create marker icons
+                // inside the marker container <div>.
+                const markerHTML = htmlElement ? new maplibre.Marker({elment: htmlElement})
+                                               : new maplibre.Marker();
+
                 const markerElement = document.createElement('div');
                 const markerIcon = document.createElement('div');
-                if (markerType === 'simulation') {
-                    markerIcon.innerHTML = this._simulationMarkerHTML;
-                } else {
-                    markerIcon.innerHTML = this._defaultMarkerHTML;
-                }
+                markerIcon.innerHTML = markerHTML.getElement().innerHTML;
                 markerIcon.className = 'flatmap-marker';
                 markerElement.appendChild(markerIcon);
 

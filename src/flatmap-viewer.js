@@ -781,17 +781,17 @@ class FlatMap
      *
      * @param      {string}  anatomicalId     The anatomical identifier of the feature on which
      *                                        to place the marker
-     * @param      {string}  [markerType='']  An optional parameter giving the type of marker
-     *                                        to use. Apart from the default, the only marker
-     *                                        type recognised is ``simulation``
+     * @param      {string}  [htmlElement=null]  An optional parameter giving the DOM element to
+     *                                           use as a marker. The default is a light blue,
+     *                                           droplet-shaped SVG marker.
      * @return     {integer}  The identifier for the resulting marker. -1 is returned if the
      *                        map doesn't contain a feature with the given anatomical identifier
      */
-    addMarker(anatomicalId, markerType='')
-    //====================================
+    addMarker(anatomicalId,  htmlElement=null)
+    //========================================
     {
         if (this._userInteractions !== null) {
-            return this._userInteractions.addMarker(anatomicalId, markerType);
+            return this._userInteractions.addMarker(anatomicalId, htmlElement);
         }
         return -1;
     }
