@@ -282,7 +282,9 @@ class FlatMap
     pathTypes()
     //=========
     {
-        return pathways.pathTypes;
+        if (this._userInteractions !== null) {
+            return this._userInteractions.pathways.pathTypes();
+        }
     }
 
     /**

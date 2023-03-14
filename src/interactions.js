@@ -133,7 +133,7 @@ export class UserInteractions
         this._pathways = new Pathways(flatmap);
 
         // The path types in this map
-        const mapPathTypes = this._pathways.pathTypes;
+        const mapPathTypes = this._pathways.pathTypes();
 
         // Disable paths that are not initially shown
         for (const path of mapPathTypes) {
@@ -205,6 +205,12 @@ export class UserInteractions
         this._map.on('move', this.panZoomEvent_.bind(this, 'pan'));
         this._map.on('zoom', this.panZoomEvent_.bind(this, 'zoom'));
         this.__pan_zoom_enabled = false;
+    }
+
+    get pathways()
+    //============
+    {
+        return this._pathways;
     }
 
     getState()

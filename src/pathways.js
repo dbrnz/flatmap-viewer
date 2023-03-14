@@ -144,8 +144,8 @@ export class Pathways
         }
     }
 
-    get pathTypes()
-    //=============
+    pathTypes()
+    //=========
     {
         const pathTypes = [];
         for (const pathType of PATH_TYPES) {
