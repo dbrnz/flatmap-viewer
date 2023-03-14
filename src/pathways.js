@@ -26,7 +26,7 @@ export const PATHWAYS_LAYER = 'pathways';
 
 //==============================================================================
 
-export const PATH_TYPES = [
+const PATH_TYPES = [
     { type: "cns", label: "CNS", colour: "#9B1FC1"},
     { type: "intracardiac", label: "Local circuit neuron", colour: "#F19E38"},
     { type: "para-pre", label: "Parasympathetic pre-ganglionic", colour: "#3F8F4A"},

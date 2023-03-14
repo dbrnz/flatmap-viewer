@@ -37,7 +37,7 @@ import {ContextMenu} from './contextmenu.js';
 import {displayedProperties} from './info.js';
 import {InfoControl} from './info.js';
 import {LayerManager} from './layers.js';
-import {PATH_TYPES, PATHWAYS_LAYER, Pathways} from './pathways.js';
+import {PATHWAYS_LAYER, Pathways} from './pathways.js';
 import {BackgroundControl, LayerControl, PathControl, SCKANControl} from './controls.js';
 import {SearchControl} from './search.js';
 import {VECTOR_TILES_SOURCE} from './styling.js';
@@ -989,7 +989,7 @@ export class UserInteractions
     {
         // Disable/enable all paths except those with `pathTypes`
         if (Array.isArray(pathTypes)) {
-            for (const pathType of pathways.PATH_TYPES) {
+            for (const pathType of pathways.pathTypes) {
                 if (pathTypes.indexOf(pathType.type) >= 0) {
                     this.enablePath(pathType.type, enable)
                 } else {
@@ -997,7 +997,7 @@ export class UserInteractions
                 }
             }
         } else {
-            for (const pathType of pathways.PATH_TYPES) {
+            for (const pathType of pathways.pathTypes) {
                 if (pathType.type === pathTypes) {
                     this.enablePath(pathType.type, enable)
                 } else {

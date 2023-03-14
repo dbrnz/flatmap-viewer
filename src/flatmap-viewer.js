@@ -275,13 +275,14 @@ class FlatMap
     }
 
     /**
-     * @returns {Array.<{type: string, label: string, colour: string}>} an array of objects giving path types
-     *                                                                  with their descriptions and colours
+     * @returns {Array.<{type: string, label: string, colour: string}>} an array of objects giving the path types
+     *                                                                  present in the map along with their
+     *                                                                  descriptions and colours
      */
     pathTypes()
     //=========
     {
-        return pathways.PATH_TYPES;
+        return pathways.pathTypes;
     }
 
     /**
