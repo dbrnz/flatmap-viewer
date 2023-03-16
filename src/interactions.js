@@ -1069,7 +1069,7 @@ export class UserInteractions
                 // MapLibre dynamically sets a transform on marker elements so in
                 // order to apply a scale transform we need to create marker icons
                 // inside the marker container <div>.
-                const markerHTML = htmlElement ? new maplibre.Marker({elment: htmlElement})
+                const markerHTML = htmlElement ? new maplibre.Marker({element: htmlElement})
                                                : new maplibre.Marker();
 
                 const markerElement = document.createElement('div');
