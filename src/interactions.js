@@ -990,29 +990,6 @@ export class UserInteractions
         this.enablePathFeatures_(enable, this._pathways.typeFeatureIds(pathType));
     }
 
-    showPaths(pathTypes, enable=true)
-    //===============================
-    {
-        // Disable/enable all paths except those with `pathTypes`
-        if (Array.isArray(pathTypes)) {
-            for (const pathType of pathways.pathTypes) {
-                if (pathTypes.indexOf(pathType.type) >= 0) {
-                    this.enablePath(pathType.type, enable)
-                } else {
-                    this.enablePath(pathType.type, !enable)
-                }
-            }
-        } else {
-            for (const pathType of pathways.pathTypes) {
-                if (pathType.type === pathTypes) {
-                    this.enablePath(pathType.type, enable)
-                } else {
-                    this.enablePath(pathType.type, !enable)
-                }
-            }
-        }
-    }
-
     pathwaysFeatureIds(externalIds)
     //=============================
     {
