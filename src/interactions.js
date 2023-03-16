@@ -976,6 +976,7 @@ export class UserInteractions
     togglePaths()
     //===========
     {
+        console.log('Depracated API function called: togglePaths()')
         if (this._disabledPathFeatures){
             this.enablePathFeatures_(true, this._pathways.allFeatureIds());
             this._disabledPathFeatures = false;
