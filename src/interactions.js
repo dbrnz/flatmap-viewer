@@ -1028,10 +1028,10 @@ export class UserInteractions
         return this._pathways.nodePathModels(nodeId);
     }
 
-    showSckanPaths(state='valid')
-    //===========================
+    enableSckanPath(sckanState, enable=true)
+    //======================================
     {
-        this._layerManager.setFilter({sckan: state});
+        this._layerManager.enableSckanPath(sckanState, enable);
     }
 
     //==============================================================================

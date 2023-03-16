@@ -338,11 +338,11 @@ const SCKAN_STATES = [
 
 export class SCKANControl
 {
-    constructor(flatmap)
+    constructor(flatmap, options={sckan: 'valid'})
     {
         this.__flatmap = flatmap;
         this.__map = undefined;
-        this.__state = 'valid';
+        this.__initialState = options.sckan || 'valid';
     }
 
     getDefaultPosition()
@@ -364,17 +364,17 @@ export class SCKANControl
         this.__sckan.className = 'flatmap-layer-grid';
 
         const innerHTML = [];
-        let checked = (this.__state === 'all') ? 'checked' : '';
+        let checked = (this.__initialState === 'all') ? 'checked' : '';
         innerHTML.push(`<label for="sckan-all-paths">ALL PATHS:</label><input id="sckan-all-paths" type="checkbox" ${checked}/>`);
         for (const state of SCKAN_STATES) {
-            checked = (this.__state.toUpperCase() === state.id) ? 'checked' : '';
+            checked = (this.__initialState.toUpperCase() === state.id) ? 'checked' : '';
             innerHTML.push(`<label for="sckan-${state.id}">${state.description}</label><input id="sckan-${state.id}" type="checkbox" ${checked}/>`);
         }
         this.__sckan.innerHTML = innerHTML.join('\n');
 
         this.__sckanCount = SCKAN_STATES.length;
-        this.__checkedCount = (this.__state === 'all') ? this.__sckanCount
-                            : (this.__state === 'none') ? 0
+        this.__checkedCount = (this.__initialState === 'all') ? this.__sckanCount
+                            : (this.__initialState === 'none') ? 0
                             : 1;
         this.__halfCount = Math.trunc(this.__sckanCount/2);
 
@@ -407,7 +407,8 @@ export class SCKANControl
                 this.__container.appendChild(this.__sckan);
                 this.__button.setAttribute('control-visible', 'true');
                 const allLayersCheckbox = document.getElementById('sckan-all-paths');
-                allLayersCheckbox.indeterminate = this.__state.toLowerCase().includes('valid');
+                allLayersCheckbox.indeterminate = (this.__checkedCount > 0)
+                                               && (this.__checkedCount < this.__sckanCount);
                 this.__sckan.focus();
             } else {
                 this.__sckan = this.__container.removeChild(this.__sckan);
@@ -430,11 +431,12 @@ export class SCKANControl
                     const sckanCheckbox = document.getElementById(`sckan-${state.id}`);
                     if (sckanCheckbox) {
                         sckanCheckbox.checked = event.target.checked;
-                        }
+                        this.__flatmap.enableSckanPath(state.id, event.target.checked);
+                    }
                 }
-                this.__flatmap.showSckanPaths(this.__state);
             } else if (event.target.id.startsWith('sckan-')) {
                 const sckanId = event.target.id.substring(6);
+                this.__flatmap.enableSckanPath(sckanId, event.target.checked);
                 if (event.target.checked) {
                     this.__checkedCount += 1;
                 } else {
@@ -442,24 +444,14 @@ export class SCKANControl
                 }
                 const allLayersCheckbox = document.getElementById('sckan-all-paths');
                 if (this.__checkedCount === 0) {
-                    this.__state = 'none';
                     allLayersCheckbox.checked = false;
                     allLayersCheckbox.indeterminate = false;
                 } else if (this.__checkedCount === this.__sckanCount) {
-                    this.__state = 'all';
                     allLayersCheckbox.checked = true;
                     allLayersCheckbox.indeterminate = false;
                 } else {
-                    if (event.target.checked) {
-                        this.__state = sckanId;
-                    } else if (sckanId === 'VALID') {
-                        this.__state = 'invalid';
-                    } else {
-                        this.__state = 'valid';
-                    }
                     allLayersCheckbox.indeterminate = true;
                 }
-                this.__flatmap.showSckanPaths(this.__state);
             }
         }
         event.stopPropagation();

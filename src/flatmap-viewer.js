@@ -320,15 +320,15 @@ class FlatMap
     /**
      * Hide or show all paths valid in SCKAN.
      *
-     * @param      {string}   validity Either ``VALID`` or ``INVALID``
-     * @param      {boolean}  [enable=true]  If ``true`` then only show the paths
-     *                                       of the type(s) otherwise only hide the paths
+     * @param {string}   sckanState  Either ``valid`` or ``invalid``
+     * @param {boolean}  enable  Show or hide paths with that SCKAN state.
+     *                           Defaults to ``true`` (show)
      */
-    showSckanPaths(state='valid')
-    //===========================
+    enableSckanPath(sckanState, enable=true)
+    //======================================
     {
         if (this._userInteractions !== null) {
-            this._userInteractions.showSckanPaths(state);
+            this._userInteractions.enableSckanPath(sckanState, enable);
         }
     }
 
