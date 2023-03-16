@@ -118,7 +118,7 @@ export class UserInteractions
         this.__annotationByMarkerId = new Map();
 
         // Where to put labels and popups on a feature
-        this.__centralPositions = new Map();
+        this.__markerPositions = new Map();
 
         // Fit the map to its initial position
 
@@ -609,7 +609,7 @@ export class UserInteractions
                 location = this.__lastClickLngLat;
             } else {
                 // Position popup at the feature's 'centre'
-                location = this.__centralPosition(featureId, ann);
+                location = this.__markerPosition(featureId, ann);
             }
 
             // Make sure the feature is on screen
@@ -1013,41 +1013,39 @@ export class UserInteractions
 
     //==============================================================================
 
-    // Find where to place a label or popup on a feature
+    // Marker handling
 
-    __centralPosition(featureId, annotation)
-    //======================================
+    __markerPosition(featureId, annotation)
     {
-        if (this.__centralPositions.has(featureId)) {
-            return this.__centralPositions.get(featureId);
+        if (this.__markerPositions.has(featureId)) {
+            return this.__markerPositions.get(featureId);
         }
-        let position = annotation.centroid;
-        const features = this._map.querySourceFeatures(VECTOR_TILES_SOURCE, {
-            'sourceLayer': this._flatmap.options.separateLayers
-                            ? `${annotation['layer']}_${annotation['tile-layer']}`
-                            : annotation['tile-layer'],
-            'filter': [
-                'all',
-                [ '==', ['id'], parseInt(featureId) ],
-                [ '==', ['geometry-type'], 'Polygon' ]
-            ]
-        });
-        if (features.length > 0) {
-            const feature = features[0];
-            const polygon = feature.geometry.coordinates;
-            // Rough heuristic. Area is in km^2; below appears to be good enough.
-            const precision = ('area' in feature.properties)
-                                ? Math.sqrt(feature.properties.area)/500000
-                                : 0.1;
-            position = polylabel(polygon, precision);
+        let position = annotation.markerPosition || annotation.centroid;
+        if (position === null || position == undefined) {
+            // Find where to place a label or popup on a feature
+            const features = this._map.querySourceFeatures(VECTOR_TILES_SOURCE, {
+                'sourceLayer': this._flatmap.options.separateLayers
+                                ? `${annotation['layer']}_${annotation['tile-layer']}`
+                                : annotation['tile-layer'],
+                'filter': [
+                    'all',
+                    [ '==', ['id'], parseInt(featureId) ],
+                    [ '==', ['geometry-type'], 'Polygon' ]
+                ]
+            });
+            if (features.length > 0) {
+                const feature = features[0];
+                const polygon = feature.geometry.coordinates;
+                // Rough heuristic. Area is in km^2; below appears to be good enough.
+                const precision = ('area' in feature.properties)
+                                    ? Math.sqrt(feature.properties.area)/500000
+                                    : 0.1;
+                position = polylabel(polygon, precision);
+            }
         }
-        this.__centralPositions.set(featureId, position);
+        this.__markerPositions.set(featureId, position);
         return position;
     }
-
-    //==============================================================================
-
-    // Marker handling
 
     addMarker(anatomicalId, htmlElement=null)
     //=======================================
@@ -1078,9 +1076,7 @@ export class UserInteractions
                 markerIcon.className = 'flatmap-marker';
                 markerElement.appendChild(markerIcon);
 
-                const markerPosition = (annotation.geometry === 'Polygon')
-                                     ? this.__centralPosition(featureId, annotation)
-                                     : annotation.centroid;
+                const markerPosition = this.__markerPosition(featureId, annotation);
                 const marker = new maplibre.Marker(markerElement)
                                            .setLngLat(markerPosition)
                                            .addTo(this._map);
