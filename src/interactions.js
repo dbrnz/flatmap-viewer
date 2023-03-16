@@ -1005,6 +1005,12 @@ export class UserInteractions
         return this._pathways.nodePathModels(nodeId);
     }
 
+    enableCentrelines(show=true)
+    //==========================
+    {
+        this._layerManager.setFilter({centrelines: state});
+    }
+
     enableSckanPath(sckanState, enable=true)
     //======================================
     {
