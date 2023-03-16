@@ -1260,9 +1260,9 @@ export class MapManager
                 // Note the kind of map
 
                 if ('style' in mapIndex) {
-                    mapOptions.style = mapIndex.style;  // Currently ``flatmap`` or ``fcdiagram``
+                    mapOptions.style = mapIndex.style;  // Currently ``anatomical`` or ``functional``
                 } else {
-                    mapOptions.style = 'flatmap';
+                    mapOptions.style = 'flatmap';       // Default is a generic ``flatmap``
                 }
 
                 // Mapmaker has changed the name of the field to indicate that indicates if

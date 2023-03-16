@@ -162,8 +162,8 @@ export class UserInteractions
             this._map.addControl(new LayerControl(flatmap, this._layerManager));
 
             // A SCKAN path control for FC maps
-            if (flatmap.options.style === 'fcdiagram') {
-                this._map.addControl(new SCKANControl(flatmap));
+            if (flatmap.options.style === 'functional') {
+                this._map.addControl(new SCKANControl(flatmap, flatmap.options.layerOptions));
             }
         }
 
