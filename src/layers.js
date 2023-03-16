@@ -250,7 +250,7 @@ export class LayerManager
             colour: true,
             outline: true,
             sckan: 'valid'
-        });;
+        });
         const backgroundLayer = new style.BackgroundLayer();
         if ('background' in flatmap.options) {
             this.__map.addLayer(backgroundLayer.style(flatmap.options.background));
@@ -327,6 +327,31 @@ export class LayerManager
         this.__layerOptions = utils.setDefaults(options, this.__layerOptions);
         for (const mapLayer of this.__mapLayers.values()) {
             mapLayer.setFilter(this.__layerOptions);
+        }
+    }
+
+    enableSckanPath(sckanState, enable=true)
+    //======================================
+    {
+        const currentState = this.__layerOptions.sckan;
+        const validEnabled = ['valid', 'all'].indexOf(currentState) >= 0;
+        const invalidEnabled = ['invalid', 'all'].indexOf(currentState) >= 0;
+        let newState = sckanState.toLowerCase();
+        if (newState === 'valid') {
+            if (enable && !validEnabled) {
+                newState = invalidEnabled ? 'all' : 'valid';
+            } else if (!enable && validEnabled) {
+                newState = invalidEnabled ? 'invalid' : 'none';
+            }
+        } else if (newState === 'invalid') {
+            if (enable && !invalidEnabled) {
+                newState = validEnabled ? 'all' : 'invalid';
+            } else if (!enable && invalidEnabled) {
+                newState = validEnabled ? 'valid' : 'none';
+            }
+        }
+        if (newState !== this.__layerOptions.sckan) {
+            this.setFilter({sckan: newState});
         }
     }
 }
