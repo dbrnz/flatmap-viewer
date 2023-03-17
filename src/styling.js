@@ -287,8 +287,8 @@ export class FeatureLineLayer extends VectorStyleLayer
             'line-color': [
                 'case',
                 ['boolean', ['feature-state', 'selected'], false], '#0F0',
-                ['has', 'colour'], ['get', 'colour'],
                 ['boolean', ['feature-state', 'active'], false], coloured ? '#888' : '#CCC',
+                ['has', 'colour'], ['get', 'colour'],
                 ['==', ['get', 'type'], 'network'], '#AFA202',
                 options.authoring ? '#C44' : '#444'
             ],
