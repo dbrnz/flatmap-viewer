@@ -651,9 +651,13 @@ export class UserInteractions
         const tooltips = [];
         for (const lineFeature of lineFeatures) {
             const properties = lineFeature.properties;
-            if ('label' in properties
-               && (!('tooltip' in properties) || properties.tooltip)
-               && !('labelled' in properties)) {
+            if ('error' in properties) {
+                tooltips.push(`<div class="feature-error">Error: ${properties.error}</div>`)
+            }
+            if ('warning' in properties) {
+                tooltips.push(`<div class="feature-error">Warning: ${properties.warning}</div>`)
+            }
+            if ('label' in properties && (!('tooltip' in properties) || properties.tooltip)) {
                 let tooltip = '';
                 const label = properties.label;
                 const cleanLabel = (label.substr(0, 1).toUpperCase() + label.substr(1)).replaceAll("\n", "<br/>");
@@ -662,32 +666,37 @@ export class UserInteractions
                 }
             }
         }
-        if (tooltips.length === 0) {
-            return '';
-        }
-        return `<div class='flatmap-feature-label'>${tooltips.join('<hr/>')}</div>`;
+        return (tooltips.length === 0) ? ''
+                                       : `<div class='flatmap-feature-label'>${tooltips.join('<hr/>')}</div>`;
     }
 
     tooltipHtml_(properties, forceLabel=false)
     //========================================
     {
+        const tooltip = [];
+        if ('error' in properties) {
+            tooltip.push(`<div class="feature-error">Error: ${properties.error}</div>`)
+        }
+        if ('warning' in properties) {
+            tooltip.push(`<div class="feature-error">Warning: ${properties.warning}</div>`)
+        }
         if (('label' in properties || 'hyperlink' in properties)
-           && (forceLabel || !('tooltip' in properties) || properties.tooltip)
-           && !('labelled' in properties)) {
+                && (forceLabel || !('tooltip' in properties) || properties.tooltip)) {
             const label = ('label' in properties) ? (properties.label.substr(0, 1).toUpperCase()
                                                    + properties.label.substr(1)).replaceAll("\n", "<br/>")
                                                   : '';
             if ('hyperlink' in properties) {
                 if (label === '') {
-                    return `<div class='flatmap-feature-label'><a href='${properties.hyperlink}'>${properties.hyperlink}</a></div>`;
+                    tooltip.push(`<a href='${properties.hyperlink}'>${properties.hyperlink}</a>`);
                 } else {
-                    return `<div class='flatmap-feature-label'><a href='${properties.hyperlink}'>${label}</a></div>`;
+                    tooltip.push(`<a href='${properties.hyperlink}'>${label}</a></div>`);
                 }
             } else {
-                return `<div class='flatmap-feature-label'>${label}</div>`;
+                tooltip.push(label);
             }
         }
-        return '';
+        return (tooltip.length === 0) ? ''
+                                      : `<div class='flatmap-feature-label'>${tooltip.join('<hr/>')}</div>`;
     }
 
     __featureEvent(type, feature)
