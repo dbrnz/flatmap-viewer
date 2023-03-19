@@ -415,8 +415,6 @@ export class PathLineLayer extends VectorStyleLayer
                 ['boolean', ['feature-state', 'selected'], false], '#0F0',
                 ['boolean', ['feature-state', 'hidden'], false], '#CCC',
                 ['==', ['get', 'type'], 'bezier'], 'red',
-                ['has', 'error'], '#FF0',
-                ['has', 'warning'], '#FF0',
                 ['==', ['get', 'kind'], 'unknown'], '#888',
                 ...PATH_STYLE_RULES,
                 '#888'
@@ -425,8 +423,7 @@ export class PathLineLayer extends VectorStyleLayer
                 'case',
                     ['boolean', ['feature-state', 'hidden'], false], 0.05,
                     ['==', ['get', 'type'], 'bezier'], 1.0,
-                    ['has', 'error'], 1.0,
-                    ['has', 'warning'], 1.0,
+                    ['==', ['get', 'kind'], 'error'], 1.0,
                     ['boolean', ['get', 'invisible'], false], 0.001,
                     ['boolean', ['feature-state', 'selected'], false], 1.0,
                     ['boolean', ['feature-state', 'active'], false], 1.0,
@@ -437,8 +434,7 @@ export class PathLineLayer extends VectorStyleLayer
                 'width', ["*", [
                     'case',
                         ['==', ['get', 'type'], 'bezier'], 0.1,
-                        ['has', 'error'], 1,
-                        ['has', 'warning'], 1,
+                        ['==', ['get', 'kind'], 'error'], 1,
                         ['==', ['get', 'kind'], 'unknown'], 1,
                         ['boolean', ['get', 'invisible'], false], 0.1,
                         ['boolean', ['feature-state', 'selected'], false], 0.6,
