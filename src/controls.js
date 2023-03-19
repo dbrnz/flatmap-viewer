@@ -123,7 +123,11 @@ export class PathControl
             if (checked != '') {
                 this.__checkedCount += 1;
             }
-            innerHTML.push(`<label for="path-${path.type}">${path.label}</label><div class="nerve-line nerve-${path.type}"></div><input id="path-${path.type}" type="checkbox" ${checked}/>`);
+            const colour = path.colour || '#440';
+            const style = path.dashed ? `background: repeating-linear-gradient(to right,${colour} 0,${colour} 6px,transparent 6px,transparent 9px);`
+                                      : `background: ${colour};`;
+
+            innerHTML.push(`<label for="path-${path.type}">${path.label}</label><div class="nerve-line" style="${style}"></div><input id="path-${path.type}" type="checkbox" ${checked}/>`);
         }
         this._legend.innerHTML = innerHTML.join('\n');
         this.__halfCount = Math.trunc(this.__pathTypes.length/2);

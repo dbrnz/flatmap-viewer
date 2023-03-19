@@ -202,33 +202,6 @@ li.flatmap-contextmenu-item:hover {
 label[for=path-all-paths] {
     font-weight: bold;
 }
-.nerve-cns {
-    background: #9B1FC1;
-}
-.nerve-intracardiac {
-    background: #F19E38;
-}
-.nerve-other {
-    background: #888;
-}
-.nerve-para-pre {
-    background: #3F8F4A;
-}
-.nerve-para-post {
-    background: repeating-linear-gradient(to right,#3F8F4A 0,#3F8F4A 6px,transparent 6px,transparent 9px)
-}
-.nerve-sensory {
-    background: #2A62F6;
-}
-.nerve-somatic {
-    background: #98561D;
-}
-.nerve-symp-pre {
-    background: #EA3423;
-}
-.nerve-symp-post {
-    background: repeating-linear-gradient(to right,#EA3423 0,#EA3423 6px,transparent 6px,transparent 9px)
-}
 
 /* Layer control */
 
