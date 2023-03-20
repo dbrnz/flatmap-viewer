@@ -162,7 +162,8 @@ export class FeatureFillLayer extends VectorStyleLayer
             'filter': [
                 'all',
                 ['==', '$type', 'Polygon'],
-                ['!=', 'models', 'UBERON:0013702']
+                ['!=', 'models', 'UBERON:0013702'],
+                ['!has', 'node']
             ],
             'layout': {
                 'fill-sort-key': ['get', 'scale']
@@ -244,7 +245,8 @@ export class FeatureBorderLayer extends VectorStyleLayer
             'type': 'line',
             'filter': [
                 'all',
-                ['==', '$type', 'Polygon']
+                ['==', '$type', 'Polygon'],
+                ['!has', 'node']
             ],
             'paint': this.paintStyle(options)
         };
@@ -564,6 +566,76 @@ export class CentrelineTrackLayer extends CentrelineLayer
     }
 
 
+}
+
+//==============================================================================
+
+export class CentrelineNodeFillLayer extends VectorStyleLayer
+{
+    constructor(id, sourceLayer)
+    {
+        super(id, 'node-fill', sourceLayer);
+    }
+
+    paintStyle(options={}, changes=false)
+    {
+        const showNodes = options.showCentrelines || false;
+        const paintStyle = {
+                'fill-color': '#AFA202',
+                'fill-opacity': showNodes ? 0.7 : 0.01
+            }
+        return super.changedPaintStyle(paintStyle, changes);
+    }
+
+    style(options)
+    {
+        return {
+            ...super.style(),
+            'type': 'fill',
+            'filter': [
+                'all',
+                ['==', '$type', 'Polygon'],
+                ['has', 'node']
+            ],
+            'layout': {
+                'fill-sort-key': ['get', 'scale']
+            },
+            'paint': this.paintStyle(options)
+        };
+    }
+}
+
+export class CentrelineNodeBorderLayer extends VectorStyleLayer
+{
+    constructor(id, sourceLayer)
+    {
+        super(id, 'node-border', sourceLayer);
+    }
+
+    paintStyle(options={}, changes=false)
+    {
+        const showNodes = options.showCentrelines || false;
+        const paintStyle = {
+                'line-color': '#AFA202',
+                'line-opacity': showNodes ? 0.7 : 0.01,
+                'line-width': 0.5
+            }
+        return super.changedPaintStyle(paintStyle, changes);
+    }
+
+    style(options)
+    {
+        return {
+            ...super.style(),
+            'type': 'line',
+            'filter': [
+                'all',
+                ['==', '$type', 'Polygon'],
+                ['has', 'node']
+            ],
+            'paint':  this.paintStyle(options)
+        };
+    }
 }
 
 //==============================================================================
