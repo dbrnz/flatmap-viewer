@@ -232,12 +232,9 @@ export class LayerControl
     {
         this.__map = map;
         this.__container = document.createElement('div');
-        this.__container.className = 'maplibregl-ctrl';
-        this.__container.id = 'flatmap-layer-control';
-
+        this.__container.className = 'maplibregl-ctrl flatmap-control';
         this.__layersControl = document.createElement('div');
-        this.__layersControl.id = 'layer-control-text';
-        this.__layersControl.className = 'flatmap-layer-grid';
+        this.__layersControl.className = 'flatmap-control-grid';
 
         const innerHTML = [];
         innerHTML.push(`<label for="layer-all-layers">ALL LAYERS:</label><input id="layer-all-layers" type="checkbox" checked/>`);
@@ -327,7 +324,6 @@ export class LayerControl
 
 //==============================================================================
 
-
 const SCKAN_STATES = [
     {
         'id': 'VALID',
@@ -360,12 +356,9 @@ export class SCKANControl
     {
         this.__map = map;
         this.__container = document.createElement('div');
-        this.__container.className = 'maplibregl-ctrl';
-        this.__container.id = 'flatmap-layer-control';
-
+        this.__container.className = 'maplibregl-ctrl flatmap-control';
         this.__sckan = document.createElement('div');
-        this.__sckan.id = 'sckan-control-text';
-        this.__sckan.className = 'flatmap-layer-grid';
+        this.__sckan.className = 'flatmap-control-grid';
 
         const innerHTML = [];
         let checked = (this.__initialState === 'all') ? 'checked' : '';
@@ -485,7 +478,6 @@ export class NerveControl
         this.__map = map;
         this.__container = document.createElement('div');
         this.__container.className = 'maplibregl-ctrl';
-        this.__container.id = 'flatmap-nerve-control';
 
         this.__button = document.createElement('button');
         this.__button.id = 'map-nerve-button';

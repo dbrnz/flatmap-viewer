@@ -205,10 +205,10 @@ label[for=path-all-paths] {
 
 /* Layer control */
 
-#flatmap-layer-control {
+.flatmap-control {
     text-align: right;
 }
-.flatmap-layer-grid {
+.flatmap-control-grid {
     margin-top: 10px;
     display: grid;
     grid-template-columns: 3.8fr 0.2fr;
@@ -223,7 +223,7 @@ label[for=path-all-paths] {
     padding: 4px;
     opacity: 0.8;
 }
-.flatmap-layer-grid input {
+.flatmap-control-grid input {
     height:  1.1em;
 }
 label[for=layer-all-layers] {
