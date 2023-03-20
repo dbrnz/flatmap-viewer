@@ -93,14 +93,12 @@ class MapStylingLayers
                                      : sourceLayer;
     }
 
-    setColour(options)
+    setPaint(options)
     {
-
     }
 
     setFilter(options)
     {
-
     }
 }
 
@@ -136,9 +134,9 @@ class MapFeatureLayers extends MapStylingLayers
             }
         }
 
-        // Make sure our colour options are set properly, in particular raster layer visibility
+        // Make sure our paint options are set properly, in particular raster layer visibility
 
-        this.setColour(this.__layerOptions);
+        this.setPaint(this.__layerOptions);
     }
 
     __addStyleLayer(styleClass, sourceLayer=FEATURES_LAYER)
@@ -169,8 +167,8 @@ class MapFeatureLayers extends MapStylingLayers
         }
     }
 
-    setColour(options)
-    //================
+    setPaint(options)
+    //===============
     {
         for (const layer of this.__layers) {
             const paintStyle = layer.paintStyle(options, true);
@@ -210,8 +208,8 @@ class MapRasterLayers extends MapStylingLayers
             this.__map.addLayer(styleLayer.style(this.__layerOptions));
             this.__layers.push(styleLayer);
         }
-        // Make sure our colour options are set properly, in particular raster layer visibility
-        this.setColour(this.__layerOptions);
+        // Make sure our paint options are set properly, in particular raster layer visibility
+        this.setPaint(this.__layerOptions);
     }
 
     addLayer(layer)
@@ -222,12 +220,12 @@ class MapRasterLayers extends MapStylingLayers
             this.__map.addLayer(rasterLayer.style(this.__layerOptions));
             this.__layers.push(rasterLayer);
         }
-        // Make sure our colour options are set properly, in particular raster layer visibility
-        this.setColour(this.__layerOptions);
+        // Make sure our paint options are set properly, in particular raster layer visibility
+        this.setPaint(this.__layerOptions);
     }
 
-    setColour(options)
-    //================
+    setPaint(options)
+    //===============
     {
         const coloured = !('colour' in options) || options.colour;
         for (const layer of this.__layers) {
@@ -307,19 +305,19 @@ export class LayerManager
                 this.__layerOptions.activeRasterLayer = enable;
                 for (const mapLayer of this.__mapLayers.values()) {
                     if (mapLayer.id !== RASTER_LAYERS_ID) {
-                        mapLayer.setColour(this.__layerOptions);
+                        mapLayer.setPaint(this.__layerOptions);
                     }
                 }
             }
         }
     }
 
-    setColour(options={})
-    //===================
+    setPaint(options={})
+    //==================
     {
         this.__layerOptions = utils.setDefaults(options, this.__layerOptions);
         for (const mapLayer of this.__mapLayers.values()) {
-            mapLayer.setColour(this.__layerOptions);
+            mapLayer.setPaint(this.__layerOptions);
         }
     }
 

@@ -666,16 +666,23 @@ class FlatMap
         }
     }
 
-    setColour(options=null)
-    //=====================
+    setPaint(options=null)
+    //====================
     {
         options = utils.setDefaults(options, {
             colour: true,
             outline: true
         });
         if (this._userInteractions !== null) {
-            this._userInteractions.setColour(options);
+            this._userInteractions.setPaint(options);
         }
+    }
+
+    setColour(options=null)
+    //=====================
+    {
+        console.log('`setColour()` is deprecated; please use `setPaint()` instead.')
+        this.setPaint(options);
     }
 
     //==========================================================================

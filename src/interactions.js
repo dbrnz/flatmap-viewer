@@ -246,11 +246,11 @@ export class UserInteractions
         }
     }
 
-    setColour(options)
-    //================
+    setPaint(options)
+    //===============
     {
         this.__colourOptions = options;
-        this._layerManager.setColour(options);
+        this._layerManager.setPaint(options);
     }
 
     getLayers()
@@ -291,7 +291,7 @@ export class UserInteractions
     {
         featureId = +featureId;   // Ensure numeric
         if (this._selectedFeatureIds.size === 0) {
-            this._layerManager.setColour({...this.__colourOptions, dimmed: dim});
+            this._layerManager.setPaint({...this.__colourOptions, dimmed: dim});
         }
         if (this._selectedFeatureIds.has(featureId)) {
             this._selectedFeatureIds.set(featureId, this._selectedFeatureIds.get(featureId) + 1);
@@ -321,7 +321,7 @@ export class UserInteractions
             }
         }
         if (this._selectedFeatureIds.size === 0) {
-            this._layerManager.setColour({...this.__colourOptions, dimmed: false});
+            this._layerManager.setPaint({...this.__colourOptions, dimmed: false});
         }
     }
 
@@ -335,7 +335,7 @@ export class UserInteractions
             }
         }
         this._selectedFeatureIds.clear();
-        this._layerManager.setColour({...this.__colourOptions, dimmed: false});
+        this._layerManager.setPaint({...this.__colourOptions, dimmed: false});
     }
 
     activeFeaturesAtEvent_(event)
