@@ -1018,7 +1018,8 @@ export class UserInteractions
     enableCentrelines(show=true)
     //==========================
     {
-        this._layerManager.setFilter({centrelines: state});
+        this.enablePath('centreline', show);
+        this._layerManager.setPaint({showCentrelines: show});
     }
 
     enableSckanPath(sckanState, enable=true)
