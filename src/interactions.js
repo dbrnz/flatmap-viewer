@@ -38,7 +38,7 @@ import {displayedProperties} from './info.js';
 import {InfoControl} from './info.js';
 import {LayerManager} from './layers.js';
 import {PATHWAYS_LAYER, Pathways} from './pathways.js';
-import {BackgroundControl, LayerControl, PathControl, SCKANControl} from './controls.js';
+import {BackgroundControl, LayerControl, NerveControl, PathControl, SCKANControl} from './controls.js';
 import {SearchControl} from './search.js';
 import {VECTOR_TILES_SOURCE} from './styling.js';
 
@@ -160,6 +160,12 @@ export class UserInteractions
 
             // Add a control to manage our layers
             this._map.addControl(new LayerControl(flatmap, this._layerManager));
+
+            // Add a control for nerve centrelines if they are present
+            if (this._pathways.haveCentrelines) {
+                this._map.addControl(new NerveControl(flatmap, this._layerManager, {showCentrelines: false}));
+                this.enableCentrelines(false);
+            }
 
             // A SCKAN path control for FC maps
             if (flatmap.options.style === 'functional') {
