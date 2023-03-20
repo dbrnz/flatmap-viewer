@@ -143,6 +143,14 @@ export class Pathways
                 this.__typePaths['other'].push(...paths);
             }
         }
+        // Nerve centrelines are a special case with their own controls
+        this.__haveCentrelines = false;
+    }
+
+    get haveCentrelines()
+    //===================
+    {
+        return this.__haveCentrelines;
     }
 
     pathTypes()
@@ -152,7 +160,11 @@ export class Pathways
         for (const pathType of PATH_TYPES) {
             if (pathType.type in this.__typePaths
             && this.__typePaths[pathType.type].length > 0) {
-                pathTypes.push(pathType);
+                if (pathType.type === 'centreline') {
+                    this.__haveCentrelines = true;
+                } else {
+                    pathTypes.push(pathType);
+                }
             }
         }
         return pathTypes;
