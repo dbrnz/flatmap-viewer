@@ -786,6 +786,20 @@ class FlatMap
     //==========================================================================
 
     /**
+     * Get a list of a FC flatmap's systems.
+     *
+     * @return {Array.Object.<{name: string, colour: string}>}  An array with system details
+     */
+    getSystems()
+    //==========
+    {
+        if (this._userInteractions !== null) {
+            return this._userInteractions.getSystems();
+        }
+    }
+    //==========================================================================
+
+    /**
      * Add a marker to the map.
      *
      * @param      {string}  anatomicalId     The anatomical identifier of the feature on which

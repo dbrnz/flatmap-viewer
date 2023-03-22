@@ -173,13 +173,23 @@ export class UserInteractions
             }
         }
 
-        // Flag features that have annotations
-        // Also flag those features that are models of something
+        // Flag features that have annotations and not which are FC systems
 
+        this.__systems = [];
+        const seenSystems = [];
         for (const [id, ann] of flatmap.annotations) {
             const feature = this.mapFeature_(id);
             if (feature !== undefined) {
                 this._map.setFeatureState(feature, { 'annotated': true });
+            }
+            if (ann['fc-class'] === 'FC_CLASS.SYSTEM') {
+                if (seenSystems.indexOf(ann['name']) < 0) {
+                    seenSystems.push(ann['name']);
+                    this.__systems.push({
+                        name: ann['name'],
+                        colour: ann['colour']
+                    });
+                }
             }
         }
 
@@ -269,6 +279,12 @@ export class UserInteractions
     //===============================
     {
         this._layerManager.activate(layerId, enable);
+    }
+
+    getSystems()
+    //==========
+    {
+        return this.__systems;
     }
 
     mapFeature_(featureId)
