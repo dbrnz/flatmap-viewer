@@ -802,19 +802,21 @@ class FlatMap
     /**
      * Add a marker to the map.
      *
-     * @param      {string}  anatomicalId     The anatomical identifier of the feature on which
-     *                                        to place the marker
-     * @param      {string}  [htmlElement=null]  An optional parameter giving the DOM element to
-     *                                           use as a marker. The default is a light blue,
-     *                                           droplet-shaped SVG marker.
-     * @return     {integer}  The identifier for the resulting marker. -1 is returned if the
-     *                        map doesn't contain a feature with the given anatomical identifier
+     * @param {string}  anatomicalId  The anatomical identifier of the feature on which
+     *                                to place the marker.
+     * @arg {Object} options          Configurable options for the marker.
+     * @arg {string} options.colour   Colour of the default marker. Defaults to ``'#005974'``
+     *                                (dark blue).
+     * @arg {string} options.element  The DOM element to use as a marker. The default is
+     *                                a dark blue droplet-shaped SVG marker.
+     * @return     {integer}          The identifier for the resulting marker. -1 is returned if the
+     *                                map doesn't contain a feature with the given anatomical identifier
      */
-    addMarker(anatomicalId,  htmlElement=null)
-    //========================================
+    addMarker(anatomicalId,  options={})
+    //==================================
     {
         if (this._userInteractions !== null) {
-            return this._userInteractions.addMarker(anatomicalId, htmlElement);
+            return this._userInteractions.addMarker(anatomicalId, options);
         }
         return -1;
     }

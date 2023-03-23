@@ -1086,8 +1086,8 @@ export class UserInteractions
         return position;
     }
 
-    addMarker(anatomicalId, htmlElement=null)
-    //=======================================
+    addMarker(anatomicalId, options={})
+    //=================================
     {
         const featureIds = this._flatmap.modelFeatureIds(anatomicalId);
         let markerId = -1;
@@ -1106,8 +1106,9 @@ export class UserInteractions
                 // MapLibre dynamically sets a transform on marker elements so in
                 // order to apply a scale transform we need to create marker icons
                 // inside the marker container <div>.
-                const markerHTML = htmlElement ? new maplibre.Marker({element: htmlElement})
-                                               : new maplibre.Marker({color: '#005974'});
+                const colour = options.colour || '#005974';
+                const markerHTML = options.element ? new maplibre.Marker({element: options.element})
+                                                   : new maplibre.Marker({color: colour});
 
                 const markerElement = document.createElement('div');
                 const markerIcon = document.createElement('div');
