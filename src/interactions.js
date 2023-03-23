@@ -1107,7 +1107,7 @@ export class UserInteractions
                 // order to apply a scale transform we need to create marker icons
                 // inside the marker container <div>.
                 const markerHTML = htmlElement ? new maplibre.Marker({element: htmlElement})
-                                               : new maplibre.Marker();
+                                               : new maplibre.Marker({color: '#005974'});
 
                 const markerElement = document.createElement('div');
                 const markerIcon = document.createElement('div');
