@@ -193,22 +193,6 @@ export class UserInteractions
             }
         }
 
-        // Display a context menu on right-click
-
-        this._lastContextTime = 0;
-        this._contextMenu = new ContextMenu(flatmap, this.__clearModal.bind(this));
-        this._map.on('contextmenu', this.contextMenuEvent_.bind(this));
-
-        // Display a context menu with a touch longer than 0.5 second
-
-        this._lastTouchTime = 0;
-        this._map.on('touchstart', (e) => { this._lastTouchTime = Date.now(); });
-        this._map.on('touchend', (e) => {
-            if (Date.now() > (this._lastTouchTime + 500)) {
-                this.contextMenuEvent_(e);
-            }
-        });
-
         // Handle mouse events
 
         this._map.on('click', this.clickEvent_.bind(this));
@@ -422,45 +406,6 @@ export class UserInteractions
             }
         }
         return smallestFeature;
-    }
-
-    contextMenuEvent_(event)
-    //======================
-    {
-        event.preventDefault();
-
-        // Chrome on Android sends both touch and contextmenu events
-        // so ignore duplicate
-
-        if (Date.now() < (this._lastContextTime + 100)) {
-            return;
-        }
-        this._lastContextTime = Date.now();
-
-        if (this._activeFeatures.length > 0) {
-            const feature = this._activeFeatures[0];
-
-            // Remove any tooltip
-            this.removeTooltip_();
-
-            const featureId = feature.id;
-            if (this._pathways.isNode(featureId)) {
-                const items = [
-                    {
-                        featureId: featureId,
-                        prompt: 'Show paths',
-                        action: this.enablePaths_.bind(this, true)
-                    },
-                    {
-                        featureId: featureId,
-                        prompt: 'Hide paths',
-                        action: this.enablePaths_.bind(this, false)
-                    }
-                ];
-                this.setModal_();
-                this._contextMenu.show(event.lngLat, items, feature.properties.label);
-            }
-        }
     }
 
     setModal_(event)
@@ -982,7 +927,6 @@ export class UserInteractions
     enablePaths_(enable, event)
     //=========================
     {
-        this._contextMenu.hide();
         const nodeId = event.target.getAttribute('featureId');
         this.enablePathFeatures_(enable, this._pathways.pathFeatureIds(nodeId));
         this.__clearModal();
