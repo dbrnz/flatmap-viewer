@@ -65,7 +65,7 @@ class MapStylingLayers
     }
 
     addLayer(styleLayer, options)
-    //==========================
+    //===========================
     {
         this.__map.addLayer(styleLayer.style(options));
         this.__layers.push(styleLayer);
@@ -144,8 +144,7 @@ class MapFeatureLayers extends MapStylingLayers
     {
         const styleLayer = new styleClass(`${this.__id}_${sourceLayer}`,
                                           this.vectorSourceId(sourceLayer));
-        this.__map.addLayer(styleLayer.style(this.__layerOptions));
-        this.__layers.push(styleLayer);
+        this.addLayer(styleLayer, this.__layerOptions);
     }
 
     __addPathwayStyleLayers()
