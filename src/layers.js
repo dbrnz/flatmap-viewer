@@ -89,8 +89,8 @@ class MapStylingLayers
     vectorSourceId(sourceLayer)
     //=========================
     {
-        return this.__separateLayers ? `${this.__id}_${sourceLayer}`
-                                     : sourceLayer;
+        return (this.__separateLayers ? `${this.__id}_${sourceLayer}`
+                                      : sourceLayer).replaceAll('/', '_');
     }
 
     setPaint(options)
