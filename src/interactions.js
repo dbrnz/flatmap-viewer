@@ -144,6 +144,27 @@ export class UserInteractions
             }
         }
 
+        // Flag features that have annotations and note which are FC systems
+
+        this.__systems = new Map();
+        for (const [id, ann] of flatmap.annotations) {
+            const feature = this.mapFeature_(id);
+            if (feature !== undefined) {
+                this._map.setFeatureState(feature, { 'annotated': true });
+            }
+            if (ann['fc-class'] === 'fc-class:System') {
+                if (this.__systems.has(ann.name)) {
+                    this.__systems.get(ann.name).featureIds.push(ann.featureId)
+                } else {
+                    this.__systems.set(ann.name, {
+                        id: ann.name.replaceAll(' ', '_'),
+                        colour: ann.colour,
+                        featureIds: [ ann.featureId ]
+                    });
+                }
+            }
+        }
+
         // Add various controls when running standalone
 
         if (flatmap.options.standalone) {
@@ -173,26 +194,6 @@ export class UserInteractions
             if (flatmap.options.style === 'functional') {
                 this._map.addControl(new SystemsControl(flatmap, this.__systems));
                 this._map.addControl(new SCKANControl(flatmap, flatmap.options.layerOptions));
-            }
-        }
-
-        // Flag features that have annotations and not which are FC systems
-
-        this.__systems = [];
-        const seenSystems = [];
-        for (const [id, ann] of flatmap.annotations) {
-            const feature = this.mapFeature_(id);
-            if (feature !== undefined) {
-                this._map.setFeatureState(feature, { 'annotated': true });
-            }
-            if (ann['fc-class'] === 'FC_CLASS.SYSTEM') {
-                if (seenSystems.indexOf(ann['name']) < 0) {
-                    seenSystems.push(ann['name']);
-                    this.__systems.push({
-                        name: ann['name'],
-                        colour: ann['colour']
-                    });
-                }
             }
         }
 
@@ -271,7 +272,48 @@ export class UserInteractions
     getSystems()
     //==========
     {
-        return this.__systems;
+        const systems = [];
+        for (const system of this.__systems.values()) {
+            systems.push({
+                name: system.name,
+                colour: system.colour,
+            });
+        }
+        return systems;
+    }
+
+    enableSystem(systemName, enable=true)
+    //===================================
+    {
+        if (this.__systems.has(systemName)) {
+            for (const featureId of this.__systems.get(systemName).featureIds) {
+                this.__enableFeatureWithChildren(featureId, enable);
+            }
+        }
+    }
+
+    __enableFeatureWithChildren(featureId, enable=true)
+    //=================================================
+    {
+        const feature = this.mapFeature_(featureId);
+        if (feature !== undefined) {
+            this.__enableFeature(feature, enable);
+            for (const childFeatureId of feature.children) {
+                this.__enableFeatureWithChildren(childFeatureId, enable);
+            }
+        }
+    }
+
+    __enableFeature(feature, enable=true)
+    //===================================
+    {
+        if (feature !== undefined) {
+            if (enable) {
+                this._map.removeFeatureState(feature, 'hidden');
+            } else {
+                this._map.setFeatureState(feature, { 'hidden': true });
+            }
+        }
     }
 
     mapFeature_(featureId)
@@ -284,9 +326,11 @@ export class UserInteractions
                 source: VECTOR_TILES_SOURCE,
                 sourceLayer: this._flatmap.options.separateLayers
                              ? `${ann['layer']}_${ann['tile-layer']}`
-                             : ann['tile-layer']
+                             : ann['tile-layer'],
+                children: ann.children || []
             };
         }
+        return undefined;
     }
 
     featureSelected_(featureId)

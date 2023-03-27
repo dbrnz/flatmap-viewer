@@ -138,6 +138,7 @@ export class FeatureFillLayer extends VectorStyleLayer
             ],
             'fill-opacity': [
                 'case',
+                ['boolean', ['feature-state', 'hidden'], false], 0.01,
                 ['boolean', ['feature-state', 'selected'], false], 0.7,
                 ['has', 'opacity'], ['get', 'opacity'],
                 ['has', 'colour'], 1.0,
@@ -203,7 +204,7 @@ export class FeatureBorderLayer extends VectorStyleLayer
 
         const lineOpacity = [
             'case',
-            ['boolean', ['get', 'invisible'], false], 0.05,
+            ['boolean', ['feature-state', 'hidden'], false], 0.05,
             ];
         if (coloured && outlined) {
             lineOpacity.push(['boolean', ['feature-state', 'active'], false]);

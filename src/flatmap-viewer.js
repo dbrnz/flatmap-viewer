@@ -797,6 +797,20 @@ class FlatMap
             return this._userInteractions.getSystems();
         }
     }
+
+    /**
+     * @param {string}  systemName  The name of the system to enable
+     * @param {boolean}  enable  Show or hide the system. Defaults to ``true`` (show)
+     *
+     */
+    enableSystem(systemName, enable=true)
+    //===================================
+    {
+        if (this._userInteractions !== null) {
+            return this._userInteractions.enableSystem(systemName, enable);
+        }
+    }
+
     //==========================================================================
 
     /**

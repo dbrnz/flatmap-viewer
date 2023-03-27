@@ -45,8 +45,8 @@ export class SystemsControl extends Control
     //================
     {
         const html = [];
-        for (const [systemId, system] of this.__systems.entries()) {
-            html.push(`<label for="${this.__prefix}${systemId}" style="background: ${system.colour};">${system.name}</label><input id="${this.__prefix}${systemId}" type="checkbox" checked/>`);
+        for (const [name, system] of this.__systems.entries()) {
+            html.push(`<label for="${this.__prefix}${system.id}" style="background: ${system.colour};">${name}</label><input id="${this.__prefix}${system.id}" type="checkbox" checked/>`);
         }
         return html;
     }
@@ -54,11 +54,11 @@ export class SystemsControl extends Control
     __enableAll(enable)
     //=================
     {
-        for (const [systemId, system] of this.__systems.entries()) {
-            const checkbox = document.getElementById(`${this.__prefix}${systemId}`);
+        for (const [name, system] of this.__systems.entries()) {
+            const checkbox = document.getElementById(`${this.__prefix}${system.id}`);
             if (checkbox) {
                 checkbox.checked = enable;
-                this.__flatmap.enableSystem(system.name, enable);
+                this.__flatmap.enableSystem(name, enable);
             }
         }
     }
@@ -66,9 +66,10 @@ export class SystemsControl extends Control
     __enableControl(id, enable)
     //=========================
     {
-        if (this.__systems.has(id)) {
-            const system = this.__systems.get(id);
-            this.__flatmap.enableSystem(system.name, enable);
+        for (const [name, system] of this.__systems.entries()) {
+            if (id === system.id) {
+                this.__flatmap.enableSystem(name, enable);
+            }
         }
     }
 
