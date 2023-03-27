@@ -123,7 +123,6 @@ export class FeatureFillLayer extends VectorStyleLayer
     {
         const coloured = !('colour' in options) || options.colour;
         const dimmed = 'dimmed' in options && options.dimmed;
-        const activeRasterLayer = 'activeRasterLayer' in options && options.activeRasterLayer;
         const paintStyle = {
             'fill-color': [
                 'case',
