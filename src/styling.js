@@ -129,10 +129,6 @@ export class FeatureFillLayer extends VectorStyleLayer
                 ['boolean', ['feature-state', 'selected'], false], '#0F0',
                 ['has', 'colour'], ['get', 'colour'],
                 ['boolean', ['feature-state', 'active'], false], coloured ? '#D88' : '#CCC',
-                ['any',
-                      ['==', ['get', 'kind'], 'scaffold']
-                ], 'white',
-                ['has', 'node'], '#AFA202',
                 'white'    // background colour? body colour ??
             ],
             'fill-opacity': [
@@ -142,12 +138,6 @@ export class FeatureFillLayer extends VectorStyleLayer
                 ['has', 'opacity'], ['get', 'opacity'],
                 ['has', 'colour'], 1.0,
                 ['boolean', ['feature-state', 'active'], false], 0.7,
-                ['has', 'node'], 0.3,
-                ['any',
-                      ['==', ['get', 'kind'], 'scaffold'],
-                      ['==', ['get', 'kind'], 'tissue'],
-                      ['==', ['get', 'kind'], 'cell-type'],
-                ], 0.1,
                 (coloured && !dimmed) ? 0.01 : 0.1
             ]
         };
@@ -197,8 +187,6 @@ export class FeatureBorderLayer extends VectorStyleLayer
         }
         lineColour.push(['has', 'colour']);
         lineColour.push('#000');
-        lineColour.push(['has', 'node']);
-        lineColour.push('#AFA202');
         lineColour.push('#444');
 
         const lineOpacity = [
