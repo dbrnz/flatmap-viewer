@@ -117,6 +117,7 @@ export class UserInteractions
         this.__activeMarker = null;
         this.__lastMarkerId = 900000;
         this.__markerIdByMarker = new Map();
+        this.__markerIdByFeatureId = new Map();
         this.__annotationByMarkerId = new Map();
 
         // Where to put labels and popups on a feature
@@ -304,6 +305,18 @@ export class UserInteractions
         }
     }
 
+    __enableFeatureMarker(featureId, enable=true)
+    //===========================================
+    {
+        const markerId = this.__markerIdByFeatureId.get(+featureId);
+        if (markerId !== undefined) {
+            const markerDiv = document.getElementById(`marker-${markerId}`);
+            if (markerDiv) {
+                markerDiv.style.visibility = enable ? 'visible' : 'hidden';
+            }
+        }
+    }
+
     __enableFeature(feature, enable=true)
     //===================================
     {
@@ -313,6 +326,7 @@ export class UserInteractions
             } else {
                 this._map.setFeatureState(feature, { 'hidden': true });
             }
+            this.__enableFeatureMarker(feature.id, enable);
         }
     }
 
@@ -1105,6 +1119,7 @@ export class UserInteractions
                 const markerIcon = document.createElement('div');
                 markerIcon.innerHTML = markerHTML.getElement().innerHTML;
                 markerIcon.className = 'flatmap-marker';
+                markerElement.id = `marker-${markerId}`;
                 markerElement.appendChild(markerIcon);
 
                 const markerPosition = this.__markerPosition(featureId, annotation);
@@ -1121,6 +1136,7 @@ export class UserInteractions
                     this.markerMouseEvent_.bind(this, marker, anatomicalId));
 
                 this.__markerIdByMarker.set(marker, markerId);
+                this.__markerIdByFeatureId.set(+featureId, markerId);
                 this.__annotationByMarkerId.set(markerId, annotation);
             }
         }
