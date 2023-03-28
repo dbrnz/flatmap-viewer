@@ -186,7 +186,7 @@ export class FeatureBorderLayer extends VectorStyleLayer
             lineColour.push('blue');
         }
         lineColour.push(['has', 'colour']);
-        lineColour.push('#000');
+        lineColour.push(['get', 'colour']);
         lineColour.push('#444');
 
         const lineOpacity = [
