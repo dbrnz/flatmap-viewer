@@ -32,6 +32,7 @@ const PATH_TYPES = [
     { type: "para-pre", label: "Parasympathetic pre-ganglionic", colour: "#3F8F4A"},
     { type: "para-post", label: "Parasympathetic post-ganglionic", colour: "#3F8F4A", dashed: true},
     { type: "sensory", label: "Sensory (afferent) neuron", colour: "#2A62F6"},
+    { type: "motor", label: "Somatic lower motor", colour: "#98561D"},
     { type: "somatic", label: "Somatic lower motor", colour: "#98561D"},
     { type: "symp-pre", label: "Sympathetic pre-ganglionic", colour: "#EA3423"},
     { type: "symp-post", label: "Sympathetic post-ganglionic", colour: "#EA3423", dashed: true},
