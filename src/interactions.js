@@ -338,9 +338,9 @@ export class UserInteractions
             return {
                 id: featureId,
                 source: VECTOR_TILES_SOURCE,
-                sourceLayer: this._flatmap.options.separateLayers
+                sourceLayer: (this._flatmap.options.separateLayers
                              ? `${ann['layer']}_${ann['tile-layer']}`
-                             : ann['tile-layer'],
+                             : ann['tile-layer']).replaceAll('/', '_'),
                 children: ann.children || []
             };
         }
