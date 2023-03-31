@@ -927,7 +927,8 @@ export class UserInteractions
     //================
     {
         this.clearActiveMarker_();
-        const clickedFeatures = this._map.queryRenderedFeatures(event.point);
+        const clickedFeatures = this._map.queryRenderedFeatures(event.point)
+                                    .filter(feature => this.__enabledFeature(feature));
         if (clickedFeatures.length == 0){
             this.__unselectFeatures();
             return;
