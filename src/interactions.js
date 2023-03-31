@@ -405,19 +405,6 @@ export class UserInteractions
         this._layerManager.setPaint({...this.__colourOptions, dimmed: false});
     }
 
-    activeFeaturesAtEvent_(event)
-    //===========================
-    {
-        // Get the features covering the event's point that are in the active layers
-
-        return this._map.queryRenderedFeatures(event.point).filter(f => {
-            return (this.__enabledFeature(f)
-                && this.activeLayerNames.indexOf(f.sourceLayer) >= 0)
-                && ('featureId' in f.properties);
-            }
-        );
-    }
-
     __activateFeature(feature)
     //=======================
     {
