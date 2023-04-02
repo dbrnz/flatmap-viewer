@@ -36,11 +36,10 @@ import '../static/flatmap-viewer.css';
 import {MapServer} from './mapserver.js';
 import {MinimapControl} from './minimap.js';
 import {NavigationControl} from './controls.js';
-import {SearchIndex, SearchResults} from './search.js';
+import {SearchIndex} from './search.js';
 import {UserInteractions} from './interactions.js';
 
 import * as images from './images.js';
-import * as pathways from './pathways.js';
 import * as utils from './utils.js';
 
 //==============================================================================
