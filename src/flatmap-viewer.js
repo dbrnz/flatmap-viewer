@@ -586,9 +586,10 @@ class FlatMap
     //=======
     {
         return {
-            'minZoom': this._map.getMinZoom(),
-            'zoom':    this._map.getZoom(),
-            'maxZoom': this._map.getMaxZoom()
+            mapUUID: this.__uuid,
+            minZoom: this._map.getMinZoom(),
+            zoom:    this._map.getZoom(),
+            maxZoom: this._map.getMaxZoom()
         }
     }
 
@@ -596,6 +597,7 @@ class FlatMap
     //===========================
     {
         if (this._callback) {
+            data.mapUUID = this.__uuid;
             return this._callback(type, data, ...args);
         }
     }
