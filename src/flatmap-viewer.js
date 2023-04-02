@@ -29,7 +29,7 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 
 // Load our stylesheet last so we can overide styling rules
 
-import '../static/flatmap-viewer.css';
+import '../static/css/flatmap-viewer.css';
 
 //==============================================================================
 

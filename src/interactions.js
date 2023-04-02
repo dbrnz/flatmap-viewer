@@ -33,6 +33,7 @@ import polylabel from 'polylabel';
 
 //==============================================================================
 
+import {Annotator} from './annotation';
 import {displayedProperties, InfoControl} from './info';
 import {LayerManager} from './layers';
 import {PATHWAYS_LAYER, Pathways} from './pathways';
@@ -195,6 +196,10 @@ export class UserInteractions
                 this._map.addControl(new SCKANControl(flatmap, flatmap.options.layerOptions));
             }
         }
+
+        // Add annotation capabilities
+
+        this.__annotator = new Annotator();
 
         // Handle mouse events
 
@@ -934,9 +939,34 @@ export class UserInteractions
         }
     }
 
+    __annotationEvent(feature)
+    //========================
+    {
+        event.preventDefault();
+
+        // Remove any tooltip
+        this.removeTooltip_();
+
+        // Select the feature
+        this.selectFeature_(feature.id);
+
+        // Don't respond to mouse events while the dialog is open
+        this.setModal_();
+
+        // The annotation dialog...
+        this.__annotator.annotate(feature, e => {
+            this.__unselectFeatures();
+            this.__clearModal();
+        });
+    }
+
     clickEvent_(event)
     //================
     {
+        if (this._modal) {
+            return;
+        }
+
         this.clearActiveMarker_();
         const clickedFeatures = this._map.queryRenderedFeatures(event.point);
         if (clickedFeatures.length == 0){
@@ -945,9 +975,14 @@ export class UserInteractions
         }
         const clickedFeature = clickedFeatures[0];
         const originalEvent = event.originalEvent;
+        if (originalEvent.altKey) {
+            this.__annotationEvent(clickedFeature);
+            return;
+        }
+
         this.selectionEvent_(originalEvent, clickedFeature);
         if (this._modal) {
-           // Remove tooltip, reset active features, etc
+            // Remove tooltip, reset active features, etc
             this.__resetFeatureDisplay();
             this.__unselectFeatures();
             this.__clearModal();
