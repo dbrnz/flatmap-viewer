@@ -33,19 +33,17 @@ import polylabel from 'polylabel';
 
 //==============================================================================
 
-import {ContextMenu} from './contextmenu.js';
-import {displayedProperties} from './info.js';
-import {InfoControl} from './info.js';
-import {LayerManager} from './layers.js';
-import {PATHWAYS_LAYER, Pathways} from './pathways.js';
+import {displayedProperties, InfoControl} from './info';
+import {LayerManager} from './layers';
+import {PATHWAYS_LAYER, Pathways} from './pathways';
 import {BackgroundControl, LayerControl, NerveControl,
-        PathControl, SCKANControl} from './controls.js';
-import {SearchControl} from './search.js';
-import {VECTOR_TILES_SOURCE} from './styling.js';
+        PathControl, SCKANControl} from './controls';
+import {SearchControl} from './search';
+import {VECTOR_TILES_SOURCE} from './styling';
 import {SystemsControl, SystemsManager} from './systems';
 
-import * as pathways from './pathways.js';
-import * as utils from './utils.js';
+import * as pathways from './pathways';
+import * as utils from './utils';
 
 //==============================================================================
 
