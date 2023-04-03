@@ -40,7 +40,7 @@ import 'jspanel4/dist/jspanel.css';
 
 //==============================================================================
 
-const DISPLAY_PROPERTIES = {
+const FEATURE_DISPLAY_PROPERTIES = {
 	'id': 'Feature',
 	'label': 'Tooltip',
 	'models': 'Models',
@@ -64,33 +64,6 @@ const ANNOTATION_FIELDS = [
 		kind: 'textbox'
 	},
 ];
-
-
-//==============================================================================
-
-function inputFields(fieldDefinitions)
-{
-	const html = [];
-	for (const field of fieldDefinitions) {
-		if (!('input' in field) || field.input) {
-			html.push('<div class="flatmap-annotation-entry">');
-			html.push(`  <label for="${field.key}">${field.prompt}:</label>`);
-			if (field.kind === 'textbox') {
-				html.push(`  <textarea rows="5" cols="40" id="${field.key}" name="${field.key}"></textarea>`)
-			} else if (!('size' in field) || field.size === 1) {
-				html.push(`  <input type="text" size="40" id="${field.key}" name="${field.key}"/>`)
-			} else {
-				html.push('  <div class="multiple">')
-				for (let n = 1; n <= field.size; n++) {
-					html.push(`    <input type="text" size="40" id="${field.key}_${n}" name="${field.key}"/>`)
-				}
-				html.push('  </div>')
-			}
-			html.push('</div>');
-		}
-	}
-	return html.join('\n');
-}
 
 //==============================================================================
 
@@ -117,6 +90,124 @@ export class Annotator
         });
     }
 
+    __featureHtml(feature)
+    //====================
+    {
+    	// Feature properties
+    	const html = [];
+    	for (const [key, prompt] of Object.entries(FEATURE_DISPLAY_PROPERTIES)) {
+    		const value = feature.properties[key];
+    		if (value !== undefined && value !== '') {
+    			const escapedValue = escape(value).replaceAll('\n', '<br/>');
+    			html.push(`<div><span class="flatmap-annotation-prompt">${prompt}:</span><span class="flatmap-annotation-value">${escapedValue}</span></div>`)
+    		}
+    	}
+		return html;
+    }
+
+    __editFormHtml(annotation)
+    //========================
+    {
+    	const html = [];
+		html.push('<div id="flatmap-annotation-formdata">');
+		for (const field of ANNOTATION_FIELDS) {
+			html.push('<div class="flatmap-annotation-entry">');
+			html.push(`  <label for="${field.key}">${field.prompt}:</label>`);
+			const value = annotation.properties[field.key] || '';
+			if (field.kind === 'textbox') {
+				html.push(`  <textarea rows="5" cols="40" id="${field.key}" name="${field.key}">${value.trim()}</textarea>`)
+			} else if (!('size' in field) || field.size === 1) {
+				html.push(`  <input type="text" size="40" id="${field.key}" name="${field.key}" value=${value.trim()}/>`)
+			} else {
+				html.push('  <div class="multiple">')
+				for (let n = 1; n <= field.size; n++) {
+					const fieldValue = (n <= value.length) ? value[n-1].trim() : '';
+					html.push(`    <input type="text" size="40" id="${field.key}_${n}" name="${field.key}" value=${fieldValue}/>`)
+				}
+				html.push('  </div>')
+			}
+			html.push('</div>');
+		}
+		html.push('  <div><input id="annotation-save-button" type="button" value="Save"/></div>');
+    	html.push('</div>');
+		return html.join('\n');
+    }
+
+    __annotationHtml(annotations)
+    //===========================
+    {
+    	const html = [];
+    	let firstBlock = true;
+    	for (const annotation of annotations) {
+    		if (firstBlock) {
+    			firstBlock = false;
+    		} else {
+    			html.push('<hr/>')
+    		}
+    		const creator = annotation.creator;
+    		const annotator = creator.name || creator.email || creator.login || creator.company || creator;
+    		html.push(`<div><span class="flatmap-annotation-prompt">${annotation.created}</span><span class="flatmap-annotation-value">${annotator}</span></div>`);
+			for (const field of ANNOTATION_FIELDS) {
+				const value = annotation.properties[field.key];
+				// field.kind === 'list'
+    			if (value !== undefined && value !== '') {
+    				const escapedValue = escape(value).replaceAll('\n', '<br/>');
+    				html.push(`<div><span class="flatmap-annotation-prompt">${field.prompt}:</span><span class="flatmap-annotation-value">${escapedValue}</span></div>`);
+	    		}
+    		}
+    	}
+		return html.join('\n');
+    }
+
+	__setupEditForm(panel, response)
+	//==============================
+	{
+		console.log('Fetch done', response);
+
+		this.__existingAnnotation.innerHTML = this.__annotationHtml(response);
+
+		this.__annotationForm.innerHTML = this.__editFormHtml({properties: {}});
+
+
+        // only do this once we have an edit form....
+        //
+        // get all focusable elements within the panel content
+        const inputElements = panel.content.querySelectorAll('input, textarea, button');
+        this.__firstInputField = inputElements[0];
+        const lastInput = inputElements[inputElements.length - 1];
+
+        const saveButton = document.getElementById('annotation-save-button');
+
+        // Lock focus within the panel
+        panel.addEventListener('keydown', function (e) {
+            if (e.key === 'Tab') {
+                if ( e.shiftKey ) /* shift + tab */ {
+                    if (document.activeElement === firstInput) {
+                        lastInput.focus();
+                        e.preventDefault();
+                    }
+                } else /* tab */ {
+                    if (document.activeElement === lastInput) {
+                        this.__firstInputField.focus();
+                        e.preventDefault();
+                    }
+                }
+            } else if (e.key === 'Enter') {
+            	if (e.target === saveButton) {
+	            	// validate/save input and close dialog
+            		panel.close();
+            	}
+            }
+        });
+
+        saveButton.addEventListener('mousedown', function (e) {
+        	// validate/save input and close dialog
+        	// save only if changes...
+    		panel.close();
+        });
+
+	}
+
 	annotate(feature, closedCallback)
 	//===============================
 	{
@@ -127,74 +218,17 @@ export class Annotator
         	return;
         }
 
-    	// Historical annotation
-    	const savedAnnotations = [  // *******await this.__flatmp.getExternalAnnotation(featureId);
-    		                        // But are we in this format???
-	    	{
-	    		created: 'Today...',
-	    		creator: "dave",
-	    		properties: [
-		    		{
-		    			'rdfs:comment': 'Some comment'
-		    		}
-	    		]
-	    	},
-	    	{
-	    		created: 'Yesterday...',
-	    		creator: "dave",
-	    		properties: [
-		    		{
-		    			'rdfs:comment': 'Some other comment'
-		    		}
-	    		]
-	    	}
-	    ];
+    	const panelContent = [];
+    	panelContent.push('<div id="flatmap-annotation-panel">');
+		panelContent.push('  <div id="flatmap-annotation-feature">');
+    	panelContent.push(...this.__featureHtml(feature));
+		panelContent.push('  </div>');
+		panelContent.push('  <form id="flatmap-annotation-form"></form>');
+    	panelContent.push('  <div id="flatmap-annotation-existing"></div>');
+    	panelContent.push('</div>');
 
-    	const html = ['<div id="flatmap-annotation-panel">'];
-
-    	// Feature properties
-		html.push('  <div id="flatmap-annotation-feature">');
-    	for (const [key, prompt] of Object.entries(DISPLAY_PROPERTIES)) {
-    		const value = feature.properties[key];
-    		if (value !== undefined && value !== '') {
-    			const escapedValue = escape(value).replaceAll('\n', '<br/>');
-    			html.push(`    <div><span class="flatmap-annotation-prompt">${prompt}:</span><span class="flatmap-annotation-value">${escapedValue}</span></div>`)
-    		}
-    	}
-		html.push('  </div>');
-
-    	// Entry fields
-    	// But only when logged in...
-    	// And then derived from values are set to latest historical...
-		html.push('  <form id="flatmap-annotation-form">');
-		html.push('    <div id="flatmap-annotation-formdata">');
-		html.push(inputFields(ANNOTATION_FIELDS));
-		html.push('      <div><input id="annotation-save-button" type="button" value="Save"/></div>');
-		html.push('    </div>');
-		html.push('  </form>');
-
-    	let firstBlock = true;
-    	html.push('  <div id="flatmap-annotation-historical">');
-    	for (const annotation of savedAnnotations) {
-    		if (firstBlock) {
-    			firstBlock = false;
-    		} else {
-    			html.push('<hr/>')
-    		}
-    		html.push(`    <div><span class="flatmap-annotation-prompt">${annotation.created}</span><span class="flatmap-annotation-value">${annotation.creator}</span></div>`)
-			for (const property of annotation.properties) {
-				for (const field of ANNOTATION_FIELDS) {
-					const value = property[field.key];
-	    			if (value !== undefined && value !== '') {
-	    				html.push(`    <div><span class="flatmap-annotation-prompt">${field.prompt}:</span><span class="flatmap-annotation-value">${escape(value)}</span></div>`)
-	    			}
-	    		}
-    		}
-    	}
-    	html.push('  </div>');
-    	html.push('</div>');
-
-    	const flatmap = this.__flatmap; // To use in panel code
+    	const annotator = this;         	// To use in panel code
+    	const flatmap = this.__flatmap; 	// To use in panel code
 		jsPanel.create({
 		    theme: 'light',
 		    border: '2px solid #0C0',
@@ -203,7 +237,7 @@ export class Annotator
 		    data: {
 		    	flatmap: this.__flatmap
 		    },
-		    content: html.join('\n'),
+		    content: panelContent.join('\n'),
  			closeOnEscape: true,
 		    closeOnBackdrop: false,
 			headerTitle: 'Feature annotations',
@@ -226,50 +260,17 @@ export class Annotator
 		            panel.headerlogo.innerHTML = '<span class="fa fa-spinner fa-spin ml-2"></span>'
 		        },
 		        done: (response, panel) => {
-//		            panel.content.innerHTML = response;
 		            panel.headerlogo.innerHTML = '';
-		            console.log(response);
-//		            panel.resize('auto 300').reposition();
+					annotator.__setupEditForm(panel, response);
 		        }
 		    },
 		    callback: (panel) => {
-		        // Data entry only when authorised
-		        const annotationForm = document.getElementById('flatmap-annotation-form');
-		        annotationForm.hidden = true;
+    			annotator.__annotationForm = document.getElementById('flatmap-annotation-form');
+		        // Data entry only once authorised
+    			annotator.__annotationForm.hidden = true;
 
-		        // get all focusable elements within the panel content
-		        const inputElements = panel.content.querySelectorAll('input, textarea, button');
-		        const firstInput = inputElements[0];
-		        const lastInput = inputElements[inputElements.length - 1];
-		        const saveButton = document.getElementById('annotation-save-button');
-
-		        // Lock focus within the panel
-		        panel.addEventListener('keydown', function (e) {
-		            if (e.key === 'Tab') {
-		                if ( e.shiftKey ) /* shift + tab */ {
-		                    if (document.activeElement === firstInput) {
-		                        lastInput.focus();
-		                        e.preventDefault();
-		                    }
-		                } else /* tab */ {
-		                    if (document.activeElement === lastInput) {
-		                        firstInput.focus();
-		                        e.preventDefault();
-		                    }
-		                }
-		            } else if (e.key === 'Enter') {
-		            	if (e.target === saveButton) {
-			            	// validate/save input and close dialog
-		            		panel.close();
-		            	}
-		            }
-		        });
-
-		        saveButton.addEventListener('mousedown', function (e) {
-	            	// validate/save input and close dialog
-	            	// save only if changes...
-            		panel.close();
-		        });
+    			// Populate once we have content from server
+		    	annotator.__existingAnnotation = document.getElementById('flatmap-annotation-existing');
 
 		        const authoriseLock = document.getElementById('flatmap-annotation-lock');
 		        const authorisedUser = document.getElementById('flatmap-annotation-user');
@@ -280,14 +281,14 @@ export class Annotator
 		        		lockClasses.add('fa-unlock');
 		        		// '/login`
 		        		authorisedUser.innerHTML = 'Annotating as ...';
-		        		annotationForm.hidden = false;
-				        firstInput.focus();
+		        		annotator.__annotationForm.hidden = false;
+				        annotator.__firstInputField.focus();
 		        	} else {
 				        // should we warn if unsaved changes??
 		        		lockClasses.remove('fa-unlock');
 		        		lockClasses.add('fa-lock');
 		        		authorisedUser.innerHTML = '';
-		        		annotationForm.hidden = true;
+		        		annotator.__annotationForm.hidden = true;
 		        	}
 		        });
 

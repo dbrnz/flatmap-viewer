@@ -254,12 +254,12 @@ label[for=layer-all-layers] {
 
 #flatmap-annotation-feature,
 #flatmap-annotation-form,
-#flatmap-annotation-historical
+#flatmap-annotation-existing
 {
     padding: 4px;
 }
 #flatmap-annotation-feature,
-#flatmap-annotation-historical
+#flatmap-annotation-existing
 {
     background-color: #DDD;
     border: 1px solid #888;
