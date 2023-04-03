@@ -56,7 +56,7 @@ const ANNOTATION_FIELDS = [
 		prompt: 'Feature derived from',
 		key: 'prov:wasDerivedFrom',
 		kind: 'list',
-		size: 5
+		size: 6
 	},
 	{
 		prompt: 'Comment',
@@ -73,7 +73,7 @@ function inputFields(fieldDefinitions)
 	const html = [];
 	for (const field of fieldDefinitions) {
 		if (!('input' in field) || field.input) {
-			html.push('<div>');
+			html.push('<div class="flatmap-annotation-entry">');
 			html.push(`  <label for="${field.key}">${field.prompt}:</label>`);
 			if (field.kind === 'textbox') {
 				html.push(`  <textarea rows="5" cols="40" id="${field.key}" name="${field.key}"></textarea>`)
@@ -101,23 +101,6 @@ export class Annotator
 		this.__flatmap = flatmap;
 	}
 
-    async getExternalAnnotation(featureId)
-    {
-        const url = this.__flatmap.addBaseUrl_(`/annotations/${featureId}`);
-        fetch(url, {
-            method: 'GET',
-            headers: {
-                "Accept": "application/json; charset=utf-8",
-                "Cache-Control": "no-store"
-            }
-        }).then((response) => {
-            if (!response.ok) {
-                throw new Error(`Cannot access ${url}, Status: ${response.status}`);
-            }
-            return response.json();
-        });
-    }
-
     async saveExternalAnnotation(featureId, properties)
     //=================================================
     {
@@ -134,8 +117,8 @@ export class Annotator
         });
     }
 
-
 	annotate(feature, closedCallback)
+	//===============================
 	{
 		const featureId = feature.properties['id']
 
@@ -144,23 +127,6 @@ export class Annotator
         	return;
         }
 
-
-/**
-    contentFetch: {
-        resource: this.__flatmap.addBaseUrl_(`/annotations/${featureId}`),
-        beforeSend: (fetchConfig, panel) => {
-            panel.headerlogo.innerHTML = "<span class='fad fa-spinner fa-spin ml-2'></span>"
-        },
-        fetchInit: {
-            method: 'POST'
-        },
-        done: (response, panel) => {
-            panel.content.innerHTML = response;
-            panel.headerlogo.innerHTML = "<span class='fad fa-check ml-2'></span>";
-            panel.resize('auto 300').reposition();
-        }
-    }
-**/
     	// Historical annotation
     	const savedAnnotations = [  // *******await this.__flatmp.getExternalAnnotation(featureId);
     		                        // But are we in this format???
@@ -184,11 +150,10 @@ export class Annotator
 	    	}
 	    ];
 
-
-    	const html = ['<div class="flatmap-annotation-panel">'];
+    	const html = ['<div id="flatmap-annotation-panel">'];
 
     	// Feature properties
-		html.push('  <div class="flatmap-annotation-feature">');
+		html.push('  <div id="flatmap-annotation-feature">');
     	for (const [key, prompt] of Object.entries(DISPLAY_PROPERTIES)) {
     		const value = feature.properties[key];
     		if (value !== undefined && value !== '') {
@@ -201,16 +166,15 @@ export class Annotator
     	// Entry fields
     	// But only when logged in...
     	// And then derived from values are set to latest historical...
-		html.push('  <form id="flatmap-annotation-form" class="flatmap-annotation-form">');
-		html.push('    <div class="flatmap-annotation-data">');
+		html.push('  <form id="flatmap-annotation-form">');
+		html.push('    <div id="flatmap-annotation-formdata">');
 		html.push(inputFields(ANNOTATION_FIELDS));
-		html.push('      <div><input type="button" value="Save"/></div>');
+		html.push('      <div><input id="annotation-save-button" type="button" value="Save"/></div>');
 		html.push('    </div>');
 		html.push('  </form>');
 
-
     	let firstBlock = true;
-    	html.push('  <div class="flatmap-annotation-historical">');
+    	html.push('  <div id="flatmap-annotation-historical">');
     	for (const annotation of savedAnnotations) {
     		if (firstBlock) {
     			firstBlock = false;
@@ -230,11 +194,15 @@ export class Annotator
     	html.push('  </div>');
     	html.push('</div>');
 
-		const dialog = jsPanel.create({
+    	const flatmap = this.__flatmap; // To use in panel code
+		jsPanel.create({
 		    theme: 'light',
-		    border: '2px solid #C00',
+		    border: '2px solid #0C0',
 		    borderRadius: '.5rem',
-		    panelSize: '470px auto',
+		    panelSize: '725px auto',
+		    data: {
+		    	flatmap: this.__flatmap
+		    },
 		    content: html.join('\n'),
  			closeOnEscape: true,
 		    closeOnBackdrop: false,
@@ -244,10 +212,64 @@ export class Annotator
 		        '<span id="flatmap-annotation-user" class="flex-auto">Logged out</span>',
 		        '<span id="flatmap-annotation-lock" class="jsPanel-ftr-btn fa fa-lock"></span>',
 		    ],
+		    contentFetch: {
+		        resource: flatmap.addBaseUrl_(`/annotations/${featureId}`),
+		        fetchInit: {
+		            method: 'GET',
+		            headers: {
+		                "Accept": "application/json; charset=utf-8",
+		                "Cache-Control": "no-store"
+		            }
+		        },
+		        bodyMethod: 'json',
+		        beforeSend: (fetchConfig, panel) => {
+		            panel.headerlogo.innerHTML = '<span class="fa fa-spinner fa-spin ml-2"></span>'
+		        },
+		        done: (response, panel) => {
+//		            panel.content.innerHTML = response;
+		            panel.headerlogo.innerHTML = '';
+		            console.log(response);
+//		            panel.resize('auto 300').reposition();
+		        }
+		    },
 		    callback: (panel) => {
 		        // Data entry only when authorised
 		        const annotationForm = document.getElementById('flatmap-annotation-form');
 		        annotationForm.hidden = true;
+
+		        // get all focusable elements within the panel content
+		        const inputElements = panel.content.querySelectorAll('input, textarea, button');
+		        const firstInput = inputElements[0];
+		        const lastInput = inputElements[inputElements.length - 1];
+		        const saveButton = document.getElementById('annotation-save-button');
+
+		        // Lock focus within the panel
+		        panel.addEventListener('keydown', function (e) {
+		            if (e.key === 'Tab') {
+		                if ( e.shiftKey ) /* shift + tab */ {
+		                    if (document.activeElement === firstInput) {
+		                        lastInput.focus();
+		                        e.preventDefault();
+		                    }
+		                } else /* tab */ {
+		                    if (document.activeElement === lastInput) {
+		                        firstInput.focus();
+		                        e.preventDefault();
+		                    }
+		                }
+		            } else if (e.key === 'Enter') {
+		            	if (e.target === saveButton) {
+			            	// validate/save input and close dialog
+		            		panel.close();
+		            	}
+		            }
+		        });
+
+		        saveButton.addEventListener('mousedown', function (e) {
+	            	// validate/save input and close dialog
+	            	// save only if changes...
+            		panel.close();
+		        });
 
 		        const authoriseLock = document.getElementById('flatmap-annotation-lock');
 		        const authorisedUser = document.getElementById('flatmap-annotation-user');
@@ -257,51 +279,16 @@ export class Annotator
 		        		lockClasses.remove('fa-lock');
 		        		lockClasses.add('fa-unlock');
 		        		// '/login`
-		        		authorisedUser.innerHTML = 'Logged in user...';
+		        		authorisedUser.innerHTML = 'Annotating as ...';
 		        		annotationForm.hidden = false;
+				        firstInput.focus();
 		        	} else {
+				        // should we warn if unsaved changes??
 		        		lockClasses.remove('fa-unlock');
 		        		lockClasses.add('fa-lock');
-		        		authorisedUser.innerHTML = 'Logged out';
+		        		authorisedUser.innerHTML = '';
 		        		annotationForm.hidden = true;
 		        	}
-		        });
-
-		        // get all focusable elements within the panel content
-		        const focusableElmts = panel.content.querySelectorAll('input, button');
-		        const first = focusableElmts[0];
-		        const last  = focusableElmts[focusableElmts.length - 1];
-		        // focus first focusable element
-		        first.focus();
-		        // handler to lock focus within the panel
-		        panel.addEventListener('keydown', function (e) {
-		            if (e.key === 'Tab') {
-		                if ( e.shiftKey ) /* shift + tab */ {
-		                    if (document.activeElement === first) {
-		                        last.focus();
-		                        e.preventDefault();
-		                    }
-		                } else /* tab */ {
-		                    if (document.activeElement === last) {
-		                        first.focus();
-		                        e.preventDefault();
-		                    }
-		                }
-		            } else if (e.key === 'Enter') {
-		            	if (e.target === last) {
-			            	// validate/save input and close dialog
-		            		panel.close();
-		            	}
-		            }
-		        });
-
-		        // want handler just on the form's  buttons
-		        panel.addEventListener('mousedown', function (e) {
-		            	if (e.target === last) {
-			            	// validate/save input and close dialog
-		            		panel.close();
-		            	}
-		        	// submit button event...
 		        });
 
 		        document.addEventListener('jspanelclosed', closedCallback, false);

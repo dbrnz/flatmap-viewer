@@ -199,7 +199,7 @@ export class UserInteractions
 
         // Add annotation capabilities
 
-        this.__annotator = new Annotator();
+        this.__annotator = new Annotator(flatmap);
 
         // Handle mouse events
 

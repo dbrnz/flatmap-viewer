@@ -241,25 +241,25 @@ label[for=layer-all-layers] {
     flex: 1 1 auto;
 }
 
-.flatmap-annotation-panel {
+#flatmap-annotation-panel {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
     height: 100%;
 }
-.flatmap-annotation-form
+#flatmap-annotation-form
 {
     flex: auto;
 }
 
-.flatmap-annotation-feature,
-.flatmap-annotation-form,
-.flatmap-annotation-historical
+#flatmap-annotation-feature,
+#flatmap-annotation-form,
+#flatmap-annotation-historical
 {
     padding: 4px;
 }
-.flatmap-annotation-feature,
-.flatmap-annotation-historical
+#flatmap-annotation-feature,
+#flatmap-annotation-historical
 {
     background-color: #DDD;
     border: 1px solid #888;
@@ -280,7 +280,7 @@ label[for=layer-all-layers] {
     vertical-align: top;
 }
 
-.flatmap-annotation-data
+#flatmap-annotation-formdata
 {
     display: flex;
     flex-direction: column;
@@ -288,46 +288,52 @@ label[for=layer-all-layers] {
     padding-right: 4px;
 }
 
-.flatmap-annotation-data div
+#flatmap-annotation-formdata div
 {
     padding-top: 4px;
     padding-bottom: 4px;
 }
-.flatmap-annotation-form input,
-.flatmap-annotation-form .multiple,
-.flatmap-annotation-form select,
-.flatmap-annotation-form textarea
-{
-    float: right;
+
+.flatmap-annotation-entry {
+    display: flex;
+    flex-wrap: nowrap;
 }
 
-.flatmap-annotation-form label
+#flatmap-annotation-form input,
+#flatmap-annotation-form .multiple,
+#flatmap-annotation-form select,
+#flatmap-annotation-form textarea
 {
+    flex: auto;
+}
+
+#flatmap-annotation-form label
+{
+    padding-right: 6px;
     display: inline-block;
     width: 80px;
 }
-.flatmap-annotation-form input
-{
-    margin-left: 6px;
-}
-.flatmap-annotation-form input[type="text"],
-.flatmap-annotation-form .multiple,
-.flatmap-annotation-form textarea
+#flatmap-annotation-form .multiple,
+#flatmap-annotation-form textarea
 {
     width: 360px;
 }
-.flatmap-annotation-form .multiple
+#flatmap-annotation-form input[type="text"]
+{
+    width: 300px;
+}
+#flatmap-annotation-form .multiple
 {
     padding:0;
 }
-.flatmap-annotation-form select
+#flatmap-annotation-form select
 {
     width: 160px;
 }
-.flatmap-annotation-form input[type="button"]
+#flatmap-annotation-form input[type="button"]
 {
     float: right;
-    background-color: #DDD;
+    background-color: #BBB;
 }
 
 .jsPanel-title {
