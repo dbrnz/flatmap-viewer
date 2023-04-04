@@ -113,16 +113,17 @@ export class Annotator
         }).then((response) => {
             panel.headerlogo.innerHTML = '';
             if (response.ok) {
-                const creator = response.json();
-                if ('error' in creator) {
-                    callback({error: creator.error});
-                } else {
-                    this.__setUser(creator);
-                    this.__authorised = true;
-                    callback(creator);
-                }
+                return response.json();
             } else {
                 callback({error: `${response.status} ${response.statusText}`});
+            }
+        }).then((response) => {
+            if ('error' in response) {
+                callback({error: response.error});
+            } else {
+                this.__setUser(response);
+                this.__authorised = true;
+                callback(response);
             }
         });
         setTimeout((panel) => {
@@ -148,10 +149,12 @@ export class Annotator
         }).then((response) => {
             if (response.ok) {
                 this.__authorised = false;
-                console.log('Annotator logout:', response.json());
+                return response.json();
             } else {
                 console.log('Annotator logout:', `${response.status} ${response.statusText}`);
             }
+        }).then((response) => {
+            console.log('Annotator logout:', response);
         });
         setTimeout(() => {
             if (this.__authorised) {
@@ -293,10 +296,12 @@ export class Annotator
             signal: abortController.signal
         }).then((response) => {
             if (response.ok) {
-                callback(response.json());
+                return response.json();
             } else {
                 callback({error: `${response.status} ${response.statusText}`});
             }
+        }).then((response) => {
+            callback(response);
         });
         return abortController;
     }
