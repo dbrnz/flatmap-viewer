@@ -20,7 +20,8 @@ module.exports = {
         new CleanWebpackPlugin({ cleanStaleWebpackAssets: false }),
         new HtmlWebpackPlugin({
             title: 'Development',
-            template: './app/index.html'
+            template: './app/index.html',
+            favicon: './static/icons/favicon.ico'
         }),
     ],
     module: {
