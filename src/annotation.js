@@ -24,19 +24,18 @@ limitations under the License.
 
 // We use Font Awesome icons
 import '../static/css/font-awesome.min.css';
-
-
 import escape from 'html-es6cape';
-
 import { jsPanel } from 'jspanel4';
 import 'jspanel4/dist/jspanel.css';
 
 //==============================================================================
 
-const FETCH_TIMEOUT = 3000;   // 3 seconds
-const UPDATE_TIMEOUT = 5000;  // 5 seconds
+const FETCH_TIMEOUT = 3000;   //  3 seconds
+const UPDATE_TIMEOUT = 5000;  //  5 seconds
+const LOGIN_TIMEOUT = 30000;  // 30 seconds
+const LOGOUT_TIMEOUT = 5000;  //  5 seconds
 
-const STATUS_MESSAGE_TIMEOUT = 2000;
+const STATUS_MESSAGE_TIMEOUT = 3000;
 
 //==============================================================================
 
@@ -77,6 +76,12 @@ export class Annotator
         this.__haveAnnotation = false;
         this.__user = undefined;
         this.__savedStatusMessage = '';
+        this.__authorised = false;
+    }
+
+    get user()
+    {
+        return this.__user;
     }
 
     __creatorName(creator)
@@ -84,29 +89,78 @@ export class Annotator
         return creator.name || creator.email || creator.login || creator.company || creator;
     }
 
-    __authorise(callback)
-    //===================
+    __setUser(creator)
     {
-        this.__user = {
-            company: "Auckland Bioengineering Institute",
-            location: "New Zealand",
-            login: "dbrnz",
-            name: "David Brooks"
-        };
-        this.__setStatusMessage(`Annotating as ${this.__creatorName(this.__user)}`, 0)
-        this.__annotationForm.hidden = false;
-        this.__firstInputField.focus();
+        this.__user = creator;
+        this.__setStatusMessage(`Annotating as ${this.__creatorName(creator)}`, 0)
+    }
 
-        callback();
+    __clearUser()
+    {
+        this.__user = undefined;
+        this.__setStatusMessage('', 0);
+    }
+
+    __authorise(panel, callback)
+    //==========================
+    {
+        const abortController = new AbortController();
+        const url = `${this.__flatmap._baseUrl}login`;
+        panel.headerlogo.innerHTML = '<span class="fa fa-spinner fa-spin ml-2"></span>';
+        fetch(url, {
+            headers: { "Content-Type": "application/json; charset=utf-8" },
+            signal: abortController.signal
+        }).then((response) => {
+            panel.headerlogo.innerHTML = '';
+            if (response.ok) {
+                const creator = response.json();
+                if ('error' in creator) {
+                    callback({error: creator.error});
+                } else {
+                    this.__setUser(creator);
+                    this.__authorised = true;
+                    callback(creator);
+                }
+            } else {
+                callback({error: `${response.status} ${response.statusText}`});
+            }
+        });
+        setTimeout((panel) => {
+            if (this.user === 'undefined') {
+                console.log("Aborting login...");
+                abortController.abort();
+                panel.headerlogo.innerHTML = '';
+                this.__setStatusMessage('Unable to login...');
+                }
+            },
+            LOGIN_TIMEOUT, panel);
     }
 
     __unauthorise()
     //=============
     {
-        this.__setStatusMessage('', 0);
-        this.__annotationForm.hidden = true;
-        this.__user = undefined;
-        this.__currentFeatureId = undefined;
+        this.__clearUser();
+        const abortController = new AbortController();
+        const url = `${this.__flatmap._baseUrl}logout`;
+        fetch(url, {
+            headers: { "Content-Type": "application/json; charset=utf-8" },
+            signal: abortController.signal
+        }).then((response) => {
+            if (response.ok) {
+                this.__authorised = false;
+                console.log('Annotator logout:', response.json());
+            } else {
+                console.log('Annotator logout:', `${response.status} ${response.statusText}`);
+            }
+        });
+        setTimeout(() => {
+            if (this.__authorised) {
+                console.log("Aborting logout...");
+                abortController.abort();
+                this.__setStatusMessage('Unable to logout...');
+                }
+            },
+            LOGOUT_TIMEOUT);
     }
 
     __setStatusMessage(message, timeout=STATUS_MESSAGE_TIMEOUT)
@@ -241,7 +295,7 @@ export class Annotator
             if (response.ok) {
                 callback(response.json());
             } else {
-                callback({error: response.statusText});
+                callback({error: `${response.status} ${response.statusText}`});
             }
         });
         return abortController;
@@ -256,7 +310,7 @@ export class Annotator
                 ...changedProperties.properties,
                 'rdf:type': 'prov:Entity',
                 'dct:subject': `flatmaps:${this.__flatmap.uuid}/${this.__currentFeatureId}`,
-                'dct:creator': this.__user
+                'dct:creator': this.user
             }
             panel.headerlogo.innerHTML = '<span class="fa fa-spinner fa-spin ml-2"></span>';
             const remoteUpdate = this.__updateRemoteAnnotation(annotation,
@@ -403,14 +457,21 @@ export class Annotator
                 annotator.__authoriseLock.addEventListener('click', (e) => {
                     const lockClasses = annotator.__authoriseLock.classList;
                     if (lockClasses.contains('fa-lock')) {
-                        annotator.__authorise(() => {
-                            lockClasses.remove('fa-lock');
-                            lockClasses.add('fa-unlock');
+                        annotator.__authorise(panel, (response) => {
+                            if ('error' in response) {
+                                annotator.__setStatusMessage(response.error);
+                            } else {
+                                annotator.__annotationForm.hidden = false;
+                                annotator.__firstInputField.focus();
+                                lockClasses.remove('fa-lock');
+                                lockClasses.add('fa-unlock');
+                            }
                         });
                     } else {
+                        annotator.__unauthorise();
+                        annotator.__annotationForm.hidden = true;
                         lockClasses.remove('fa-unlock');
                         lockClasses.add('fa-lock');
-                        annotator.__unauthorise();
                     }
                 });
 
