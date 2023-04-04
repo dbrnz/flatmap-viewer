@@ -113,31 +113,10 @@ export class Annotator
         this.__setStatusMessage('', 0);
     }
 
-    __authorise(panel, callback)
-    //==========================
+    async __authorise(panel)
+    //======================
     {
         const abortController = new AbortController();
-        const url = `${this.__flatmap._baseUrl}login`;
-        startSpinner(panel);
-        fetch(url, {
-            headers: { "Content-Type": "application/json; charset=utf-8" },
-            signal: abortController.signal
-        }).then((response) => {
-            stopSpinner(panel);
-            if (response.ok) {
-                return response.json();
-            } else {
-                callback({error: `${response.status} ${response.statusText}`});
-            }
-        }).then((response) => {
-            if ('error' in response) {
-                callback({error: response.error});
-            } else {
-                this.__setUser(response);
-                this.__authorised = true;
-                callback(response);
-            }
-        });
         setTimeout((panel) => {
             if (this.user === 'undefined') {
                 console.log("Aborting login...");
@@ -147,27 +126,32 @@ export class Annotator
                 }
             },
             LOGIN_TIMEOUT, panel);
-    }
 
-    __unauthorise()
-    //=============
-    {
-        this.__clearUser();
-        const abortController = new AbortController();
-        const url = `${this.__flatmap._baseUrl}logout`;
-        fetch(url, {
+        const url = `${this.__flatmap._baseUrl}login`;
+        startSpinner(panel);
+        const response = await fetch(url, {
             headers: { "Content-Type": "application/json; charset=utf-8" },
             signal: abortController.signal
-        }).then((response) => {
-            if (response.ok) {
-                this.__authorised = false;
-                return response.json();
-            } else {
-                console.log('Annotator logout:', `${response.status} ${response.statusText}`);
-            }
-        }).then((response) => {
-            console.log('Annotator logout:', response);
         });
+        stopSpinner(panel);
+        if (response.ok) {
+            const user_data = await response.json();
+            if ('error' in user_data) {
+                return Promise.resolve({error: response.error});
+            } else {
+                this.__setUser(user_data);
+                this.__authorised = true;
+                return user_data;
+            }
+        } else {
+            return Promise.resolve({error: `${response.status} ${response.statusText}`});
+        }
+    }
+
+    async __unauthorise()
+    //===================
+    {
+        const abortController = new AbortController();
         setTimeout(() => {
             if (this.__authorised) {
                 console.log("Aborting logout...");
@@ -176,6 +160,18 @@ export class Annotator
                 }
             },
             LOGOUT_TIMEOUT);
+
+        const url = `${this.__flatmap._baseUrl}logout`;
+        const response = fetch(url, {
+            headers: { "Content-Type": "application/json; charset=utf-8" },
+            signal: abortController.signal
+        });
+        if (response.ok) {
+            this.__authorised = false;
+            return await response.json();
+        } else {
+            return Promise.resolve({error: `${response.status} ${response.statusText}`});
+        }
     }
 
     __setStatusMessage(message, timeout=STATUS_MESSAGE_TIMEOUT)
@@ -296,32 +292,38 @@ export class Annotator
         }
     }
 
-    __updateRemoteAnnotation(annotation, callback)
-    //============================================
+    async __updateRemoteAnnotation(panel, annotation)
+    //===============================================
     {
         const abortController = new AbortController();
+
+        setTimeout((panel) => {
+            if (panel.status !== 'closed') {
+                console.log("Aborting remote update...");
+                abortController.abort();
+                stopSpinner(panel);
+                this.__setStatusMessage('Cannot update annotation...');
+            }
+        }, UPDATE_TIMEOUT, panel);
+
         const url = this.__flatmap.addBaseUrl_(`/annotations/${this.__currentFeatureId}`);
-        fetch(url, {
+        const response = await fetch(url, {
             headers: { "Content-Type": "application/json; charset=utf-8" },
             method: 'POST',
             body: JSON.stringify(annotation),
             signal: abortController.signal
-        }).then((response) => {
-            if (response.ok) {
-                return response.json();
-            } else {
-                callback({error: `${response.status} ${response.statusText}`});
-            }
-        }).then((response) => {
-            callback(response);
         });
-        return abortController;
+        if (response.ok) {
+            return await response.json();
+        } else {
+            return Promise.resolve({error: `${response.status} ${response.statusText}`});
+        }
     }
 
-    __saveAnnotation(panel, lastAnnotation)
-    //=====================================
+    async __saveAnnotation(panel, provenanceData)
+    //===========================================
     {
-        const changedProperties = this.__changedAnnotation(lastAnnotation);
+        const changedProperties = this.__changedAnnotation(provenanceData);
         if (this.__currentFeatureId !== undefined && changedProperties.changed) {
             const annotation = {
                 ...changedProperties.properties,
@@ -329,24 +331,14 @@ export class Annotator
                 'dct:subject': `flatmaps:${this.__flatmap.uuid}/${this.__currentFeatureId}`,
                 'dct:creator': this.user
             }
-            panel.headerlogo.innerHTML = '<span class="fa fa-spinner fa-spin ml-2"></span>';
-            const remoteUpdate = this.__updateRemoteAnnotation(annotation,
-                (response) => {
-                    if ('error' in response) {
-                        panel.headerlogo.innerHTML = response.error;
-                    } else {
-                        panel.headerlogo.innerHTML = '';
-                        panel.close();
-                    }
-                });
-            setTimeout((panel) => {
-                if (panel.status !== 'closed') {
-                    console.log("Aborting remote update...");
-                    remoteUpdate.abort();
-                    panel.headerlogo.innerHTML = '';
-                    this.__setStatusMessage('Cannot update annotation...');
-                }
-            }, UPDATE_TIMEOUT, panel);
+            startSpinner(panel);
+            const response = await this.__updateRemoteAnnotation(panel, annotation);
+            stopSpinner(panel);
+            if ('error' in response) {
+                this.__setStatusMessage(response.error);
+            } else {
+                panel.close();
+            }
         } else {
             this.__
             this.__setStatusMessage('No changes to save...');
@@ -392,6 +384,42 @@ export class Annotator
         }.bind(this));
     }
 
+    __panelCallback(panel)
+    //====================
+    {
+        this.__annotationForm = document.getElementById('flatmap-annotation-form');
+        // Data entry only once authorised
+        this.__annotationForm.hidden = true;
+
+        // Populate once we have content from server
+        this.__existingAnnotation = document.getElementById('flatmap-annotation-existing');
+        this.__statusMessage = document.getElementById('flatmap-annotation-status');
+
+        this.__authoriseLock = document.getElementById('flatmap-annotation-lock');
+        this.__authoriseLock.addEventListener('click', (e) => {
+            const lockClasses = this.__authoriseLock.classList;
+            if (lockClasses.contains('fa-lock')) {
+                this.__authorise(panel).then((response) => {
+                    if ('error' in response) {
+                        this.__setStatusMessage(response.error);
+                    } else {
+                        this.__annotationForm.hidden = false;
+                        this.__firstInputField.focus();
+                        lockClasses.remove('fa-lock');
+                        lockClasses.add('fa-unlock');
+                    }
+                });
+            } else {
+                this.__unauthorise().then((response) => {
+                    console.log(`Annotator logout: ${response}`);
+                });
+                this.__annotationForm.hidden = true;
+                lockClasses.remove('fa-unlock');
+                lockClasses.add('fa-lock');
+            }
+        });
+    }
+
     annotate(feature, closedCallback)
     //===============================
     {
@@ -411,8 +439,8 @@ export class Annotator
         panelContent.push('  <div id="flatmap-annotation-existing"></div>');
         panelContent.push('</div>');
 
-        const annotator = this;             // To use in panel code
-        const flatmap = this.__flatmap;     // To use in panel code
+        const annotator = this;             // To use in panel creation code
+        const flatmap = this.__flatmap;     // To use in panel creation code
         const contentFetchAbort = new AbortController();
         this.__panel = jsPanel.create({
             theme: 'light',
@@ -461,42 +489,11 @@ export class Annotator
                     stopSpinner(panel);
                 }
             },
-            callback: (panel) => {
-                annotator.__annotationForm = document.getElementById('flatmap-annotation-form');
-                // Data entry only once authorised
-                annotator.__annotationForm.hidden = true;
-
-                // Populate once we have content from server
-                annotator.__existingAnnotation = document.getElementById('flatmap-annotation-existing');
-                annotator.__statusMessage = document.getElementById('flatmap-annotation-status');
-
-                annotator.__authoriseLock = document.getElementById('flatmap-annotation-lock');
-                annotator.__authoriseLock.addEventListener('click', (e) => {
-                    const lockClasses = annotator.__authoriseLock.classList;
-                    if (lockClasses.contains('fa-lock')) {
-                        annotator.__authorise(panel, (response) => {
-                            if ('error' in response) {
-                                annotator.__setStatusMessage(response.error);
-                            } else {
-                                annotator.__annotationForm.hidden = false;
-                                annotator.__firstInputField.focus();
-                                lockClasses.remove('fa-lock');
-                                lockClasses.add('fa-unlock');
-                            }
-                        });
-                    } else {
-                        annotator.__unauthorise();
-                        annotator.__annotationForm.hidden = true;
-                        lockClasses.remove('fa-unlock');
-                        lockClasses.add('fa-lock');
-                    }
-                });
-
-                // should we warn if unsaved changes when closing??
-                document.addEventListener('jspanelclosed', closedCallback, false);
-            }
+            callback: annotator.__panelCallback.bind(annotator)
         });
 
+        // should we warn if unsaved changes when closing??
+        document.addEventListener('jspanelclosed', closedCallback, false);
     }
 
 }
