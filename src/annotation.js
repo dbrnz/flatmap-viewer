@@ -239,15 +239,17 @@ export class Annotator
         for (const field of ANNOTATION_FIELDS) {
             html.push('<div class="flatmap-annotation-entry">');
             html.push(`  <label for="${field.key}">${field.prompt}:</label>`);
-            const value = field.update ? provenanceData[field.key] || '' : '';
             if (field.kind === 'textbox') {
+                const value = field.update ? provenanceData[field.key] || '' : '';
                 html.push(`  <textarea rows="5" cols="40" id="${field.key}" name="${field.key}">${value.trim()}</textarea>`)
             } else if (!('kind' in field) || field.kind !== 'list') {
+                const value = field.update ? provenanceData[field.key] || '' : '';
                 html.push(`  <input type="text" size="40" id="${field.key}" name="${field.key}" value="${value.trim()}"/>`)
             } else {   // field.kind === 'list'
+                const listValues = field.update ? provenanceData[field.key] || [] : [];
                 html.push('  <div class="multiple">')
                 for (let n = 1; n <= field.size; n++) {
-                    const fieldValue = (n <= value.length) ? value[n-1].trim() : '';
+                    const fieldValue = (n <= listValues.length) ? listValues[n-1].trim() : '';
                     html.push(`    <input type="text" size="40" id="${field.key}_${n}" name="${field.key}" value="${fieldValue}"/>`)
                 }
                 html.push('  </div>')
@@ -284,8 +286,8 @@ export class Annotator
         const newProperties = {};
         let propertiesChanged = false;
         for (const field of ANNOTATION_FIELDS) {
-            const lastValue = field.update ? provenanceData[field.key] || '' : '';
             if (!('kind' in field) || field.kind !== 'list') {
+                const lastValue = field.update ? provenanceData[field.key] || '' : '';
                 const inputField = document.getElementById(field.key);
                 const newValue = inputField.value.trim();
                 if (newValue !== lastValue.trim()) {
@@ -298,6 +300,7 @@ export class Annotator
                     const inputField = document.getElementById(`${field.key}_${n}`);
                     listValues.push(inputField.value.trim());
                 }
+                const lastValue = field.update ? provenanceData[field.key] || [] : [];
                 const oldValues = lastValue.map(v => v.trim()).filter(v => (v !== '')).sort();
                 const newValues = listValues.map(v => v.trim()).filter(v => (v !== '')).sort();
                 if (oldValues.length !== newValues.length
