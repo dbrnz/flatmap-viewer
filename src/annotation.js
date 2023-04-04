@@ -259,30 +259,51 @@ export class Annotator
         return html.join('\n');
     }
 
-    __changedAnnotation(lastAnnotation)
+    __provenanceData(annotations)
+    //===========================
+    {
+        const provenanceData = {};
+        for (const annotation of annotations) {   // In order of most recent to oldest
+            if (annotation['rdf:type'] === 'prov:Entity') {
+                for (const field of ANNOTATION_FIELDS) {
+                    if (field.update) {
+                        const value = annotation[field.key];
+                        if (value !== undefined && !(field.key in provenanceData)) {
+                            provenanceData[field.key] = value;
+                        }
+                    }
+                }
+            }
+        }
+        return provenanceData;
+    }
+
+    __changedAnnotation(provenanceData)
     //=================================
     {
         const newProperties = {};
         let propertiesChanged = false;
         for (const field of ANNOTATION_FIELDS) {
-            const lastValue = field.update ? lastAnnotation[field.key] || '' : '';
+            const lastValue = field.update ? provenanceData[field.key] || '' : '';
             if (!('kind' in field) || field.kind !== 'list') {
                 const inputField = document.getElementById(field.key);
-                newProperties[field.key] = inputField.value.trim();
-                if (!propertiesChanged && newProperties[field.key] !== lastValue.trim()) {
+                const newValue = inputField.value.trim();
+                if (newValue !== lastValue.trim()) {
+                    newProperties[field.key] = newValue;
                     propertiesChanged = true;
                 }
             } else {   // field.kind === 'list'
-                newProperties[field.key] = [];
-                const changedList = false;
+                const listValues = [];
                 for (let n = 1; n <= field.size; n++) {
-                    const lastListValue = (n <= lastValue.length) ? lastValue[n-1].trim() : '';
                     const inputField = document.getElementById(`${field.key}_${n}`);
-                    const newListValue = inputField.value.trim();
-                    newProperties[field.key].push(newListValue);
-                    if (!propertiesChanged && newListValue !== lastListValue) {
-                        propertiesChanged = true;
-                    }
+                    listValues.push(inputField.value.trim());
+                }
+                const oldValues = lastValue.map(v => v.trim()).filter(v => (v !== '')).sort();
+                const newValues = listValues.map(v => v.trim()).filter(v => (v !== '')).sort();
+                if (oldValues.length !== newValues.length
+                 || oldValues.filter(v => !newValues.includes(v)).length > 0) {
+                    newProperties[field.key] = newValues;
+                    propertiesChanged = true;
                 }
             }
         }
@@ -349,9 +370,9 @@ export class Annotator
     //====================================
     {
         this.__haveAnnotation = true;
+        const provenanceData = this.__provenanceData(response);
         this.__existingAnnotation.innerHTML = this.__annotationHtml(response);
-        const lastAnnotation = response.length ? response[0] : {};
-        this.__annotationForm.innerHTML = this.__editFormHtml(lastAnnotation);
+        this.__annotationForm.innerHTML = this.__editFormHtml(provenanceData);
 
         // Lock focus to focusable elements within the panel
         const inputElements = panel.content.querySelectorAll('input, textarea, button');
@@ -374,13 +395,13 @@ export class Annotator
                 }
             } else if (e.key === 'Enter') {
                 if (e.target === saveButton) {
-                    this.__saveAnnotation(panel, lastAnnotation);
+                    this.__saveAnnotation(panel, provenanceData);
                 }
             }
         }.bind(this));
 
         saveButton.addEventListener('mousedown', function (e) {
-            this.__saveAnnotation(panel, lastAnnotation);
+            this.__saveAnnotation(panel, provenanceData);
         }.bind(this));
     }
 
