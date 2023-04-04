@@ -23,7 +23,7 @@ limitations under the License.
 //==============================================================================
 
 // We use Font Awesome icons
-import '../static/css/font-awesome.min.css';
+import '@fortawesome/fontawesome-free/css/all.css';
 import escape from 'html-es6cape';
 import { jsPanel } from 'jspanel4';
 import 'jspanel4/dist/jspanel.css';
