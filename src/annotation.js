@@ -68,6 +68,18 @@ const ANNOTATION_FIELDS = [
 
 //==============================================================================
 
+function startSpinner(panel)
+{
+    panel.headerlogo.innerHTML = '<span class="fa fa-spinner fa-spin ml-2"></span>';
+}
+
+function stopSpinner(panel)
+{
+    panel.headerlogo.innerHTML = '';
+}
+
+//==============================================================================
+
 export class Annotator
 {
     constructor(flatmap)
@@ -106,12 +118,12 @@ export class Annotator
     {
         const abortController = new AbortController();
         const url = `${this.__flatmap._baseUrl}login`;
-        panel.headerlogo.innerHTML = '<span class="fa fa-spinner fa-spin ml-2"></span>';
+        startSpinner(panel);
         fetch(url, {
             headers: { "Content-Type": "application/json; charset=utf-8" },
             signal: abortController.signal
         }).then((response) => {
-            panel.headerlogo.innerHTML = '';
+            stopSpinner(panel);
             if (response.ok) {
                 return response.json();
             } else {
@@ -130,7 +142,7 @@ export class Annotator
             if (this.user === 'undefined') {
                 console.log("Aborting login...");
                 abortController.abort();
-                panel.headerlogo.innerHTML = '';
+                stopSpinner(panel);
                 this.__setStatusMessage('Unable to login...');
                 }
             },
@@ -433,12 +445,12 @@ export class Annotator
                 },
                 bodyMethod: 'json',
                 beforeSend: (fetchConfig, panel) => {
-                    panel.headerlogo.innerHTML = '<span class="fa fa-spinner fa-spin ml-2"></span>';
+                    startSpinner(panel);
                     setTimeout((panel) => {
                         if (!annotator.__haveAnnotation) {
                             console.log("Aborting content fetch...");
                             contentFetchAbort.abort();
-                            panel.headerlogo.innerHTML = '';
+                            stopSpinner(panel);
                             annotator.__setStatusMessage('Cannot fetch annotation...');
                             annotator.__authoriseLock.className = '';
                         }
@@ -446,7 +458,7 @@ export class Annotator
                 },
                 done: (response, panel) => {
                     annotator.__finishPanelContent(panel, response);
-                    panel.headerlogo.innerHTML = '';
+                    stopSpinner(panel);
                 }
             },
             callback: (panel) => {
