@@ -419,6 +419,20 @@ class FlatMap
     get id()
     //======
     {
+        return this.__id;
+    }
+
+    /**
+     * The map's unique universal identifier.
+     *
+     * For published maps this is different to the map's ``id``;
+     * it might be the same as ``id`` for unpublished maps.
+     *
+     * @type string
+     */
+    get uuid()
+    //========
+    {
         return this.__uuid;
     }
 
