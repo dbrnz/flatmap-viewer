@@ -231,15 +231,15 @@ export class Annotator
         return html.join('\n');
     }
 
-    __editFormHtml(annotation)
-    //========================
+    __editFormHtml(provenanceData)
+    //============================
     {
         const html = [];
         html.push('<div id="flatmap-annotation-formdata">');
         for (const field of ANNOTATION_FIELDS) {
             html.push('<div class="flatmap-annotation-entry">');
             html.push(`  <label for="${field.key}">${field.prompt}:</label>`);
-            const value = field.update ? annotation[field.key] || '' : '';
+            const value = field.update ? provenanceData[field.key] || '' : '';
             if (field.kind === 'textbox') {
                 html.push(`  <textarea rows="5" cols="40" id="${field.key}" name="${field.key}">${value.trim()}</textarea>`)
             } else if (!('kind' in field) || field.kind !== 'list') {
@@ -361,7 +361,6 @@ export class Annotator
                 panel.close();
             }
         } else {
-            this.__
             this.__setStatusMessage('No changes to save...');
         }
     }
