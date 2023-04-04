@@ -31,9 +31,9 @@ import 'jspanel4/dist/jspanel.css';
 //==============================================================================
 
 const FETCH_TIMEOUT = 3000;   //  3 seconds
-const UPDATE_TIMEOUT = 5000;  //  5 seconds
+const UPDATE_TIMEOUT = 3000;  //  5 seconds
 const LOGIN_TIMEOUT = 30000;  // 30 seconds
-const LOGOUT_TIMEOUT = 5000;  //  5 seconds
+const LOGOUT_TIMEOUT = 3000;  //  5 seconds
 
 const STATUS_MESSAGE_TIMEOUT = 3000;
 
