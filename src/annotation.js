@@ -301,8 +301,8 @@ export class Annotator
                     listValues.push(inputField.value.trim());
                 }
                 const lastValue = field.update ? provenanceData[field.key] || [] : [];
-                const oldValues = lastValue.map(v => v.trim()).filter(v => (v !== '')).sort();
-                const newValues = listValues.map(v => v.trim()).filter(v => (v !== '')).sort();
+                const oldValues = lastValue.map(v => v.trim()).filter(v => (v !== '')).sort(Intl.Collator().compare);
+                const newValues = listValues.map(v => v.trim()).filter(v => (v !== '')).sort(Intl.Collator().compare);
                 if (oldValues.length !== newValues.length
                  || oldValues.filter(v => !newValues.includes(v)).length > 0) {
                     newProperties[field.key] = newValues;
