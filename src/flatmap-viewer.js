@@ -85,12 +85,12 @@ class FlatMap
 
         for (const [id, source] of Object.entries(mapDescription.style.sources)) {
             if (source.url) {
-                source.url = this.addBaseUrl_(source.url);
+                source.url = this.makeServerUrl(source.url);
             }
             if (source.tiles) {
                 const tiles = [];
                 for (const tileUrl of source.tiles) {
-                    tiles.push(this.addBaseUrl_(tileUrl));
+                    tiles.push(this.makeServerUrl(tileUrl));
                 }
                 source.tiles = tiles;
             }
@@ -361,21 +361,23 @@ class FlatMap
     {
         if (!this._map.hasImage(id)) {
             const image = await (path.startsWith('data:image') ? this.loadEncodedImage_(path)
-                                                               : this.loadImage_(path.startsWith('/') ? this.addBaseUrl_(path)
+                                                               : this.loadImage_(path.startsWith('/') ? this.makeServerUrl(path)
                                                                                                       : new URL(path, baseUrl)));
             this._map.addImage(id, image, options);
         }
     }
 
-    addBaseUrl_(url)
-    //==============
+    makeServerUrl(url, resource='flatmap/')
+    //=====================================
     {
-        if (url.startsWith('/')) {
-            return `${this._baseUrl}flatmap/${this.__uuid}${url}`; // We don't want embedded `{` and `}` characters escaped
-        } else if (!url.startsWith('http://') && !url.startsWith('https://')) {
-            console.log(`Invalid URL (${url}) in map's sources`);
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+            return url;
+        } else if (url.startsWith('/')) {
+            // We don't want embedded `{` and `}` characters escaped
+            return `${this._baseUrl}${resource}${this.__uuid}${url}`;
+        } else {
+            return `${this._baseUrl}${resource}${this.__uuid}/${url}`;
         }
-        return url;
     }
 
     /**

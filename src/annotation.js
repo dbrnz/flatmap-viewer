@@ -330,7 +330,7 @@ export class Annotator
             }
         }, UPDATE_TIMEOUT, panel);
 
-        const url = this.__flatmap.addBaseUrl_(`/annotations/${this.__currentFeatureId}`);
+        const url = this.__flatmap.makeServerUrl(this.__currentFeatureId, 'annotator/');
         const response = await fetch(url, {
             headers: { "Content-Type": "application/json; charset=utf-8" },
             method: 'POST',
@@ -484,7 +484,7 @@ export class Annotator
                 '<span id="flatmap-annotation-lock" class="jsPanel-ftr-btn fa fa-lock"></span>',
             ],
             contentFetch: {
-                resource: flatmap.addBaseUrl_(`/annotations/${this.__currentFeatureId}`),
+                resource: flatmap.makeServerUrl(this.__currentFeatureId, 'annotator/'),
                 fetchInit: {
                     method: 'GET',
                     mode: 'cors',
