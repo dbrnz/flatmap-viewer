@@ -141,7 +141,7 @@ export class Annotator
             } else {
                 this.__setUser(user_data);
                 this.__authorised = true;
-                return user_data;
+                return Promise.resolve(user_data);
             }
         } else {
             return Promise.resolve({error: `${response.status} ${response.statusText}`});
@@ -168,7 +168,7 @@ export class Annotator
         });
         if (response.ok) {
             this.__authorised = false;
-            return await response.json();
+            return response.json();
         } else {
             return Promise.resolve({error: `${response.status} ${response.statusText}`});
         }
@@ -338,7 +338,7 @@ export class Annotator
             signal: abortController.signal
         });
         if (response.ok) {
-            return await response.json();
+            return response.json();
         } else {
             return Promise.resolve({error: `${response.status} ${response.statusText}`});
         }
@@ -361,6 +361,7 @@ export class Annotator
             if ('error' in response) {
                 this.__setStatusMessage(response.error);
             } else {
+                this.__flatmap.setFeatureAnnotated(this.__currentFeatureId);
                 panel.close();
             }
         } else {
@@ -517,6 +518,24 @@ export class Annotator
 
         // should we warn if unsaved changes when closing??
         document.addEventListener('jspanelclosed', closedCallback, false);
+    }
+
+    async annotated_features()
+    //========================
+    {
+        const url = this.__flatmap.makeServerUrl('', 'annotator/');
+        const response = await fetch(url, {
+            headers: {
+                "Accept": "application/json; charset=utf-8",
+                "Cache-Control": "no-store"
+            }
+        });
+        if (response.ok) {
+            return response.json();
+        } else {
+            console.error(`Annotated features: ${response.status} ${response.statusText}`);
+            return Promise.resolve([]);
+        }
     }
 
 }

@@ -31,6 +31,7 @@ import {PATH_STYLE_RULES} from './pathways.js';
 //==============================================================================
 
 const COLOUR_ACTIVE    = 'blue';
+const COLOUR_ANNOTATED = '#0F0';
 const COLOUR_SELECTED  = '#0F0';
 
 const CENTRELINE_ACTIVE = '#444';
@@ -198,6 +199,8 @@ export class FeatureBorderLayer extends VectorStyleLayer
             lineColour.push(['boolean', ['feature-state', 'active'], false]);
             lineColour.push(COLOUR_ACTIVE);
         }
+        lineColour.push(['boolean', ['feature-state', 'annotated'], false]);
+        lineColour.push(COLOUR_ANNOTATED);
         lineColour.push(['has', 'colour']);
         lineColour.push(['get', 'colour']);
         lineColour.push('#444');
@@ -211,6 +214,8 @@ export class FeatureBorderLayer extends VectorStyleLayer
             lineOpacity.push(0.9);
         }
         lineOpacity.push(['boolean', ['feature-state', 'selected'], false]);
+        lineOpacity.push(0.9);
+        lineOpacity.push(['boolean', ['feature-state', 'annotated'], false]);
         lineOpacity.push(0.9);
         if (activeRasterLayer) {
             lineOpacity.push((outlined && !dimmed) ? 0.3 : 0.1);
@@ -228,6 +233,8 @@ export class FeatureBorderLayer extends VectorStyleLayer
             lineWidth.push(['boolean', ['feature-state', 'active'], false]);
             lineWidth.push(1.5);
         }
+        lineWidth.push(['boolean', ['feature-state', 'annotated'], false]);
+        lineWidth.push(3.5);
         lineWidth.push(['has', 'colour']);
         lineWidth.push(0.7);
         lineWidth.push((coloured && outlined) ? 0.5 : 0.1);
@@ -346,6 +353,63 @@ export class FeatureDashLineLayer extends FeatureLineLayer
     constructor(id, sourceLayer)
     {
         super(id, sourceLayer, {dashed: true});
+    }
+}
+
+//==============================================================================
+
+export class AnnotatedPathLayer extends VectorStyleLayer
+{
+    constructor(id, sourceLayer)
+    {
+        super(id, 'annotated-path', sourceLayer);
+    }
+
+    paintStyle(options={}, changes=false)
+    {
+        const dimmed = 'dimmed' in options && options.dimmed;
+        const paintStyle = {
+            'line-color': COLOUR_ANNOTATED,
+            'line-dasharray': [5, 0.5, 3, 0.5],
+            'line-opacity': [
+                'case',
+                    ['boolean', ['feature-state', 'hidden'], false], 0.05,
+                        ['boolean', ['feature-state', 'annotated'], false],
+                        (dimmed ? 0.1 : 0.8),
+                    0.6
+                ],
+            'line-width': [
+                'let',
+                'width',
+                    ['case',
+                    ['boolean', ['feature-state', 'annotated'], false],
+                        ['*', 1.2, ['case', ['has', 'stroke-width'], ['get', 'stroke-width'], 1.0]],
+                        0.0
+                    ],
+                ['interpolate',
+                    ['exponential', 2],
+                    ['zoom'],
+                     2, ["*", ['var', 'width'], ["^", 2, -0.5]],
+                     7, ["*", ['var', 'width'], ["^", 2,  2.5]],
+                     9, ["*", ['var', 'width'], ["^", 2,  4.0]]
+                ]
+            ]
+        };
+        return super.changedPaintStyle(paintStyle, changes);
+    }
+
+    style(options)
+    {
+        const dimmed = 'dimmed' in options && options.dimmed;
+        return {
+            ...super.style(),
+            'type': 'line',
+            'filter': ['==', '$type', 'LineString'],
+            'paint': this.paintStyle(options),
+            'layout': {
+                'line-cap': 'square'
+            }
+        };
     }
 }
 

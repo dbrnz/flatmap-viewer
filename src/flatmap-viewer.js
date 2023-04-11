@@ -472,6 +472,19 @@ class FlatMap
         return this.__idToAnnotation.get(featureId.toString());
     }
 
+    /**
+     * Flag the feature as having external annotation.
+     *
+     * @param      {string}  featureId  The feature's identifier
+     */
+    setFeatureAnnotated(featureId)
+    //============================
+    {
+        if (this._userInteractions !== null) {
+            this._userInteractions.setFeatureAnnotated(featureId);
+        }
+    }
+
     __updateFeatureIdMap(property, featureIdMap, annotation)
     //======================================================
     {

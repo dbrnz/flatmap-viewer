@@ -144,14 +144,13 @@ export class UserInteractions
             }
         }
 
-        // Flag features that have annotations and note which are FC systems
+        this.__featureIdToMapId = new Map();
+        this.__setupAnnotation();
+
+        // Note features that are FC systems
 
         this.__systems = new Map();
-        for (const [id, ann] of flatmap.annotations) {
-            const feature = this.mapFeature_(id);
-            if (feature !== undefined) {
-                this._map.setFeatureState(feature, { 'annotated': true });
-            }
+        for (const [id, ann] of this._flatmap.annotations) {
             if (ann['fc-class'] === 'fc-class:System') {
                 if (this.__systems.has(ann.name)) {
                     this.__systems.get(ann.name).featureIds.push(ann.featureId)
@@ -196,10 +195,6 @@ export class UserInteractions
                 this._map.addControl(new SCKANControl(flatmap, flatmap.options.layerOptions));
             }
         }
-
-        // Add annotation capabilities
-
-        this.__annotator = new Annotator(flatmap);
 
         // Handle mouse events
 
@@ -251,6 +246,39 @@ export class UserInteractions
         }
         if (Object.keys(options).length > 0) {
             this._map.jumpTo(options);
+        }
+    }
+
+    async __setupAnnotation()
+    //=======================
+    {
+        // Add annotation capability
+
+        this.__annotator = new Annotator(this._flatmap);
+        const annotated_features = await this.__annotator.annotated_features();
+
+        // Flag features that have annotations
+
+        for (const [mapId, ann] of this._flatmap.annotations) {
+            this.__featureIdToMapId.set(ann.id, mapId);
+            const feature = this.mapFeature_(mapId);
+            if (feature !== undefined) {
+                this._map.setFeatureState(feature, { 'map-annotation': true });
+                if (annotated_features.indexOf(ann.id) >= 0) {
+                    this._map.setFeatureState(feature, { 'annotated': true });
+                }
+            }
+        }
+    }
+
+    setFeatureAnnotated(featureId)
+    //============================
+    {
+        // featureId v's geoJSON id
+        const mapId = this.__featureIdToMapId.get(featureId);
+        const feature = this.mapFeature_(mapId);
+        if (feature !== undefined) {
+            this._map.setFeatureState(feature, { 'annotated': true });
         }
     }
 
@@ -447,7 +475,7 @@ export class UserInteractions
         let smallestFeature = null;
         for (const feature of features) {
             if (feature.geometry.type.includes('Polygon')
-             && this._map.getFeatureState(feature)['annotated']) {
+             && this._map.getFeatureState(feature)['map-annotation']) {
                 const polygon = turf.geometry(feature.geometry.type, feature.geometry.coordinates);
                 const area = turfArea(polygon);
                 if (smallestFeature === null || smallestArea > area) {
