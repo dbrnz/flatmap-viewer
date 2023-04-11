@@ -30,6 +30,19 @@ import {PATH_STYLE_RULES} from './pathways.js';
 
 //==============================================================================
 
+const COLOUR_ACTIVE    = 'blue';
+const COLOUR_SELECTED  = '#0F0';
+
+const CENTRELINE_ACTIVE = '#444';
+const CENTRELINE_COLOUR = '#CCC';
+
+const FEATURE_SELECTED_BORDER = 'black';
+
+const NERVE_ACTIVE = '#222';
+const NERVE_SELECTED = 'red';
+
+//==============================================================================
+
 class VectorStyleLayer
 {
     constructor(id, suffix, sourceLayer)
@@ -126,7 +139,7 @@ export class FeatureFillLayer extends VectorStyleLayer
         const paintStyle = {
             'fill-color': [
                 'case',
-                ['boolean', ['feature-state', 'selected'], false], '#0F0',
+                ['boolean', ['feature-state', 'selected'], false], COLOUR_SELECTED,
                 ['has', 'colour'], ['get', 'colour'],
                 ['boolean', ['feature-state', 'active'], false], coloured ? '#D88' : '#CCC',
                 'white'    // background colour? body colour ??
@@ -180,10 +193,10 @@ export class FeatureBorderLayer extends VectorStyleLayer
         const activeRasterLayer = 'activeRasterLayer' in options && options.activeRasterLayer;
         const lineColour = [ 'case' ];
         lineColour.push(['boolean', ['feature-state', 'selected'], false]);
-        lineColour.push('black');
+        lineColour.push(FEATURE_SELECTED_BORDER);
         if (coloured && outlined) {
             lineColour.push(['boolean', ['feature-state', 'active'], false]);
-            lineColour.push('blue');
+            lineColour.push(COLOUR_ACTIVE);
         }
         lineColour.push(['has', 'colour']);
         lineColour.push(['get', 'colour']);
@@ -276,7 +289,7 @@ export class FeatureLineLayer extends VectorStyleLayer
         const paintStyle = {
             'line-color': [
                 'case',
-                ['boolean', ['feature-state', 'selected'], false], '#0F0',
+                ['boolean', ['feature-state', 'selected'], false], COLOUR_SELECTED,
                 ['boolean', ['feature-state', 'active'], false], coloured ? '#888' : '#CCC',
                 ['has', 'colour'], ['get', 'colour'],
                 ['==', ['get', 'type'], 'network'], '#AFA202',
@@ -402,7 +415,7 @@ export class PathLineLayer extends VectorStyleLayer
         const paintStyle = {
             'line-color': [
                 'case',
-                ['boolean', ['feature-state', 'selected'], false], '#0F0',
+                ['boolean', ['feature-state', 'selected'], false], COLOUR_SELECTED,
                 ['boolean', ['feature-state', 'hidden'], false], '#CCC',
                 ['==', ['get', 'type'], 'bezier'], 'red',
                 ['==', ['get', 'kind'], 'unknown'], '#888',
@@ -487,9 +500,9 @@ class CentrelineLayer extends VectorStyleLayer
         const paintStyle = {
             'line-color': (this.__type == 'edge') ? '#000' : [
                 'case',
-                ['boolean', ['feature-state', 'selected'], false], '#0F0',
-                ['boolean', ['feature-state', 'active'], false], '#444',
-                '#CCC'
+                ['boolean', ['feature-state', 'selected'], false], COLOUR_SELECTED,
+                ['boolean', ['feature-state', 'active'], false], CENTRELINE_ACTIVE,
+                CENTRELINE_COLOUR
             ],
             'line-opacity': [
                 'case',
@@ -650,8 +663,8 @@ export class FeatureNerveLayer extends VectorStyleLayer
                 'line-color': [
                     'case',
                     ['boolean', ['feature-state', 'hidden'], false], '#CCC',
-                    ['boolean', ['feature-state', 'active'], false], '#222',
-                    ['boolean', ['feature-state', 'selected'], false], 'red',
+                    ['boolean', ['feature-state', 'active'], false], NERVE_ACTIVE,
+                    ['boolean', ['feature-state', 'selected'], false], NERVE_SELECTED,
                     '#888'
                 ],
                 'line-opacity': [
@@ -702,7 +715,7 @@ export class NervePolygonBorder extends VectorStyleLayer
             'paint': {
                 'line-color': [
                     'case',
-                    ['boolean', ['feature-state', 'active'], false], 'blue',
+                    ['boolean', ['feature-state', 'active'], false], COLOUR_ACTIVE,
                     ['boolean', ['feature-state', 'selected'], false], 'red',
                     '#444'
                 ],
