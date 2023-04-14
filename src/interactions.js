@@ -144,8 +144,12 @@ export class UserInteractions
             }
         }
 
-        this.__featureIdToMapId = new Map();
-        this.__setupAnnotation();
+        // Add annotation capability
+        if (flatmap.options.annotator) {
+            this.__setupAnnotation();
+        } else {
+            this.__annotator = null;
+        }
 
         // Note features that are FC systems
 
@@ -258,7 +262,7 @@ export class UserInteractions
         const annotated_features = await this.__annotator.annotated_features();
 
         // Flag features that have annotations
-
+        thid.this.__featureIdToMapId = new Map();
         for (const [mapId, ann] of this._flatmap.annotations) {
             this.__featureIdToMapId.set(ann.id, mapId);
             const feature = this.mapFeature_(mapId);
@@ -274,11 +278,13 @@ export class UserInteractions
     setFeatureAnnotated(featureId)
     //============================
     {
-        // featureId v's geoJSON id
-        const mapId = this.__featureIdToMapId.get(featureId);
-        const feature = this.mapFeature_(mapId);
-        if (feature !== undefined) {
-            this._map.setFeatureState(feature, { 'annotated': true });
+        if (this.__annotator) {
+            // featureId v's geoJSON id
+            const mapId = this.__featureIdToMapId.get(featureId);
+            const feature = this.mapFeature_(mapId);
+            if (feature !== undefined) {
+                this._map.setFeatureState(feature, { 'annotated': true });
+            }
         }
     }
 
@@ -957,6 +963,10 @@ export class UserInteractions
     __annotationEvent(feature)
     //========================
     {
+        if (!this.__annotator) {
+            return;
+        }
+
         event.preventDefault();
 
         // Remove any tooltip
