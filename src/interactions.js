@@ -274,9 +274,9 @@ export class UserInteractions
     //==========
     {
         const systems = [];
-        for (const system of this.__systems.values()) {
+        for (const [name, system] of this.__systems.entries()) {
             systems.push({
-                name: system.name,
+                name: name,
                 colour: system.colour,
             });
         }
