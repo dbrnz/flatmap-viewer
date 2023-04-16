@@ -135,19 +135,21 @@ export class FeatureFillLayer extends VectorStyleLayer
 
     paintStyle(options, changes=false)
     {
+        const ghostColour = '#D8D8D8';       // Function of BG colour?
         const coloured = !('colour' in options) || options.colour;
         const dimmed = 'dimmed' in options && options.dimmed;
         const paintStyle = {
             'fill-color': [
                 'case',
                 ['boolean', ['feature-state', 'selected'], false], COLOUR_SELECTED,
+                ['boolean', ['feature-state', 'hidden'], false], ghostColour,
                 ['has', 'colour'], ['get', 'colour'],
                 ['boolean', ['feature-state', 'active'], false], coloured ? '#D88' : '#CCC',
                 'white'    // background colour? body colour ??
             ],
             'fill-opacity': [
                 'case',
-                ['boolean', ['feature-state', 'hidden'], false], 0.01,
+                ['boolean', ['feature-state', 'hidden'], false], 0.1,
                 ['boolean', ['feature-state', 'selected'], false], 0.7,
                 ['has', 'opacity'], ['get', 'opacity'],
                 ['has', 'colour'], 1.0,
