@@ -33,18 +33,12 @@ module.exports = {
           },
           {
             test:/\.css$/,
-            use:['style-loader','css-loader']
+            use:['style-loader', 'css-loader']
           },
           {
-            test: /\.(png|jpg|gif|woff|woff2|eot|ttf|otf)$/i,
-            use: [
-              {
-                loader: 'url-loader',
-                options: {
-                  limit: 8192,
-                },
-              },
-            ],
+            test: /\.(png|jpe?g|gif|svg|eot|ttf|woff|woff2)$/i,
+            // More information here https://webpack.js.org/guides/asset-modules/
+            type: "asset",
           }
         ]
     }
