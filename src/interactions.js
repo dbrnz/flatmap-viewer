@@ -262,7 +262,7 @@ export class UserInteractions
         const annotated_features = await this.__annotator.annotated_features();
 
         // Flag features that have annotations
-        thid.this.__featureIdToMapId = new Map();
+        this.__featureIdToMapId = new Map();
         for (const [mapId, ann] of this._flatmap.annotations) {
             this.__featureIdToMapId.set(ann.id, mapId);
             const feature = this.mapFeature_(mapId);
