@@ -254,7 +254,7 @@ export class UserInteractions
         this.__featureIdToMapId = new Map();
         for (const [mapId, ann] of this._flatmap.annotations) {
             this.__featureIdToMapId.set(ann.id, mapId);
-            const feature = this.mapFeature_(mapId);
+            const feature = this.mapFeature(mapId);
             if (feature !== undefined) {
                 this._map.setFeatureState(feature, { 'map-annotation': true });
                 if (annotated_features.indexOf(ann.id) >= 0) {
@@ -270,7 +270,7 @@ export class UserInteractions
         if (this.__annotator) {
             // featureId v's geoJSON id
             const mapId = this.__featureIdToMapId.get(featureId);
-            const feature = this.mapFeature_(mapId);
+            const feature = this.mapFeature(mapId);
             if (feature !== undefined) {
                 this._map.setFeatureState(feature, { 'annotated': true });
             }
@@ -311,9 +311,9 @@ export class UserInteractions
     enableFeatureWithChildren(featureId, enable=true)
     //===============================================
     {
-        const feature = this.mapFeature_(featureId);
+        const feature = this.mapFeature(featureId);
         if (feature !== undefined) {
-            this.__enableFeature(feature, enable);
+            this.enableFeature(feature, enable);
             for (const childFeatureId of feature.children) {
                 this.enableFeatureWithChildren(childFeatureId, enable);
             }
@@ -323,9 +323,9 @@ export class UserInteractions
     __enableFeatureWithParents(featureId, enable=true)
     //================================================
     {
-        const feature = this.mapFeature_(featureId);
+        const feature = this.mapFeature(featureId);
         if (feature !== undefined) {
-            this.__enableFeature(feature, enable);
+            this.enableFeature(feature, enable);
             for (const childFeatureId of feature.parents) {
                 this.__enableFeatureWithParents(childFeatureId, enable);
             }
@@ -344,8 +344,8 @@ export class UserInteractions
         }
     }
 
-    __enableFeature(feature, enable=true)
-    //===================================
+    enableFeature(feature, enable=true)
+    //=================================
     {
         if (feature !== undefined) {
             if (enable) {
@@ -357,8 +357,8 @@ export class UserInteractions
         }
     }
 
-    mapFeature_(featureId)
-    //====================
+    mapFeature(featureId)
+    //===================
     {
         const ann = this._flatmap.annotation(featureId);
         if (ann !== undefined) {
@@ -390,7 +390,7 @@ export class UserInteractions
         if (this._selectedFeatureIds.has(featureId)) {
             this._selectedFeatureIds.set(featureId, this._selectedFeatureIds.get(featureId) + 1);
         } else {
-            const feature = this.mapFeature_(featureId);
+            const feature = this.mapFeature(featureId);
             if (feature !== undefined) {
                 this._map.setFeatureState(feature, { 'selected': true });
                 this._selectedFeatureIds.set(featureId, 1);
@@ -407,7 +407,7 @@ export class UserInteractions
             if (references > 1) {
                 this._selectedFeatureIds.set(featureId, references - 1);
             } else {
-                const feature = this.mapFeature_(featureId);
+                const feature = this.mapFeature(featureId);
                 if (feature !== undefined) {
                     this._map.removeFeatureState(feature, 'selected');
                     this._selectedFeatureIds.delete(+featureId);
@@ -423,7 +423,7 @@ export class UserInteractions
     //==================
     {
         for (const featureId of this._selectedFeatureIds.keys()) {
-            const feature = this.mapFeature_(featureId);
+            const feature = this.mapFeature(featureId);
             if (feature !== undefined) {
                 this._map.removeFeatureState(feature, 'selected');
             }
@@ -453,7 +453,7 @@ export class UserInteractions
     //==========================
     {
         featureId = +featureId;   // Ensure numeric
-        this.__activateFeature(this.mapFeature_(featureId));
+        this.__activateFeature(this.mapFeature(featureId));
     }
 
     unhighlightFeatures_()
@@ -829,7 +829,7 @@ export class UserInteractions
                 const lineIds = new Set(lineFeatures.map(f => f.properties.featureId));
                 for (const featureId of this._pathways.lineFeatureIds(lineIds)) {
                     if (+featureId !== lineFeatureId) {
-                        this.__activateFeature(this.mapFeature_(featureId));
+                        this.__activateFeature(this.mapFeature(featureId));
                     }
                 }
             }
@@ -1016,12 +1016,12 @@ export class UserInteractions
     {
         if ('nerveId' in feature.properties) {
             for (const featureId of this._pathways.nerveFeatureIds(feature.properties.nerveId)) {
-                this.__activateFeature(this.mapFeature_(featureId));
+                this.__activateFeature(this.mapFeature(featureId));
             }
         }
         if ('nodeId' in feature.properties) {
             for (const featureId of this._pathways.nodeFeatureIds(feature.properties.nodeId)) {
-                this.__activateFeature(this.mapFeature_(featureId));
+                this.__activateFeature(this.mapFeature(featureId));
             }
         }
     }
@@ -1046,7 +1046,7 @@ export class UserInteractions
     //=====================================
     {
         for (const featureId of featureIds) {
-            const feature = this.mapFeature_(featureId);
+            const feature = this.mapFeature(featureId);
             if (feature !== undefined) {
                 if (enable) {
                     this._map.removeFeatureState(feature, 'hidden');
@@ -1257,7 +1257,7 @@ export class UserInteractions
                 const markerId = this.__markerIdByMarker.get(marker);
                 const annotation = this.__annotationByMarkerId.get(markerId);
                 // The marker's feature
-                const feature = this.mapFeature_(annotation.featureId);
+                const feature = this.mapFeature(annotation.featureId);
                 if (feature !== undefined) {
                     if (event.type === 'mouseenter') {
                         // Highlight on mouse enter
