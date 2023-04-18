@@ -155,7 +155,7 @@ export class UserInteractions
 
         // Note features that are FC systems
 
-        this.__systemsManager = new SystemsManager(this._flatmap);
+        this.__systemsManager = new SystemsManager(this._flatmap, this);
 
         // Add various controls when running standalone
 
@@ -184,7 +184,7 @@ export class UserInteractions
 
             // SCKAN path and SYSTEMS controls for FC maps
             if (flatmap.options.style === 'functional') {
-                this._map.addControl(new SystemsControl(flatmap, this.__systemsManager));
+                this._map.addControl(new SystemsControl(flatmap, this.__systemsManager.systems));
                 this._map.addControl(new SCKANControl(flatmap, flatmap.options.layerOptions));
             }
         }
@@ -299,34 +299,35 @@ export class UserInteractions
     getSystems()
     //==========
     {
-        const systems = [];
-        for (const [name, system] of this.__systemsManager.systems.entries()) {
-            systems.push({
-                name: name,
-                colour: system.colour,
-            });
-        }
-        return systems;
+        return this.__systemsManager.systems;
     }
 
     enableSystem(systemName, enable=true)
     //===================================
     {
-        if (this.__systemsManager.systems.has(systemName)) {
-            for (const featureId of this.__systemsManager.systems.get(systemName).featureIds) {
-                this.__enableFeatureWithChildren(featureId, enable);
-            }
-        }
+        this.__systemsManager.enable(systemName, enable);
     }
 
-    __enableFeatureWithChildren(featureId, enable=true)
-    //=================================================
+    enableFeatureWithChildren(featureId, enable=true)
+    //===============================================
     {
         const feature = this.mapFeature_(featureId);
         if (feature !== undefined) {
             this.__enableFeature(feature, enable);
             for (const childFeatureId of feature.children) {
-                this.__enableFeatureWithChildren(childFeatureId, enable);
+                this.enableFeatureWithChildren(childFeatureId, enable);
+            }
+        }
+    }
+
+    __enableFeatureWithParents(featureId, enable=true)
+    //================================================
+    {
+        const feature = this.mapFeature_(featureId);
+        if (feature !== undefined) {
+            this.__enableFeature(feature, enable);
+            for (const childFeatureId of feature.parents) {
+                this.__enableFeatureWithParents(childFeatureId, enable);
             }
         }
     }

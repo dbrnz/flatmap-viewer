@@ -21,8 +21,9 @@ limitations under the License.
 
 export class SystemsManager
 {
-    constructor(flatmap)
+    constructor(flatmap, ui)
     {
+        this.__ui = ui;
         this.__systems = new Map();
 //        const UNKNOWN_FEATURES = 'UNKNOWN FEATURES...';
         for (const [id, ann] of flatmap.annotations) {
@@ -55,8 +56,27 @@ console.log(ann);
 
     get systems()
     {
-        return this.__systems;
+        const systems = [];
+        for (const [name, system] of this.__systems.entries()) {
+            systems.push({
+                name: name,
+                id: system.id,
+                colour: system.colour,
+            });
+        }
+        return systems;
     }
+
+    enable(systemName, enable=true)
+    {
+        if (this.__systems.has(systemName)) {
+            for (const featureId of this.__systems.get(systemName).featureIds) {
+                this.__ui.enableFeatureWithChildren(featureId, enable);
+            }
+        }
+
+    }
+
 }
 
 //==============================================================================

@@ -25,18 +25,18 @@ import { Control } from './controls';
 
 export class SystemsControl extends Control
 {
-    constructor(flatmap, systemsManager)
+    constructor(flatmap, systems)
     {
         super(flatmap, 'system', 'systems');
-        this.__systemsManager = systemsManager;
+        this.__systems = systems;
     }
 
     __innerLinesHTML()
     //================
     {
         const html = [];
-        for (const [name, system] of this.__systemsManager.systems.entries()) {
-            html.push(`<label for="${this.__prefix}${system.id}" style="background: ${system.colour};">${name}</label><input id="${this.__prefix}${system.id}" type="checkbox" checked/>`);
+        for (const system of this.__systems) {
+            html.push(`<label for="${this.__prefix}${system.id}" style="background: ${system.colour};">${system.name}</label><input id="${this.__prefix}${system.id}" type="checkbox" checked/>`);
         }
         return html;
     }
@@ -44,11 +44,11 @@ export class SystemsControl extends Control
     __enableAll(enable)
     //=================
     {
-        for (const [name, system] of this.__systemsManager.systems.entries()) {
+        for (const system of this.__systems) {
             const checkbox = document.getElementById(`${this.__prefix}${system.id}`);
             if (checkbox) {
                 checkbox.checked = enable;
-                this.__flatmap.enableSystem(name, enable);
+                this.__flatmap.enableSystem(system.name, enable);
             }
         }
     }
@@ -56,9 +56,9 @@ export class SystemsControl extends Control
     __enableControl(id, enable)
     //=========================
     {
-        for (const [name, system] of this.__systemsManager.systems.entries()) {
+        for (const system of this.__systems) {
             if (id === system.id) {
-                this.__flatmap.enableSystem(name, enable);
+                this.__flatmap.enableSystem(system.name, enable);
             }
         }
     }
