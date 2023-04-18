@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019  David Brooks
+Copyright (c) 2019 - 2023 David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -42,10 +42,6 @@ limitations under the License.
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-
-//==============================================================================
-
-'use strict';
 
 //==============================================================================
 

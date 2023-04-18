@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019  David Brooks
+Copyright (c) 2019 - 2023 David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -17,13 +17,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 ******************************************************************************/
-
-'use strict';
-
-//==============================================================================
-
-
-//==============================================================================
 
 // Make sure colour string is in `#rrggbb` form.
 // Based on https://stackoverflow.com/a/47355187

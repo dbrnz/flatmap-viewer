@@ -16,61 +16,47 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-******************************************************************************/
-
-
-import { Control } from './controls';
-
+**/
 //==============================================================================
 
 export class SystemsManager
 {
-    constructor()
+    constructor(flatmap)
     {
+        this.__systems = new Map();
+//        const UNKNOWN_FEATURES = 'UNKNOWN FEATURES...';
+        for (const [id, ann] of flatmap.annotations) {
+            if (ann['fc-class'] === 'fc-class:System') {
+                if (this.__systems.has(ann.name)) {
+                    this.__systems.get(ann.name).featureIds.push(ann.featureId)
+                } else {
+                    this.__systems.set(ann.name, {
+                        id: ann.name.replaceAll(' ', '_'),
+                        colour: ann.colour,
+                        featureIds: [ ann.featureId ]
+                    });
+                }
+            }
+/*
+             else if (ann['fc-class'] === 'fc-class:Unknown') {
+console.log(ann);
+                if (this.__systems.has(UNKNOWN_FEATURES)) {
+                    this.__systems.get(UNKNOWN_FEATURES).featureIds.push(ann.featureId)
+                } else {
+                    this.__systems.set(UNKNOWN_FEATURES, {
+                        id: UNKNOWN_FEATURES.replaceAll(' ', '_'),
+                        colour: COLOUR_ERROR,
+                        featureIds: [ ann.featureId ]
+                    });
+                }
+            }  */
+        }
+    }
 
+    get systems()
+    {
+        return this.__systems;
     }
 }
 
 //==============================================================================
-
-export class SystemsControl extends Control
-{
-    constructor(flatmap, systems)
-    {
-        super(flatmap, 'system', 'systems');
-        this.__systems = systems;
-    }
-
-    __innerLinesHTML()
-    //================
-    {
-        const html = [];
-        for (const [name, system] of this.__systems.entries()) {
-            html.push(`<label for="${this.__prefix}${system.id}" style="background: ${system.colour};">${name}</label><input id="${this.__prefix}${system.id}" type="checkbox" checked/>`);
-        }
-        return html;
-    }
-
-    __enableAll(enable)
-    //=================
-    {
-        for (const [name, system] of this.__systems.entries()) {
-            const checkbox = document.getElementById(`${this.__prefix}${system.id}`);
-            if (checkbox) {
-                checkbox.checked = enable;
-                this.__flatmap.enableSystem(name, enable);
-            }
-        }
-    }
-
-    __enableControl(id, enable)
-    //=========================
-    {
-        for (const [name, system] of this.__systems.entries()) {
-            if (id === system.id) {
-                this.__flatmap.enableSystem(name, enable);
-            }
-        }
-    }
-
-}

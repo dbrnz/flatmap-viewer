@@ -34,14 +34,16 @@ import polylabel from 'polylabel';
 //==============================================================================
 
 import {Annotator} from './annotation';
-import {displayedProperties, InfoControl} from './info';
 import {LayerManager} from './layers';
 import {PATHWAYS_LAYER, Pathways} from './pathways';
+import {COLOUR_ERROR, VECTOR_TILES_SOURCE} from './styling';
+import {SystemsManager} from './systems';
+
+import {displayedProperties, InfoControl} from './controls/info';
 import {BackgroundControl, LayerControl, NerveControl,
-        PathControl, SCKANControl} from './controls';
-import {SearchControl} from './search';
-import {VECTOR_TILES_SOURCE} from './styling';
-import {SystemsControl, SystemsManager} from './systems';
+        PathControl, SCKANControl} from './controls/controls';
+import {SearchControl} from './controls/search';
+import {SystemsControl} from './controls/systems';
 
 import * as pathways from './pathways';
 import * as utils from './utils';
@@ -153,20 +155,7 @@ export class UserInteractions
 
         // Note features that are FC systems
 
-        this.__systems = new Map();
-        for (const [id, ann] of this._flatmap.annotations) {
-            if (ann['fc-class'] === 'fc-class:System') {
-                if (this.__systems.has(ann.name)) {
-                    this.__systems.get(ann.name).featureIds.push(ann.featureId)
-                } else {
-                    this.__systems.set(ann.name, {
-                        id: ann.name.replaceAll(' ', '_'),
-                        colour: ann.colour,
-                        featureIds: [ ann.featureId ]
-                    });
-                }
-            }
-        }
+        this.__systemsManager = new SystemsManager(this._flatmap);
 
         // Add various controls when running standalone
 
@@ -195,7 +184,7 @@ export class UserInteractions
 
             // SCKAN path and SYSTEMS controls for FC maps
             if (flatmap.options.style === 'functional') {
-                this._map.addControl(new SystemsControl(flatmap, this.__systems));
+                this._map.addControl(new SystemsControl(flatmap, this.__systemsManager));
                 this._map.addControl(new SCKANControl(flatmap, flatmap.options.layerOptions));
             }
         }
@@ -311,7 +300,7 @@ export class UserInteractions
     //==========
     {
         const systems = [];
-        for (const [name, system] of this.__systems.entries()) {
+        for (const [name, system] of this.__systemsManager.systems.entries()) {
             systems.push({
                 name: name,
                 colour: system.colour,
@@ -323,8 +312,8 @@ export class UserInteractions
     enableSystem(systemName, enable=true)
     //===================================
     {
-        if (this.__systems.has(systemName)) {
-            for (const featureId of this.__systems.get(systemName).featureIds) {
+        if (this.__systemsManager.systems.has(systemName)) {
+            for (const featureId of this.__systemsManager.systems.get(systemName).featureIds) {
                 this.__enableFeatureWithChildren(featureId, enable);
             }
         }
