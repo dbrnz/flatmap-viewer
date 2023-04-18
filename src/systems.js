@@ -25,7 +25,6 @@ export class SystemsManager
     {
         this.__ui = ui;
         this.__systems = new Map();
-//        const UNKNOWN_FEATURES = 'UNKNOWN FEATURES...';
         for (const [id, ann] of flatmap.annotations) {
             if (ann['fc-class'] === 'fc-class:System') {
                 if (this.__systems.has(ann.name)) {
@@ -38,19 +37,7 @@ export class SystemsManager
                     });
                 }
             }
-/*
-             else if (ann['fc-class'] === 'fc-class:Unknown') {
-console.log(ann);
-                if (this.__systems.has(UNKNOWN_FEATURES)) {
-                    this.__systems.get(UNKNOWN_FEATURES).featureIds.push(ann.featureId)
-                } else {
-                    this.__systems.set(UNKNOWN_FEATURES, {
-                        id: UNKNOWN_FEATURES.replaceAll(' ', '_'),
-                        colour: COLOUR_ERROR,
-                        featureIds: [ ann.featureId ]
-                    });
                 }
-            }  */
         }
     }
 
