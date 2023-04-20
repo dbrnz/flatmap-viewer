@@ -104,8 +104,6 @@ export class UserInteractions
         this._infoControl = null;
         this._tooltip = null;
 
-        this._disabledPathFeatures = false;
-
         this._inQuery = false;
         this._modal = false;
 
@@ -357,6 +355,14 @@ export class UserInteractions
         }
     }
 
+    __featureEnabled(feature)
+    //=======================
+    {
+        const state = this._map.getFeatureState(feature);
+        return (state !== undefined
+            && (!('hidden' in state) || !state.hidden));
+    }
+
     mapFeature(featureId)
     //===================
     {
@@ -380,8 +386,8 @@ export class UserInteractions
         return this._selectedFeatureIds.has(+featureId);
     }
 
-    selectFeature_(featureId, dim=true)
-    //=================================
+    selectFeature(featureId, dim=true)
+    //================================
     {
         featureId = +featureId;   // Ensure numeric
         if (this._selectedFeatureIds.size === 0) {
@@ -398,8 +404,8 @@ export class UserInteractions
         }
     }
 
-    unselectFeature_(featureId)
-    //=========================
+    unselectFeature(featureId)
+    //========================
     {
         featureId = +featureId;   // Ensure numeric
         if (this._selectedFeatureIds.has(featureId)) {
@@ -419,8 +425,8 @@ export class UserInteractions
         }
     }
 
-    __unselectFeatures()
-    //==================
+    unselectFeatures()
+    //================
     {
         for (const featureId of this._selectedFeatureIds.keys()) {
             const feature = this.mapFeature(featureId);
@@ -433,7 +439,7 @@ export class UserInteractions
     }
 
     __activateFeature(feature)
-    //=======================
+    //========================
     {
         if (feature !== undefined) {
             this._map.setFeatureState(feature, { active: true });
@@ -499,16 +505,15 @@ export class UserInteractions
     //=====
     {
         this.__clearModal();
-        this.clearActiveMarker_();
-        this.__unselectFeatures();
-        this.enablePathFeatures_(true, this._pathways.allFeatureIds());
-        this._disabledPathFeatures = false;
+        this.__clearActiveMarker();
+        this.unselectFeatures();
+        this.__enablePathFeatures(this._pathways.allFeatureIds(), true);
     }
 
     clearSearchResults(reset=true)
     //============================
     {
-        this.__unselectFeatures();
+        this.unselectFeatures();
     }
 
     /**
@@ -544,14 +549,14 @@ export class UserInteractions
     //========================
     {
         if (featureIds.length) {
-            this.__unselectFeatures();
+            this.unselectFeatures();
             for (const featureId of featureIds) {
                 const annotation = this._flatmap.annotation(featureId);
                 if (annotation) {
-                    this.selectFeature_(featureId);
+                    this.selectFeature(featureId);
                     if ('type' in annotation && annotation.type.startsWith('line')) {
                         for (const pathFeatureId of this._pathways.lineFeatureIds([featureId])) {
-                            this.selectFeature_(pathFeatureId);
+                            this.selectFeature(pathFeatureId);
                         }
                     }
                 }
@@ -588,7 +593,7 @@ export class UserInteractions
         const highlight = (options.highlight === true);
         if (featureIds.length) {
             this.unhighlightFeatures_();
-            if (select) this.__unselectFeatures();
+            if (select) this.unselectFeatures();
             let bbox = null;
             if (options.noZoomIn) {
                 const bounds = this._map.getBounds().toArray();
@@ -598,7 +603,7 @@ export class UserInteractions
                 const annotation = this._flatmap.annotation(featureId);
                 if (annotation) {
                     if (select) {
-                        this.selectFeature_(featureId);
+                        this.selectFeature(featureId);
                     } else if (highlight) {
                         this.highlightFeature_(featureId);
                     }
@@ -606,7 +611,7 @@ export class UserInteractions
                     if ('type' in annotation && annotation.type.startsWith('line')) {
                         for (const pathFeatureId of this._pathways.lineFeatureIds([featureId])) {
                             if (select) {
-                                this.selectFeature_(pathFeatureId);
+                                this.selectFeature(pathFeatureId);
                             } else if (highlight) {
                                 this.highlightFeature_(pathFeatureId);
                             }
@@ -639,8 +644,8 @@ export class UserInteractions
 
             // Highlight the feature
 
-            this.__unselectFeatures();
-            this.selectFeature_(featureId);
+            this.unselectFeatures();
+            this.selectFeature(featureId);
 
             // Find the pop-up's postion
 
@@ -675,7 +680,7 @@ export class UserInteractions
     //============
     {
         this.__clearModal();
-        this.__unselectFeatures();
+        this.unselectFeatures();
     }
 
     removeTooltip_()
@@ -785,7 +790,7 @@ export class UserInteractions
 
         // Get all the features at the current point
         const features = this._map.queryRenderedFeatures(event.point)
-                             .filter(feature => this.__enabledFeature(feature));
+                             .filter(feature => this.__featureEnabled(feature));
         if (features.length === 0) {
             this._lastFeatureMouseEntered = null;
             this._lastFeatureModelsMouse = null;
@@ -931,19 +936,19 @@ export class UserInteractions
                         break;
                     }
                 }
-                this.__unselectFeatures();
+                this.unselectFeatures();
                 if (selecting) {
                     for (const feature of this._activeFeatures) {
-                        this.selectFeature_(feature.id, dim);
+                        this.selectFeature(feature.id, dim);
                     }
                 }
             } else {
                 const clickedSelected = this.featureSelected_(clickedFeatureId);
                 for (const feature of this._activeFeatures) {
                     if (clickedSelected) {
-                        this.unselectFeature_(feature.id);
+                        this.unselectFeature(feature.id);
                     } else {
-                        this.selectFeature_(feature.id, dim);
+                        this.selectFeature(feature.id, dim);
                     }
                 }
             }
@@ -963,14 +968,14 @@ export class UserInteractions
         this.removeTooltip_();
 
         // Select the feature
-        this.selectFeature_(feature.id);
+        this.selectFeature(feature.id);
 
         // Don't respond to mouse events while the dialog is open
         this.setModal_();
 
         // The annotation dialog...
         this.__annotator.annotate(feature, e => {
-            this.__unselectFeatures();
+            this.unselectFeatures();
             this.__clearModal();
         });
     }
@@ -982,11 +987,11 @@ export class UserInteractions
             return;
         }
 
-        this.clearActiveMarker_();
+        this.__clearActiveMarker();
         const clickedFeatures = this._map.queryRenderedFeatures(event.point)
-                                    .filter(feature => this.__enabledFeature(feature));
+                                    .filter(feature => this.__featureEnabled(feature));
         if (clickedFeatures.length == 0){
-            this.__unselectFeatures();
+            this.unselectFeatures();
             return;
         }
         const clickedFeature = clickedFeatures[0];
@@ -1000,7 +1005,7 @@ export class UserInteractions
         if (this._modal) {
             // Remove tooltip, reset active features, etc
             this.__resetFeatureDisplay();
-            this.__unselectFeatures();
+            this.unselectFeatures();
             this.__clearModal();
         } else if (clickedFeature !== undefined) {
             this.__lastClickLngLat = event.lngLat;
@@ -1026,42 +1031,18 @@ export class UserInteractions
         }
     }
 
-    __enabledFeature(feature)
-    //=======================
-    {
-        const state = this._map.getFeatureState(feature);
-        return (state !== undefined
-            && (!('hidden' in state) || !state.hidden));
-    }
-
-    enablePaths_(enable, event)
-    //=========================
-    {
-        const nodeId = event.target.getAttribute('featureId');
-        this.enablePathFeatures_(enable, this._pathways.pathFeatureIds(nodeId));
-        this.__clearModal();
-    }
-
-    enablePathFeatures_(enable, featureIds)
-    //=====================================
+    __enablePathFeatures(featureIds, enable)
+    //======================================
     {
         for (const featureId of featureIds) {
-            const feature = this.mapFeature(featureId);
-            if (feature !== undefined) {
-                if (enable) {
-                    this._map.removeFeatureState(feature, 'hidden');
-                } else {
-                    this._map.setFeatureState(feature, { 'hidden': true });
-                    this._disabledPathFeatures = true;
-                }
-            }
+            this.enableFeature(this.mapFeature(featureId), enable);
         }
     }
 
     enablePath(pathType, enable=true)
     //===============================
     {
-        this.enablePathFeatures_(enable, this._pathways.typeFeatureIds(pathType));
+        this.__enablePathFeatures(this._pathways.typeFeatureIds(pathType), enable);
     }
 
     pathwaysFeatureIds(externalIds)
@@ -1266,7 +1247,7 @@ export class UserInteractions
         event.stopPropagation();
     }
 
-    clearActiveMarker_()
+    __clearActiveMarker()
     //==================
     {
         if (this.__activeMarker !== null) {
@@ -1280,7 +1261,7 @@ export class UserInteractions
     {
         const marker = this.__activeMarker;
         if (markerId !== this.__markerIdByMarker.get(marker)) {
-            this.clearActiveMarker_();
+            this.__clearActiveMarker();
             return false;
         }
 
@@ -1299,7 +1280,7 @@ export class UserInteractions
             element.innerHTML = content;
         }
 
-        element.addEventListener('click', e => this.clearActiveMarker_());
+        element.addEventListener('click', e => this.__clearActiveMarker());
 
         this._tooltip = new maplibre.Popup({
             closeButton: false,
