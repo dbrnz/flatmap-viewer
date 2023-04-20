@@ -477,7 +477,7 @@ export class Annotator
                 label = ` -- ${feature.properties.label.split('\n')[0]} (${feature.properties.models})`;
             }
             featureList.push(`<option value="${feature.id}" ${selected}>${annotated ? '* ' : ''}${feature.properties.id} -- ${feature.properties.kind}${label}</option>`);
-            featureProperties.set(feature.id, feature.properties);
+            featureProperties.set(+feature.id, feature.properties);
             featureSeen.add(feature.properties['id']);
             selected = '';
         }
@@ -492,7 +492,7 @@ export class Annotator
 <div id="flatmap-annotation-feature">
     <div>
         <label for="annotation-feature-selector">Select feature:</label>
-        <select id="annotation-feature-selector">
+        <select id="annotation-feature-selector" size="${Math.min(featureList.length, 7)}">
             ${featureList.join('\n')}
         </select>
     </div>
@@ -516,12 +516,19 @@ export class Annotator
             callback: ((panel) => {
                 const selector = document.getElementById('annotation-feature-selector');
                 selector.onchange = (e) => {
-                            if (e.target.value !== '') {
-                                this.__ui.unselectFeatures();
-                                this.__ui.selectFeature(e.target.value);
-                                this.__panel.options.data = featureProperties.get(e.target.value);
-                            }
-                        };
+                    if (e.target.value !== '') {
+                        this.__ui.unselectFeatures();
+                        this.__ui.selectFeature(e.target.value);
+                        this.__panel.options.data = featureProperties.get(+e.target.value);
+                    }
+                };
+                selector.ondblclick = (e) => {
+                    if (e.target.value !== '') {
+                        const properties = this.__panel.options.data;
+                        this.__panel.close();
+                        callback(properties);
+                    }
+                }
                 selector.focus();
                 document.getElementById('annotation-feature-cancel')
                         .onclick = (e) => {
@@ -530,9 +537,9 @@ export class Annotator
                         };
                 document.getElementById('annotation-feature-annotate')
                         .onclick = (e) => {
-                            const featureProperties = this.__panel.options.data;
+                            const properties = this.__panel.options.data;
                             this.__panel.close();
-                            callback(featureProperties);
+                            callback(properties);
                         };
             }).bind(this)
         });
