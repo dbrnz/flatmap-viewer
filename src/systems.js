@@ -35,7 +35,8 @@ export class SystemsManager
                         id: ann.name.replaceAll(' ', '_'),
                         colour: ann.colour,
                         featureIds: [ ann.featureId ],
-                        enabled: enabled
+                        enabled: enabled,
+                        pathIds: ('path-ids' in ann) ? ann['path-ids'] : []
                     });
                 }
                 for (const childId of ann['children']) {
@@ -86,6 +87,11 @@ export class SystemsManager
                 }
             }
             system.enabled = enable;
+
+            // Enable/disable all paths associated with the system
+            for (const pathId of system.pathIds) {
+                this.__ui.enableFeature(this.__ui.mapFeature(pathId), enable);
+            }
         }
     }
 }
