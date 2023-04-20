@@ -261,20 +261,6 @@ class FlatMap
     }
 
     /**
-     * Toggle the visibility of paths on the map.zoomIn
-     *
-     * * If some paths are hidden then all paths are made visible.
-     * * If all paths are visible then they are all hidden.
-     */
-    togglePaths()
-    //===========
-    {
-        if (this._userInteractions !== null) {
-            this._userInteractions.togglePaths();
-        }
-    }
-
-    /**
      * @returns {Array.<{type: string, label: string, colour: string}>} an array of objects giving the path types
      *                                                                  present in the map along with their
      *                                                                  descriptions and colours
