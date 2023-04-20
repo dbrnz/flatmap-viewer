@@ -33,6 +33,7 @@ import {PATH_STYLE_RULES} from './pathways.js';
 const COLOUR_ACTIVE    = 'blue';
 const COLOUR_ANNOTATED = '#0F0';
 const COLOUR_SELECTED  = '#0F0';
+const COLOUR_HIDDEN    = '#D8D8D8';
 
 const CENTRELINE_ACTIVE = '#444';
 const CENTRELINE_COLOUR = '#CCC';
@@ -135,14 +136,13 @@ export class FeatureFillLayer extends VectorStyleLayer
 
     paintStyle(options, changes=false)
     {
-        const ghostColour = '#D8D8D8';       // Function of BG colour?
         const coloured = !('colour' in options) || options.colour;
         const dimmed = 'dimmed' in options && options.dimmed;
         const paintStyle = {
             'fill-color': [
                 'case',
                 ['boolean', ['feature-state', 'selected'], false], COLOUR_SELECTED,
-                ['boolean', ['feature-state', 'hidden'], false], ghostColour,
+                ['boolean', ['feature-state', 'hidden'], false], COLOUR_HIDDEN,
                 ['has', 'colour'], ['get', 'colour'],
                 ['boolean', ['feature-state', 'active'], false], coloured ? '#D88' : '#CCC',
                 'white'    // background colour? body colour ??
@@ -195,6 +195,8 @@ export class FeatureBorderLayer extends VectorStyleLayer
         const dimmed = 'dimmed' in options && options.dimmed;
         const activeRasterLayer = 'activeRasterLayer' in options && options.activeRasterLayer;
         const lineColour = [ 'case' ];
+        lineColour.push(['boolean', ['feature-state', 'hidden'], false]);
+        lineColour.push(COLOUR_HIDDEN);
         lineColour.push(['boolean', ['feature-state', 'selected'], false]);
         lineColour.push(FEATURE_SELECTED_BORDER);
         if (coloured && outlined) {
@@ -298,6 +300,7 @@ export class FeatureLineLayer extends VectorStyleLayer
         const paintStyle = {
             'line-color': [
                 'case',
+                ['boolean', ['feature-state', 'hidden'], false], COLOUR_HIDDEN,
                 ['boolean', ['feature-state', 'selected'], false], COLOUR_SELECTED,
                 ['boolean', ['feature-state', 'active'], false], coloured ? '#888' : '#CCC',
                 ['has', 'colour'], ['get', 'colour'],
@@ -306,6 +309,7 @@ export class FeatureLineLayer extends VectorStyleLayer
             ],
             'line-opacity': [
                 'case',
+                    ['boolean', ['feature-state', 'hidden'], false], 0.01,
                     ['boolean', ['feature-state', 'selected'], false], 1.0,
                     ['has', 'colour'], 1.0,
                     ['boolean', ['feature-state', 'active'], false], 1.0,
@@ -499,7 +503,7 @@ export class PathLineLayer extends VectorStyleLayer
             'line-color': [
                 'case',
                 ['boolean', ['feature-state', 'selected'], false], COLOUR_SELECTED,
-                ['boolean', ['feature-state', 'hidden'], false], '#CCC',
+                ['boolean', ['feature-state', 'hidden'], false], COLOUR_HIDDEN,
                 ['==', ['get', 'type'], 'bezier'], 'red',
                 ['==', ['get', 'kind'], 'unknown'], '#888',
                 ...PATH_STYLE_RULES,
@@ -507,7 +511,7 @@ export class PathLineLayer extends VectorStyleLayer
             ],
             'line-opacity': [
                 'case',
-                    ['boolean', ['feature-state', 'hidden'], false], 0.05,
+                    ['boolean', ['feature-state', 'hidden'], false], 0.01,
                     ['==', ['get', 'type'], 'bezier'], 1.0,
                     ['==', ['get', 'kind'], 'error'], 1.0,
                     ['boolean', ['get', 'invisible'], false], 0.001,
@@ -745,7 +749,7 @@ export class FeatureNerveLayer extends VectorStyleLayer
             'paint': {
                 'line-color': [
                     'case',
-                    ['boolean', ['feature-state', 'hidden'], false], '#CCC',
+                    ['boolean', ['feature-state', 'hidden'], false], COLOUR_HIDDEN,
                     ['boolean', ['feature-state', 'active'], false], NERVE_ACTIVE,
                     ['boolean', ['feature-state', 'selected'], false], NERVE_SELECTED,
                     '#888'
