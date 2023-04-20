@@ -523,7 +523,7 @@ export class PathLineLayer extends VectorStyleLayer
                         ['==', ['get', 'kind'], 'error'], 1,
                         ['==', ['get', 'kind'], 'unknown'], 1,
                         ['boolean', ['get', 'invisible'], false], 0.1,
-                        ['boolean', ['feature-state', 'selected'], false], 0.6,
+                        ['boolean', ['feature-state', 'selected'], false], 2.0,
                         ['boolean', ['feature-state', 'active'], false], 0.9,
                     0.6
                     ],
