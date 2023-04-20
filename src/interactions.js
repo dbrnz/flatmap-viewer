@@ -245,7 +245,7 @@ export class UserInteractions
     {
         // Add annotation capability
 
-        this.__annotator = new Annotator(this._flatmap);
+        this.__annotator = new Annotator(this._flatmap, this);
         const annotated_features = await this.__annotator.annotated_features();
 
         // Flag features that have annotations
@@ -955,8 +955,8 @@ export class UserInteractions
         }
     }
 
-    __annotationEvent(feature)
-    //========================
+    __annotationEvent(features)
+    //=========================
     {
         if (!this.__annotator) {
             return;
@@ -967,14 +967,11 @@ export class UserInteractions
         // Remove any tooltip
         this.removeTooltip_();
 
-        // Select the feature
-        this.selectFeature(feature.id);
-
         // Don't respond to mouse events while the dialog is open
         this.setModal_();
 
         // The annotation dialog...
-        this.__annotator.annotate(feature, e => {
+        this.__annotator.annotate(features, () => {
             this.unselectFeatures();
             this.__clearModal();
         });
@@ -994,13 +991,13 @@ export class UserInteractions
             this.unselectFeatures();
             return;
         }
-        const clickedFeature = clickedFeatures[0];
         const originalEvent = event.originalEvent;
         if (originalEvent.altKey) {
-            this.__annotationEvent(clickedFeature);
+            this.__annotationEvent(clickedFeatures);
             return;
         }
 
+        const clickedFeature = clickedFeatures[0];
         this.selectionEvent_(originalEvent, clickedFeature);
         if (this._modal) {
             // Remove tooltip, reset active features, etc

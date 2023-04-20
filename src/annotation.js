@@ -82,9 +82,10 @@ function stopSpinner(panel)
 
 export class Annotator
 {
-    constructor(flatmap)
+    constructor(flatmap, ui)
     {
         this.__flatmap = flatmap;
+        this.__ui = ui;
         this.__haveAnnotation = false;
         this.__user = undefined;
         this.__savedStatusMessage = '';
@@ -444,20 +445,115 @@ export class Annotator
         });
     }
 
-    annotate(feature, closedCallback)
-    //===============================
+    __chooseFeature(features, callback)
+    //=================================
     {
-        this.__currentFeatureId = feature.properties['id']
+        this.__ui.selectFeature(features[0].id);
 
+        // Feature chooser is only for multiple selections
+        if (features.length === 1
+         || features[0].properties['cd-class'] !== 'celldl:Connection'
+         || (features.length === 2
+          && features[1].properties['cd-class'] !== 'celldl:Connection')) {
+            callback(features[0]);
+        }
+        const featureList = [];
+        const featureProperties = new Map();
+        let selected = 'selected';    // Select the first entry
+        for (const feature of features) {
+            if (feature.properties['cd-class'] !== 'celldl:Connection') {
+                break;
+            }
+            const mapFeature = this.__ui.mapFeature(feature.id);
+            const annotated = (mapFeature !== undefined)
+                            ? this.__ui._map.getFeatureState(mapFeature)['annotated']
+                            : false;
+            let label = '';
+            if (feature.properties.models) {
+                label = ` -- ${feature.properties.label.split('\n')[0]} (${feature.properties.models})`;
+            }
+            featureList.push(`<option value="${feature.id}" ${selected}>${annotated ? '* ' : ''}${feature.properties.id} -- ${feature.properties.kind}${label}</option>`);
+            featureProperties.set(feature.id, feature.properties);
+            selected = '';
+        }
+        const panelContent = `
+<div id="flatmap-annotation-feature">
+    <div>
+        <label for="annotation-feature-selector">Select feature:</label>
+        <select id="annotation-feature-selector">
+            ${featureList.join('\n')}
+        </select>
+    </div>
+    <div>
+        <input id="annotation-feature-cancel" type="button" value="Cancel"/>
+        <input id="annotation-feature-annotate" type="button" value="Annotate"/>
+    </div>
+</div>`;
+        this.__panel = jsPanel.create({
+            theme: 'light',
+            border: '2px solid #080',
+            borderRadius: '.5rem',
+            panelSize: 'auto auto',
+            position: 'left-top',
+            content: panelContent,
+            data: features[0].properties,
+            closeOnEscape: true,
+            closeOnBackdrop: false,
+            headerTitle: 'Select feature to annotate',
+            headerControls: 'closeonly xs',
+            callback: ((panel) => {
+                const selector = document.getElementById('annotation-feature-selector');
+                selector.onchange = (e) => {
+                            if (e.target.value !== '') {
+                                this.__ui.unselectFeatures();
+                                this.__ui.selectFeature(e.target.value);
+                                this.__panel.options.data = featureProperties.get(e.target.value);
+                            }
+                        };
+                selector.focus();
+                document.getElementById('annotation-feature-cancel')
+                        .onclick = (e) => {
+                            this.__panel.close();
+                            callback(undefined);
+                        };
+                document.getElementById('annotation-feature-annotate')
+                        .onclick = (e) => {
+                            const featureProperties = this.__panel.options.data;
+                            this.__panel.close();
+                            callback(featureProperties);
+                        };
+            }).bind(this)
+        });
+        document.addEventListener('jspanelcloseduser', (e) => { callback(undefined) }, false);
+    }
+
+    annotate(features, closedCallback)
+    //================================
+    {
+        // provide a list of features so dialog needs to first provide selection list
+        // and highlight current one as user scrolls...
+
+        this.__chooseFeature(features, (featureProperties) => {
+            if (featureProperties) {
+                this.__annotateFeature(featureProperties, closedCallback);
+            } else {
+                closedCallback();
+            }
+        });
+    }
+
+    __annotateFeature(featureProperties, callback)
+    //============================================
+    {
+        this.__currentFeatureId = featureProperties['id'];
         if (this.__currentFeatureId === undefined) {
-            closedCallback();
+            callback();
             return;
         }
-
         const panelContent = [];
         panelContent.push('<div id="flatmap-annotation-panel">');
         panelContent.push('  <div id="flatmap-annotation-feature">');
-        panelContent.push(...this.__featureHtml(feature.properties));
+        panelContent.push(...this.__featureHtml(featureProperties));
         panelContent.push('  </div>');
         panelContent.push('  <form id="flatmap-annotation-form"></form>');
         panelContent.push('  <div id="flatmap-annotation-existing"></div>');
@@ -517,7 +613,7 @@ export class Annotator
         });
 
         // should we warn if unsaved changes when closing??
-        document.addEventListener('jspanelclosed', closedCallback, false);
+        document.addEventListener('jspanelclosed', callback, false);
     }
 
     async annotated_features()
