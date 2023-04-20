@@ -360,11 +360,52 @@ export class FeatureDashLineLayer extends FeatureLineLayer
 
 //==============================================================================
 
+function sckanFilter(options)
+{
+    const sckanState = !'sckan' in options ? 'all'
+                     : options.sckan.toLowerCase();
+    const sckanFilter =
+        sckanState == 'none' ? [
+            ['!has', 'sckan']
+        ] :
+        sckanState == 'valid' ? [[
+            'any',
+            ['!has', 'sckan'],
+            [
+                'all',
+                ['has', 'sckan'],
+                ['==', 'sckan', true]
+            ]
+        ]] :
+        sckanState == 'invalid' ? [[
+            'any',
+            ['!has', 'sckan'],
+            [
+                'all',
+                ['has', 'sckan'],
+                ['!=', 'sckan', true]
+            ]
+        ]] :
+        [ ];
+    return sckanFilter;
+}
+
+//==============================================================================
+
 export class AnnotatedPathLayer extends VectorStyleLayer
 {
     constructor(id, sourceLayer)
     {
         super(id, 'annotated-path', sourceLayer);
+    }
+
+    makeFilter(options={})
+    {
+        return [
+            'all',
+            ['==', '$type', 'LineString'],
+            ...sckanFilter(options)
+        ];
     }
 
     paintStyle(options={}, changes=false)
@@ -406,7 +447,7 @@ export class AnnotatedPathLayer extends VectorStyleLayer
         return {
             ...super.style(),
             'type': 'line',
-            'filter': ['==', '$type', 'LineString'],
+            'filter': this.makeFilter(options),
             'paint': this.paintStyle(options),
             'layout': {
                 'line-cap': 'square'
@@ -429,31 +470,7 @@ export class PathLineLayer extends VectorStyleLayer
 
     makeFilter(options={})
     {
-        const sckanState = !'sckan' in options ? 'all'
-                         : options.sckan.toLowerCase();
-        const sckan_filter =
-            sckanState == 'none' ? [
-                ['!has', 'sckan']
-            ] :
-            sckanState == 'valid' ? [[
-                'any',
-                ['!has', 'sckan'],
-                [
-                    'all',
-                    ['has', 'sckan'],
-                    ['==', 'sckan', true]
-                ]
-            ]] :
-            sckanState == 'invalid' ? [[
-                'any',
-                ['!has', 'sckan'],
-                [
-                    'all',
-                    ['has', 'sckan'],
-                    ['!=', 'sckan', true]
-                ]
-            ]] :
-            [ ];
+        const sckan_filter = sckanFilter(options);
 
         return this.__dashed ? [
             'all',
