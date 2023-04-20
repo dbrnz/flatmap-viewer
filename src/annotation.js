@@ -445,8 +445,8 @@ export class Annotator
         });
     }
 
-    __chooseFeature(features, callback)
-    //=================================
+    __chooseFeatureProperties(features, callback)
+    //===========================================
     {
         this.__ui.selectFeature(features[0].id);
 
@@ -455,14 +455,18 @@ export class Annotator
          || features[0].properties['cd-class'] !== 'celldl:Connection'
          || (features.length === 2
           && features[1].properties['cd-class'] !== 'celldl:Connection')) {
-            callback(features[0]);
+            callback(features[0].properties);
+            return;
         }
         const featureList = [];
         const featureProperties = new Map();
+        const featureSeen = new Set();
         let selected = 'selected';    // Select the first entry
         for (const feature of features) {
-            if (feature.properties['cd-class'] !== 'celldl:Connection') {
-                break;
+            if (feature.properties['cd-class'] !== 'celldl:Connection'
+             || feature.properties['id'] == undefined
+             || featureSeen.has(feature.properties['id'])) {
+                continue;
             }
             const mapFeature = this.__ui.mapFeature(feature.id);
             const annotated = (mapFeature !== undefined)
@@ -474,7 +478,15 @@ export class Annotator
             }
             featureList.push(`<option value="${feature.id}" ${selected}>${annotated ? '* ' : ''}${feature.properties.id} -- ${feature.properties.kind}${label}</option>`);
             featureProperties.set(feature.id, feature.properties);
+            featureSeen.add(feature.properties['id']);
             selected = '';
+        }
+        if (featureList.length == 0) {
+            callback(undefined);
+            return;
+        } else if (featureList.length == 1) {
+            callback(featureProperties.values().next().value);
+            return;
         }
         const panelContent = `
 <div id="flatmap-annotation-feature">
@@ -533,7 +545,7 @@ export class Annotator
         // provide a list of features so dialog needs to first provide selection list
         // and highlight current one as user scrolls...
 
-        this.__chooseFeature(features, (featureProperties) => {
+        this.__chooseFeatureProperties(features, (featureProperties) => {
             if (featureProperties) {
                 this.__annotateFeature(featureProperties, closedCallback);
             } else {
