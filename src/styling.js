@@ -45,6 +45,17 @@ const NERVE_SELECTED = 'red';
 
 //==============================================================================
 
+const STROKE_INTERPOLATION = [
+    'interpolate',
+    ['exponential', 2],
+    ['zoom'],
+     2, ["*", ['var', 'width'], ["^", 2, -0.5]],
+     7, ["*", ['var', 'width'], ["^", 2,  2.5]],
+     9, ["*", ['var', 'width'], ["^", 2,  4.0]]
+];
+
+//==============================================================================
+
 class VectorStyleLayer
 {
     constructor(id, suffix, sourceLayer)
@@ -323,14 +334,8 @@ export class FeatureLineLayer extends VectorStyleLayer
                         ['boolean', ['feature-state', 'selected'], false], 1.2,
                         ['boolean', ['feature-state', 'active'], false], 1.2,
                         options.authoring ? 0.7 : 0.5
-                    ], [
-                    'interpolate',
-                        ['exponential', 2],
-                        ['zoom'],
-                         2, ["*", ['var', 'width'], ["^", 2, -0.5]],
-                         7, ["*", ['var', 'width'], ["^", 2,  2.5]],
-                         9, ["*", ['var', 'width'], ["^", 2,  4.0]]
-                    ]
+                    ],
+                    STROKE_INTERPOLATION
             ]
             // Need to vary width based on zoom??
             // Or opacity??
@@ -433,13 +438,7 @@ export class AnnotatedPathLayer extends VectorStyleLayer
                         ['*', 1.2, ['case', ['has', 'stroke-width'], ['get', 'stroke-width'], 1.0]],
                         0.0
                     ],
-                ['interpolate',
-                    ['exponential', 2],
-                    ['zoom'],
-                     2, ["*", ['var', 'width'], ["^", 2, -0.5]],
-                     7, ["*", ['var', 'width'], ["^", 2,  2.5]],
-                     9, ["*", ['var', 'width'], ["^", 2,  4.0]]
-                ]
+                STROKE_INTERPOLATION
             ]
         };
         return super.changedPaintStyle(paintStyle, changes);
@@ -529,16 +528,11 @@ export class PathLineLayer extends VectorStyleLayer
                         ['boolean', ['get', 'invisible'], false], 0.1,
                         ['boolean', ['feature-state', 'selected'], false], 2.0,
                         ['boolean', ['feature-state', 'active'], false], 0.9,
-                    0.6
+                        0.6
                     ],
-                    ['case', ['has', 'stroke-width'], ['get', 'stroke-width'], 1.0]],
-                    ['interpolate',
-                        ['exponential', 2],
-                        ['zoom'],
-                         2, ["*", ['var', 'width'], ["^", 2, -0.5]],
-                         7, ["*", ['var', 'width'], ["^", 2,  2.5]],
-                         9, ["*", ['var', 'width'], ["^", 2,  4.0]]
-                    ]
+                    ['case', ['has', 'stroke-width'], ['get', 'stroke-width'], 1.0]
+                    ],
+                    STROKE_INTERPOLATION
             ]
         };
         if (this.__dashed) {
@@ -602,14 +596,7 @@ class CentrelineLayer extends VectorStyleLayer
                 'let',
                 'width',
                     (this.__type == 'edge') ? 1.6 : 1.2,
-                    [
-                    'interpolate',
-                        ['exponential', 2],
-                        ['zoom'],
-                         2, ["*", ['var', 'width'], ["^", 2, -0.5]],
-                         7, ["*", ['var', 'width'], ["^", 2,  2.5]],
-                         9, ["*", ['var', 'width'], ["^", 2,  4.0]]
-                ]
+                    STROKE_INTERPOLATION
             ]
             // Need to vary width based on zoom??
             // Or opacity??
