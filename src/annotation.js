@@ -476,7 +476,7 @@ export class Annotator
             if (feature.properties.models) {
                 label = ` -- ${feature.properties.label.split('\n')[0]} (${feature.properties.models})`;
             }
-            featureList.push(`<option value="${feature.id}" ${selected}>${annotated ? '* ' : ''}${feature.properties.id} -- ${feature.properties.kind}${label}</option>`);
+            featureList.push(`<option value="${feature.id}" ${selected}>${annotated ? '*' : '&nbsp;'} ${feature.properties.id} -- ${feature.properties.kind}${label}</option>`);
             featureProperties.set(+feature.id, feature.properties);
             featureSeen.add(feature.properties['id']);
             selected = '';
@@ -489,14 +489,14 @@ export class Annotator
             return;
         }
         const panelContent = `
-<div id="flatmap-annotation-feature">
+<div id="annotation-feature-selection">
     <div>
         <label for="annotation-feature-selector">Select feature:</label>
         <select id="annotation-feature-selector" size="${Math.min(featureList.length, 7)}">
             ${featureList.join('\n')}
         </select>
     </div>
-    <div>
+    <div id="annotation-feature-buttons">
         <input id="annotation-feature-cancel" type="button" value="Cancel"/>
         <input id="annotation-feature-annotate" type="button" value="Annotate"/>
     </div>
