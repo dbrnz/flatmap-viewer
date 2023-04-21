@@ -180,10 +180,13 @@ class FlatMap
             if (this._userInteractions === null) {
                 this.setupUserInteractions_();
             } else if (this._initialState === null) {
+                this._map.setMinZoom(3.0);
+                this._map.setMaxBounds(null);
+                this._map.setRenderWorldCopies(true);
                 this._bounds = this._map.getBounds();
-                this._map.setMaxBounds(this._bounds);
-                const sw = maplibregl.MercatorCoordinate.fromLngLat(this._bounds.toArray()[0]);
-                const ne = maplibregl.MercatorCoordinate.fromLngLat(this._bounds.toArray()[1]);
+                const bounds = this._bounds.toArray();
+                const sw = maplibregl.MercatorCoordinate.fromLngLat(bounds[0]);
+                const ne = maplibregl.MercatorCoordinate.fromLngLat(bounds[1]);
                 this.__normalised_origin = [sw.x, ne.y];
                 this.__normalised_size = [ne.x - sw.x, sw.y - ne.y];
                 if ('state' in this._options) {
