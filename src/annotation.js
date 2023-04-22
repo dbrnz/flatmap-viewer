@@ -639,16 +639,21 @@ export class Annotator
     //========================
     {
         const url = this.__flatmap.makeServerUrl('', 'annotator/');
-        const response = await fetch(url, {
-            headers: {
-                "Accept": "application/json; charset=utf-8",
-                "Cache-Control": "no-store"
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    "Accept": "application/json; charset=utf-8",
+                    "Cache-Control": "no-store"
+                }
+            });
+            if (response.ok) {
+                return response.json();
+            } else {
+                console.error(`Annotated features: ${response.status} ${response.statusText}`);
+                return Promise.resolve([]);
             }
-        });
-        if (response.ok) {
-            return response.json();
-        } else {
-            console.error(`Annotated features: ${response.status} ${response.statusText}`);
+        } catch {
+            console.error(`Fetch failed -- is annotator available at ${this.__flatmap._baseUrl} ?`);
             return Promise.resolve([]);
         }
     }
