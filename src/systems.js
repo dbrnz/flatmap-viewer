@@ -84,7 +84,7 @@ export class SystemsManager
         for (const featureId of system.featureIds) {
             const feature = this.__ui.mapFeature(featureId);
             if (feature !== undefined) {
-                this.__ui.enableFeature(feature, enable);
+                this.__ui.enableMapFeature(feature, enable);
                 for (const childFeatureId of feature.children) {
                     const enabledCount = this.__enabledChildren.get(childFeatureId);
                     if (enable && enabledCount === 0 || !enable && enabledCount == 1) {
