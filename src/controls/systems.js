@@ -57,7 +57,7 @@ export class SystemsControl extends Control
             const checkbox = document.getElementById(`${this.__prefix}${system.id}`);
             if (checkbox) {
                 checkbox.checked = enable;
-                this.__flatmap.enableSystem(system.name, enable);
+                this.__flatmap.enableSystem(system.id, enable);
             }
         }
     }
@@ -67,7 +67,7 @@ export class SystemsControl extends Control
     {
         for (const system of this.__systems) {
             if (id === system.id) {
-                this.__flatmap.enableSystem(system.name, enable);
+                this.__flatmap.enableSystem(system.id, enable);
             }
         }
     }

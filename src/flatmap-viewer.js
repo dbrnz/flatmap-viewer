@@ -808,7 +808,7 @@ class FlatMap
     /**
      * Get a list of a FC flatmap's systems.
      *
-     * @return {Array.Object.<{name: string, colour: string}>}  An array with system details
+     * @return {Array.Object.<{id: string, name: string, colour: string, enabled: boolean}>}  An array with system details
      */
     getSystems()
     //==========
@@ -819,15 +819,15 @@ class FlatMap
     }
 
     /**
-     * @param {string}  systemName  The name of the system to enable
+     * @param {string}  systemId  The identifier of the system to enable
      * @param {boolean}  enable  Show or hide the system. Defaults to ``true`` (show)
      *
      */
-    enableSystem(systemName, enable=true)
+    enableSystem(systemId, enable=true)
     //===================================
     {
         if (this._userInteractions !== null) {
-            return this._userInteractions.enableSystem(systemName, enable);
+            return this._userInteractions.enableSystem(systemId, enable);
         }
     }
 
