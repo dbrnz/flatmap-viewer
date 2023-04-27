@@ -32,6 +32,151 @@ function standardise_color(str){
 
 //==============================================================================
 
+export class Control
+{
+    constructor(flatmap, id, name)
+    {
+        this.__flatmap = flatmap;
+        this.__id = id;
+        this.__name = name;
+        this.__map = undefined;
+        this.__prefix = `${this.__id}-`
+    }
+
+    getDefaultPosition()
+    //==================
+    {
+        return 'top-right';
+    }
+
+    _addControlDetails()
+    //==================
+    {
+        return {
+            enabled: 0,
+            total: 0
+        }
+    }
+
+    _enableAll(enable)
+    //================
+    {
+    }
+
+    __setAllCheckedState()
+    //====================
+    {
+        if (this.__checkedCount === 0) {
+            this.__allCheckbox.checked = false;
+            this.__allCheckbox.indeterminate = false;
+        } else if (this.__checkedCount === this.__totalCount) {
+            this.__allCheckbox.checked = true;
+            this.__allCheckbox.indeterminate = false;
+        } else {
+            this.__allCheckbox.indeterminate = true;
+        }
+    }
+
+    _addControlLine(id, name, style=null)
+    //===================================
+    {
+        const label = document.createElement('label');
+        label.setAttribute('for', id);
+        if (style !== null) {
+            label.setAttribute('style', style);
+        }
+        label.textContent = name;
+        this.__control.appendChild(label);
+        const input = document.createElement('input');
+        input.setAttribute('type', 'checkbox');
+        input.id = id;
+        this.__control.appendChild(input);
+        return input;
+    }
+
+    onAdd(map)
+    //========
+    {
+        this.__map = map;
+        this.__container = document.createElement('div');
+        this.__container.className = 'maplibregl-ctrl flatmap-control';
+        this.__control = document.createElement('div');
+        this.__control.className = 'flatmap-control-grid';
+
+        this.__allCheckbox = this._addControlLine(`control-all-${this.__id}`, `ALL ${this.__name.toUpperCase()}:`);
+        const controlDetails = this._addControlDetails();
+        this.__totalCount = controlDetails.total;
+        this.__halfCount = Math.trunc(this.__totalCount/2);
+        this.__checkedCount = controlDetails.enabled;
+        this.__setAllCheckedState();
+
+        /*
+        const innerDetails = this._innerLinesHTML();
+        const innerHTML = innerDetails.html;
+        innerHTML.splice(0, 0, `<label for="control-all-${this.__id}">ALL ${this.__name.toUpperCase()}:</label><input id="control-all-${this.__id}" type="checkbox"/>`);
+        this.__control.innerHTML = innerHTML.join('\n');
+
+        this.__totalCount = innerHTML.length;
+        this.__halfCount = Math.trunc(this.__totalCount/2);
+        this.__checkedCount = innerDetails.enabled;
+        this.__allCheckbox = document.getElementById(`control-all-${this.__id}`);
+        this.__setAllCheckedState();
+        */
+
+        this.__button = document.createElement('button');
+        this.__button.id = `flatmap-${this.__id}-button`;
+        this.__button.className = 'control-button text-button';
+        this.__button.setAttribute('type', 'button');
+        this.__button.setAttribute('aria-label', `Show/hide map's ${this.__name}`);
+        this.__button.setAttribute('control-visible', 'false');
+        this.__button.textContent = this.__name.toUpperCase().substring(0, 6);
+        this.__button.title = `Show/hide map's ${this.__name}`;
+        this.__container.appendChild(this.__button);
+
+        this.__container.addEventListener('click', this.onClick_.bind(this));
+        return this.__container;
+    }
+
+    onRemove()
+    //========
+    {
+        this.__container.parentNode.removeChild(this.__container);
+        this.__map = undefined;
+    }
+
+    onClick_(event)
+    //=============
+    {
+        if (event.target.id === `flatmap-${this.__id}-button`) {
+            if (this.__button.getAttribute('control-visible') === 'false') {
+                this.__container.appendChild(this.__control);
+                this.__button.setAttribute('control-visible', 'true');
+                this.__control.focus();
+            } else {
+                this.__control = this.__container.removeChild(this.__control);
+                this.__button.setAttribute('control-visible', 'false');
+            }
+        } else if (event.target.tagName === 'INPUT') {
+            if (event.target.id === `control-all-${this.__id}`) {
+                if (event.target.indeterminate) {
+                    event.target.checked = (this.__checkedCount >= this.__halfCount);
+                    event.target.indeterminate = false;
+                }
+                this.__checkedCount = event.target.checked ? this.__totalCount : 0;
+                this._enableAll(event.target.checked);
+            } else if (event.target.id.startsWith(`${this.__id}-`)) {
+                this.__enableControl(event.target.id.substring(this.__prefix.length),
+                                     event.target.checked);
+                this.__checkedCount += (event.target.checked ? 1 : -1);
+                this.__setAllCheckedState();
+            }
+        }
+        event.stopPropagation();
+    }
+}
+
+//==============================================================================
+
 export class NavigationControl
 {
     constructor(flatmap)
@@ -308,123 +453,6 @@ export class LayerControl
                     allLayersCheckbox.indeterminate = false;
                 } else {
                     allLayersCheckbox.indeterminate = true;
-                }
-            }
-        }
-        event.stopPropagation();
-    }
-}
-
-//==============================================================================
-
-export class Control
-{
-    constructor(flatmap, id, name)
-    {
-        this.__flatmap = flatmap;
-        this.__id = id;
-        this.__name = name;
-        this.__map = undefined;
-        this.__prefix = `${this.__id}-`
-    }
-
-    getDefaultPosition()
-    //==================
-    {
-        return 'top-right';
-    }
-
-    __innerLinesHTML()
-    //================
-    {
-        return [];
-    }
-
-    __enableAll(enable)
-    //=================
-    {
-
-    }
-
-    onAdd(map)
-    //========
-    {
-        this.__map = map;
-        this.__container = document.createElement('div');
-        this.__container.className = 'maplibregl-ctrl flatmap-control';
-        this.__control = document.createElement('div');
-        this.__control.className = 'flatmap-control-grid';
-
-        const innerHTML = this.__innerLinesHTML();
-        this.__totalCount = innerHTML.length;
-        innerHTML.splice(0, 0, `<label for="control-all-${this.__id}">ALL ${this.__name.toUpperCase()}:</label><input id="control-all-${this.__id}" type="checkbox" checked/>`);
-        this.__control.innerHTML = innerHTML.join('\n');
-
-        this.__checkedCount = this.__totalCount;
-        this.__halfCount = Math.trunc(this.__checkedCount/2);
-
-        this.__button = document.createElement('button');
-        this.__button.id = `flatmap-${this.__id}-button`;
-        this.__button.className = 'control-button text-button';
-        this.__button.setAttribute('type', 'button');
-        this.__button.setAttribute('aria-label', `Show/hide map's ${this.__name}`);
-        this.__button.setAttribute('control-visible', 'false');
-        this.__button.textContent = this.__name.toUpperCase().substring(0, 6);
-        this.__button.title = `Show/hide map's ${this.__name}`;
-        this.__container.appendChild(this.__button);
-
-        this.__container.addEventListener('click', this.onClick_.bind(this));
-        return this.__container;
-    }
-
-    onRemove()
-    //========
-    {
-        this.__container.parentNode.removeChild(this.__container);
-        this.__map = undefined;
-    }
-
-    onClick_(event)
-    //=============
-    {
-        if (event.target.id === `flatmap-${this.__id}-button`) {
-            if (this.__button.getAttribute('control-visible') === 'false') {
-                this.__container.appendChild(this.__control);
-                this.__button.setAttribute('control-visible', 'true');
-                this.__control.focus();
-            } else {
-                this.__control = this.__container.removeChild(this.__control);
-                this.__button.setAttribute('control-visible', 'false');
-            }
-        } else if (event.target.tagName === 'INPUT') {
-            if (event.target.id === `control-all-${this.__id}`) {
-                if (event.target.indeterminate) {
-                    event.target.checked = (this.__checkedCount >= this.__halfCount);
-                    event.target.indeterminate = false;
-                }
-                if (event.target.checked) {
-                    this.__checkedCount = this.__totalCount;
-                } else {
-                    this.__checkedCount = 0;
-                }
-                this.__enableAll(event.target.checked);
-            } else if (event.target.id.startsWith(`${this.__id}-`)) {
-                this.__enableControl(event.target.id.substring(this.__prefix.length),
-                                     event.target.checked);
-                if (event.target.checked) {
-                    this.__checkedCount += 1;
-                } else {
-                    this.__checkedCount -= 1;
-                }
-                const allCheckbox = document.getElementById(`control-all-${this.__id}`);
-                if (this.__checkedCount === 0) {
-                    allCheckbox.checked = false;
-                    allCheckbox.indeterminate = false;
-                } else if (this.__checkedCount === this.__totalCount) {
-                    allCheckbox.checked = true;
-                    allCheckbox.indeterminate = false;
-                } else {
-                    allCheckbox.indeterminate = true;
                 }
             }
         }

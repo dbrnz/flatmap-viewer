@@ -31,18 +31,27 @@ export class SystemsControl extends Control
         this.__systems = systems;
     }
 
-    __innerLinesHTML()
-    //================
+    _addControlDetails()
+    //===============
     {
-        const html = [];
+        let lines = 0;
+        let enabled = 0;
         for (const system of this.__systems) {
-            html.push(`<label for="${this.__prefix}${system.id}" style="background: ${system.colour};">${system.name}</label><input id="${this.__prefix}${system.id}" type="checkbox" checked/>`);
+            const input = this._addControlLine(`${this.__prefix}${system.id}`, system.name, `background: ${system.colour};`);
+            if (system.enabled) {
+                input.checked = true;
+                enabled += 1;
+            }
+            lines += 1;
         }
-        return html;
+        return {
+            enabled: enabled,
+            total: lines
+        };
     }
 
-    __enableAll(enable)
-    //=================
+    _enableAll(enable)
+    //================
     {
         for (const system of this.__systems) {
             const checkbox = document.getElementById(`${this.__prefix}${system.id}`);
