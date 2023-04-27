@@ -21,34 +21,35 @@ limitations under the License.
 
 export class SystemsManager
 {
-    constructor(flatmap, ui, enabled=true)
+    constructor(flatmap, ui, enabled=false)
     {
         this.__ui = ui;
         this.__systems = new Map();
         this.__enabledChildren = new Map();
         for (const [id, ann] of flatmap.annotations) {
             if (ann['fc-class'] === 'fc-class:System') {
-                if (this.__systems.has(ann.name)) {
-                    this.__systems.get(ann.name).featureIds.push(ann.featureId)
+                const systemId = ann.name.replaceAll(' ', '_');
+                if (this.__systems.has(systemId)) {
+                    this.__systems.get(systemId).featureIds.push(ann.featureId)
                 } else {
-                    this.__systems.set(ann.name, {
-                        id: ann.name.replaceAll(' ', '_'),
+                    this.__systems.set(systemId, {
+                        name: ann.name,
                         colour: ann.colour,
                         featureIds: [ ann.featureId ],
-                        enabled: enabled,
+                        enabled: false,
                         pathIds: ('path-ids' in ann) ? ann['path-ids'] : []
                     });
+                this.__ui.enableFeature(ann.featureId, false);
                 }
                 for (const childId of ann['children']) {
-                    if (enabled) {
-                        const enabledCount = (this.__enabledChildren.has(childId))
-                                           ? this.__enabledChildren.get(childId)
-                                           : 0;
-                        this.__enabledChildren.set(childId, enabledCount + 1);
-                    } else {
-                        this.__enabledChildren.set(childId, 0);
-                    }
+                    this.__enabledChildren.set(childId, 0);
+                    this.__ui.enableFeatureWithChildren(childId, false);
                 }
+            }
+        }
+        if (enabled) {
+            for (const system of this.__systems.values()) {
+                this.__enableSystem(system, true);
             }
         }
     }
@@ -57,10 +58,10 @@ export class SystemsManager
     //===========
     {
         const systems = [];
-        for (const [name, system] of this.__systems.entries()) {
+        for (const [systemId, system] of this.__systems.entries()) {
             systems.push({
-                name: name,
-                id: system.id,
+                id: systemId,
+                name: system.name,
                 colour: system.colour,
                 enabled: system.enabled
             });
@@ -68,31 +69,44 @@ export class SystemsManager
         return systems;
     }
 
-    enable(systemName, enable=true)
-    //=============================
+    enable(systemId, enable=true)
+    //===========================
     {
-        const system = this.__systems.get(systemName);
+        const system = this.__systems.get(systemId);
         if (system !== undefined && enable !== system.enabled) {
-            for (const featureId of system.featureIds) {
-                const feature = this.__ui.mapFeature(featureId);
-                if (feature !== undefined) {
-                    this.__ui.enableFeature(feature, enable);
-                    for (const childFeatureId of feature.children) {
-                        const enabledCount = this.__enabledChildren.get(childFeatureId);
-                        if (enable && enabledCount === 0 || !enable && enabledCount == 1) {
-                            this.__ui.enableFeatureWithChildren(childFeatureId, enable);
-                        }
-                        this.__enabledChildren.set(childFeatureId, enabledCount + (enable ? 1 : -1));
+            this.__enableSystem(system, enable);
+        }
+    }
+
+    __enableSystem(system, enable=true)
+    //=================================
+    {
+        for (const featureId of system.featureIds) {
+            const feature = this.__ui.mapFeature(featureId);
+            if (feature !== undefined) {
+                this.__ui.enableFeature(feature, enable);
+                for (const childFeatureId of feature.children) {
+                    const enabledCount = this.__enabledChildren.get(childFeatureId);
+                    if (enable && enabledCount === 0 || !enable && enabledCount == 1) {
+                        this.__ui.enableFeatureWithChildren(childFeatureId, enable);
                     }
+                    this.__enabledChildren.set(childFeatureId, enabledCount + (enable ? 1 : -1));
                 }
             }
-            system.enabled = enable;
-
-            // Enable/disable all paths associated with the system
-            for (const pathId of system.pathIds) {
-                this.__ui.enableFeature(this.__ui.mapFeature(pathId), enable);
-            }
         }
+
+        // Enable/disable all paths associated with the system
+        this.__ui.enablePathsBySystem(system, enable);
+
+        // Save system state
+        system.enabled = enable;
+    }
+
+    systemEnabled(systemId)
+    //=====================
+    {
+        const system = this.__systems.get(systemId);
+        return (system !== undefined && system.enabled);
     }
 }
 

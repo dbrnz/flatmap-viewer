@@ -300,10 +300,14 @@ export class UserInteractions
         return this.__systemsManager.systems;
     }
 
-    enableSystem(systemName, enable=true)
+    enableSystem(systemId, enable=true)
+    //=================================
+    {
+        this.__systemsManager.enable(systemId, enable);
+    }
+
     //===================================
     {
-        this.__systemsManager.enable(systemName, enable);
     }
 
     enableFeatureWithChildren(featureId, enable=true)
