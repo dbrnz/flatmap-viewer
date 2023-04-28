@@ -331,8 +331,8 @@ export class LayerManager
         }
     }
 
-    enableSckanPath(sckanState, enable=true)
-    //======================================
+    enableSckanPaths(sckanState, enable=true)
+    //=======================================
     {
         const currentState = this.__layerOptions.sckan;
         const validEnabled = ['valid', 'all'].indexOf(currentState) >= 0;

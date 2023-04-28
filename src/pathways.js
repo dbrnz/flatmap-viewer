@@ -50,10 +50,11 @@ export const PATH_STYLE_RULES =
 
 //==============================================================================
 
-export class Pathways
+export class PathManager
 {
-    constructor(flatmap)
+    constructor(flatmap, ui, enabled=true)
     {
+        this.__ui = ui;
         this.__connectivityModelPaths = {};                          // modelId: [pathIds]
         this.__pathToConnectivityModel = {};
         if ('models' in flatmap.pathways) {
@@ -66,14 +67,17 @@ export class Pathways
         }
         this.__pathModelPaths = {};                                  // pathModelId: [pathIds]
         this.__pathToPathModel = {};
+
+        this.__paths = {};
+        const pathLines = {};                                    // pathId: [lineIds]
+        const pathNerves = {};                                   // pathId: [nerveIds]
         if ('paths' in flatmap.pathways) {
-            this._pathLines = {};                                    // pathId: [lineIds]
-            this._pathNerves = {};                                   // pathId: [nerveIds]
-            this._pathNodes = {};                                    // pathId: [nodeIds]
             for (const [pathId, path] of Object.entries(flatmap.pathways.paths)) {
-                this._pathLines[pathId] = path.lines;
-                this._pathNerves[pathId] = path.nerves;
-                this._pathNodes[pathId] = path.nodes;
+                this.__paths[pathId] = path;
+                for (const lineId of path.lines) {
+                    this.__ui.enableFeature(lineId, enabled, true);
+                }
+                this.__paths[pathId].systemCount = 0;
                 if ('models' in path) {
                     const modelId = path['models'];
                     if (!(modelId in this.__pathModelPaths)) {
@@ -83,30 +87,12 @@ export class Pathways
                     this.__pathToPathModel[pathId] = modelId;
                 }
             }
-        } else {
-            // To be deprecated...
-            this._pathLines = flatmap.pathways['path-lines'];        // pathId: [lineIds]
-            this._pathNerves = flatmap.pathways['path-nerves'];      // pathId: [nerveIds]
-            if ('path-nodes' in flatmap.pathways) {
-                this._pathNodes = flatmap.pathways['path-nodes'];    // pathId: [nodeIds]
-            } else {
-                this._pathNodes = {};
-                for (const path of Object.keys(this._pathLines)) {
-                    this._pathNodes[path] = [];
-                }
-            }
         }
-        this._linePaths = reverseMap(this._pathLines);               // lineId: [pathIds]
-        this._nervePaths = reverseMap(this._pathNerves);             // nerveId: [pathIds]
+        this.__pathsByLine = reverseMap(pathLines);               // lineId: [pathIds]
+        this.__pathsByNerve = reverseMap(pathNerves);             // nerveId: [pathIds]
 
         const nodePaths = flatmap.pathways['node-paths'];
-        if (!('start-paths' in nodePaths)) {
-            this._nodePaths = nodePaths;                             // nodeId: [pathIds]
-        } else {   // Original format, deprecated
-            this._nodePaths = nodePaths['start-paths'];
-            this.extendNodePaths_(nodePaths['through-paths']);
-            this.extendNodePaths_(nodePaths['end-paths']);
-        }
+        this._nodePaths = nodePaths;                                 // nodeId: [pathIds]
         const featureIds = new Set();
         for (const paths of Object.values(this._nodePaths)) {
             this.addPathsToFeatureSet_(paths, featureIds);
@@ -114,20 +100,28 @@ export class Pathways
         this._allFeatureIds = featureIds;
 
         // Construct a list of path types we know about
-        const pathTypes = [];
-        for (const pathType of PATH_TYPES) {
-            pathTypes.push(pathType.type);
+        const pathTypes = {};
+        for (const pathTypeDefn of PATH_TYPES) {
+            pathTypes[pathTypeDefn.type] = pathTypeDefn;
         }
-        // Map unknown path types to ``other``
-        this.__typePaths = {};
-        this.__typePaths['other'] = [];
+
+        // Set path types, mapping unknown path types to ``other``
+        this.__pathsByType = {};
+        this.__pathsByType['other'] = [];
+        this.__pathtypeEnabled = {};
         for (const [pathType, paths] of Object.entries(flatmap.pathways['type-paths'])) {
-            if (pathTypes.indexOf(pathType) >= 0) {
-                this.__typePaths[pathType] = paths;
+            if (pathType in pathTypes) {
+                this.__pathsByType[pathType] = paths;
+                const pathDefn = pathTypes[pathType];
+                this.__pathtypeEnabled[pathType] = !('enabled' in pathDefn) || pathDefn.pathDefn;
             } else {
-                this.__typePaths['other'].push(...paths);
+                this.__pathsByType['other'].push(...paths);
+                this.__pathtypeEnabled[pathType] = false;
             }
         }
+        // Assign types to individual paths
+        this.__assignPathTypes();
+
         // Nerve centrelines are a special case with their own controls
         this.__haveCentrelines = false;
     }
@@ -138,13 +132,23 @@ export class Pathways
         return this.__haveCentrelines;
     }
 
+    __assignPathTypes()
+    //=================
+    {
+        for (const [pathType, paths] of Object.entries(this.__pathsByType)) {
+            for (const pathId of paths) {
+                this.__paths[pathId].pathType = pathType;
+            }
+        }
+    }
+
     pathTypes()
     //=========
     {
         const pathTypes = [];
         for (const pathType of PATH_TYPES) {
-            if (pathType.type in this.__typePaths
-            && this.__typePaths[pathType.type].length > 0) {
+            if (pathType.type in this.__pathsByType
+            && this.__pathsByType[pathType.type].length > 0) {
                 if (pathType.type === 'centreline') {
                     this.__haveCentrelines = true;
                 } else {
@@ -155,27 +159,14 @@ export class Pathways
         return pathTypes;
     }
 
-    addPathsToFeatureSet_(paths, featureSet)
+    addPathsToFeatureSet_(pathIds, featureSet)
     //======================================
     {
-        for (const path of paths) {
-            if (path in this._pathLines) {
-                this._pathLines[path].forEach(lineId => featureSet.add(lineId));
-                this._pathNerves[path].forEach(nerveId => featureSet.add(nerveId));
-                this._pathNodes[path].forEach(nodeId => featureSet.add(nodeId));
-            }
-        }
-    }
-
-    extendNodePaths_(nodePaths)
-    //=========================
-    {
-        for (const [key, values] of Object.entries(nodePaths)) {
-            if (key in this._nodePaths) {
-                this._nodePaths[key].push(...values);
-            } else {
-                this._nodePaths[key] = values;
-            }
+        for (const pathId of pathIds) {
+            const path = this.__paths[pathId];
+            path.lines.forEach(lineId => featureSet.add(lineId));
+            path.nerves.forEach(nerveId => featureSet.add(nerveId));
+            path.nodes.forEach(nodeId => featureSet.add(nodeId));
         }
     }
 
@@ -190,8 +181,8 @@ export class Pathways
     {
         const featureIds = new Set();
         for (const lineId of lineIds) {
-            if (lineId in this._linePaths) {
-                this.addPathsToFeatureSet_(this._linePaths[lineId], featureIds);
+            if (lineId in this.__pathsByLine) {
+                this.addPathsToFeatureSet_(this.__pathsByLine[lineId], featureIds);
             }
         }
         return featureIds;
@@ -201,8 +192,8 @@ export class Pathways
     //======================
     {
         const featureIds = new Set();
-        if (nerveId in this._nervePaths) {
-            this.addPathsToFeatureSet_(this._nervePaths[nerveId], featureIds);
+        if (nerveId in this.__pathsByNerve) {
+            this.addPathsToFeatureSet_(this.__pathsByNerve[nerveId], featureIds);
         }
         return featureIds;
     }
@@ -221,8 +212,8 @@ export class Pathways
     //=====================
     {
         const properties = Object.assign({}, feature.properties);
-        if (feature.id in this._linePaths) {
-            for (const pathId of this._linePaths[feature.id]) {
+        if (feature.id in this.__pathsByLine) {
+            for (const pathId of this.__pathsByLine[feature.id]) {
                 // There should only be a single path for a line
                 if (pathId in this.__pathToConnectivityModel) {
                     properties['connectivity'] = this.__pathToConnectivityModel[pathId];
@@ -233,7 +224,7 @@ export class Pathways
             }
 /*
             if (!('connectivity' in properties)) {
-                for (const pathId of this._nervePaths[feature.id]) {
+                for (const pathId of this.__pathsByNerve[feature.id]) {
                     if (pathId in this.__pathToConnectivityModel) {
                         properties['connectivity'] = this.__pathToConnectivityModel[pathId];
                         break;
@@ -281,14 +272,46 @@ export class Pathways
         return featureIds;
     }
 
-    typeFeatureIds(pathType)
-    //======================
+    __typeFeatureIds(pathType)
+    //========================
     {
         const featureIds = new Set();
-        if (pathType in this.__typePaths) {
-            this.addPathsToFeatureSet_(this.__typePaths[pathType], featureIds);
+        if (pathType in this.__pathsByType) {
+            this.addPathsToFeatureSet_(this.__pathsByType[pathType], featureIds);
         }
         return featureIds;
+    }
+
+    enablePathsBySystem(system, enable)
+    //=================================
+    {
+        for (const pathId of system.pathIds) {
+            const path = this.__paths[pathId];
+            if (this.__pathtypeEnabled[path.pathType]
+              && (enable && path.systemCount === 0
+              || !enable && path.systemCount == 1)) {
+                // and type(pathId) is enabled...
+                const featureIds = new Set();
+                this.addPathsToFeatureSet_([pathId], featureIds)
+                for (const featureId of featureIds) {
+                    this.__ui.enableFeature(featureId, enable);
+                }
+            }
+            path.systemCount += (enable ? 1 : -1);
+            // TODO? Show connectors and parent components of these paths??
+        }
+    }
+
+    enablePathsByType(pathType, enable)
+    //=================================
+    {
+        if (enable && !this.__pathtypeEnabled[pathType]
+        || !enable && this.__pathtypeEnabled[pathType]) {
+            for (const featureId of this.__typeFeatureIds(pathType)) {
+                this.__ui.enableFeature(featureId, enable);
+            }
+            this.__pathtypeEnabled[pathType] = enable;
+        }
     }
 
     nodePathModels(nodeId)

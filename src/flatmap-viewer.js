@@ -272,7 +272,7 @@ class FlatMap
     //=========
     {
         if (this._userInteractions !== null) {
-            return this._userInteractions.pathways.pathTypes();
+            return this._userInteractions.pathManager.pathTypes();
         }
     }
 
@@ -287,7 +287,7 @@ class FlatMap
     //===============================
     {
         if (this._userInteractions !== null) {
-            this._userInteractions.enablePath(pathType, enable);
+            this._userInteractions.enablePathsByType(pathType, enable);
         }
     }
 
@@ -302,7 +302,7 @@ class FlatMap
     //======================================
     {
         if (this._userInteractions !== null) {
-            this._userInteractions.enableSckanPath(sckanState, enable);
+            this._userInteractions.enableSckanPaths(sckanState, enable);
         }
     }
 
@@ -524,7 +524,7 @@ class FlatMap
         }
         if (featureIds.length == 0 && this._userInteractions !== null) {
             // We still haven't found a feature, so check connectivity
-            featureIds.extend(this._userInteractions.pathwaysFeatureIds(anatomicalIds));
+            featureIds.extend(this._userInteractions.pathFeatureIds(anatomicalIds));
         }
         return featureIds;
     }

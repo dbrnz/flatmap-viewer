@@ -39,11 +39,11 @@ export class SystemsManager
                         enabled: false,
                         pathIds: ('path-ids' in ann) ? ann['path-ids'] : []
                     });
-                this.__ui.enableFeature(ann.featureId, false);
+                this.__ui.enableFeature(ann.featureId, false, true);
                 }
                 for (const childId of ann['children']) {
                     this.__enabledChildren.set(childId, 0);
-                    this.__ui.enableFeatureWithChildren(childId, false);
+                    this.__ui.enableFeatureWithChildren(childId, false, true);
                 }
             }
         }

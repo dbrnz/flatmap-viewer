@@ -35,7 +35,7 @@ import polylabel from 'polylabel';
 
 import {Annotator} from './annotation';
 import {LayerManager} from './layers';
-import {PATHWAYS_LAYER, Pathways} from './pathways';
+import {PATHWAYS_LAYER, PathManager} from './pathways';
 import {COLOUR_ERROR, VECTOR_TILES_SOURCE} from './styling';
 import {SystemsManager} from './systems';
 
@@ -46,7 +46,6 @@ import {PathControl} from './controls/paths';
 import {SearchControl} from './controls/search';
 import {SystemsControl} from './controls/systems';
 
-import * as pathways from './pathways';
 import * as utils from './utils';
 
 //==============================================================================
@@ -131,17 +130,22 @@ export class UserInteractions
 
         this._layerManager = new LayerManager(flatmap);
 
-        // Path visibility is either controlled externally or by a local control
+        this.__featureEnabledCount = new Map(Array.from(this._flatmap.annotations.keys()).map(k => [+k, 0]));
 
-        this._pathways = new Pathways(flatmap);
+        const featuresEnabled = flatmap.options.style !== 'functional';
+
+        // Path visibility is either controlled externally or by a local control
+        // FC path visiblitity is determined by system visiblity
+
+        this.__pathManager = new PathManager(flatmap, this, featuresEnabled);
 
         // The path types in this map
-        const mapPathTypes = this._pathways.pathTypes();
+        const mapPathTypes = this.__pathManager.pathTypes();
 
         // Disable paths that are not initially shown
         for (const path of mapPathTypes) {
             if ('enabled' in path && !path.enabled) {
-                this.enablePath(path.type, false);
+                this.enablePathsByType(path.type, false);
             }
         }
 
@@ -154,7 +158,7 @@ export class UserInteractions
 
         // Note features that are FC systems
 
-        this.__systemsManager = new SystemsManager(this._flatmap, this);
+        this.__systemsManager = new SystemsManager(this._flatmap, this, featuresEnabled);
 
         // Add various controls when running standalone
 
@@ -176,7 +180,7 @@ export class UserInteractions
             this._map.addControl(new LayerControl(flatmap, this._layerManager));
 
             // Add a control for nerve centrelines if they are present
-            if (this._pathways.haveCentrelines) {
+            if (this.__pathManager.haveCentrelines) {
                 this._map.addControl(new NerveControl(flatmap, this._layerManager, {showCentrelines: false}));
                 this.enableCentrelines(false);
             }
@@ -202,10 +206,10 @@ export class UserInteractions
         this.__pan_zoom_enabled = false;
     }
 
-    get pathways()
-    //============
+    get pathManager()
+    //===============
     {
-        return this._pathways;
+        return this.__pathManager;
     }
 
     getState()
@@ -307,30 +311,62 @@ export class UserInteractions
         this.__systemsManager.enable(systemId, enable);
     }
 
-    //===================================
+    mapFeature(featureId)
+    //===================
     {
+        const ann = this._flatmap.annotation(featureId);
+        if (ann !== undefined) {
+            return {
+                id: featureId,
+                source: VECTOR_TILES_SOURCE,
+                sourceLayer: (this._flatmap.options.separateLayers
+                             ? `${ann['layer']}_${ann['tile-layer']}`
+                             : ann['tile-layer']).replaceAll('/', '_'),
+                children: ann.children || []
+            };
+        }
+        return undefined;
     }
 
-    enableFeatureWithChildren(featureId, enable=true)
-    //===============================================
+    enableMapFeature(feature, enable=true)
+    //====================================
     {
-        const feature = this.mapFeature(featureId);
         if (feature !== undefined) {
-            this.enableFeature(feature, enable);
-            for (const childFeatureId of feature.children) {
-                this.enableFeatureWithChildren(childFeatureId, enable);
+        if (feature.id === 9) {
+            console.log('mf', feature.id, this.__featureEnabledCount.get(+feature.id), enable)
+        }
+            if (enable) {
+                this._map.removeFeatureState(feature, 'hidden');
+            } else {
+                this._map.setFeatureState(feature, { 'hidden': true });
             }
+            this.__enableFeatureMarker(feature.id, enable);
         }
     }
 
-    __enableFeatureWithParents(featureId, enable=true)
+    enableFeature(featureId, enable=true, force=false)
     //================================================
+    {
+        const enabledCount = this.__featureEnabledCount.get(+featureId)
+        if (force || enable && enabledCount === 0 || !enable && enabledCount == 1) {
+            this.enableMapFeature(this.mapFeature(featureId), enable)
+        }
+        if (!force) {
+            this.__featureEnabledCount.set(+featureId, enabledCount + (enable ? 1 : -1));
+        }
+        if (featureId === 9) {
+            console.log('ef', featureId, this.__featureEnabledCount.get(+featureId), enable)
+        }
+    }
+
+    enableFeatureWithChildren(featureId, enable=true, force=false)
+    //============================================================
     {
         const feature = this.mapFeature(featureId);
         if (feature !== undefined) {
-            this.enableFeature(feature, enable);
-            for (const childFeatureId of feature.parents) {
-                this.__enableFeatureWithParents(childFeatureId, enable);
+            this.enableFeature(featureId, enable, force);
+            for (const childFeatureId of feature.children) {
+                this.enableFeatureWithChildren(childFeatureId, enable, force);
             }
         }
     }
@@ -347,42 +383,12 @@ export class UserInteractions
         }
     }
 
-    enableFeature(feature, enable=true)
-    //=================================
-    {
-        if (feature !== undefined) {
-            if (enable) {
-                this._map.removeFeatureState(feature, 'hidden');
-            } else {
-                this._map.setFeatureState(feature, { 'hidden': true });
-            }
-            this.__enableFeatureMarker(feature.id, enable);
-        }
-    }
-
     __featureEnabled(feature)
     //=======================
     {
         const state = this._map.getFeatureState(feature);
         return (state !== undefined
             && (!('hidden' in state) || !state.hidden));
-    }
-
-    mapFeature(featureId)
-    //===================
-    {
-        const ann = this._flatmap.annotation(featureId);
-        if (ann !== undefined) {
-            return {
-                id: featureId,
-                source: VECTOR_TILES_SOURCE,
-                sourceLayer: (this._flatmap.options.separateLayers
-                             ? `${ann['layer']}_${ann['tile-layer']}`
-                             : ann['tile-layer']).replaceAll('/', '_'),
-                children: ann.children || []
-            };
-        }
-        return undefined;
     }
 
     featureSelected_(featureId)
@@ -512,7 +518,7 @@ export class UserInteractions
         this.__clearModal();
         this.__clearActiveMarker();
         this.unselectFeatures();
-        this.__enablePathFeatures(this._pathways.allFeatureIds(), true);
+        this.__enablePathFeatures(this.__pathManager.allFeatureIds(), true);
     }
 
     clearSearchResults(reset=true)
@@ -536,7 +542,7 @@ export class UserInteractions
                 if (annotation) {
                     this.highlightFeature_(featureId);
                     if ('type' in annotation && annotation.type.startsWith('line')) {
-                        for (const pathFeatureId of this._pathways.lineFeatureIds([featureId])) {
+                        for (const pathFeatureId of this.__pathManager.lineFeatureIds([featureId])) {
                             this.highlightFeature_(pathFeatureId);
                         }
                     }
@@ -560,7 +566,7 @@ export class UserInteractions
                 if (annotation) {
                     this.selectFeature(featureId);
                     if ('type' in annotation && annotation.type.startsWith('line')) {
-                        for (const pathFeatureId of this._pathways.lineFeatureIds([featureId])) {
+                        for (const pathFeatureId of this.__pathManager.lineFeatureIds([featureId])) {
                             this.selectFeature(pathFeatureId);
                         }
                     }
@@ -614,7 +620,7 @@ export class UserInteractions
                     }
                     bbox = expandBounds(bbox, annotation.bounds);
                     if ('type' in annotation && annotation.type.startsWith('line')) {
-                        for (const pathFeatureId of this._pathways.lineFeatureIds([featureId])) {
+                        for (const pathFeatureId of this.__pathManager.lineFeatureIds([featureId])) {
                             if (select) {
                                 this.selectFeature(pathFeatureId);
                             } else if (highlight) {
@@ -756,7 +762,7 @@ export class UserInteractions
     {
         if (feature.sourceLayer === PATHWAYS_LAYER) {  // I suspect this is never true as source layer
                                                        // names are like `neural_routes_pathways`
-            return this._flatmap.featureEvent(type, this._pathways.pathProperties(feature));
+            return this._flatmap.featureEvent(type, this.__pathManager.pathProperties(feature));
         } else if ('properties' in feature) {
             return this._flatmap.featureEvent(type, feature.properties);
         }
@@ -837,7 +843,7 @@ export class UserInteractions
                 const lineFeatureId = +lineFeature.properties.featureId;  // Ensure numeric
                 this.__activateFeature(lineFeature);
                 const lineIds = new Set(lineFeatures.map(f => f.properties.featureId));
-                for (const featureId of this._pathways.lineFeatureIds(lineIds)) {
+                for (const featureId of this.__pathManager.lineFeatureIds(lineIds)) {
                     if (+featureId !== lineFeatureId) {
                         this.__activateFeature(this.mapFeature(featureId));
                     }
@@ -1022,57 +1028,61 @@ export class UserInteractions
     //================================
     {
         if ('nerveId' in feature.properties) {
-            for (const featureId of this._pathways.nerveFeatureIds(feature.properties.nerveId)) {
+            for (const featureId of this.__pathManager.nerveFeatureIds(feature.properties.nerveId)) {
                 this.__activateFeature(this.mapFeature(featureId));
             }
         }
         if ('nodeId' in feature.properties) {
-            for (const featureId of this._pathways.nodeFeatureIds(feature.properties.nodeId)) {
+            for (const featureId of this.__pathManager.nodeFeatureIds(feature.properties.nodeId)) {
                 this.__activateFeature(this.mapFeature(featureId));
             }
         }
     }
 
-    __enablePathFeatures(featureIds, enable)
-    //======================================
-    {
-        for (const featureId of featureIds) {
-            this.enableFeature(this.mapFeature(featureId), enable);
-        }
-    }
-
-    enablePath(pathType, enable=true)
-    //===============================
-    {
-        this.__enablePathFeatures(this._pathways.typeFeatureIds(pathType), enable);
-    }
-
-    pathwaysFeatureIds(externalIds)
+    enablePath(pathId, enable=true)
     //=============================
     {
+        this.__pathManager.enablePath(pathId, enable);
+    }
+
+    enablePathsBySystem(system, enable=true)
+    //======================================
+    {
+        this.__pathManager.enablePathsBySystem(system, enable);
+    }
+
+    enablePathsByType(pathType, enable=true)
+    //=====================================
+    {
+        this.__pathManager.enablePathsByType(pathType, enable);
+    }
+
+    pathFeatureIds(externalIds)
+    //=========================
+    {
         const featureIds = new utils.List();
-        featureIds.extend(this._pathways.connectivityModelFeatureIds(externalIds));
-        featureIds.extend(this._pathways.pathModelFeatureIds(externalIds));
+        featureIds.extend(this.__pathManager.connectivityModelFeatureIds(externalIds));
+        featureIds.extend(this.__pathManager.pathModelFeatureIds(externalIds));
         return featureIds;
     }
 
     nodePathModels(nodeId)
     //====================
     {
-        return this._pathways.nodePathModels(nodeId);
+        return this.__pathManager.nodePathModels(nodeId);
     }
 
     enableCentrelines(show=true)
     //==========================
     {
-        this.enablePath('centreline', show);
+        this.enablePathsByType('centreline', show);
         this._layerManager.setPaint({showCentrelines: show});
     }
 
-    enableSckanPath(sckanState, enable=true)
-    //======================================
+    enableSckanPaths(sckanState, enable=true)
+    //=======================================
     {
-        this._layerManager.enableSckanPath(sckanState, enable);
+        this._layerManager.enableSckanPaths(sckanState, enable);
     }
 
     //==============================================================================
