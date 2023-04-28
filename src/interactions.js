@@ -837,8 +837,10 @@ export class UserInteractions
         const lineFeatures = features.filter(feature => ('centreline' in feature.properties
                                                       || ('type' in feature.properties
                                                         && feature.properties.type.startsWith('line')) ));
+        let tooltipFeature = null;
         if (lineFeatures.length > 0) {
             tooltip = this.lineTooltip_(lineFeatures);
+            tooltipFeature = lineFeatures[0];
             for (const lineFeature of lineFeatures) {
                 const lineFeatureId = +lineFeature.properties.featureId;  // Ensure numeric
                 this.__activateFeature(lineFeature);
@@ -866,6 +868,7 @@ export class UserInteractions
                 }
                 const feature = labelledFeatures[0];
                 tooltip = this.tooltipHtml_(feature.properties);
+                tooltipFeature = feature;
                 if (this._flatmap.options.debug) {  // Do this when Info on and not debug??
                     const debugProperties = [
                         'featureId',
@@ -904,11 +907,11 @@ export class UserInteractions
         if (displayInfo || this._flatmap.options.debug) {
             this._infoControl.show(info);
         }
-        this.__showToolTip(tooltip, event.lngLat);
+        this.__showToolTip(tooltip, event.lngLat, tooltipFeature);
     }
 
-    __showToolTip(html, lngLat)
-    //=========================
+    __showToolTip(html, lngLat, feature=null)
+    //=======================================
     {
         // Show a tooltip
         if (html !== '') {
@@ -922,7 +925,10 @@ export class UserInteractions
                 const pt = turf.point(lngLat.toArray());
                 const gps = turfProjection.toMercator(pt);
                 const coords = gps.geometry.coordinates;
-                html = `<span>${JSON.stringify(coords)}</span><br/>${html}`;
+                const header = (feature === null)
+                             ? JSON.stringify(coords)
+                             : `${JSON.stringify(coords)} (${feature.id} ${feature.properties['id']})`;
+                html = `<span>${header}</span><br/>${html}`;
             }
             this._tooltip
                 .setLngLat(lngLat)
