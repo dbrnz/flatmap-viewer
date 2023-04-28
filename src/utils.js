@@ -124,3 +124,21 @@ export function setDefaults(options, defaultOptions)
 }
 
 //==============================================================================
+
+export function reverseMap(mapping)
+//=================================
+{
+    const reverse = {};
+    for (const [key, values] of Object.entries(mapping)) {
+        for (const value of values) {
+            if (value in reverse) {
+                reverse[value].add(key);
+            } else {
+                reverse[value] = new Set([key]);
+            }
+        }
+    }
+    return reverse;
+}
+
+//==============================================================================

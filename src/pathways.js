@@ -22,6 +22,8 @@ limitations under the License.
 
 //==============================================================================
 
+import { reverseMap } from './utils';
+
 export const PATHWAYS_LAYER = 'pathways';
 
 //==============================================================================
@@ -45,24 +47,6 @@ const PATH_TYPES = [
 
 export const PATH_STYLE_RULES =
     PATH_TYPES.flatMap(pathType => [['==', ['get', 'kind'], pathType.type], pathType.colour]);
-
-//==============================================================================
-
-function reverseMap(mapping)
-//==========================
-{
-    const reverse = {};
-    for (const [key, values] of Object.entries(mapping)) {
-        for (const value of values) {
-            if (value in reverse) {
-                reverse[value].add(key);
-            } else {
-                reverse[value] = new Set([key]);
-            }
-        }
-    }
-    return reverse;
-}
 
 //==============================================================================
 
