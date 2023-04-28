@@ -25,6 +25,8 @@ import { indexedProperties } from '../search.js';
 export const displayedProperties = [
     'id',
     'class',
+    'fc-class',
+    'fc-kind',
     ...indexedProperties
 ];
 
