@@ -41,7 +41,8 @@ import {SystemsManager} from './systems';
 
 import {displayedProperties, InfoControl} from './controls/info';
 import {BackgroundControl, LayerControl, NerveControl,
-        PathControl, SCKANControl} from './controls/controls';
+        SCKANControl} from './controls/controls';
+import {PathControl} from './controls/paths';
 import {SearchControl} from './controls/search';
 import {SystemsControl} from './controls/systems';
 
