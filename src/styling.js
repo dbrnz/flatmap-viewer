@@ -521,9 +521,9 @@ export class PathLineLayer extends VectorStyleLayer
                     ['==', ['get', 'type'], 'bezier'], 1.0,
                     ['==', ['get', 'kind'], 'error'], 1.0,
                     ['boolean', ['get', 'invisible'], false], 0.001,
-                dimmed ? 0.1 : 0.8
                     ['boolean', ['feature-state', 'selected'], false], 0.0,
                     ['boolean', ['feature-state', 'active'], false], 0.0,
+                dimmed ? 0.1 : 0.8
             ],
             'line-width': [
                 'let',
