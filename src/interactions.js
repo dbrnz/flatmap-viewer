@@ -330,9 +330,6 @@ export class UserInteractions
     //====================================
     {
         if (feature !== undefined) {
-        if (feature.id === 9) {
-            console.log('mf', feature.id, this.__featureEnabledCount.get(+feature.id), enable)
-        }
             if (enable) {
                 this._map.removeFeatureState(feature, 'hidden');
             } else {
@@ -353,9 +350,6 @@ export class UserInteractions
             this.__featureEnabledCount.set(+featureId, enable ? 1 : 0);
         } else {
             this.__featureEnabledCount.set(+featureId, enabledCount + (enable ? 1 : -1));
-        }
-        if (featureId === 9) {
-            console.log('ef', featureId, this.__featureEnabledCount.get(+featureId), enable)
         }
     }
 
