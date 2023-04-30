@@ -142,11 +142,9 @@ export class UserInteractions
         // The path types in this map
         const mapPathTypes = this.__pathManager.pathTypes();
 
-        // Disable paths that are not initially shown
+        // Set initial enabled state of paths
         for (const path of mapPathTypes) {
-            if ('enabled' in path && !path.enabled) {
-                this.enablePathsByType(path.type, false);
-            }
+            this.__pathManager.enablePathsByType(path.type, path.enabled, true);
         }
 
         // Add annotation capability
@@ -182,7 +180,7 @@ export class UserInteractions
             // Add a control for nerve centrelines if they are present
             if (this.__pathManager.haveCentrelines) {
                 this._map.addControl(new NerveControl(flatmap, this._layerManager, {showCentrelines: false}));
-                this.enableCentrelines(false);
+                this.enableCentrelines(false, true);
             }
 
             // SCKAN path and SYSTEMS controls for FC maps
@@ -351,7 +349,9 @@ export class UserInteractions
         if (force || enable && enabledCount === 0 || !enable && enabledCount == 1) {
             this.enableMapFeature(this.mapFeature(featureId), enable)
         }
-        if (!force) {
+        if (force) {
+            this.__featureEnabledCount.set(+featureId, enable ? 1 : 0);
+        } else {
             this.__featureEnabledCount.set(+featureId, enabledCount + (enable ? 1 : -1));
         }
         if (featureId === 9) {
@@ -1078,11 +1078,11 @@ export class UserInteractions
         return this.__pathManager.nodePathModels(nodeId);
     }
 
-    enableCentrelines(show=true)
-    //==========================
+    enableCentrelines(enable=true, force=false)
+    //=========================================
     {
-        this.enablePathsByType('centreline', show);
-        this._layerManager.setPaint({showCentrelines: show});
+        this.__pathManager.enablePathsByType('centreline', enable, force);
+        this._layerManager.setPaint({showCentrelines: enable});
     }
 
     enableSckanPaths(sckanState, enable=true)

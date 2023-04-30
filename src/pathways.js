@@ -101,19 +101,19 @@ export class PathManager
 
         // Construct a list of path types we know about
         const pathTypes = {};
+        this.__pathtypeEnabled = {};
         for (const pathTypeDefn of PATH_TYPES) {
             pathTypes[pathTypeDefn.type] = pathTypeDefn;
+            this.__pathtypeEnabled[pathTypeDefn.type] = !('enabled' in pathTypeDefn) || pathTypeDefn.enabled;
         }
 
         // Set path types, mapping unknown path types to ``other``
         this.__pathsByType = {};
         this.__pathsByType['other'] = [];
-        this.__pathtypeEnabled = {};
         for (const [pathType, paths] of Object.entries(flatmap.pathways['type-paths'])) {
             if (pathType in pathTypes) {
                 this.__pathsByType[pathType] = paths;
                 const pathDefn = pathTypes[pathType];
-                this.__pathtypeEnabled[pathType] = !('enabled' in pathDefn) || pathDefn.pathDefn;
             } else {
                 this.__pathsByType['other'].push(...paths);
                 this.__pathtypeEnabled[pathType] = false;
@@ -146,13 +146,16 @@ export class PathManager
     //=========
     {
         const pathTypes = [];
-        for (const pathType of PATH_TYPES) {
-            if (pathType.type in this.__pathsByType
-            && this.__pathsByType[pathType.type].length > 0) {
-                if (pathType.type === 'centreline') {
+        for (const pathTypeDefn of PATH_TYPES) {
+            if (pathTypeDefn.type in this.__pathsByType
+            && this.__pathsByType[pathTypeDefn.type].length > 0) {
+                if (pathTypeDefn.type === 'centreline') {
                     this.__haveCentrelines = true;
                 } else {
-                    pathTypes.push(pathType);
+                    pathTypes.push({
+                        ...pathTypeDefn,
+                        enabled: this.__pathtypeEnabled[pathTypeDefn.type]
+                    });
                 }
             }
         }
@@ -302,13 +305,14 @@ export class PathManager
         }
     }
 
-    enablePathsByType(pathType, enable)
-    //=================================
+    enablePathsByType(pathType, enable, force=false)
+    //==============================================
     {
-        if (enable && !this.__pathtypeEnabled[pathType]
-        || !enable && this.__pathtypeEnabled[pathType]) {
+        if (force
+         || enable && !this.__pathtypeEnabled[pathType]
+         || !enable && this.__pathtypeEnabled[pathType]) {
             for (const featureId of this.__typeFeatureIds(pathType)) {
-                this.__ui.enableFeature(featureId, enable);
+                this.__ui.enableFeature(featureId, enable, force);
             }
             this.__pathtypeEnabled[pathType] = enable;
         }

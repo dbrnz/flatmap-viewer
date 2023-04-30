@@ -283,8 +283,7 @@ export class FeatureLineLayer extends VectorStyleLayer
     constructor(id, sourceLayer, options={})
     {
         const dashed = ('dashed' in options && options.dashed);
-        const filterType = dashed ? 'line-dash' : 'line';
-        super(id, `feature-${filterType}`, sourceLayer);
+        super(id, `feature-${dashed ? 'line-dash' : 'line'}`, sourceLayer);
         this.__dashed = dashed;
     }
 
@@ -466,9 +465,10 @@ export class PathLineLayer extends VectorStyleLayer
     constructor(id, sourceLayer, options={})
     {
         const dashed = ('dashed' in options && options.dashed);
-        const filterType = dashed ? 'line-dash' : 'line';
-        super(id, `path-${filterType}`, sourceLayer);
+        const highlight = ('highlight' in options && options.highlight);
+        super(id, `path${highlight ? '-highlight' : ''}-${dashed ? 'line-dash' : 'line'}`, sourceLayer);
         this.__dashed = dashed;
+        this.__highlight = highlight;
     }
 
     makeFilter(options={})
@@ -508,31 +508,45 @@ export class PathLineLayer extends VectorStyleLayer
                 ...PATH_STYLE_RULES,
                 '#888'
             ],
-            'line-opacity': [
+            'line-opacity': this.__highlight ? [
+                'case',
+                    ['boolean', ['feature-state', 'hidden'], false], 0.0,
+                    ['boolean', ['get', 'invisible'], false], 0.0,
+                    ['boolean', ['feature-state', 'selected'], false], 1.0,
+                    ['boolean', ['feature-state', 'active'], false], 1.0,
+                0.0
+            ] : [
                 'case',
                     ['boolean', ['feature-state', 'hidden'], false], 0.01,
                     ['==', ['get', 'type'], 'bezier'], 1.0,
                     ['==', ['get', 'kind'], 'error'], 1.0,
                     ['boolean', ['get', 'invisible'], false], 0.001,
-                    ['boolean', ['feature-state', 'selected'], false], 1.0,
-                    ['boolean', ['feature-state', 'active'], false], 1.0,
                 dimmed ? 0.1 : 0.8
+                    ['boolean', ['feature-state', 'selected'], false], 0.0,
+                    ['boolean', ['feature-state', 'active'], false], 0.0,
             ],
             'line-width': [
                 'let',
-                'width', ["*", [
-                    'case',
+                'width', [
+                    "*",
+                    this.__highlight ? ['case',
+                        ['boolean', ['get', 'invisible'], false], 0.1,
+                        ['boolean', ['feature-state', 'selected'], false], 0.6,
+                        ['boolean', ['feature-state', 'active'], false], 0.9,
+                        0.0
+                    ] : [
+                     'case',
                         ['==', ['get', 'type'], 'bezier'], 0.1,
                         ['==', ['get', 'kind'], 'error'], 1,
                         ['==', ['get', 'kind'], 'unknown'], 1,
                         ['boolean', ['get', 'invisible'], false], 0.1,
-                        ['boolean', ['feature-state', 'selected'], false], 2.0,
-                        ['boolean', ['feature-state', 'active'], false], 0.9,
+                        ['boolean', ['feature-state', 'selected'], false], 0.0,
+                        ['boolean', ['feature-state', 'active'], false], 0.0,
                         0.6
                     ],
                     ['case', ['has', 'stroke-width'], ['get', 'stroke-width'], 1.0]
-                    ],
-                    STROKE_INTERPOLATION
+                ],
+                STROKE_INTERPOLATION
             ]
         };
         if (this.__dashed) {
@@ -562,6 +576,24 @@ export class PathDashlineLayer extends PathLineLayer
     constructor(id, sourceLayer)
     {
         super(id, sourceLayer, {dashed: true});
+    }
+}
+
+//==============================================================================
+
+export class PathHighlightLayer extends PathLineLayer
+{
+    constructor(id, sourceLayer)
+    {
+        super(id, sourceLayer, {highlight: true});
+    }
+}
+
+export class PathDashHighlightLayer extends PathLineLayer
+{
+    constructor(id, sourceLayer)
+    {
+        super(id, sourceLayer, {dashed: true, highlight: true});
     }
 }
 
