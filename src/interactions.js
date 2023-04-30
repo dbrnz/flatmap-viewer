@@ -1045,14 +1045,14 @@ export class UserInteractions
         this.__pathManager.enablePath(pathId, enable);
     }
 
-    enablePathsBySystem(system, enable=true)
-    //======================================
+    enablePathsBySystem(system, enable=true, force=false)
+    //===================================================
     {
-        this.__pathManager.enablePathsBySystem(system, enable);
+        this.__pathManager.enablePathsBySystem(system, enable, force);
     }
 
     enablePathsByType(pathType, enable=true)
-    //=====================================
+    //======================================
     {
         this.__pathManager.enablePathsByType(pathType, enable);
     }

@@ -47,9 +47,12 @@ export class SystemsManager
                 }
             }
         }
-        if (enabled) {
-            for (const system of this.__systems.values()) {
+        for (const system of this.__systems.values()) {
+            if (enabled) {
                 this.__enableSystem(system, true);
+            } else {
+                // Disable all paths associated with the disabled system
+                this.__ui.enablePathsBySystem(system, false, true);
             }
         }
     }

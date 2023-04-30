@@ -285,22 +285,26 @@ export class PathManager
         return featureIds;
     }
 
-    enablePathsBySystem(system, enable)
-    //=================================
+    enablePathsBySystem(system, enable, force=false)
+    //==============================================
     {
         for (const pathId of system.pathIds) {
             const path = this.__paths[pathId];
             if (this.__pathtypeEnabled[path.pathType]
-              && (enable && path.systemCount === 0
-              || !enable && path.systemCount == 1)) {
+              && (force
+               || enable && path.systemCount === 0
+               || !enable && path.systemCount == 1)) {
                 // and type(pathId) is enabled...
                 const featureIds = new Set();
                 this.addPathsToFeatureSet_([pathId], featureIds)
                 for (const featureId of featureIds) {
-                    this.__ui.enableFeature(featureId, enable);
+                    this.__ui.enableFeature(featureId, enable, force);
                 }
             }
             path.systemCount += (enable ? 1 : -1);
+            if (path.systemCount < 0) {
+                path.systemCount = 0;
+            }
             // TODO? Show connectors and parent components of these paths??
         }
     }
