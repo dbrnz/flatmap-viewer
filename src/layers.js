@@ -165,6 +165,9 @@ class MapFeatureLayers extends MapStylingLayers
             this.__addStyleLayer(style.NervePolygonBorder, PATHWAYS_LAYER);
             this.__addStyleLayer(style.NervePolygonFill, PATHWAYS_LAYER);
             this.__addStyleLayer(style.FeatureNerveLayer, PATHWAYS_LAYER);
+
+            this.__addStyleLayer(style.PathHighlightLayer, PATHWAYS_LAYER);
+            this.__addStyleLayer(style.PathDashHighlightLayer, PATHWAYS_LAYER);
         }
     }
 
