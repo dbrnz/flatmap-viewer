@@ -73,6 +73,8 @@ export class PathManager
         const pathNerves = {};                                   // pathId: [nerveIds]
         if ('paths' in flatmap.pathways) {
             for (const [pathId, path] of Object.entries(flatmap.pathways.paths)) {
+                pathLines[pathId] = path.lines;
+                pathNerves[pathId] = path.nerves;
                 this.__paths[pathId] = path;
                 for (const lineId of path.lines) {
                     this.__ui.enableFeature(lineId, enabled, true);
