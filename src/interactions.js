@@ -1028,7 +1028,11 @@ export class UserInteractions
     //================================
     {
         if ('nerveId' in feature.properties) {
-            for (const featureId of this.__pathManager.nerveFeatureIds(feature.properties.nerveId)) {
+            const nerveId = feature.properties.nerveId;
+            if (nerveId !== feature.id) {
+                this.__activateFeature(this.mapFeature(nerveId));
+            }
+            for (const featureId of this.__pathManager.nerveFeatureIds(nerveId)) {
                 this.__activateFeature(this.mapFeature(featureId));
             }
         }
