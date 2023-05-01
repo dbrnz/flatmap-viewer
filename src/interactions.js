@@ -330,9 +330,14 @@ export class UserInteractions
     //====================================
     {
         if (feature !== undefined) {
-            if (enable) {
-                this._map.removeFeatureState(feature, 'hidden');
-            } else {
+            const state = this._map.getFeatureState(feature);
+            if  ('hidden' in state) {
+                if (enable) {
+                    this._map.removeFeatureState(feature, 'hidden');
+                } else if (!state.hidden) {
+                    this._map.setFeatureState(feature, { 'hidden': true });
+                }
+            } else if (!enable) {
                 this._map.setFeatureState(feature, { 'hidden': true });
             }
             this.__enableFeatureMarker(feature.id, enable);
