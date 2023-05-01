@@ -126,12 +126,19 @@ export class PathManager
 
         // Nerve centrelines are a special case with their own controls
         this.__haveCentrelines = false;
+        this.__enabledCentrelines = false;
     }
 
     get haveCentrelines()
     //===================
     {
         return this.__haveCentrelines;
+    }
+
+    get enabledCentrelines()
+    //======================
+    {
+        return this.__enabledCentrelines;
     }
 
     __assignPathTypes()
@@ -153,6 +160,7 @@ export class PathManager
             && this.__pathsByType[pathTypeDefn.type].length > 0) {
                 if (pathTypeDefn.type === 'centreline') {
                     this.__haveCentrelines = true;
+                    this.__enabledCentrelines = this.__pathtypeEnabled[pathTypeDefn.type];
                 } else {
                     pathTypes.push({
                         ...pathTypeDefn,

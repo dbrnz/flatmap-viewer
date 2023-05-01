@@ -146,6 +146,9 @@ export class UserInteractions
         for (const path of mapPathTypes) {
             this.__pathManager.enablePathsByType(path.type, path.enabled, true);
         }
+        if (this.__pathManager.haveCentrelines) {
+            this.enableCentrelines(this.__pathManager.enabledCentrelines, true);
+        }
 
         // Add annotation capability
         if (flatmap.options.annotator) {
@@ -180,7 +183,6 @@ export class UserInteractions
             // Add a control for nerve centrelines if they are present
             if (this.__pathManager.haveCentrelines) {
                 this._map.addControl(new NerveControl(flatmap, this._layerManager, {showCentrelines: false}));
-                this.enableCentrelines(false, true);
             }
 
             // SCKAN path and SYSTEMS controls for FC maps
