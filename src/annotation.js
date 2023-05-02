@@ -475,6 +475,8 @@ export class Annotator
             let label = '';
             if (feature.properties.models) {
                 label = ` -- ${feature.properties.label.split('\n')[0]} (${feature.properties.models})`;
+            } else if (feature.properties.label) {
+                label = ` -- ${feature.properties.label.split('\n')[0]}`;
             }
             featureList.push(`<option value="${feature.id}" ${selected}>${annotated ? '*' : '&nbsp;'} ${feature.properties.id} -- ${feature.properties.kind}${label}</option>`);
             featureProperties.set(+feature.id, feature.properties);
