@@ -40,7 +40,7 @@ import {VECTOR_TILES_SOURCE} from './styling';
 import {SystemsManager} from './systems';
 
 import {displayedProperties, InfoControl} from './controls/info';
-import {BackgroundControl, LayerControl, NerveControl,
+import {AnnotatedControl, BackgroundControl, LayerControl, NerveControl,
         SCKANControl} from './controls/controls';
 import {PathControl} from './controls/paths';
 import {SearchControl} from './controls/search';
@@ -189,6 +189,7 @@ export class UserInteractions
             if (flatmap.options.style === 'functional') {
                 this._map.addControl(new SystemsControl(flatmap, this.__systemsManager.systems));
                 this._map.addControl(new SCKANControl(flatmap, flatmap.options.layerOptions));
+                this._map.addControl(new AnnotatedControl(this, flatmap.options.layerOptions));
             }
         }
 
@@ -1094,6 +1095,12 @@ export class UserInteractions
     //=======================================
     {
         this._layerManager.enableSckanPaths(sckanState, enable);
+    }
+
+    excludeAnnotated(exclude=false)
+    //=============================
+    {
+        this._layerManager.setPaint({excludeAnnotated: exclude});
     }
 
     //==============================================================================

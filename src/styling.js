@@ -418,23 +418,24 @@ export class AnnotatedPathLayer extends VectorStyleLayer
 
     paintStyle(options={}, changes=false)
     {
-        const dimmed = 'dimmed' in options && options.dimmed;
+        const exclude = 'excludeAnnotated' in options && options.excludeAnnotated;
         const paintStyle = {
             'line-color': COLOUR_ANNOTATED,
             'line-dasharray': [5, 0.5, 3, 0.5],
             'line-opacity': [
                 'case',
                     ['boolean', ['feature-state', 'hidden'], false], 0.05,
-                        ['boolean', ['feature-state', 'annotated'], false],
-                        (dimmed ? 0.1 : 0.8),
+                    ['boolean', ['feature-state', 'annotated'], false],
+                        (exclude ? 0.05 : 0.8),
                     0.6
                 ],
             'line-width': [
                 'let',
                 'width',
                     ['case',
+                    ['boolean', ['feature-state', 'hidden'], false], 0.0,
                     ['boolean', ['feature-state', 'annotated'], false],
-                        ['*', 1.2, ['case', ['has', 'stroke-width'], ['get', 'stroke-width'], 1.0]],
+                        exclude ? 0.0 : (['*', 1.2, ['case', ['has', 'stroke-width'], ['get', 'stroke-width'], 1.0]]),
                         0.0
                     ],
                 STROKE_INTERPOLATION
@@ -498,6 +499,7 @@ export class PathLineLayer extends VectorStyleLayer
     paintStyle(options={}, changes=false)
     {
         const dimmed = 'dimmed' in options && options.dimmed;
+        const exclude = 'excludeAnnotated' in options && options.excludeAnnotated;
         const paintStyle = {
             'line-color': [
                 'case',
@@ -544,6 +546,7 @@ export class PathLineLayer extends VectorStyleLayer
                         ['boolean', ['feature-state', 'active'], false], 0.0,
                         0.6
                     ],
+                    ['case', ['boolean', ['feature-state', 'annotated'], false], (exclude ? 0.0 : 1.0), 1.0],
                     ['case', ['has', 'stroke-width'], ['get', 'stroke-width'], 1.0]
                 ],
                 STROKE_INTERPOLATION
