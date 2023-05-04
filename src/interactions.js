@@ -1186,6 +1186,9 @@ export class UserInteractions
                 this.__markerIdByMarker.set(marker, markerId);
                 this.__markerIdByFeatureId.set(+featureId, markerId);
                 this.__annotationByMarkerId.set(markerId, annotation);
+                if (!this.__featureEnabled(this.mapFeature(+featureId))) {
+                    markerElement.style.visibility = 'hidden';
+                }
             }
         }
         if (markerId === -1) {
