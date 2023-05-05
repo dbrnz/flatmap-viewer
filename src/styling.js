@@ -651,7 +651,7 @@ class CentrelineLayer extends VectorStyleLayer
             ],
             'paint': this.paintStyle(options),
             'layout': {
-                'line-cap': 'square',
+                'line-cap': 'butt',
                 'line-join': 'bevel'
             }
         };
@@ -691,8 +691,13 @@ export class CentrelineNodeFillLayer extends VectorStyleLayer
     {
         const showNodes = options.showCentrelines || false;
         const paintStyle = {
-                'fill-color': '#AFA202',
-                'fill-opacity': showNodes ? 0.7 : 0.01
+                'fill-color': [
+                    'case',
+                    ['boolean', ['feature-state', 'selected'], false], COLOUR_SELECTED,
+                    ['boolean', ['feature-state', 'active'], false], CENTRELINE_ACTIVE,
+                    CENTRELINE_COLOUR
+                ],
+                'fill-opacity': showNodes ? 1.0 : 0.01
             }
         return super.changedPaintStyle(paintStyle, changes);
     }
@@ -726,9 +731,14 @@ export class CentrelineNodeBorderLayer extends VectorStyleLayer
     {
         const showNodes = options.showCentrelines || false;
         const paintStyle = {
-                'line-color': '#AFA202',
-                'line-opacity': showNodes ? 0.7 : 0.01,
-                'line-width': 0.5
+                'line-color': '#000',
+                'line-opacity': showNodes ? 0.8 : 0.01,
+                'line-width': [
+                    'let',
+                    'width',
+                        0.2,
+                        STROKE_INTERPOLATION
+                ]
             }
         return super.changedPaintStyle(paintStyle, changes);
     }
