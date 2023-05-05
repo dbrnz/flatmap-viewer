@@ -655,10 +655,11 @@ export class UserInteractions
                 this._currentPopup.remove();
             }
 
-            // Highlight the feature
-
-            this.unselectFeatures();
-            this.selectFeature(featureId);
+            if (!(options && options.preserveSelection)) {
+                // Highlight the feature
+                this.unselectFeatures();
+                this.selectFeature(featureId);
+            }
 
             // Find the pop-up's postion
 
