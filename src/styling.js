@@ -161,7 +161,7 @@ export class FeatureFillLayer extends VectorStyleLayer
             'fill-opacity': [
                 'case',
                 ['boolean', ['feature-state', 'hidden'], false], 0.1,
-                ['boolean', ['feature-state', 'selected'], false], 0.7,
+                ['boolean', ['feature-state', 'selected'], false], 0.5,
                 ['has', 'opacity'], ['get', 'opacity'],
                 ['has', 'colour'], 1.0,
                 ['boolean', ['feature-state', 'active'], false], 0.7,
@@ -502,13 +502,17 @@ export class PathLineLayer extends VectorStyleLayer
         const exclude = 'excludeAnnotated' in options && options.excludeAnnotated;
         const paintStyle = {
             'line-color': [
-                'case',
-                ['boolean', ['feature-state', 'selected'], false], COLOUR_SELECTED,
-                ['boolean', ['feature-state', 'hidden'], false], COLOUR_HIDDEN,
-                ['==', ['get', 'type'], 'bezier'], 'red',
-                ['==', ['get', 'kind'], 'unknown'], '#888',
-                ...PATH_STYLE_RULES,
-                '#888'
+                'let', 'active', ['to-number', ['feature-state', 'active'], 0],
+                [ 'case',
+                    ['all',
+                        ['==', ['var', 'active'], 0],
+                        ['boolean', ['feature-state', 'selected'], false],
+                    ], COLOUR_SELECTED,
+                    ['boolean', ['feature-state', 'hidden'], false], COLOUR_HIDDEN,
+                    ['==', ['get', 'type'], 'bezier'], 'red',
+                    ...PATH_STYLE_RULES,
+                    '#888'
+                ]
             ],
             'line-opacity': this.__highlight ? [
                 'case',
@@ -782,8 +786,8 @@ export class FeatureNerveLayer extends VectorStyleLayer
                 'line-color': [
                     'case',
                     ['boolean', ['feature-state', 'hidden'], false], COLOUR_HIDDEN,
-                    ['boolean', ['feature-state', 'active'], false], NERVE_ACTIVE,
                     ['boolean', ['feature-state', 'selected'], false], NERVE_SELECTED,
+                    ['boolean', ['feature-state', 'active'], false], NERVE_ACTIVE,
                     '#888'
                 ],
                 'line-opacity': [
@@ -865,7 +869,41 @@ export class NervePolygonFill extends VectorStyleLayer
         super(id, 'nerve-fill', sourceLayer);
     }
 
-    style(options)
+    paintStyle(options={}, changes=false)
+    {
+        const dimmed = 'dimmed' in options && options.dimmed;
+        const paintStyle = {
+            'fill-color': [
+                'let', 'active', ['to-number', ['feature-state', 'active'], 0],
+                [ 'case',
+                    ['all',
+                        ['==', ['var', 'active'], 0],
+                        ['==', ['get', 'type'], 'arrow'],
+                        ['boolean', ['feature-state', 'selected'], false]
+                    ], COLOUR_SELECTED,
+                    ['==', ['get', 'kind'], 'bezier-end'], 'red',
+                    ['==', ['get', 'kind'], 'bezier-control'], 'green',
+                    ...PATH_STYLE_RULES,
+                    'white'
+                ]
+            ],
+            'fill-opacity': [
+                'case',
+                ['boolean', ['feature-state', 'hidden'], false], 0.01,
+                ['boolean', ['feature-state', 'selected'], false], 0.8,
+                ['boolean', ['feature-state', 'active'], false], 0.9,
+                ['==', ['get', 'type'], 'bezier'], 0.9,
+                ['any',
+                    ['==', ['get', 'type'], 'arrow'],
+                    ['==', ['get', 'type'], 'junction']
+                ], dimmed ? 0.1 : 0.5,
+                0.01
+            ]
+        };
+        return super.changedPaintStyle(paintStyle, changes);
+    }
+
+    style(options={})
     {
         return {
             ...super.style(),
@@ -874,28 +912,14 @@ export class NervePolygonFill extends VectorStyleLayer
                 'all',
                 ['==', '$type', 'Polygon'],
                 ['any',
+                    ['==', 'type', 'arrow'],
                     ['==', 'type', 'bezier'],
                     ['==', 'type', 'junction'],
                     ['==', 'type', 'nerve'],
                     ['==', 'type', 'nerve-section']
                 ]
             ],
-            'paint': {
-                'fill-color': [
-                    'case',
-                    ['==', ['get', 'kind'], 'bezier-end'], 'red',
-                    ['==', ['get', 'kind'], 'bezier-control'], 'green',
-                    ...PATH_STYLE_RULES,
-                    'white'
-                ],
-                'fill-opacity': [
-                    'case',
-                    ['boolean', ['feature-state', 'hidden'], false], 0.01,
-                    ['==', ['get', 'type'], 'bezier'], 0.9,
-                    ['==', ['get', 'type'], 'junction'], 0.4,
-                    0.01
-                ]
-            }
+            'paint': this.paintStyle(options)
         };
     }
 }
