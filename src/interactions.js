@@ -832,7 +832,7 @@ export class UserInteractions
         let info = '';
         let tooltip = '';
         if (displayInfo) {
-            if (!'tooltip' in features[0].properties) {
+            if (!('tooltip' in features[0].properties)) {
                 this.__activateFeature(features[0]);
             }
             info = this._infoControl.featureInformation(features, event.lngLat);
