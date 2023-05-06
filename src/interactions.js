@@ -897,7 +897,9 @@ export class UserInteractions
                         //htmlList.push(`<span class="info-name">Scale:</span>`);
                         //htmlList.push(`<span class="info-value">${feature.properties.scale}</span>`);
                     }
-                    info = `<div id="info-control-info">${htmlList.join('\n')}</div>`;
+                    if (!this._flatmap.options.debug) {
+                        info = `<div id="info-control-info">${htmlList.join('\n')}</div>`;
+                    }
                 }
                 this.__activateFeature(feature);
                 this.__activateRelatedFeatures(feature);
@@ -907,7 +909,7 @@ export class UserInteractions
             }
         }
 
-        if (displayInfo || this._flatmap.options.debug) {
+        if (info !== '') {
             this._infoControl.show(info);
         }
         this.__showToolTip(tooltip, event.lngLat, tooltipFeature);
