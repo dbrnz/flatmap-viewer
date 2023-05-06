@@ -77,6 +77,7 @@ class FlatMap
         this.__datasetToFeatureIds = new Map();
         this.__modelToFeatureIds = new Map();
         this.__mapSourceToFeatureIds = new Map();
+
         for (const [featureId, annotation] of Object.entries(mapDescription.annotations)) {
             this.__addAnnotation(featureId, annotation);
             this.__searchIndex.indexMetadata(featureId, annotation);
@@ -176,7 +177,7 @@ class FlatMap
         this._initialState = null;
         this._minimap = null;
 
-        this._map.on('idle', () => {
+        this._map.on('load', () => {
             if (this._userInteractions === null) {
                 this.setupUserInteractions_();
             } else if (this._initialState === null) {
