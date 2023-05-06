@@ -890,6 +890,7 @@ export class NervePolygonFill extends VectorStyleLayer
                 ],
                 'fill-opacity': [
                     'case',
+                    ['boolean', ['feature-state', 'hidden'], false], 0.01,
                     ['==', ['get', 'type'], 'bezier'], 0.9,
                     ['==', ['get', 'type'], 'junction'], 0.4,
                     0.01
