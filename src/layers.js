@@ -123,7 +123,6 @@ class MapFeatureLayers extends MapStylingLayers
                 this.__addStyleLayer(style.FeatureLineLayer);
                 this.__addStyleLayer(style.FeatureBorderLayer);
                 this.__addStyleLayer(style.CentrelineNodeFillLayer);
-                this.__addStyleLayer(style.CentrelineNodeBorderLayer);
             }
             this.__addPathwayStyleLayers();
             if (vectorFeatures) {
