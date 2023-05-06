@@ -194,8 +194,8 @@ export class InfoControl
             const featureIds = [];
             const displayFeatures = [];
             for (const feat of featureList) {
-                if (featureIds.indexOf(feat['id']) < 0) {
-                    featureIds.push(feat['id']);
+                if (featureIds.indexOf(feat.id) < 0) {
+                    featureIds.push(feat.id);
                     const displayFeat = {};
                     displayProperties.forEach(prop => {
                         if (prop === 'properties') {
