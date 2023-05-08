@@ -177,7 +177,7 @@ class FlatMap
         this._initialState = null;
         this._minimap = null;
 
-        this._map.on('load', () => {
+        this._map.on('idle', () => {
             if (this._userInteractions === null) {
                 this.setupUserInteractions_();
             } else if (this._initialState === null) {
