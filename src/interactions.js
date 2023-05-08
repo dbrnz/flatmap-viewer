@@ -856,8 +856,7 @@ export class UserInteractions
             }
         } else {
             let labelledFeatures = features.filter(feature => (('hyperlink' in feature.properties
-                                                             || 'label' in feature.properties
-                                                             || 'node' in feature.properties)
+                                                             || 'label' in feature.properties)
                                                          && (!('tooltip' in feature.properties)
                                                             || feature.properties.tooltip)))
                                            .sort((a, b) => (a.properties.area - b.properties.area));
