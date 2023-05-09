@@ -1122,13 +1122,12 @@ class FlatMap
     }
 
     /**
-     * Zoom map to features.
+     * Select features and zoom the map to them.
      *
-     * @param      {Array.<string>}  externalIds   An array of anaotomical terms identifing features
+     * @param      {Array.<string>}  featureIds   An array of feature identifiers
      * @param      {Object}  [options]
-     * @param      {boolean} [options.select=true]  Select the features zoomed to
-     * @param      {boolean} [options.highlight=false]  Highlight the features zoomed to
-     * @param      {number}  [options.padding=100]  Padding around the composite bounding box
+     * @param      {boolean} [options.noZoomIn=false]  Don't zoom in (although zoom out as necessary)
+     * @param      {number}  [options.padding=10]  Padding in pixels around the composite bounding box
      */
     zoomToFeatures(externalIds, options=null)
     //=======================================

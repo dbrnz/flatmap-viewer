@@ -580,16 +580,15 @@ export class UserInteractions
     showSearchResults(featureIds)
     //===========================
     {
-        this.zoomToFeatures(featureIds, {highlight: true, noZoomIn: true});
+        this.unselectFeatures();
+        this.zoomToFeatures(featureIds, {noZoomIn: true});
     }
 
     /**
-     * Zoom map to features.
+     * Select features and zoom the map to them.
      *
      * @param      {Array.<string>}  featureIds   An array of feature identifiers
      * @param      {Object}  [options]
-     * @param      {boolean} [options.select=true]  Select the features zoomed to
-     * @param      {boolean} [options.highlight=false]  Highlight the features zoomed to
      * @param      {boolean} [options.noZoomIn=false]  Don't zoom in (although zoom out as necessary)
      * @param      {number}  [options.padding=10]  Padding in pixels around the composite bounding box
      */
@@ -597,16 +596,11 @@ export class UserInteractions
     //======================================
     {
         options = utils.setDefaults(options, {
-            select: true,
-            highlight:
-            false, noZoomIn:
-            false, padding:10
+            noZoomIn: false,
+            padding: 10
         });
-        const select = (options.select === true);
-        const highlight = (options.highlight === true);
         if (featureIds.length) {
-            this.unhighlightFeatures_();
-            if (select) this.unselectFeatures();
+            this.unselectFeatures();
             let bbox = null;
             if (options.noZoomIn) {
                 const bounds = this._map.getBounds().toArray();
@@ -615,19 +609,11 @@ export class UserInteractions
             for (const featureId of featureIds) {
                 const annotation = this._flatmap.annotation(featureId);
                 if (annotation) {
-                    if (select) {
-                        this.selectFeature(featureId);
-                    } else if (highlight) {
-                        this.highlightFeature_(featureId);
-                    }
+                    this.selectFeature(featureId);
                     bbox = expandBounds(bbox, annotation.bounds);
                     if ('type' in annotation && annotation.type.startsWith('line')) {
                         for (const pathFeatureId of this.__pathManager.lineFeatureIds([featureId])) {
-                            if (select) {
-                                this.selectFeature(pathFeatureId);
-                            } else if (highlight) {
-                                this.highlightFeature_(pathFeatureId);
-                            }
+                            this.selectFeature(pathFeatureId);
                             const pathAnnotation = this._flatmap.annotation(pathFeatureId)
                             bbox = expandBounds(bbox, pathAnnotation.bounds);
                         }
@@ -652,14 +638,23 @@ export class UserInteractions
             // Remove any existing popup
 
             if (this._currentPopup) {
+                if (options && options.preserveSelection) {
+                    this._currentPopup.options.preserveSelection = options.preserveSelection;
+                }
                 this._currentPopup.remove();
             }
 
-            if (!(options && options.preserveSelection)) {
-                // Highlight the feature
+            // Clear selection if we are not preserving it
+
+            if (options && options.preserveSelection) {
+                delete options.preserveSelection;       // Don't pass to onClose()
+            } else {                                    // via the popup's options
                 this.unselectFeatures();
-                this.selectFeature(featureId);
             }
+
+            // Select the feature
+
+            this.selectFeature(featureId);
 
             // Find the pop-up's postion
 
@@ -680,7 +675,7 @@ export class UserInteractions
             }
             this.setModal_();
             this._currentPopup = new maplibre.Popup(options).addTo(this._map);
-            this._currentPopup.on('close', this.__clearPopup.bind(this));
+            this._currentPopup.on('close', this.__onCloseCurrentPopup.bind(this));
             this._currentPopup.setLngLat(location);
             if (typeof content === 'object') {
                 this._currentPopup.setDOMContent(content);
@@ -690,11 +685,16 @@ export class UserInteractions
         }
     }
 
-    __clearPopup()
-    //============
+    __onCloseCurrentPopup()
+    //=====================
     {
-        this.__clearModal();
-        this.unselectFeatures();
+        if (this._currentPopup) {
+            this.__clearModal();
+            if (!(this._currentPopup.options && this._currentPopup.options.preserveSelection)) {
+                this.unselectFeatures();
+            }
+            this._currentPopup = null;
+        }
     }
 
     removeTooltip_()
