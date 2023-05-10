@@ -508,7 +508,7 @@ export class Annotator
             border: '2px solid #080',
             borderRadius: '.5rem',
             panelSize: 'auto auto',
-            position: 'left-top',
+            position: 'left-top 50 70',
             content: panelContent,
             data: features[0].properties,
             closeOnEscape: true,
@@ -588,7 +588,7 @@ export class Annotator
             border: '2px solid #080',
             borderRadius: '.5rem',
             panelSize: '725px auto',
-            position: 'left-top',
+            position: 'left-top 50 70',
             data: {
                 flatmap: this.__flatmap
             },
