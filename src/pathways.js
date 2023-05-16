@@ -65,12 +65,11 @@ export class PathManager
                 }
             }
         }
-        this.__pathModelPaths = {};                                  // pathModelId: [pathIds]
-        this.__pathToPathModel = {};
-
-        this.__paths = {};
-        const pathLines = {};                                    // pathId: [lineIds]
-        const pathNerves = {};                                   // pathId: [nerveIds]
+        this.__pathModelPaths = {};                             // pathModelId: [pathIds]
+        this.__pathToPathModel = {};                            // pathId: pathModelId
+        this.__paths = {};                                      // pathId: path
+        const pathLines = {};                                   // pathId: [lineIds]
+        const pathNerves = {};                                  // pathId: [nerveIds]
         if ('paths' in flatmap.pathways) {
             for (const [pathId, path] of Object.entries(flatmap.pathways.paths)) {
                 pathLines[pathId] = path.lines;
