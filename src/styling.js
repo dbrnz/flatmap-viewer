@@ -31,7 +31,7 @@ import {PATH_STYLE_RULES} from './pathways.js';
 //==============================================================================
 
 const COLOUR_ACTIVE    = 'blue';
-const COLOUR_ANNOTATED = '#0F0';
+const COLOUR_ANNOTATED = '#C8F';
 const COLOUR_SELECTED  = '#0F0';
 const COLOUR_HIDDEN    = '#D8D8D8';
 
@@ -435,7 +435,7 @@ export class AnnotatedPathLayer extends VectorStyleLayer
                     ['case',
                     ['boolean', ['feature-state', 'hidden'], false], 0.0,
                     ['boolean', ['feature-state', 'annotated'], false],
-                        exclude ? 0.0 : (['*', 1.2, ['case', ['has', 'stroke-width'], ['get', 'stroke-width'], 1.0]]),
+                        exclude ? 0.0 : (['*', 1.1, ['case', ['has', 'stroke-width'], ['get', 'stroke-width'], 1.0]]),
                         0.0
                     ],
                 STROKE_INTERPOLATION
