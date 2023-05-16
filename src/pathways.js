@@ -42,7 +42,7 @@ const PATH_TYPES = [
     { type: "arterial", label: "Arterial blood vessel", colour: "#F00", enabled: false},
     { type: "venous", label: "Venous blood vessel", colour: "#2F6EBA", enabled: false},
     { type: "centreline", label: "Nerve centrelines", colour: "#CCC", enabled: false},
-    { type: "error", label: "Paths with errors or warnings", colour: "#FF0"}
+    { type: "error", label: "Paths with errors or warnings", colour: "#FF0", enabled: false}
 ];
 
 export const PATH_STYLE_RULES =
