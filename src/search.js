@@ -67,7 +67,8 @@ export class SearchIndex
     //========================
     {
         text = text.replace(new RegExp('<br/>', 'g'), ' ')
-                   .replace('\n', ' ');
+                   .replace(new RegExp('\n', 'g'), ' ')
+                   ;
         if (text) {
             this._searchEngine.add({
                 id: this._featureIds.length,
