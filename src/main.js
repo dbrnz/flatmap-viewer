@@ -59,6 +59,7 @@ export async function standaloneViewer(map_endpoint=null, options={})
         background: defaultBackground,
         debug: false,
         minimap: false,
+        showId: true,
         showPosition: false,
         standalone: true,
         annotator: true

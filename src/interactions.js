@@ -918,26 +918,34 @@ export class UserInteractions
     //=======================================
     {
         // Show a tooltip
-        if (html !== '') {
-            this._tooltip = new maplibre.Popup({
-                closeButton: false,
-                closeOnClick: false,
-                maxWidth: 'none',
-                className: 'flatmap-tooltip-popup'
-            });
+        if (html !== '' || this._flatmap.options.showId && feature !== null) {
+            let header = '';
             if (this._flatmap.options.showPosition) {
                 const pt = turf.point(lngLat.toArray());
                 const gps = turfProjection.toMercator(pt);
                 const coords = gps.geometry.coordinates;
-                const header = (feature === null)
+                header = (feature === null)
                              ? JSON.stringify(coords)
-                             : `${JSON.stringify(coords)} (${feature.id} ${feature.properties['id']})`;
+                             : `${JSON.stringify(coords)} (${feature.id})`;
+            }
+            if (this._flatmap.options.showId && feature !== null && 'id' in feature.properties) {
+                header = `${header} ${feature.properties.id}`;
+            }
+            if (header !== '') {
                 html = `<span>${header}</span><br/>${html}`;
             }
-            this._tooltip
-                .setLngLat(lngLat)
-                .setHTML(html)
-                .addTo(this._map);
+            if (html !== '') {
+                this._tooltip = new maplibre.Popup({
+                    closeButton: false,
+                    closeOnClick: false,
+                    maxWidth: 'none',
+                    className: 'flatmap-tooltip-popup'
+                });
+                this._tooltip
+                    .setLngLat(lngLat)
+                    .setHTML(html)
+                    .addTo(this._map);
+            }
         }
     }
 
