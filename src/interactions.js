@@ -402,19 +402,36 @@ export class UserInteractions
     selectFeature(featureId, dim=true)
     //================================
     {
-        featureId = +featureId;   // Ensure numeric
-        if (this._selectedFeatureIds.size === 0) {
-            this._layerManager.setPaint({...this.__colourOptions, dimmed: dim});
+        const ann = this._flatmap.annotation(featureId);
+        if ('sckan' in ann) {
+            const sckanState = this._layerManager.sckanState;
+            if (sckanState === 'none'
+             || sckanState === 'valid' && !ann.sckan
+             || sckanState === 'invalid' && ann.sckan) {
+                return false;
+            }
         }
+        featureId = +featureId;   // Ensure numeric
+        let result = false;
+        const noSelection = (this._selectedFeatureIds.size === 0);
         if (this._selectedFeatureIds.has(featureId)) {
             this._selectedFeatureIds.set(featureId, this._selectedFeatureIds.get(featureId) + 1);
+            result = true;
         } else {
             const feature = this.mapFeature(featureId);
             if (feature !== undefined) {
-                this._map.setFeatureState(feature, { 'selected': true });
-                this._selectedFeatureIds.set(featureId, 1);
+                const state = this._map.getFeatureState(feature);
+                if (state !== undefined && (!('hidden' in state) || !state.hidden)) {
+                    this._map.setFeatureState(feature, { 'selected': true });
+                    this._selectedFeatureIds.set(featureId, 1);
+                    result = true;
+                }
             }
         }
+        if (result && noSelection) {
+            this._layerManager.setPaint({...this.__colourOptions, dimmed: dim});
+        }
+        return result;
     }
 
     unselectFeature(featureId)
@@ -566,10 +583,11 @@ export class UserInteractions
             for (const featureId of featureIds) {
                 const annotation = this._flatmap.annotation(featureId);
                 if (annotation) {
-                    this.selectFeature(featureId);
-                    if ('type' in annotation && annotation.type.startsWith('line')) {
-                        for (const pathFeatureId of this.__pathManager.lineFeatureIds([featureId])) {
-                            this.selectFeature(pathFeatureId);
+                    if (this.selectFeature(featureId)) {
+                        if ('type' in annotation && annotation.type.startsWith('line')) {
+                            for (const pathFeatureId of this.__pathManager.lineFeatureIds([featureId])) {
+                                this.selectFeature(pathFeatureId);
+                            }
                         }
                     }
                 }
@@ -609,13 +627,15 @@ export class UserInteractions
             for (const featureId of featureIds) {
                 const annotation = this._flatmap.annotation(featureId);
                 if (annotation) {
-                    this.selectFeature(featureId);
-                    bbox = expandBounds(bbox, annotation.bounds);
-                    if ('type' in annotation && annotation.type.startsWith('line')) {
-                        for (const pathFeatureId of this.__pathManager.lineFeatureIds([featureId])) {
-                            this.selectFeature(pathFeatureId);
-                            const pathAnnotation = this._flatmap.annotation(pathFeatureId)
-                            bbox = expandBounds(bbox, pathAnnotation.bounds);
+                    if (this.selectFeature(featureId)) {
+                        bbox = expandBounds(bbox, annotation.bounds);
+                        if ('type' in annotation && annotation.type.startsWith('line')) {
+                            for (const pathFeatureId of this.__pathManager.lineFeatureIds([featureId])) {
+                                if (this.selectFeature(pathFeatureId)) {
+                                    const pathAnnotation = this._flatmap.annotation(pathFeatureId)
+                                    bbox = expandBounds(bbox, pathAnnotation.bounds);
+                                }
+                            }
                         }
                     }
                 }
