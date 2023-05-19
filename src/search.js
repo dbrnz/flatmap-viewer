@@ -56,15 +56,15 @@ export class SearchIndex
             if (prop in metadata) {
                 const text = metadata[prop];
                 if (!textSeen.includes(text)) {
-                    this.addTerm_(featureId, text);
+                    this.indexText(featureId, text);
                     textSeen.push(text);
                 }
             }
         }
     }
 
-    addTerm_(featureId, text)
-    //=======================
+    indexText(featureId, text)
+    //========================
     {
         text = text.replace(new RegExp('<br/>', 'g'), ' ')
                    .replace('\n', ' ');
