@@ -298,6 +298,12 @@ export class LayerManager
         return layers;
     }
 
+    get sckanState()
+    //==============
+    {
+        return this.__layerOptions.sckan;
+    }
+
     activate(layerId, enable=true)
     //============================
     {
