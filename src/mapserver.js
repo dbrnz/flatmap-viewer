@@ -22,6 +22,24 @@ limitations under the License.
 
 //==============================================================================
 
+export async function loadJSON(url)
+//=================================
+{
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+            "Accept": "application/json; charset=utf-8",
+            "Cache-Control": "no-store"
+        }
+    });
+    if (!response.ok) {
+        throw new Error(`Cannot access ${url}`);
+    }
+    return response.json();
+}
+
+//==============================================================================
+
 export class MapServer
 {
     constructor(url)
@@ -39,18 +57,7 @@ export class MapServer
     async loadJSON(relativePath)
     //==========================
     {
-        const url = this.url(relativePath);
-        const response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                "Accept": "application/json; charset=utf-8",
-                "Cache-Control": "no-store"
-            }
-        });
-        if (!response.ok) {
-            throw new Error(`Cannot access ${url}`);
-        }
-        return response.json();
+        return loadJSON(this.url(relativePath));
     }
 }
 

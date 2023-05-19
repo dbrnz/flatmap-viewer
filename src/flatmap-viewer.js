@@ -33,7 +33,7 @@ import '../static/css/flatmap-viewer.css';
 
 //==============================================================================
 
-import {MapServer} from './mapserver.js';
+import {MapServer, loadJSON} from './mapserver.js';
 import {SearchIndex} from './search.js';
 import {UserInteractions} from './interactions.js';
 
@@ -77,10 +77,14 @@ class FlatMap
         this.__datasetToFeatureIds = new Map();
         this.__modelToFeatureIds = new Map();
         this.__mapSourceToFeatureIds = new Map();
+        this.__annIdToFeatureId = new Map();
 
         for (const [featureId, annotation] of Object.entries(mapDescription.annotations)) {
             this.__addAnnotation(featureId, annotation);
             this.__searchIndex.indexMetadata(featureId, annotation);
+        }
+        if (this.options.annotator) {
+            this.__addAnnotatedComments();
         }
 
         // Set base of source URLs in map's style
@@ -205,6 +209,25 @@ class FlatMap
                 this._resolve(this);
             }
         });
+    }
+
+    async __addAnnotatedComments()
+    //============================
+    {
+        const url = this.makeServerUrl('', 'annotator/')
+        const annotatedFeatures = await loadJSON(url);
+        for (const annotatedId of annotatedFeatures) {
+            const featureId = this.__annIdToFeatureId.get(annotatedId);
+            if (featureId) {
+                const url = this.makeServerUrl(annotatedId, 'annotator/')
+                const annotations = await loadJSON(url);
+                for (const annotation of annotations) {   // In order of most recent to oldest
+                    if ('rdfs:comment' in annotation) {
+                        this.__searchIndex.indexText(featureId, annotation['rdfs:comment']);
+                    }
+                }
+            }
+        }
     }
 
     async setupUserInteractions_()
@@ -498,6 +521,7 @@ class FlatMap
         this.__updateFeatureIdMap('dataset', this.__datasetToFeatureIds, ann);
         this.__updateFeatureIdMap('models', this.__modelToFeatureIds, ann);
         this.__updateFeatureIdMap('source', this.__mapSourceToFeatureIds, ann);
+        this.__annIdToFeatureId.set(ann.id, featureId);
     }
 
     modelFeatureIds(anatomicalId)
