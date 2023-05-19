@@ -27,6 +27,7 @@ export const displayedProperties = [
     'class',
     'fc-class',
     'fc-kind',
+    'name',
     ...indexedProperties
 ];
 
