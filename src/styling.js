@@ -418,15 +418,18 @@ export class AnnotatedPathLayer extends VectorStyleLayer
 
     paintStyle(options={}, changes=false)
     {
+        const dimmed = 'dimmed' in options && options.dimmed;
         const exclude = 'excludeAnnotated' in options && options.excludeAnnotated;
         const paintStyle = {
             'line-color': COLOUR_ANNOTATED,
             'line-dasharray': [5, 0.5, 3, 0.5],
             'line-opacity': [
                 'case',
+                    ['boolean', ['feature-state', 'active'], false], 0.8,
+                    ['boolean', ['feature-state', 'selected'], false], 0.8,
                     ['boolean', ['feature-state', 'hidden'], false], 0.05,
                     ['boolean', ['feature-state', 'annotated'], false],
-                        (exclude ? 0.05 : 0.8),
+                        ((exclude || dimmed) ? 0.05 : 0.8),
                     0.6
                 ],
             'line-width': [
@@ -435,7 +438,11 @@ export class AnnotatedPathLayer extends VectorStyleLayer
                     ['case',
                     ['boolean', ['feature-state', 'hidden'], false], 0.0,
                     ['boolean', ['feature-state', 'annotated'], false],
-                        exclude ? 0.0 : (['*', 1.1, ['case', ['has', 'stroke-width'], ['get', 'stroke-width'], 1.0]]),
+                        exclude ? 0.0 : (['*', 1.1, ['case',
+                            ['has', 'stroke-width'], ['get', 'stroke-width'],
+                            ['boolean', ['feature-state', 'active'], false], 1.1,
+                            ['boolean', ['feature-state', 'active'], false], 1.1,
+                            1.0]]),
                         0.0
                     ],
                 STROKE_INTERPOLATION
@@ -446,7 +453,6 @@ export class AnnotatedPathLayer extends VectorStyleLayer
 
     style(options)
     {
-        const dimmed = 'dimmed' in options && options.dimmed;
         return {
             ...super.style(),
             'type': 'line',
