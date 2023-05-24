@@ -27,7 +27,7 @@ export class SystemsManager
         this.__systems = new Map();
         this.__enabledChildren = new Map();
         for (const [id, ann] of flatmap.annotations) {
-            if (ann['fc-class'] === 'fc-class:System') {
+            if (['fc:System', 'fc-class:System'].indexOf(ann['fc-class']) >= 0) {
                 const systemId = ann.name.replaceAll(' ', '_');
                 if (this.__systems.has(systemId)) {
                     this.__systems.get(systemId).featureIds.push(ann.featureId)
