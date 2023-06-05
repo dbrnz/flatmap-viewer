@@ -96,7 +96,7 @@ export class SearchIndex
         const options = {};
         let results = [];
         text = text.trim()
-        if (text.length > 2 && ["'", '"'].indexOf(text.slice(0, 1)) >= 0) {
+        if (text.length > 2 && ["'", '"'].includes(text.slice(0, 1))) {
             text = text.replaceAll(text.slice(0, 1), '');
             results = this._searchEngine.search(text, {prefix: true, combineWith: 'AND'});
         } else if (text.length > 1) {

@@ -115,8 +115,7 @@ class MapFeatureLayers extends MapStylingLayers
         // if no image layers then make feature borders (and lines?) more visible...??
         if (haveVectorLayers) {
             const featuresVectorSource = this.vectorSourceId(FEATURES_LAYER);
-            const vectorFeatures = vectorTileSource.vectorLayerIds
-                                                   .indexOf(featuresVectorSource) >= 0;
+            const vectorFeatures = vectorTileSource.vectorLayerIds.includes(featuresVectorSource);
             if (vectorFeatures) {
                 this.__addStyleLayer(style.FeatureFillLayer);
                 this.__addStyleLayer(style.FeatureDashLineLayer);
@@ -152,7 +151,7 @@ class MapFeatureLayers extends MapStylingLayers
         const pathwaysVectorSource = this.vectorSourceId(PATHWAYS_LAYER);
         if (this.__map.getSource('vector-tiles')
                 .vectorLayerIds
-                .indexOf(pathwaysVectorSource) >= 0) {
+                .includes(pathwaysVectorSource)) {
             this.__addStyleLayer(style.AnnotatedPathLayer, PATHWAYS_LAYER);
 
             this.__addStyleLayer(style.CentrelineEdgeLayer, PATHWAYS_LAYER);
@@ -343,8 +342,8 @@ export class LayerManager
     //=======================================
     {
         const currentState = this.__layerOptions.sckan;
-        const validEnabled = ['valid', 'all'].indexOf(currentState) >= 0;
-        const invalidEnabled = ['invalid', 'all'].indexOf(currentState) >= 0;
+        const validEnabled = ['valid', 'all'].includes(currentState);
+        const invalidEnabled = ['invalid', 'all'].includes(currentState);
         let newState = sckanState.toLowerCase();
         if (newState === 'valid') {
             if (enable && !validEnabled) {

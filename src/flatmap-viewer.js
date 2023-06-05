@@ -169,7 +169,7 @@ class FlatMap
         if (mapDescription.options.navigationControl) {
             const value = mapDescription.options.navigationControl;
             const position = ((typeof value === 'string')
-                           && (['top-left', 'top-right', 'bottom-right', 'bottom-left'].indexOf(value) >= 0))
+                           && ['top-left', 'top-right', 'bottom-right', 'bottom-left'].includes(value))
                            ? value : 'bottom-right';
             this._map.addControl(new NavigationControl(this), position);
         }
@@ -967,7 +967,7 @@ class FlatMap
             if (property in properties) {
                 const value = properties[property];
                 if (value !== undefined) {
-                    if (jsonProperties.indexOf(property) >= 0) {
+                    if (jsonProperties.includes(property)) {
                         data[property] = JSON.parse(properties[property])
                     } else {
                         data[property] = properties[property];

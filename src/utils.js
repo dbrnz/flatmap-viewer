@@ -35,7 +35,7 @@ export class List extends Array {
     }
 
     contains(element) {
-        return (super.indexOf(element) >= 0);
+        return (super.includes(element));
     }
 
     extend(other) {
@@ -96,12 +96,12 @@ export class Mutex
 
 export function normaliseId(id)
 {
-    if (id.indexOf(':') < 0) {
+    if (!id.includes(':')) {
         return id;
     }
     const parts = id.split(':')
     const lastPart = parts[parts.length - 1]
-    if (['http', 'https', 'urn'].indexOf(parts[0]) >= 0 || '0123456789'.indexOf(lastPart[0]) < 0) {
+    if (['http', 'https', 'urn'].includes(parts[0]) || !'0123456789'.includes(lastPart[0])) {
         return id;
     }
     parts[parts.length - 1] = lastPart.padStart(8, '0');

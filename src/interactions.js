@@ -261,7 +261,7 @@ export class UserInteractions
             const feature = this.mapFeature(mapId);
             if (feature !== undefined) {
                 this._map.setFeatureState(feature, { 'map-annotation': true });
-                if (annotated_features.indexOf(ann.id) >= 0) {
+                if (annotated_features.includes(ann.id)) {
                     this._map.setFeatureState(feature, { 'annotated': true });
                 }
             }
@@ -902,7 +902,7 @@ export class UserInteractions
                     const htmlList = [];
                     const featureIds = [];
                     for (const feature of labelledFeatures) {
-                        if (featureIds.indexOf(feature.id) < 0) {
+                        if (!featureIds.includes(feature.id)) {
                             featureIds.push(feature.id);
                             for (const prop of debugProperties) {
                                 if (prop in feature.properties) {
@@ -976,7 +976,7 @@ export class UserInteractions
             const clickedFeatureId = feature.id;
             const dim = !('properties' in feature
                        && 'kind' in feature.properties
-                       && ['cell-type', 'scaffold', 'tissue'].indexOf(feature.properties.kind) >= 0);
+                       && ['cell-type', 'scaffold', 'tissue'].includes(feature.properties.kind));
             if (!(event.ctrlKey || event.metaKey)) {
                 let selecting = true;
                 for (const featureId of this._selectedFeatureIds.keys()) {
@@ -1177,7 +1177,7 @@ export class UserInteractions
 
         for (const featureId of featureIds) {
             const annotation = this._flatmap.annotation(featureId);
-            if (annotation.geometry.indexOf('Polygon') < 0) {
+            if (!annotation.geometry.includes('Polygon')) {
                 continue;
             }
             if (!('marker' in annotation)) {
@@ -1258,7 +1258,7 @@ export class UserInteractions
         for (const [marker, id] of this.__markerIdByMarker.entries()) {
             if (visibleBounds.contains(marker.getLngLat())) {
                 const annotation = this.__annotationByMarkerId.get(id);
-                if (anatomicalIds.indexOf(annotation.models) < 0) {
+                if (!anatomicalIds.includes(annotation.models)) {
                     anatomicalIds.push(annotation.models);
                 }
             }
@@ -1275,7 +1275,7 @@ export class UserInteractions
             return;
         }
 
-        if (['mouseenter', 'mouseleave', 'click'].indexOf(event.type) >= 0) {
+        if (['mouseenter', 'mouseleave', 'click'].includes(event.type)) {
             this.__activeMarker = marker;
 
             // Remove any existing tooltips
@@ -1285,7 +1285,7 @@ export class UserInteractions
             // Reset cursor
             marker.getElement().style.cursor = 'default';
 
-            if (['mouseenter', 'click'].indexOf(event.type) >= 0) {
+            if (['mouseenter', 'click'].includes(event.type)) {
                 const markerId = this.__markerIdByMarker.get(marker);
                 const annotation = this.__annotationByMarkerId.get(markerId);
                 // The marker's feature

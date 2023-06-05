@@ -132,7 +132,7 @@ export class MinimapControl
         let width = DEFAULTS.width;
         if (typeof this._options.width === 'string') {
             width = parseInt(this._options.width);
-            if (this._options.width.indexOf('%') > 0) {
+            if (this._options.width.includes('%')) {
                 width = width*mapCanvasElement.width/100;
             }
         } else if (typeof this._options.width === 'number') {
