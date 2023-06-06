@@ -16,18 +16,26 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-**/
+******************************************************************************/
+
+const FC_KIND = {
+    SYSTEM: ['fc:System', 'fc-class:System'],
+    ORGAN:  ['fc:Organ', 'fc-class:Organ'],
+    FTU:    ['fc:Ftu', 'fc-class:Ftu']
+};
+
 //==============================================================================
 
 export class SystemsManager
 {
     constructor(flatmap, ui, enabled=false)
     {
+        this.__flatmap = flatmap;
         this.__ui = ui;
         this.__systems = new Map();
         this.__enabledChildren = new Map();
-        for (const [id, ann] of flatmap.annotations) {
-            if (['fc:System', 'fc-class:System'].includes(ann['fc-class'])) {
+        for (const [_, ann] of flatmap.annotations) {
+            if (FC_KIND.SYSTEM.includes(ann['fc-class'])) {
                 const systemId = ann.name.replaceAll(' ', '_');
                 if (this.__systems.has(systemId)) {
                     this.__systems.get(systemId).featureIds.push(ann.featureId)
@@ -37,7 +45,8 @@ export class SystemsManager
                         colour: ann.colour,
                         featureIds: [ ann.featureId ],
                         enabled: false,
-                        pathIds: ('path-ids' in ann) ? ann['path-ids'] : []
+                        pathIds: ('path-ids' in ann) ? ann['path-ids'] : [],
+                        organs: this.__children(ann.children, FC_KIND.ORGAN)
                     });
                 this.__ui.enableFeature(ann.featureId, false, true);
                 }
@@ -57,6 +66,26 @@ export class SystemsManager
         }
     }
 
+    __children(childFeatureIds, childClass)
+    //=====================================
+    {
+        const children = [];
+        for (const childFeatureId of childFeatureIds || []) {
+            const childAnnotation = this.__flatmap.annotation(childFeatureId);
+            if (childAnnotation !== undefined && childClass.includes(childAnnotation['fc-class'])) {
+                const child = {
+                    label: childAnnotation.label,
+                    models: childAnnotation.models
+                };
+                if (childClass === FC_KIND.ORGAN) {
+                    child.ftus = this.__children(childAnnotation.children, FC_KIND.FTU)
+                };
+                children.push(child);
+            }
+        }
+        return children;
+    }
+
     get systems()
     //===========
     {
@@ -66,7 +95,8 @@ export class SystemsManager
                 id: systemId,
                 name: system.name,
                 colour: system.colour,
-                enabled: system.enabled
+                enabled: system.enabled,
+                organs: system.organs
             });
         }
         return systems;
