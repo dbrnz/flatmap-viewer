@@ -25,6 +25,7 @@ import { indexedProperties } from '../search.js';
 export const displayedProperties = [
     'id',
     'class',
+    'cd-class',
     'fc-class',
     'fc-kind',
     'name',
@@ -138,6 +139,7 @@ export class InfoControl
                 this._active = true;
                 button.classList.add('control-button-active');
             } else {
+                this.reset();
                 this._active = false;
                 button.classList.remove('control-button-active');
             }
