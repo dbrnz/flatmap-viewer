@@ -60,9 +60,9 @@ class FlatMap
         this._baseUrl = mapBaseUrl;
         this.__id = mapDescription.id;
         this.__uuid = mapDescription.uuid;
-        this._details = mapDescription.details;
-        this._created = mapDescription.created;
+        this.__details = mapDescription.details;
         this.__provenance = mapDescription.provenance;
+        this.__created = mapDescription.created;
         this.__taxon = mapDescription.taxon;
         this.__biologicalSex = mapDescription.biologicalSex;
         this._mapNumber = mapDescription.number;
@@ -425,7 +425,7 @@ class FlatMap
     get created()
     //===========
     {
-        return this._created;
+        return this.__created;
     }
 
     /**
@@ -461,7 +461,7 @@ class FlatMap
     get details()
     //===========
     {
-        return this._details;
+        return this.__details;
     }
 
     /**
