@@ -62,6 +62,7 @@ class FlatMap
         this.__uuid = mapDescription.uuid;
         this._details = mapDescription.details;
         this._created = mapDescription.created;
+        this.__provenance = mapDescription.provenance;
         this.__taxon = mapDescription.taxon;
         this.__biologicalSex = mapDescription.biologicalSex;
         this._mapNumber = mapDescription.number;
@@ -461,6 +462,17 @@ class FlatMap
     //===========
     {
         return this._details;
+    }
+
+    /**
+     * The map's provenance as returned from the map server.
+     *
+     * @type Object
+     */
+    get provenance()
+    //==============
+    {
+        return this.__provenance;
     }
 
     /**
@@ -1405,6 +1417,10 @@ export class MapManager
 
                 const annotations = await this._mapServer.loadJSON(`flatmap/${mapId}/annotations`);
 
+                // Get the map's provenance
+
+                const provenance = await this._mapServer.loadJSON(`flatmap/${mapId}/metadata`);
+
                 // Get additional marker details for the map
 
                 const mapMarkers = await this._mapServer.loadJSON(`flatmap/${mapId}/markers`);
@@ -1458,6 +1474,7 @@ export class MapManager
                         annotations: annotations,
                         number: this._mapNumber,
                         pathways: pathways,
+                        provenance, provenance,
                         callback: callback
                     },
                     resolve);
