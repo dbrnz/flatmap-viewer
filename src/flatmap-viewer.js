@@ -970,6 +970,7 @@ class FlatMap
             'models',
             'nodeId',
             'source',
+            'taxon',
             'hyperlinks'
         ];
         const jsonProperties = [
