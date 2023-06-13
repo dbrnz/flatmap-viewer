@@ -22,6 +22,10 @@ limitations under the License.
 
 //==============================================================================
 
+const NO_NORMALISATION = ['http', 'https', 'urn', 'NCBITaxon'];
+
+//==============================================================================
+
 export class List extends Array {
     constructor(iterable=null) {
         super();
@@ -101,7 +105,7 @@ export function normaliseId(id)
     }
     const parts = id.split(':')
     const lastPart = parts[parts.length - 1]
-    if (['http', 'https', 'urn'].includes(parts[0]) || !'0123456789'.includes(lastPart[0])) {
+    if (NO_NORMALISATION.includes(parts[0]) || !'0123456789'.includes(lastPart[0])) {
         return id;
     }
     parts[parts.length - 1] = lastPart.padStart(8, '0');
