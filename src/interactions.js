@@ -22,7 +22,7 @@ limitations under the License.
 
 //==============================================================================
 
-import maplibre from 'maplibre-gl';
+import maplibregl from 'maplibre-gl';
 
 import {default as turfArea} from '@turf/area';
 import {default as turfBBox} from '@turf/bbox';
@@ -699,7 +699,7 @@ export class UserInteractions
                 this._map.panTo(location);
             }
             this.setModal_();
-            this._currentPopup = new maplibre.Popup(options).addTo(this._map);
+            this._currentPopup = new maplibregl.Popup(options).addTo(this._map);
             this._currentPopup.on('close', this.__onCloseCurrentPopup.bind(this));
             this._currentPopup.setLngLat(location);
             if (typeof content === 'object') {
@@ -960,7 +960,7 @@ export class UserInteractions
                 html = `<span>${header}</span><br/>${html}`;
             }
             if (html !== '') {
-                this._tooltip = new maplibre.Popup({
+                this._tooltip = new maplibregl.Popup({
                     closeButton: false,
                     closeOnClick: false,
                     maxWidth: 'none',
@@ -1195,8 +1195,8 @@ export class UserInteractions
                 // order to apply a scale transform we need to create marker icons
                 // inside the marker container <div>.
                 const colour = options.colour || '#005974';
-                const markerHTML = options.element ? new maplibre.Marker({element: options.element})
-                                                   : new maplibre.Marker({color: colour});
+                const markerHTML = options.element ? new maplibregl.Marker({element: options.element})
+                                                   : new maplibregl.Marker({color: colour});
 
                 const markerElement = document.createElement('div');
                 const markerIcon = document.createElement('div');
@@ -1206,9 +1206,9 @@ export class UserInteractions
                 markerElement.appendChild(markerIcon);
 
                 const markerPosition = this.__markerPosition(featureId, annotation);
-                const marker = new maplibre.Marker(markerElement)
-                                           .setLngLat(markerPosition)
-                                           .addTo(this._map);
+                const marker = new maplibregl.Marker(markerElement)
+                                             .setLngLat(markerPosition)
+                                             .addTo(this._map);
                 markerElement.addEventListener('mouseenter',
                     this.markerMouseEvent_.bind(this, marker, anatomicalId));
                 markerElement.addEventListener('mousemove',
@@ -1350,7 +1350,7 @@ export class UserInteractions
 
         element.addEventListener('click', e => this.__clearActiveMarker());
 
-        this._tooltip = new maplibre.Popup({
+        this._tooltip = new maplibregl.Popup({
             closeButton: false,
             closeOnClick: false,
             maxWidth: 'none',

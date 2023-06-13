@@ -45,7 +45,7 @@ limitations under the License.
 
 //==============================================================================
 
-import maplibre from 'maplibre-gl';
+import maplibregl from 'maplibre-gl';
 
 //==============================================================================
 
@@ -146,7 +146,7 @@ export class MinimapControl
 
         // Create the actual minimap
 
-        this._miniMap = new maplibre.Map({
+        this._miniMap = new maplibregl.Map({
             attributionControl: false,
             container: container,
             style: map.getStyle(),
