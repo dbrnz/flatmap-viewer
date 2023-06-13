@@ -333,6 +333,26 @@ class FlatMap
     }
 
     /**
+     * Show or hide connectivity features observed in particular species.
+     *
+     * @param {string | Array.<string>}   taxonId(s)  A single taxon identifier
+     *                                                or an array of identifiers.
+     * @param {boolean}  enable  Show or hide connectivity paths and features.
+     *                           Defaults to ``true`` (show)
+     */
+    enableConnectivityByTaxonIds(taxonIds, enable=true)
+    //=================================================
+    {
+        if (this._userInteractions !== null) {
+            if (Array.isArray(taxonIds)) {
+                this._userInteractions.enableConnectivityByTaxonIds(taxonIds, enable);
+            } else {
+                this._userInteractions.enableConnectivityByTaxonIds([taxonIds], enable);
+            }
+        }
+    }
+
+    /**
      * Hide or show centrelines and nodes.
      *
      * @param {boolean}  enable  Show or centrelines and associated nodes.

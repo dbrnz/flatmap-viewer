@@ -1132,6 +1132,16 @@ export class UserInteractions
         this._layerManager.enableSckanPaths(sckanState, enable);
     }
 
+    enableConnectivityByTaxonIds(taxonIds, enable=true)
+    //=================================================
+    {
+        if (enable) {
+            this._layerManager.setFilter({taxons: taxonIds});
+        } else {
+            this._layerManager.setFilter({taxons: []});
+        }
+    }
+
     excludeAnnotated(exclude=false)
     //=============================
     {
