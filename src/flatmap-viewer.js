@@ -817,7 +817,7 @@ class FlatMap
     /**
      * Get a list of the flatmap's layers.
      *
-     * @return {Array.Object.<{id: string, description: string, enabled: boolean}>}  An array with layer details
+     * @return {Array.<{id: string, description: string, enabled: boolean}>}  An array with layer details
      */
     getLayers()
     //=========
@@ -845,7 +845,7 @@ class FlatMap
     /**
      * Get a list of a FC flatmap's systems.
      *
-     * @return {Array.Object.<{id: string, name: string, colour: string, enabled: boolean}>}  An array with system details
+     * @return {Array.<{id: string, name: string, colour: string, enabled: boolean}>}  An array with system details
      */
     getSystems()
     //==========

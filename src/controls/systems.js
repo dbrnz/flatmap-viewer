@@ -32,7 +32,7 @@ export class SystemsControl extends Control
     }
 
     _addControlDetails()
-    //===============
+    //==================
     {
         let lines = 0;
         let enabled = 0;
