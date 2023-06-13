@@ -79,6 +79,7 @@ class FlatMap
         this.__modelToFeatureIds = new Map();
         this.__mapSourceToFeatureIds = new Map();
         this.__annIdToFeatureId = new Map();
+        this.__taxonToFeatureIds = new Map();
 
         for (const [featureId, annotation] of Object.entries(mapDescription.annotations)) {
             this.__addAnnotation(featureId, annotation);
@@ -511,16 +512,28 @@ class FlatMap
         }
     }
 
+    __updateFeatureIdMapEntry(propertyId, featureIdMap, featureId)
+    //======================================================
+    {
+        const featureIds = featureIdMap.get(propertyId);
+        if (featureIds) {
+            featureIds.push(featureId);
+        } else {
+            featureIdMap.set(propertyId, [featureId]);
+        }
+    }
+
     __updateFeatureIdMap(property, featureIdMap, annotation)
     //======================================================
     {
         if (property in annotation) {
-            const id = utils.normaliseId(annotation[property]);
-            const featureIds = featureIdMap.get(id);
-            if (featureIds) {
-                featureIds.push(annotation.featureId);
+            const propertyId = annotation[property];
+            if (Array.isArray(propertyId)) {
+                for (const id of propertyId) {
+                    this.__updateFeatureIdMapEntry(id, featureIdMap, annotation.featureId);
+                }
             } else {
-                featureIdMap.set(id, [annotation.featureId]);
+                this.__updateFeatureIdMapEntry(propertyId, featureIdMap, annotation.featureId)
             }
         }
     }
@@ -533,6 +546,7 @@ class FlatMap
         this.__updateFeatureIdMap('dataset', this.__datasetToFeatureIds, ann);
         this.__updateFeatureIdMap('models', this.__modelToFeatureIds, ann);
         this.__updateFeatureIdMap('source', this.__mapSourceToFeatureIds, ann);
+        this.__updateFeatureIdMap('taxons', this.__taxonToFeatureIds, ann);
         this.__annIdToFeatureId.set(ann.id, featureId);
     }
 
@@ -608,6 +622,17 @@ class FlatMap
     //=========================
     {
         return [...this.__modelToFeatureIds.keys()]
+    }
+
+    /**
+     * The taxon identifiers of species which the map's connectivity has been observed in.
+     *
+     * @type {string|Array.<string>}
+     */
+    get taxonIdentifiers()
+    //====================
+    {
+        return [...this.__taxonToFeatureIds.keys()]
     }
 
     /**
