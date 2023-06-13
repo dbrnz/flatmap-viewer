@@ -374,24 +374,24 @@ function sckanFilter(options)
                      : options.sckan.toLowerCase();
     const sckanFilter =
         sckanState == 'none' ? [
-            ['!has', 'sckan']
+            ['!', ['has', 'sckan']]
         ] :
         sckanState == 'valid' ? [[
             'any',
-            ['!has', 'sckan'],
+            ['!', ['has', 'sckan']],
             [
                 'all',
                 ['has', 'sckan'],
-                ['==', 'sckan', true]
+                ['==', ['get', 'sckan'], true]
             ]
         ]] :
         sckanState == 'invalid' ? [[
             'any',
-            ['!has', 'sckan'],
+            ['!', ['has', 'sckan']],
             [
                 'all',
                 ['has', 'sckan'],
-                ['!=', 'sckan', true]
+                ['!=', ['get', 'sckan'], true]
             ]
         ]] :
         [ ];
@@ -411,7 +411,6 @@ export class AnnotatedPathLayer extends VectorStyleLayer
     {
         return [
             'all',
-            ['==', '$type', 'LineString'],
             ...sckanFilter(options)
         ];
     }
@@ -484,18 +483,16 @@ export class PathLineLayer extends VectorStyleLayer
 
         return this.__dashed ? [
             'all',
-            ['==', '$type', 'LineString'],
-            ['==', 'type', `line-dash`],
+            ['==', ['get', 'type'], 'line-dash'],
             ...sckan_filter
         ] : [
             'all',
-            ['==', '$type', 'LineString'],
             [
                 'any',
-                ['==', 'type', 'bezier'],
+                ['==', ['get', 'type'], 'bezier'],
                 [
                     'all',
-                    ['==', 'type', `line`],
+                    ['==', ['get', 'type'], 'line'],
                     ...sckan_filter
                 ]
             ]
