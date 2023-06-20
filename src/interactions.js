@@ -159,11 +159,12 @@ export class UserInteractions
         }
 
         // Note features that are FC systems
-
         this.__systemsManager = new SystemsManager(this._flatmap, this, featuresEnabled);
 
-        // Add various controls when running standalone
+        // All taxons of connectivity paths are enabled by default
+        this.__enabledConnectivityTaxons = new Set(this._flatmap.taxonIdentifiers);
 
+        // Add various controls when running standalone
         if (flatmap.options.standalone) {
             // Add a control to search annotations if option set
             this._map.addControl(new SearchControl(flatmap));
@@ -1136,10 +1137,15 @@ export class UserInteractions
     //=================================================
     {
         if (enable) {
-            this._layerManager.setFilter({taxons: taxonIds});
+            for (const taxonId of taxonIds) {
+               this.__enabledConnectivityTaxons.add(taxonId);
+            }
         } else {
-            this._layerManager.setFilter({taxons: []});
+            for (const taxonId of taxonIds) {
+               this.__enabledConnectivityTaxons.delete(taxonId);
+            }
         }
+        this._layerManager.setFilter({taxons: [...this.__enabledConnectivityTaxons.values()]});
     }
 
     excludeAnnotated(exclude=false)

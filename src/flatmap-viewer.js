@@ -50,6 +50,15 @@ const MAP_MAKER_SEPARATE_LAYERS_VERSION = 1.4;
 //==============================================================================
 
 /**
+ * The taxon identifier used when none has been given.
+ *
+ * @type       {string}
+ */
+export const UNCLASSIFIED_TAXON_ID = 'NCBITaxon:2787823';   // unclassified entries
+
+//==============================================================================
+
+/**
 * Maps are not created directly but instead are created and loaded by
 * :meth:`LoadMap` of :class:`MapManager`.
 */
@@ -543,18 +552,20 @@ class FlatMap
         }
     }
 
-    __updateFeatureIdMap(property, featureIdMap, annotation)
-    //======================================================
+    __updateFeatureIdMap(property, featureIdMap, annotation, missingId=null)
+    //======================================================================
     {
-        if (property in annotation) {
+        if (property in annotation && annotation[property].length) {
             const propertyId = annotation[property];
             if (Array.isArray(propertyId)) {
                 for (const id of propertyId) {
                     this.__updateFeatureIdMapEntry(id, featureIdMap, annotation.featureId);
                 }
             } else {
-                this.__updateFeatureIdMapEntry(propertyId, featureIdMap, annotation.featureId)
+                this.__updateFeatureIdMapEntry(propertyId, featureIdMap, annotation.featureId);
             }
+        } else if (missingId !== null) {
+            this.__updateFeatureIdMapEntry(missingId, featureIdMap, annotation.featureId);
         }
     }
 
@@ -566,7 +577,7 @@ class FlatMap
         this.__updateFeatureIdMap('dataset', this.__datasetToFeatureIds, ann);
         this.__updateFeatureIdMap('models', this.__modelToFeatureIds, ann);
         this.__updateFeatureIdMap('source', this.__mapSourceToFeatureIds, ann);
-        this.__updateFeatureIdMap('taxons', this.__taxonToFeatureIds, ann);
+        this.__updateFeatureIdMap('taxons', this.__taxonToFeatureIds, ann, UNCLASSIFIED_TAXON_ID);
         this.__annIdToFeatureId.set(ann.id, featureId);
     }
 

@@ -26,7 +26,8 @@ export const VECTOR_TILES_SOURCE = 'vector-tiles';
 
 //==============================================================================
 
-import {PATH_STYLE_RULES} from './pathways.js';
+import {UNCLASSIFIED_TAXON_ID} from './flatmap-viewer';
+import {PATH_STYLE_RULES} from './pathways';
 
 //==============================================================================
 
@@ -482,14 +483,19 @@ export class PathLineLayer extends VectorStyleLayer
         const sckan_filter = sckanFilter(options);
         let taxonFilter = [];
         if ('taxons' in options) {
-            taxonFilter.push('all');
-            taxonFilter.push(['has', 'taxons']);
-            const filterList = ['any'];
-            for (const taxon of options.taxons) {
-                filterList.push(['in', taxon, ['get', 'taxons']]);
+            if (options.taxons.length) {
+                taxonFilter.push('any');
+                for (const taxon of options.taxons) {
+                    if (taxon !== UNCLASSIFIED_TAXON_ID) {
+                        taxonFilter.push(['in', taxon, ['get', 'taxons']]);
+                    } else {
+                        taxonFilter.push(['case', ['has', 'taxons'], false, true]);
+                    }
+                }
+                taxonFilter = [taxonFilter];
+            } else {
+                taxonFilter.push(false);
             }
-            taxonFilter.push(filterList);
-            taxonFilter = [taxonFilter];
         }
 
         return this.__dashed ? [
