@@ -45,6 +45,7 @@ import {AnnotatedControl, BackgroundControl, LayerControl, NerveControl,
 import {PathControl} from './controls/paths';
 import {SearchControl} from './controls/search';
 import {SystemsControl} from './controls/systems';
+import {TaxonsControl} from './controls/taxons';
 
 import * as utils from './utils';
 
@@ -187,11 +188,14 @@ export class UserInteractions
                 this._map.addControl(new NerveControl(flatmap, this._layerManager, {showCentrelines: false}));
             }
 
-            // SCKAN path and SYSTEMS controls for FC maps
             if (flatmap.options.style === 'functional') {
+                // SCKAN path and SYSTEMS controls for FC maps
                 this._map.addControl(new SystemsControl(flatmap, this.__systemsManager.systems));
                 this._map.addControl(new SCKANControl(flatmap, flatmap.options.layerOptions));
                 this._map.addControl(new AnnotatedControl(this, flatmap.options.layerOptions));
+            } else {
+                // Connectivity taxon control for AC maps
+                this._map.addControl(new TaxonsControl(flatmap));
             }
         }
 
