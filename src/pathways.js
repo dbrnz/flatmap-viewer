@@ -28,6 +28,10 @@ export const PATHWAYS_LAYER = 'pathways';
 
 //==============================================================================
 
+export const APINATOMY_PATH_PREFIX = 'ilxtr:';
+
+//==============================================================================
+
 const PATH_TYPES = [
     { type: "cns", label: "CNS", colour: "#9B1FC1"},
     { type: "intracardiac", label: "Local circuit neuron", colour: "#F19E38"},

@@ -39,6 +39,7 @@ import {UserInteractions} from './interactions.js';
 
 import {MinimapControl} from './controls/minimap.js';
 import {NavigationControl} from './controls/controls.js';
+import {APINATOMY_PATH_PREFIX} from './pathways';
 
 import * as images from './images.js';
 import * as utils from './utils.js';
@@ -542,7 +543,7 @@ class FlatMap
     }
 
     __updateFeatureIdMapEntry(propertyId, featureIdMap, featureId)
-    //======================================================
+    //============================================================
     {
         const featureIds = featureIdMap.get(propertyId);
         if (featureIds) {
@@ -564,7 +565,9 @@ class FlatMap
             } else {
                 this.__updateFeatureIdMapEntry(propertyId, featureIdMap, annotation.featureId);
             }
-        } else if (missingId !== null) {
+        } else if (missingId !== null
+               && 'models' in annotation
+               && annotation.models.startsWith(APINATOMY_PATH_PREFIX)) {
             this.__updateFeatureIdMapEntry(missingId, featureIdMap, annotation.featureId);
         }
     }
