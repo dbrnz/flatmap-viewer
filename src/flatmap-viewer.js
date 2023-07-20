@@ -545,11 +545,12 @@ class FlatMap
     __updateFeatureIdMapEntry(propertyId, featureIdMap, featureId)
     //============================================================
     {
-        const featureIds = featureIdMap.get(propertyId);
+        const id = utils.normaliseId(propertyId)
+        const featureIds = featureIdMap.get(id);
         if (featureIds) {
             featureIds.push(featureId);
         } else {
-            featureIdMap.set(propertyId, [featureId]);
+            featureIdMap.set(id, [featureId]);
         }
     }
 
