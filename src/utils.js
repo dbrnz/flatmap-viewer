@@ -22,7 +22,11 @@ limitations under the License.
 
 //==============================================================================
 
-const NO_NORMALISATION = ['http', 'https', 'urn', 'NCBITaxon'];
+// A PMID is a "1- to 8-digit accession number with no leading zeros"
+const ZERO_PAD_PREFIXES = {
+    'ILX':    7,
+    'UBERON': 7
+};
 
 //==============================================================================
 
@@ -105,11 +109,11 @@ export function normaliseId(id)
     }
     const parts = id.split(':')
     const lastPart = parts[parts.length - 1]
-    if (NO_NORMALISATION.includes(parts[0]) || !'0123456789'.includes(lastPart[0])) {
-        return id;
+    if (parts[0].toUpperCase() in ZERO_PAD_PREFIXES && '0123456789'.includes(lastPart[0])) {
+        parts[parts.length - 1] = lastPart.padStart(ZERO_PAD_PREFIXES[parts[0].toUpperCase()], '0');
+        return parts.join(':');
     }
-    parts[parts.length - 1] = lastPart.padStart(8, '0');
-    return parts.join(':');
+    return id;
 }
 
 //==============================================================================
