@@ -1202,7 +1202,7 @@ export class UserInteractions
 
         for (const featureId of featureIds) {
             const annotation = this._flatmap.annotation(featureId);
-            if (!annotation.geometry.includes('Polygon')) {
+            if (!('markerPosition' in annotation) && !annotation.geometry.includes('Polygon')) {
                 continue;
             }
             if (!('marker' in annotation)) {
