@@ -1226,7 +1226,7 @@ export class UserInteractions
                 markerElement.appendChild(markerIcon);
 
                 const markerPosition = this.__markerPosition(featureId, annotation);
-                const marker = new maplibregl.Marker({marker: markerElement})
+                const marker = new maplibregl.Marker({element: markerElement})
                                              .setLngLat(markerPosition)
                                              .addTo(this._map);
                 markerElement.addEventListener('mouseenter',
