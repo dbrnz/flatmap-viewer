@@ -1216,12 +1216,11 @@ export class UserInteractions
                 // inside the marker container <div>.
                 const colour = options.colour || '#005974';
                 const markerHTML = options.element ? new maplibregl.Marker({element: options.element})
-                                                   : new maplibregl.Marker({color: colour});
+                                                   : new maplibregl.Marker({color: colour, scale: 0.5});
 
                 const markerElement = document.createElement('div');
                 const markerIcon = document.createElement('div');
                 markerIcon.innerHTML = markerHTML.getElement().innerHTML;
-                markerIcon.className = 'flatmap-marker';
                 markerElement.id = `marker-${markerId}`;
                 markerElement.appendChild(markerIcon);
 

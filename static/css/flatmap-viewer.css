@@ -230,12 +230,6 @@ label[for=layer-all-layers] {
     font-weight: bold;
 }
 
-/* Markers */
-
-.flatmap-marker {
-    transform: scale(0.5);
-}
-
 /* Annotator */
 .flex-auto {
     flex: 1 1 auto;
