@@ -648,7 +648,7 @@ class CentrelineLayer extends VectorStyleLayer
             ],
             'line-opacity': [
                 'case',
-                    ['boolean', ['feature-state', 'hidden'], false], 0.01,
+                    ['boolean', ['feature-state', 'hidden'], false], 0,
                     ['boolean', ['feature-state', 'selected'], false], 1.0,
                     ['boolean', ['feature-state', 'active'], false], 1.0,
                 (this.__type == 'edge') ? 0.4 : 0.8
