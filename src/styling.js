@@ -673,7 +673,8 @@ class CentrelineLayer extends VectorStyleLayer
             'filter': [
                 'all',
                 ['==', '$type', 'LineString'],
-                ['==', 'kind', 'centreline']
+                ['==', 'kind', 'centreline'],
+                ['has', 'label']
             ],
             'paint': this.paintStyle(options),
             'layout': {
