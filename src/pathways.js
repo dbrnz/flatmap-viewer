@@ -214,16 +214,6 @@ export class PathManager
         return featureIds;
     }
 
-   nodeFeatureIds(nodeId)
-    //===================
-    {
-        const featureIds = new Set();
-        if (nodeId in this._nodePaths) {
-            this.addPathsToFeatureSet_(this._nodePaths[nodeId], featureIds);
-        }
-        return featureIds;
-    }
-
     pathProperties(feature)
     //=====================
     {

@@ -1089,7 +1089,7 @@ export class UserInteractions
             }
         }
         if ('nodeId' in feature.properties) {
-            for (const featureId of this.__pathManager.nodeFeatureIds(feature.properties.nodeId)) {
+            for (const featureId of this.__pathManager.pathFeatureIds(feature.properties.nodeId)) {
                 this.__activateFeature(this.mapFeature(featureId));
             }
         }
