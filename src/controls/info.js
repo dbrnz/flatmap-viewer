@@ -29,7 +29,8 @@ export const displayedProperties = [
     'fc-class',
     'fc-kind',
     'name',
-    ...indexedProperties
+    ...indexedProperties,
+    'featureId'
 ];
 
 //==============================================================================
@@ -247,18 +248,25 @@ export class InfoControl
                             }
                         }
                     });
-                    displayValues.set(feature.id, values);
+                    if (Object.keys(values).length > 0) {
+                        displayValues.set(feature.id, values);
+                    }
                 }
             }
 
             const htmlList = [];
-            for (const values of displayValues.values()) {
+            let lastId = null;
+            for (const [id, values] of displayValues.entries()) {
+                if (lastId !== null && lastId !== id) {
+                    htmlList.push(`<span><hr/></span><span></span>`);
+                }
                 for (const prop of displayedProperties) {
                     if (prop in values) {
                         htmlList.push(`<span class="info-name">${prop}:</span>`);
                         htmlList.push(`<span class="info-value">${values[prop]}</span>`);
                     }
                 }
+                lastId = id;
             }
             if (htmlList.length > 0) {
                 html = `<div id="info-control-info">${htmlList.join('\n')}</div>`;
