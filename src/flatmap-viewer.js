@@ -1012,23 +1012,18 @@ class FlatMap
         return false;
     }
 
-    /**
-     * Generate a callback as a result of some event with a flatmap feature.
-     *
-     * @param      {string}  eventType     The event type
-     * @param      {Object}  properties    Properties associated with the feature
-     */
-    featureEvent(eventType, properties)
-    //=================================
+    __exportedProperties(properties)
+    //==============================
     {
         const data = {};
         const exportedProperties = [
+            'id',
+            'featureId',
             'connectivity',
             'dataset',
             'kind',
             'label',
             'models',
-            'nodeId',
             'source',
             'taxons',
             'hyperlinks'
@@ -1042,6 +1037,8 @@ class FlatMap
                 if (value !== undefined) {
                     if (jsonProperties.includes(property)) {
                         data[property] = JSON.parse(properties[property])
+                    } else if (property === 'featureId') {
+                        data[property] = +properties[property];  // Ensure numeric
                     } else {
                         data[property] = properties[property];
                     }
@@ -1050,10 +1047,39 @@ class FlatMap
         }
         if (Object.keys(data).length > 0) {
             data['type'] = 'feature';
+        }
+        return data;
+    }
+
+    /**
+     * Generate a callback as a result of some event with a flatmap feature.
+     *
+     * @param      {string}  eventType     The event type
+     * @param      {Object}  properties    Properties associated with the feature
+     */
+    featureEvent(eventType, properties)
+    //=================================
+    {
+        const data = this.__exportedProperties(properties);
+
+        if (Object.keys(data).length > 0) {
             this.callback(eventType, data);
             return true;
         }
         return false;
+    }
+
+    /**
+     * Return properties associated with a feature.
+     *
+     * @param      {number}  featureId  The feature's internal (GeoJSON) id
+     * @returns    {Object}             Properties associated with the feature
+     */
+    featureProperties(featureId)
+    //==========================
+    {
+        const properties = this.annotation(featureId);
+        return properties ? this.__exportedProperties(properties) : {};
     }
 
     /**
