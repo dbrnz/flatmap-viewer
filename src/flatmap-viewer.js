@@ -622,6 +622,12 @@ class FlatMap
         return (ann && 'models' in ann) ? utils.normaliseId(ann.models) : null;
     }
 
+    /**
+     * Get model terms of all paths connected to a node.
+     *
+     * @param      {number}  pathId  The local (GeoJSON) identifier of a node
+     * @return     {set<string>}  Model terms of all paths connected to the node
+     */
     nodePathModels(nodeId)
     //====================
     {
