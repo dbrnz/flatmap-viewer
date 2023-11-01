@@ -630,6 +630,20 @@ class FlatMap
         }
     }
 
+    /**
+     * Get feature ids of all nodes of a path model.
+     *
+     * @param      {string}  pathId  The path model identifier
+     * @return     {set<number>}  Local (GeoJSON) identifiers of features on the path
+     */
+    pathModelNodes(modelId)
+    //=====================
+    {
+        if (this._userInteractions !== null) {
+            return this._userInteractions.pathModelNodes(modelId);
+        }
+    }
+
     get layers()
     //==========
     {

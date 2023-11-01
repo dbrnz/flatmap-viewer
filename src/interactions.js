@@ -1122,6 +1122,12 @@ export class UserInteractions
         return featureIds;
     }
 
+    pathModelNodes(modelId)
+    //=====================
+    {
+        return this.__pathManager.pathModelNodes(modelId);
+    }
+
     nodePathModels(nodeId)
     //====================
     {

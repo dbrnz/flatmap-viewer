@@ -338,6 +338,20 @@ export class PathManager
         }
         return modelIds;
     }
+
+    pathModelNodes(modelId)
+    //=====================
+    {
+        const nodeIds = new Set();
+        if (modelId in this.__pathModelPaths) {
+            for (const pathId of this.__pathModelPaths[modelId]) {
+                for (const nodeId of this.__paths[pathId].nodes) {
+                    nodeIds.add(nodeId);
+                }
+            }
+        }
+        return nodeIds;
+    }
 }
 
 //==============================================================================
