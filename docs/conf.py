@@ -17,7 +17,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'Flatmap Viewer'
-copyright = '2019-2021, David Brooks'
+copyright = '2019-2023, David Brooks'
 author = 'David Brooks'
 
 # -- General configuration ---------------------------------------------------
