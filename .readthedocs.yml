@@ -9,8 +9,11 @@ sphinx:
   configuration: docs/conf.py
 
 # poetry export --dev -f requirements.txt --output docs/requirements.txt
-
 python:
-  version: 3.8
   install:
-  - requirements: docs/requirements.txt
+    - requirements: docs/requirements.txt
+
+build:
+  os: "ubuntu-22.04"
+  tools:
+    python: "3.11"
