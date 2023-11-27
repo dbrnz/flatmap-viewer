@@ -93,7 +93,7 @@ export async function standaloneViewer(map_endpoint=null, options={})
                 }
             }, mapOptions)
             .then(map => {
-                map.addMarker('UBERON:0000948'); // Heart
+                map.addMarker('UBERON:0000948', {className: 'heart-marker'}); // Heart
                 map.addMarker('UBERON:0002048'); // Lung
                 map.addMarker('UBERON:0000945'); // Stomach
                 map.addMarker('UBERON:0001155'); // Colon

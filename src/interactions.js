@@ -1233,9 +1233,12 @@ export class UserInteractions
                 markerIcon.innerHTML = markerHTML.getElement().innerHTML;
                 markerElement.id = `marker-${markerId}`;
                 markerElement.appendChild(markerIcon);
-
+                const markerOptions = {element: markerElement};
+                if ('className' in options) {
+                    markerOptions.className = options.className;
+                }
                 const markerPosition = this.__markerPosition(featureId, annotation);
-                const marker = new maplibregl.Marker({element: markerElement})
+                const marker = new maplibregl.Marker(markerOptions)
                                              .setLngLat(markerPosition)
                                              .addTo(this._map);
                 markerElement.addEventListener('mouseenter',

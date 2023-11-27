@@ -956,6 +956,7 @@ class FlatMap
      * @param {string}  anatomicalId  The anatomical identifier of the feature on which
      *                                to place the marker.
      * @arg {Object} options          Configurable options for the marker.
+     * @arg {string} options.className Space-separated CSS class names to add to marker element.
      * @arg {string} options.colour   Colour of the default marker. Defaults to ``'#005974'``
      *                                (dark blue).
      * @arg {string} options.element  The DOM element to use as a marker. The default is
