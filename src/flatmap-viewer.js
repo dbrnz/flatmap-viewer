@@ -1238,20 +1238,6 @@ class FlatMap
     //==========================================================================
 
     /**
-     * Highlight features on the map.
-     *
-     * @param {Array.<string>}  externalIds  An array of anaotomical terms identifing features to highlight
-     */
-    highlightFeatures(externalIds)
-    //============================
-    {
-        if (this._userInteractions !== null) {
-            const featureIds = this.modelFeatureIdList(externalIds);
-            this._userInteractions.highlightFeatures(featureIds);
-        }
-    }
-
-    /**
      * Select features on the map.
      *
      * @param {Array.<string>}  externalIds  An array of anaotomical terms identifing features to select

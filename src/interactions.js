@@ -495,19 +495,6 @@ export class UserInteractions
         }
     }
 
-    highlightFeature_(featureId)
-    //==========================
-    {
-        featureId = +featureId;   // Ensure numeric
-        this.__activateFeature(this.mapFeature(featureId));
-    }
-
-    unhighlightFeatures_()
-    //====================
-    {
-        this.resetActiveFeatures_();
-    }
-
     smallestAnnotatedPolygonFeature_(features)
     //========================================
     {
@@ -554,30 +541,6 @@ export class UserInteractions
     //============================
     {
         this.unselectFeatures();
-    }
-
-    /**
-     * Highlight features on the map.
-     *
-     * @param {Array.<string>}  featureIds  An array of feature identifiers to highlight
-     */
-    highlightFeatures(featureIds)
-    //===========================
-    {
-        if (featureIds.length) {
-            this.unhighlightFeatures_();
-            for (const featureId of featureIds) {
-                const annotation = this._flatmap.annotation(featureId);
-                if (annotation) {
-                    this.highlightFeature_(featureId);
-                    if ('type' in annotation && annotation.type.startsWith('line')) {
-                        for (const pathFeatureId of this.__pathManager.lineFeatureIds([featureId])) {
-                            this.highlightFeature_(pathFeatureId);
-                        }
-                    }
-                }
-            }
-        }
     }
 
     /**
