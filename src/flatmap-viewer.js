@@ -95,9 +95,6 @@ class FlatMap
             this.__addAnnotation(featureId, annotation);
             this.__searchIndex.indexMetadata(featureId, annotation);
         }
-        if (this.options.annotator) {
-            this.__addAnnotatedComments();
-        }
 
         // Set base of source URLs in map's style
 
@@ -221,25 +218,6 @@ class FlatMap
                 this._resolve(this);
             }
         });
-    }
-
-    async __addAnnotatedComments()
-    //============================
-    {
-        const url = this.makeServerUrl('', 'annotator/')
-        const annotatedFeatures = await loadJSON(url);
-        for (const annotatedId of annotatedFeatures) {
-            const featureId = this.__annIdToFeatureId.get(annotatedId);
-            if (featureId) {
-                const url = this.makeServerUrl(annotatedId, 'annotator/')
-                const annotations = await loadJSON(url);
-                for (const annotation of annotations) {   // In order of most recent to oldest
-                    if ('rdfs:comment' in annotation) {
-                        this.__searchIndex.indexText(featureId, annotation['rdfs:comment']);
-                    }
-                }
-            }
-        }
     }
 
     async setupUserInteractions_()
@@ -1421,7 +1399,6 @@ export class MapManager
     * @arg options.showPosition {boolean} Show ``position`` of tooltip.
     * @arg options.standalone {boolean} Viewer is running ``standalone``, as opposed to integrated into
     *                                   another application so show a number of controls. Defaults to ``false``.
-    * @arg options.annotator {boolean} Allow interactive annotation of features and paths.
     * @example
     * const humanMap1 = mapManager.loadMap('humanV1', 'div-1');
     *

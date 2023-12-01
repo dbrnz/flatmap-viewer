@@ -62,7 +62,6 @@ export async function standaloneViewer(map_endpoint=null, options={})
         showId: true,
         showPosition: false,
         standalone: true,
-        annotator: true,
     }, options);
 
     function loadMap(id, taxon, sex)
