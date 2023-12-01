@@ -312,12 +312,17 @@ export class FeatureLineLayer extends VectorStyleLayer
                 ],
             'line-width': [
                 'let',
-                'width', [
-                    'case',
-                        ['==', ['get', 'type'], 'network'], 1.2,
-                        ['boolean', ['feature-state', 'selected'], false], 1.2,
-                        ['boolean', ['feature-state', 'active'], false], 1.2,
-                        options.authoring ? 0.7 : 0.5
+                'width',  [
+                    '*',
+                        ['case',
+                            ['has', 'stroke-width'], ['get', 'stroke-width'],
+                            1.0
+                        ],
+                        ['case',
+                            ['boolean', ['feature-state', 'selected'], false], 1.2,
+                            ['boolean', ['feature-state', 'active'], false], 1.2,
+                            options.authoring ? 0.7 : 0.5
+                        ]
                     ],
                     STROKE_INTERPOLATION
             ]
