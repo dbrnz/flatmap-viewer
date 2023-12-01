@@ -206,53 +206,37 @@ export class FeatureBorderLayer extends VectorStyleLayer
         const outlined = !('outline' in options) || options.outline;
         const dimmed = 'dimmed' in options && options.dimmed;
         const activeRasterLayer = 'activeRasterLayer' in options && options.activeRasterLayer;
-        const lineColour = [ 'case' ];
-        lineColour.push(['boolean', ['feature-state', 'hidden'], false]);
-        lineColour.push(COLOUR_HIDDEN);
-        lineColour.push(['boolean', ['feature-state', 'selected'], false]);
-        lineColour.push(FEATURE_SELECTED_BORDER);
+        const lineColour = ['case'];
+        lineColour.push(['boolean', ['feature-state', 'hidden'], false], COLOUR_HIDDEN);
+        lineColour.push(['boolean', ['feature-state', 'selected'], false], FEATURE_SELECTED_BORDER);
         if (coloured && outlined) {
-            lineColour.push(['boolean', ['feature-state', 'active'], false]);
-            lineColour.push(COLOUR_ACTIVE);
+            lineColour.push(['boolean', ['feature-state', 'active'], false], COLOUR_ACTIVE);
         }
-        lineColour.push(['boolean', ['feature-state', 'annotated'], false]);
-        lineColour.push(COLOUR_ANNOTATED);
-        lineColour.push(['has', 'colour']);
-        lineColour.push(['get', 'colour']);
+        lineColour.push(['boolean', ['feature-state', 'annotated'], false], COLOUR_ANNOTATED);
+        lineColour.push(['has', 'colour'], ['get', 'colour']);
         lineColour.push('#444');
 
-        const lineOpacity = [
-            'case',
-            ['boolean', ['feature-state', 'hidden'], false], 0.05,
-            ];
+        const lineOpacity = ['case'];
+        lineOpacity.push(['boolean', ['feature-state', 'hidden'], false], 0.05);
         if (coloured && outlined) {
-            lineOpacity.push(['boolean', ['feature-state', 'active'], false]);
-            lineOpacity.push(0.9);
+            lineOpacity.push(['boolean', ['feature-state', 'active'], false], 0.9);
         }
-        lineOpacity.push(['boolean', ['feature-state', 'selected'], false]);
-        lineOpacity.push(0.9);
-        lineOpacity.push(['boolean', ['feature-state', 'annotated'], false]);
-        lineOpacity.push(0.9);
+        lineOpacity.push(['boolean', ['feature-state', 'selected'], false], 0.9);
+        lineOpacity.push(['boolean', ['feature-state', 'annotated'], false], 0.9);
         if (activeRasterLayer) {
             lineOpacity.push((outlined && !dimmed) ? 0.3 : 0.1);
         } else {
             lineOpacity.push(0.5);
         }
 
-        const lineWidth = [
-            'case',
-            ['boolean', ['get', 'invisible'], false], 0.2,
-            ];
-        lineWidth.push(['boolean', ['feature-state', 'selected'], false]);
-        lineWidth.push(2.5);
+        const lineWidth = ['case'];
+        lineWidth.push(['boolean', ['get', 'invisible'], false], 0.2);
+        lineWidth.push(['boolean', ['feature-state', 'selected'], false], 2.5);
         if (coloured && outlined) {
-            lineWidth.push(['boolean', ['feature-state', 'active'], false]);
-            lineWidth.push(1.5);
+            lineWidth.push(['boolean', ['feature-state', 'active'], false], 1.5);
         }
-        lineWidth.push(['boolean', ['feature-state', 'annotated'], false]);
-        lineWidth.push(3.5);
-        lineWidth.push(['has', 'colour']);
-        lineWidth.push(0.7);
+        lineWidth.push(['boolean', ['feature-state', 'annotated'], false], 3.5);
+        lineWidth.push(['has', 'colour'], 0.7);
         lineWidth.push((coloured && outlined) ? 0.5 : 0.1);
 
         return super.changedPaintStyle({
@@ -293,14 +277,14 @@ export class FeatureLineLayer extends VectorStyleLayer
         return this.__dashed ? [
             'all',
             ['==', '$type', 'LineString'],
-            ['==', 'type', `line-dash`]
+            ['==', 'type', 'line-dash']
         ] : [
             'all',
             ['==', '$type', 'LineString'],
             [
                 'any',
                 ['==', 'type', 'bezier'],
-                ['==', 'type', `line`]
+                ['==', 'type', 'line']
             ]
         ];
     }
