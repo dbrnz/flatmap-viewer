@@ -162,7 +162,7 @@ export class FeatureFillLayer extends VectorStyleLayer
             'fill-opacity': [
                 'case',
                 ['boolean', ['feature-state', 'hidden'], false], 0.1,
-                ['boolean', ['feature-state', 'selected'], false], 0.5,
+                ['boolean', ['feature-state', 'selected'], false], 0.2,
                 ['has', 'opacity'], ['get', 'opacity'],
                 ['has', 'colour'], 1.0,
                 ['boolean', ['feature-state', 'active'], false], 0.7,
@@ -231,7 +231,7 @@ export class FeatureBorderLayer extends VectorStyleLayer
 
         const lineWidth = ['case'];
         lineWidth.push(['boolean', ['get', 'invisible'], false], 0.2);
-        lineWidth.push(['boolean', ['feature-state', 'selected'], false], 2.5);
+        lineWidth.push(['boolean', ['feature-state', 'selected'], false], 1.5);
         if (coloured && outlined) {
             lineWidth.push(['boolean', ['feature-state', 'active'], false], 1.5);
         }
@@ -515,10 +515,6 @@ export class PathLineLayer extends VectorStyleLayer
             'line-color': [
                 'let', 'active', ['to-number', ['feature-state', 'active'], 0],
                 [ 'case',
-                    ['all',
-                        ['==', ['var', 'active'], 0],
-                        ['boolean', ['feature-state', 'selected'], false],
-                    ], COLOUR_SELECTED,
                     ['boolean', ['feature-state', 'hidden'], false], COLOUR_HIDDEN,
                     ['==', ['get', 'type'], 'bezier'], 'red',
                     ...PATH_STYLE_RULES,
@@ -548,7 +544,9 @@ export class PathLineLayer extends VectorStyleLayer
                     "*",
                     this.__highlight ? ['case',
                         ['boolean', ['get', 'invisible'], false], 0.1,
-                        ['boolean', ['feature-state', 'selected'], false], 0.6,
+                        ['boolean', ['feature-state', 'selected'], false], [
+                            'case', ['boolean', ['feature-state', 'active'], false], 1.2,
+                                0.9],
                         ['boolean', ['feature-state', 'active'], false], 0.9,
                         0.0
                     ] : [
