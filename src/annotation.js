@@ -22,6 +22,9 @@ limitations under the License.
 
 //==============================================================================
 
+import {AnnotationService} from '@abi-software/sparc-annotation';
+
+
 // We use Font Awesome icons
 import '@fortawesome/fontawesome-free/css/all.css';
 import escape from 'html-es6cape';
@@ -90,11 +93,71 @@ export class Annotator
         this.__user = undefined;
         this.__savedStatusMessage = '';
         this.__authorised = false;
+        // Don't use `localhost` as cookies won't be saved...
+        this.__annotationService = new AnnotationService(`${this.__flatmap.server}annotator`);
+
+        this.__login()
     }
 
     get user()
     {
         return this.__user;
+    }
+
+    async annotate(features, closedCallback)
+    //======================================
+    {
+        // provide a list of features so dialog needs to first provide selection list
+        // and highlight current one as user scrolls...
+
+
+        const l = await this.__annotationService.authenticate();
+console.log(l);
+
+        const r = await this.__annotationService.addAnnotation({
+            resource: 'resource_23',  // should be map's unique id
+            item: 'item65',          // sould be feature's unique id within map
+            evidence: ['http://flatmaps.org/publication'],
+            comment: 'this is some ramdom comment...'
+        });
+console.log(r);
+
+        this.__chooseFeatureProperties(features, (featureProperties) => {
+            if (featureProperties) {
+                this.__annotateFeature(featureProperties, closedCallback);
+            } else {
+                closedCallback();
+            }
+        });
+    }
+
+    async annotated_features()
+    //========================
+    {
+        const url = this.__flatmap.makeServerUrl('', 'annotator/');
+        try {
+            const response = await fetch(url, {
+                headers: {
+                    "Accept": "application/json; charset=utf-8",
+                    "Cache-Control": "no-store"
+                }
+            });
+            if (response.ok) {
+                return response.json();
+            } else {
+                console.error(`Annotated features: ${response.status} ${response.statusText}`);
+                return Promise.resolve([]);
+            }
+        } catch {
+            console.error(`Fetch failed -- is annotator available at ${this.__flatmap._baseUrl} ?`);
+            return Promise.resolve([]);
+        }
+    }
+
+    async __login()
+    {
+        document.cookie = 'user-token=eyJraWQiOiJwcjhTaWE2dm9FZTcxNyttOWRiYXRlc3lJZkx6K3lIdDE4RGR5aGVodHZNPSIsImFsZyI6IlJTMjU2In0.eyJzdWIiOiI5ZWQyMTY4MS1lNzQ5LTQ5NDUtOWVkOS1hOWM4NjA1YTBiNDYiLCJkZXZpY2Vfa2V5IjoidXMtZWFzdC0xXzM0ZDM0OGJiLWIwYzMtNGI1Mi1hY2Y4LTcyYzFjNzM0YzgwMiIsImlzcyI6Imh0dHBzOlwvXC9jb2duaXRvLWlkcC51cy1lYXN0LTEuYW1hem9uYXdzLmNvbVwvdXMtZWFzdC0xX2IxTnl4WWNyMCIsImNsaWVudF9pZCI6IjY3MG1vN3NpODFwY2Mzc2Z1YjdvMTkxNGQ4Iiwib3JpZ2luX2p0aSI6ImUzZTRkNmMwLTQ4ZmEtNGQ4Yi04M2FmLTBmMmJjNmE2MmVjOCIsImV2ZW50X2lkIjoiZTBkMDkxMDctNjNiYy00MjRlLTg3NjctMzE3YzdlNzU4ZTk3IiwidG9rZW5fdXNlIjoiYWNjZXNzIiwic2NvcGUiOiJhd3MuY29nbml0by5zaWduaW4udXNlci5hZG1pbiIsImF1dGhfdGltZSI6MTY5OTQyNjMxMywiZXhwIjoxNjk5NDMzNjQ4LCJpYXQiOjE2OTk0MzAwNDgsImp0aSI6ImY0NTFkOTg3LWM1OGItNDBmZC1iNDljLWUzN2RmODBiYzAwYiIsInVzZXJuYW1lIjoiOWVkMjE2ODEtZTc0OS00OTQ1LTllZDktYTljODYwNWEwYjQ2In0.cJtbpzzkzwySOflUXedQyUQ9fP8auT-ysEQBKDCxGp1tUWT-A43ju1tSXhDr9LV7TbYth8eJ29nDoQ4gICYGhhgJ1gNf_AQz6Or5jQuGWDMVlVsc83GDKeCgyNJuptFxv0AJIbNMI3x-somK__ipkJsdeuAtShrtrXVsMEi78FrZbdN_4tnlfFbgPu0lb1JDVOZccSV8B6mYsCvAAcrNDCGswlQVSAJJQF0xSfwFl7-xC8__nGr4MINMT2rgHzuOVmooZNOw5A5qAji933dRk6p_m3cxpo44e1HSQ24Qljj4IfuK29Dz3kiWMFZ9eV1JoanY3ePoXb9ulerOsggtEw';
+    //    console.log(await this.__annotationService.authenticate());
     }
 
     __creatorName(creator)
@@ -548,21 +611,6 @@ export class Annotator
         document.addEventListener('jspanelcloseduser', (e) => { callback(undefined) }, false);
     }
 
-    annotate(features, closedCallback)
-    //================================
-    {
-        // provide a list of features so dialog needs to first provide selection list
-        // and highlight current one as user scrolls...
-
-        this.__chooseFeatureProperties(features, (featureProperties) => {
-            if (featureProperties) {
-                this.__annotateFeature(featureProperties, closedCallback);
-            } else {
-                closedCallback();
-            }
-        });
-    }
-
     __annotateFeature(featureProperties, callback)
     //============================================
     {
@@ -601,6 +649,7 @@ export class Annotator
                 '<span id="flatmap-annotation-status" class="flex-auto"></span>',
                 '<span id="flatmap-annotation-lock" class="jsPanel-ftr-btn fa fa-lock"></span>',
             ],
+/*
             contentFetch: {
                 resource: flatmap.makeServerUrl(this.__currentFeatureId, 'annotator/'),
                 fetchInit: {
@@ -630,36 +679,13 @@ export class Annotator
                     stopSpinner(panel);
                 }
             },
+*/
             callback: annotator.__panelCallback.bind(annotator)
         });
 
         // should we warn if unsaved changes when closing??
         document.addEventListener('jspanelclosed', callback, false);
     }
-
-    async annotated_features()
-    //========================
-    {
-        const url = this.__flatmap.makeServerUrl('', 'annotator/');
-        try {
-            const response = await fetch(url, {
-                headers: {
-                    "Accept": "application/json; charset=utf-8",
-                    "Cache-Control": "no-store"
-                }
-            });
-            if (response.ok) {
-                return response.json();
-            } else {
-                console.error(`Annotated features: ${response.status} ${response.statusText}`);
-                return Promise.resolve([]);
-            }
-        } catch {
-            console.error(`Fetch failed -- is annotator available at ${this.__flatmap._baseUrl} ?`);
-            return Promise.resolve([]);
-        }
-    }
-
 }
 
 //==============================================================================
