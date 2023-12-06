@@ -350,9 +350,12 @@ export class UserInteractions
     __featureEnabled(feature)
     //=======================
     {
-        const state = this._map.getFeatureState(feature);
-        return (state !== undefined
-            && (!('hidden' in state) || !state.hidden));
+        if (feature.id) {
+            const state = this._map.getFeatureState(feature);
+            return (state !== undefined
+                && (!('hidden' in state) || !state.hidden));
+        }
+        return false;
     }
 
     featureSelected_(featureId)
