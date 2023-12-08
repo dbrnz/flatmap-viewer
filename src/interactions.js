@@ -45,6 +45,7 @@ import {PathControl} from './controls/paths';
 import {SearchControl} from './controls/search';
 import {SystemsControl} from './controls/systems';
 import {TaxonsControl} from './controls/taxons';
+import {latex2Svg} from './mathjax';
 
 import * as utils from './utils';
 
@@ -88,6 +89,31 @@ function expandBounds(bbox1, bbox2, padding)
                             : [Math.min(bbox1[0], bbox2[0]-padding.lng), Math.min(bbox1[1], bbox2[1]-padding.lat),
                                Math.max(bbox1[2], bbox2[2]+padding.lng), Math.max(bbox1[3], bbox2[3]+padding.lat)
                               ];
+}
+
+//==============================================================================
+
+function labelPosition(feature)
+{
+    const polygon = feature.geometry.coordinates;
+    // Rough heuristic. Area is in km^2; below appears to be good enough.
+    const precision = ('area' in feature.properties)
+                        ? Math.sqrt(feature.properties.area)/500000
+                        : 0.1;
+    return polylabel(polygon, precision);
+}
+
+//==============================================================================
+
+function getRenderedLabel(properties)
+{
+    if (!('renderedLabel' in properties)) {
+        const label = ('label' in properties) ? (properties.label.substr(0, 1).toUpperCase()
+                                               + properties.label.substr(1)).replaceAll("\n", "<br/>")
+                                              : '';
+        properties.renderedLabel = label.replaceAll(/`\$([^\$]*)\$`/g, math => latex2Svg(math.slice(2, -2)));
+    }
+    return properties.renderedLabel;
 }
 
 //==============================================================================
@@ -671,7 +697,6 @@ export class UserInteractions
                 tooltips.push(`<div class="feature-error">Warning: ${properties.warning}</div>`)
             }
             if ('label' in properties && (!('tooltip' in properties) || properties.tooltip)) {
-                let tooltip = '';
                 const label = properties.label;
                 const cleanLabel = (label.substr(0, 1).toUpperCase() + label.substr(1)).replaceAll("\n", "<br/>");
                 if (!tooltips.includes(cleanLabel)) {
@@ -693,19 +718,18 @@ export class UserInteractions
         if ('warning' in properties) {
             tooltip.push(`<div class="feature-error">Warning: ${properties.warning}</div>`)
         }
+        let renderedLabel;
         if (('label' in properties || 'hyperlink' in properties)
                 && (forceLabel || !('tooltip' in properties) || properties.tooltip)) {
-            const label = ('label' in properties) ? (properties.label.substr(0, 1).toUpperCase()
-                                                   + properties.label.substr(1)).replaceAll("\n", "<br/>")
-                                                  : '';
+            const renderedLabel = getRenderedLabel(properties);
             if ('hyperlink' in properties) {
-                if (label === '') {
+                if (renderedLabel === '') {
                     tooltip.push(`<a href='${properties.hyperlink}'>${properties.hyperlink}</a>`);
                 } else {
-                    tooltip.push(`<a href='${properties.hyperlink}'>${label}</a></div>`);
+                    tooltip.push(`<a href='${properties.hyperlink}'>${renderedLabel}</a></div>`);
                 }
             } else {
-                tooltip.push(label);
+                tooltip.push(renderedLabel);
             }
         }
         return (tooltip.length === 0) ? ''
@@ -1081,13 +1105,7 @@ export class UserInteractions
                 ]
             });
             if (features.length > 0) {
-                const feature = features[0];
-                const polygon = feature.geometry.coordinates;
-                // Rough heuristic. Area is in km^2; below appears to be good enough.
-                const precision = ('area' in feature.properties)
-                                    ? Math.sqrt(feature.properties.area)/500000
-                                    : 0.1;
-                position = polylabel(polygon, precision);
+                position = labelPosition(features[0]);
             }
         }
         this.__markerPositions.set(featureId, position);

@@ -26,6 +26,7 @@
     "bezier-js": "^6.1.0",
     "html-es6cape": "^2.0.2",
     "maplibre-gl": ">=3.6.0",
+    "mathjax-full": "^3.2.2",
     "minisearch": "^2.2.1",
     "polylabel": "^1.1.0"
   },
