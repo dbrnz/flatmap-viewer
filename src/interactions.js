@@ -515,7 +515,6 @@ export class UserInteractions
         this.__clearModal();
         this.__clearActiveMarker();
         this.unselectFeatures();
-        this.__enablePathFeatures(this.__pathManager.allFeatureIds(), true);
     }
 
     clearSearchResults(reset=true)
