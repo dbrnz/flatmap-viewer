@@ -170,8 +170,8 @@ class FlatMap
 
         // Disable map rotation
 
-        this._map.dragRotate.disable();
-        this._map.touchZoomRotate.disableRotation();
+        //this._map.dragRotate.disable();
+        //this._map.touchZoomRotate.disableRotation();
 
         // Add navigation controls if option set
 

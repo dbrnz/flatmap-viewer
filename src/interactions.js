@@ -22,6 +22,10 @@ limitations under the License.
 
 //==============================================================================
 
+import {colord} from "colord";
+
+import {MapboxOverlay as DeckOverlay} from '@deck.gl/mapbox';
+import {ArcLayer} from '@deck.gl/layers';
 import maplibregl from 'maplibre-gl';
 
 import {default as turfArea} from '@turf/area';
@@ -34,7 +38,7 @@ import polylabel from 'polylabel';
 //==============================================================================
 
 import {LayerManager} from './layers';
-import {PATHWAYS_LAYER, PathManager} from './pathways';
+import {pathColour, PATHWAYS_LAYER, PathManager} from './pathways';
 import {VECTOR_TILES_SOURCE} from './styling';
 import {SystemsManager} from './systems';
 
@@ -114,6 +118,12 @@ function getRenderedLabel(properties)
         properties.renderedLabel = label.replaceAll(/`\$([^\$]*)\$`/g, math => latex2Svg(math.slice(2, -2)));
     }
     return properties.renderedLabel;
+}
+
+function pathColourRGB(pathType, alpha=255)
+{
+    const rgb = colord(pathColour(pathType)).toRgb();
+    return [rgb.r, rgb.g, rgb.b, alpha];
 }
 
 //==============================================================================
@@ -215,6 +225,50 @@ export class UserInteractions
                 this._map.addControl(new TaxonsControl(flatmap));
             }
         }
+
+const pathData = [...flatmap.annotations.values()]
+                 .filter(ann => ann['tile-layer'] === 'pathways'
+                             && ann['geometry'] === 'LineString'
+                             && 'type' in ann && ann['type'].startsWith('line')
+                             && 'kind' in ann && !ann['kind'].includes('arterial') && !ann['kind'].includes('venous')
+                             && 'pathStartPosition' in ann
+                             && 'pathEndPosition' in ann)
+
+const deckOverlay = new DeckOverlay({
+  layers: [
+    new ArcLayer({
+      id: 'arcs',
+      data: pathData,
+      pickable: true,
+      autoHighlight: true,
+      numSegments: 100,
+      onHover: (i, e) => {
+        if (i.object) {
+            const lineFeatureId = +i.object.featureId;
+            this.__activateFeature(this.mapFeature(lineFeatureId));
+            for (const featureId of this.__pathManager.lineFeatureIds([lineFeatureId])) {
+                if (+featureId !== lineFeatureId) {
+                    this.__activateFeature(this.mapFeature(featureId));
+                }
+            }
+        }
+      },
+      onClick: (i, e) => {
+console.log('click', i, e)
+      },
+      // Styles
+      getSourcePosition: f => f.pathStartPosition,
+      getTargetPosition: f => f.pathEndPosition,
+      getSourceColor: f => pathColourRGB(f.kind, 160),
+      getTargetColor: f => pathColourRGB(f.kind, 160),
+      highlightColor: o => pathColourRGB(o.object.kind),
+      getWidth: 3
+    })
+  ],
+  getTooltip: ({object}) => object && object.label
+});
+
+this._map.addControl(deckOverlay);
 
         // Handle mouse events
 
