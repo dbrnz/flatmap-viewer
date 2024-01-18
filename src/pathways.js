@@ -52,6 +52,14 @@ const PATH_TYPES = [
 export const PATH_STYLE_RULES =
     PATH_TYPES.flatMap(pathType => [['==', ['get', 'kind'], pathType.type], pathType.colour]);
 
+export const PATH_COLOURS =
+    Object.fromEntries(PATH_TYPES.flatMap(pathType => [[pathType.type, pathType.colour]]));
+
+export function pathColour(pathType)
+{
+    return PATH_COLOURS[pathType] || '#FF0';
+}
+
 //==============================================================================
 
 export class PathManager
