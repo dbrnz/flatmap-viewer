@@ -569,7 +569,6 @@ this._map.addControl(deckOverlay);
         this.__clearModal();
         this.__clearActiveMarker();
         this.unselectFeatures();
-        this.__enablePathFeatures(this.__pathManager.allFeatureIds(), true);
     }
 
     clearSearchResults(reset=true)
