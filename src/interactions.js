@@ -35,7 +35,7 @@ import polylabel from 'polylabel';
 
 import {LayerManager} from './layers';
 import {PATHWAYS_LAYER, PathManager} from './pathways';
-import {VECTOR_TILES_SOURCE} from './styling';
+import {VECTOR_TILES_SOURCE} from './layers/styling';
 import {SystemsManager} from './systems';
 
 import {displayedProperties, InfoControl} from './controls/info';
