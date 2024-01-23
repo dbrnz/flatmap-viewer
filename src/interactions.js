@@ -513,8 +513,8 @@ this._map.addControl(deckOverlay);
         this._layerManager.setPaint({...this.__colourOptions, dimmed: false});
     }
 
-    __activateFeature(feature)
-    //========================
+    activateFeature(feature)
+    //======================
     {
         if (feature !== undefined) {
             this._map.setFeatureState(feature, { active: true });
@@ -862,7 +862,7 @@ this._map.addControl(deckOverlay);
         let tooltip = '';
         if (displayInfo) {
             if (!('tooltip' in features[0].properties)) {
-                this.__activateFeature(features[0]);
+                this.activateFeature(features[0]);
             }
             info = this._infoControl.featureInformation(features, event.lngLat);
         }
@@ -875,11 +875,11 @@ this._map.addControl(deckOverlay);
             tooltipFeature = lineFeatures[0];
             for (const lineFeature of lineFeatures) {
                 const lineFeatureId = +lineFeature.properties.featureId;  // Ensure numeric
-                this.__activateFeature(lineFeature);
+                this.activateFeature(lineFeature);
                 const lineIds = new Set(lineFeatures.map(f => f.properties.featureId));
                 for (const featureId of this.__pathManager.lineFeatureIds(lineIds)) {
                     if (+featureId !== lineFeatureId) {
-                        this.__activateFeature(this.mapFeature(featureId));
+                        this.activateFeature(this.mapFeature(featureId));
                     }
                 }
             }
@@ -929,7 +929,7 @@ this._map.addControl(deckOverlay);
                         info = `<div id="info-control-info">${htmlList.join('\n')}</div>`;
                     }
                 }
-                this.__activateFeature(feature);
+                this.activateFeature(feature);
                 this.__activateRelatedFeatures(feature);
                 if ('hyperlink' in feature.properties) {
                     this._map.getCanvas().style.cursor = 'pointer';
@@ -1049,15 +1049,15 @@ this._map.addControl(deckOverlay);
         if ('nerveId' in feature.properties) {
             const nerveId = feature.properties.nerveId;
             if (nerveId !== feature.id) {
-                this.__activateFeature(this.mapFeature(nerveId));
+                this.activateFeature(this.mapFeature(nerveId));
             }
             for (const featureId of this.__pathManager.nerveFeatureIds(nerveId)) {
-                this.__activateFeature(this.mapFeature(featureId));
+                this.activateFeature(this.mapFeature(featureId));
             }
         }
         if ('nodeId' in feature.properties) {
             for (const featureId of this.__pathManager.pathFeatureIds(feature.properties.nodeId)) {
-                this.__activateFeature(this.mapFeature(featureId));
+                this.activateFeature(this.mapFeature(featureId));
             }
         }
     }
@@ -1292,7 +1292,7 @@ this._map.addControl(deckOverlay);
                     if (event.type === 'mouseenter') {
                         // Highlight on mouse enter
                         this.resetActiveFeatures_();
-                        this.__activateFeature(feature);
+                        this.activateFeature(feature);
                     } else {
                         this.selectionEvent_(event, feature)
                     }
