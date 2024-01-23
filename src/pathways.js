@@ -299,6 +299,7 @@ export class PathManager
     enablePathsBySystem(system, enable, force=false)
     //==============================================
     {
+        let changed = false;
         for (const pathId of system.pathIds) {
             const path = this.__paths[pathId];
             if (this.__pathtypeEnabled[path.pathType]
@@ -311,12 +312,16 @@ export class PathManager
                 for (const featureId of featureIds) {
                     this.__ui.enableFeature(featureId, enable, force);
                 }
+                changed = true
             }
             path.systemCount += (enable ? 1 : -1);
             if (path.systemCount < 0) {
                 path.systemCount = 0;
             }
             // TODO? Show connectors and parent components of these paths??
+        }
+        if (changed) {
+            this.#notifyWatchers()
         }
     }
 
@@ -330,6 +335,7 @@ export class PathManager
                 this.__ui.enableFeature(featureId, enable, force);
             }
             this.__pathtypeEnabled[pathType] = enable;
+            this.#notifyWatchers()
         }
     }
 
@@ -359,6 +365,31 @@ export class PathManager
             }
         }
         return nodeIds;
+    }
+
+    #lastWatcherId = 0
+    #watcherCallbacks = new Map()
+
+    addWatcher(callback)
+    //==================
+    {
+        this.#lastWatcherId += 1
+        this.#watcherCallbacks.set(this.#lastWatcherId, callback)
+        return this.#lastWatcherId
+    }
+
+    removeWatcher(watcherId)
+    //======================
+    {
+        this.#watcherCallbacks.delete(watcherId)
+    }
+
+    #notifyWatchers()
+    //===============
+    {
+        for (const callback of this.#watcherCallbacks.values()) {
+            callback()
+        }
     }
 }
 
