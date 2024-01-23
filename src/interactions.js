@@ -36,6 +36,7 @@ import polylabel from 'polylabel';
 import {LayerManager} from './layers';
 import {PATHWAYS_LAYER, PathManager} from './pathways';
 import {VECTOR_TILES_SOURCE} from './layers/styling';
+import {Paths3DLayer} from './layers/paths3d'
 import {SystemsManager} from './systems';
 
 import {displayedProperties, InfoControl} from './controls/info';
@@ -121,6 +122,8 @@ function getRenderedLabel(properties)
 
 export class UserInteractions
 {
+    #paths3dLayer
+
     constructor(flatmap)
     {
         this._flatmap = flatmap;
@@ -184,6 +187,9 @@ export class UserInteractions
         // All taxons of connectivity paths are enabled by default
         this.__enabledConnectivityTaxons = new Set(this._flatmap.taxonIdentifiers);
 
+        // Support 3D path view
+        this.#paths3dLayer = new Paths3DLayer(flatmap, this)
+
         // Add various controls when running standalone
         if (flatmap.options.standalone) {
             // Add a control to search annotations if option set
@@ -216,7 +222,7 @@ export class UserInteractions
                 this._map.addControl(new TaxonsControl(flatmap));
             }
 
-            this._map.addControl(new Path3DControl(flatmap, this));
+            this._map.addControl(new Path3DControl(this));
         }
 
         // Handle mouse events
@@ -289,6 +295,12 @@ export class UserInteractions
     //===============================
     {
         this._layerManager.activate(layerId, enable);
+    }
+
+    enable3dPaths(enable=true)
+    //========================
+    {
+        this.#paths3dLayer.enable(enable)
     }
 
     getSystems()

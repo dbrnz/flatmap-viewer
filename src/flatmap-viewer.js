@@ -898,6 +898,19 @@ class FlatMap
         }
     }
 
+    /**
+     * Show/hide 3D path view.
+     *
+     * @param      {boolean}  [enable=true]
+     */
+    enable3dPaths(enable=true)
+    //========================
+    {
+        if (this._userInteractions !== null) {
+            this._userInteractions.enable3dPaths(enable)
+        }
+    }
+
     //==========================================================================
 
     /**
