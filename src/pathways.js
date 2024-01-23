@@ -339,6 +339,12 @@ export class PathManager
         }
     }
 
+    pathTypeEnabled(pathType)
+    //=======================
+    {
+        return this.__pathtypeEnabled[pathType] || false
+    }
+
     nodePathModels(nodeId)
     //====================
     {
