@@ -1062,12 +1062,6 @@ this._map.addControl(deckOverlay);
         }
     }
 
-    enablePath(pathId, enable=true)
-    //=============================
-    {
-        this.__pathManager.enablePath(pathId, enable);
-    }
-
     enablePathsBySystem(system, enable=true, force=false)
     //===================================================
     {
