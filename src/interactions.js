@@ -213,6 +213,8 @@ export class UserInteractions
             } else {
                 // Connectivity taxon control for AC maps
                 this._map.addControl(new TaxonsControl(flatmap));
+//                this._map.addControl(new AnnotationControl(flatmap));
+                this._map.addControl(new AnnotationRegionControl(flatmap));
             }
         }
 
