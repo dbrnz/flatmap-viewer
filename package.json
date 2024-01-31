@@ -17,6 +17,7 @@
   "author": "David Brooks",
   "license": "MIT",
   "dependencies": {
+    "@abi-software/sparc-annotation": "^0.0.4",
     "@babel/runtime": "^7.10.4",
     "@fortawesome/fontawesome-free": "^6.4.0",
     "@mapbox/mapbox-gl-draw": "^1.4.3",
@@ -25,6 +26,7 @@
     "@turf/helpers": "^6.5.0",
     "@turf/projection": "^6.5.0",
     "bezier-js": "^6.1.0",
+    "jspanel4": "^4.16.1",
     "html-es6cape": "^2.0.2",
     "mapbox-gl-draw-freehand-mode": "^2.1.0",
     "maplibre-gl": ">=3.6.0",

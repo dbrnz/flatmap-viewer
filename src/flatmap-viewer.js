@@ -96,6 +96,10 @@ class FlatMap
             this.__searchIndex.indexMetadata(featureId, annotation);
         }
 
+        if (this.options.annotator) {
+            this.__addAnnotatedComments();
+        }
+
         // Set base of source URLs in map's style
 
         for (const [id, source] of Object.entries(mapDescription.style.sources)) {
@@ -218,6 +222,25 @@ class FlatMap
                 this._resolve(this);
             }
         });
+    }
+
+    async __addAnnotatedComments()
+    //============================
+    {
+        const url = this.makeServerUrl('', 'annotator/')
+        const annotatedFeatures = await loadJSON(url);
+        for (const annotatedId of annotatedFeatures) {
+            const featureId = this.__annIdToFeatureId.get(annotatedId);
+            if (featureId) {
+                const url = this.makeServerUrl(annotatedId, 'annotator/')
+                const annotations = await loadJSON(url);
+                for (const annotation of annotations) {   // In order of most recent to oldest
+                    if ('rdfs:comment' in annotation) {
+                        this.__searchIndex.indexText(featureId, annotation['rdfs:comment']);
+                    }
+                }
+            }
+        }
     }
 
     async setupUserInteractions_()

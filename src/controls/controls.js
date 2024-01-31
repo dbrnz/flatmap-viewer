@@ -526,6 +526,73 @@ export class NerveControl
 
 //==============================================================================
 
+export class AnnotatedControl
+{
+    constructor(ui, options={excludeAnnotated: false})
+    {
+        this.__ui = ui;
+        this.__map = undefined;
+        this.__exclude = options.excludeAnnotated || false;
+    }
+
+    getDefaultPosition()
+    //==================
+    {
+        return 'top-right';
+    }
+
+    onAdd(map)
+    //========
+    {
+        this.__map = map;
+        this.__container = document.createElement('div');
+        this.__container.className = 'maplibregl-ctrl';
+
+        this.__button = document.createElement('button');
+        this.__button.id = 'map-annotated-button';
+        this.__button.className = 'control-button text-button';
+        this.__button.setAttribute('type', 'button');
+        this.__button.setAttribute('aria-label', 'Show/hide annotated paths');
+        this.__button.textContent = 'UNANN';
+        this.__button.title = 'Show/hide annotated paths';
+        this.__container.appendChild(this.__button);
+
+        this.__container.addEventListener('click', this.onClick_.bind(this));
+        this.__setBackground();
+        return this.__container;
+    }
+
+    __setBackground()
+    //===============
+    {
+        if (this.__exclude) {
+            this.__button.setAttribute('style', 'background: red');
+        } else {
+            this.__button.removeAttribute('style');
+        }
+    }
+
+    onRemove()
+    //========
+    {
+        this.__container.parentNode.removeChild(this.__container);
+        this.__map = undefined;
+    }
+
+    onClick_(event)
+    //=============
+    {
+        if (event.target.id === 'map-annotated-button') {
+            this.__exclude = !this.__exclude;
+            this.__setBackground();
+            this.__ui.excludeAnnotated(this.__exclude);
+        }
+        event.stopPropagation();
+    }
+}
+
+//==============================================================================
+
 export class BackgroundControl
 {
     constructor(flatmap)

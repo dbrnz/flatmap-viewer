@@ -33,14 +33,16 @@ import polylabel from 'polylabel';
 
 //==============================================================================
 
+import {Annotator} from './annotation';
 import {LayerManager} from './layers';
 import {PATHWAYS_LAYER, PathManager} from './pathways';
 import {VECTOR_TILES_SOURCE} from './styling';
 import {SystemsManager} from './systems';
 
 import {displayedProperties, InfoControl} from './controls/info';
-import {BackgroundControl, LayerControl, NerveControl,
+import {AnnotatedControl, BackgroundControl, LayerControl, NerveControl,
         SCKANControl} from './controls/controls';
+import {AnnotationRegionControl} from './controls/annotation'
 import {PathControl} from './controls/paths';
 import {SearchControl} from './controls/search';
 import {SystemsControl} from './controls/systems';
@@ -177,6 +179,13 @@ export class UserInteractions
             this.enableCentrelines(this.__pathManager.enabledCentrelines, true);
         }
 
+        // Add annotation capability
+        if (flatmap.options.annotator) {
+            this.__setupAnnotation();
+        } else {
+            this.__annotator = null;
+        }
+
         // Note features that are FC systems
         this.__systemsManager = new SystemsManager(this._flatmap, this, featuresEnabled);
 
@@ -215,6 +224,11 @@ export class UserInteractions
                 this._map.addControl(new TaxonsControl(flatmap));
 //                this._map.addControl(new AnnotationControl(flatmap));
                 this._map.addControl(new AnnotationRegionControl(flatmap));
+            }
+
+            if (flatmap.options.annotator) {
+                // Show/hide annotated paths
+                this._map.addControl(new AnnotatedControl(this, flatmap.options.layerOptions));
             }
         }
 
@@ -268,6 +282,41 @@ export class UserInteractions
         }
         if (Object.keys(options).length > 0) {
             this._map.jumpTo(options);
+        }
+    }
+
+    async __setupAnnotation()
+    //=======================
+    {
+        // Add annotation capability
+
+        this.__annotator = new Annotator(this._flatmap, this);
+        const annotated_features = await this.__annotator.annotated_features();
+
+        // Flag features that have annotations
+        this.__featureIdToMapId = new Map();
+        for (const [mapId, ann] of this._flatmap.annotations) {
+            this.__featureIdToMapId.set(ann.id, mapId);
+            const feature = this.mapFeature(mapId);
+            if (feature !== undefined) {
+                this._map.setFeatureState(feature, { 'map-annotation': true });
+                if (annotated_features.includes(ann.id)) {
+                    this._map.setFeatureState(feature, { 'annotated': true });
+                }
+            }
+        }
+    }
+
+    setFeatureAnnotated(featureId)
+    //============================
+    {
+        if (this.__annotator) {
+            // featureId v's geoJSON id
+            const mapId = this.__featureIdToMapId.get(featureId);
+            const feature = this.mapFeature(mapId);
+            if (feature !== undefined) {
+                this._map.setFeatureState(feature, { 'annotated': true });
+            }
         }
     }
 
@@ -961,6 +1010,28 @@ export class UserInteractions
         }
     }
 
+    __annotationEvent(features)
+    //=========================
+    {
+        if (!this.__annotator) {
+            return;
+        }
+
+        event.preventDefault();
+
+        // Remove any tooltip
+        this.removeTooltip_();
+
+        // Don't respond to mouse events while the dialog is open
+        this.setModal_();
+
+        // The annotation dialog...
+        this.__annotator.annotate(features, () => {
+            this.unselectFeatures();
+            this.__clearModal();
+        });
+    }
+
     clickEvent_(event)
     //================
     {
@@ -975,8 +1046,13 @@ export class UserInteractions
             this.unselectFeatures();
             return;
         }
+        const originalEvent = event.originalEvent;
+        if (originalEvent.altKey) {
+            this.__annotationEvent(clickedFeatures);
+            return;
+        }
         const clickedFeature = clickedFeatures[0];
-        this.selectionEvent_(event.originalEvent, clickedFeature);
+        this.selectionEvent_(originalEvent, clickedFeature);
         if (this._modal) {
             // Remove tooltip, reset active features, etc
             this.__resetFeatureDisplay();
