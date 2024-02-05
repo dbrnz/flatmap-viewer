@@ -22,6 +22,7 @@ export class Path3DControl
 {
     #button
     #container
+    #enabled = false
     #map = null
     #flatmap
 
@@ -60,16 +61,29 @@ export class Path3DControl
         this.#map = undefined
     }
 
+    __setBackground()
+    //===============
+    {
+        if (this.#enabled) {
+            this.#button.setAttribute('style', 'background: red');
+        } else {
+            this.#button.removeAttribute('style');
+        }
+    }
+
     onClick(_event)
     //=============
     {
         if (this.#button.classList.contains('control-active')) {
             this.#flatmap.enable3dPaths(false)
             this.#button.classList.remove('control-active')
+            this.#enabled = false
         } else {
             this.#flatmap.enable3dPaths(true)
             this.#button.classList.add('control-active')
+            this.#enabled = true
         }
+        this.__setBackground()
     }
 }
 
