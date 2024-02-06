@@ -18,31 +18,99 @@ limitations under the License.
 
 ******************************************************************************/
 
-import {colord} from 'colord'
 import {ArcLayer} from '@deck.gl/layers'
 import {MapboxOverlay as DeckOverlay} from '@deck.gl/mapbox'
+import {Model, Geometry} from '@luma.gl/core'
+import GL from '@luma.gl/constants'
 
 //==============================================================================
 
-import {pathColour} from '../pathways'
+import {pathColourArray} from '../pathways'
 
-// Should this be in `pathways.js` ??
-function pathColourRGB(pathType, alpha=255)
-//=========================================
+
+//==============================================================================
+
+const transparencyCheck = '|| length(vColor) == 0.0'
+
+class ArcMapLayer extends ArcLayer
 {
-    const rgb = colord(pathColour(pathType)).toRgb()
-    return [rgb.r, rgb.g, rgb.b, alpha]
+    static layerName = 'ArcMapLayer'
+
+    constructor(...args)
+    {
+        super(...args)
+    }
+
+    getShaders()
+    //==========
+    {
+        const shaders = super.getShaders()
+        shaders.fs = `#version 300 es\n${shaders.fs}`
+                     .replace('isValid == 0.0', `isValid == 0.0 ${transparencyCheck}`)
+        shaders.vs = `#version 300 es\n${shaders.vs}`
+        return shaders
+    }
+}
+
+//==============================================================================
+
+const makeDashed = `  float alpha = floor(fract(float(gl_VertexID)/6.0)+0.5);
+  if (vColor.a != 0.0) vColor.a = alpha;
+`
+
+class ArcDashedLayer extends ArcMapLayer
+{
+    static layerName = 'ArcDashedLayer'
+
+    constructor(...args)
+    {
+        super(...args)
+    }
+
+    getShaders()
+    //==========
+    {
+        const shaders = super.getShaders()
+        shaders.vs = shaders.vs.replace('DECKGL_FILTER_COLOR(', `${makeDashed}\n  DECKGL_FILTER_COLOR(`)
+        return shaders
+    }
+
+    _getModel(gl)
+    //===========
+    {
+        const {numSegments} = this.props
+        let positions = []
+        for (let i = 0; i < numSegments; i++) {
+            positions = positions.concat([i, 1, 0, i, -1, 0]);
+        }
+        const model = new Model(gl, {
+            ...this.getShaders(),
+            id: this.props.id,
+            geometry: new Geometry({
+                drawMode: GL.TRIANGLE_STRIP,
+                attributes: {
+                    positions: new Float32Array(positions)
+                }
+            }),
+            isInstanced: true,
+        })
+        model.setUniforms({numSegments: numSegments})
+        return model
+    }
 }
 
 //==============================================================================
 
 export class Paths3DLayer
 {
+    #arcLayers = new Map()
     #deckOverlay = null
     #enabled = false
+    #knownTypes = []
     #map
     #pathData
     #pathManager
+    #pathStyles
     #ui
 
     constructor(flatmap, ui)
@@ -51,80 +119,107 @@ export class Paths3DLayer
         this.#map = flatmap.map
         this.#pathManager = ui.pathManager
         this.#pathManager.addWatcher(this.#pathStateChanged.bind(this))
-        this.#pathData = [...flatmap.annotations.values()]
-                 .filter(ann => ann['tile-layer'] === 'pathways'
-                             && ann['geometry'] === 'LineString'
-                             && 'type' in ann && ann['type'].startsWith('line')
-                             && 'kind' in ann // && !ann['kind'].includes('arterial') && !ann['kind'].includes('venous')
-                             && 'pathStartPosition' in ann
-                             && 'pathEndPosition' in ann)
+        this.#pathData = new Map([...flatmap.annotations.values()]
+                                 .filter(ann => ann['tile-layer'] === 'pathways'
+                                             && ann['geometry'] === 'LineString'
+                                             && 'type' in ann && ann['type'].startsWith('line')
+                                             && 'kind' in ann
+                                             && 'pathStartPosition' in ann
+                                             && 'pathEndPosition' in ann)
+                                 .map(ann => [ann.featureId, ann]))
+        this.#pathStyles = new Map(this.#pathManager.pathStyles().map(s => [s.type, s]))
+        this.#knownTypes = [...this.#pathStyles.keys()].filter(t => t !== 'other')
     }
 
     enable(enable=true)
     //=================
     {
         if (enable && !this.#enabled) {
-            this.#setDeckOverlay()
+            this.#setupDeckOverlay()
             this.#map.addControl(this.#deckOverlay)
         } else if (!enable && this.#enabled) {
             if (this.#deckOverlay) {
                 this.#map.removeControl(this.#deckOverlay)
+                this.#deckOverlay.finalize()
                 this.#deckOverlay = null
             }
         }
         this.#enabled = enable
     }
 
-    #pathStateChanged()
-    //=================
+    #pathStateChanged(changes={})
+    //===========================
     {
         if (this.#deckOverlay) {
-            this.#map.removeControl(this.#deckOverlay)
-            this.#setDeckOverlay()
-            this.#map.addControl(this.#deckOverlay)
+            if ('pathType' in changes) {
+                const pathType = changes.pathType
+                const enabled = this.#pathManager.pathTypeEnabled(pathType)
+                if (enabled && !this.#arcLayers.has(pathType)) {
+                    const pathStyles = this.#pathManager.pathStyles()
+                    this.#arcLayers.set(pathType, this.#arcLayer(pathType, this.#pathStyles.get(pathType).dashed))
+                } else if (!enabled && this.#arcLayers.has(pathType)) {
+                    this.#arcLayers.delete(pathType)
+                }
+                this.#deckOverlay.setProps({
+                    layers:  [...this.#arcLayers.values()]
+                })
+            }
         }
     }
 
-    #setDeckOverlay()
-    //===============
+    #layerOptions(type)
+    //=================
     {
-        this.#deckOverlay = new DeckOverlay({
-            layers: [
-                // Need to have two layers, one with dashed lines, one without
-                //
-                // Better, one layer per pathType and set/clear layer.visible...
-                //
-                new ArcLayer({
-                    id: 'arcs',
-                    data: this.#pathData
-                              .filter(f => this.#pathManager.pathTypeEnabled(f.kind)),
-                    pickable: true,
-                    autoHighlight: true,
-                    numSegments: 100,
-                    onHover: (i, e) => {
-                        //console.log('hover', i, e)
-                        if (i.object) {
-                            const lineFeatureId = +i.object.featureId
-                            this.#ui.activateFeature(this.#ui.mapFeature(lineFeatureId))
-                            for (const featureId of this.#pathManager.lineFeatureIds([lineFeatureId])) {
-                                if (+featureId !== lineFeatureId) {
-                                    this.#ui.activateFeature(this.#ui.mapFeature(featureId))
-                                }
-                            }
+        const pathData = [...this.#pathData.values()]
+                                 .filter(ann => (this.#knownTypes.includes(ann.kind) && (ann.kind === type)
+                                             || !this.#knownTypes.includes(ann.kind) && (type === 'other')))
+        return {
+            id: `arc-${type}`,
+            data: pathData,
+            pickable: true,
+            autoHighlight: true,
+            numSegments: 400,
+            onHover: (i, e) => {
+                if (i.object) {
+                    // change width
+                    const lineFeatureId = +i.object.featureId
+                    this.#ui.activateFeature(this.#ui.mapFeature(lineFeatureId))
+                    for (const featureId of this.#pathManager.lineFeatureIds([lineFeatureId])) {
+                        if (+featureId !== lineFeatureId) {
+                            this.#ui.activateFeature(this.#ui.mapFeature(featureId))
                         }
-                    },
-                    onClick: (i, e) => {
-                        console.log('click', i, e)
-                    },
-                    // Styles
-                    getSourcePosition: f => f.pathStartPosition,
-                    getTargetPosition: f => f.pathEndPosition,
-                    getSourceColor: f => pathColourRGB(f.kind, 160),
-                    getTargetColor: f => pathColourRGB(f.kind, 160),
-                    highlightColor: o => pathColourRGB(o.object.kind),
-                    getWidth: 3,
-            ],
+                    }
+                    return true   // stop bubbling up...
+                }
+            },
+            // Styles
+            getSourcePosition: f => f.pathStartPosition,
+            getTargetPosition: f => f.pathEndPosition,
+            getSourceColor: f => pathColourArray(f.kind, 160),
+            getTargetColor: f => pathColourArray(f.kind, 160),
+            highlightColor: o => pathColourArray(o.object.kind),
+            opacity: 1.0,
+            getWidth: 3,
+        }
+    }
+
+    #arcLayer(type, dashed)
+    //=====================
+    {
+        return dashed ? new ArcDashedLayer(this.#layerOptions(type))
+                      : new ArcMapLayer(this.#layerOptions(type))
+    }
+
+    #setupDeckOverlay()
+    //=================
+    {
+        [...this.#pathStyles.values()].filter(style => this.#pathManager.pathTypeEnabled(style.type))
+                                      .forEach(style => this.#arcLayers.set(style.type, this.#arcLayer(style.type, style.dashed)))
+        this.#deckOverlay = new DeckOverlay({
+            layers: [...this.#arcLayers.values()],
             getTooltip: ({object}) => object && object.label
         })
     }
 }
+
+//==============================================================================

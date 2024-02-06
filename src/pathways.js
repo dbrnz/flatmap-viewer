@@ -20,6 +20,8 @@ limitations under the License.
 
 'use strict';
 
+import {colord} from 'colord'
+
 //==============================================================================
 
 import { reverseMap } from './utils';
@@ -49,15 +51,21 @@ const PATH_TYPES = [
     { type: "error", label: "Paths with errors or warnings", colour: "#FF0", enabled: false}
 ];
 
+const PathTypeMap = new Map(PATH_TYPES.map(t => [t.type, t]))
+
 export const PATH_STYLE_RULES =
     PATH_TYPES.flatMap(pathType => [['==', ['get', 'kind'], pathType.type], pathType.colour]);
 
-export const PATH_COLOURS =
-    Object.fromEntries(PATH_TYPES.flatMap(pathType => [[pathType.type, pathType.colour]]));
-
-export function pathColour(pathType)
+export function pathColourArray(pathType, alpha=255)
+//==================================================
 {
-    return PATH_COLOURS[pathType] || '#FF0';
+    if (pathType === 'hidden') {
+        return [0, 0, 0, 0]
+    }
+    const rgb = colord(PathTypeMap.has(pathType)
+                        ? PathTypeMap.get(pathType).colour
+                        : '#FF0').toRgb()
+    return [rgb.r, rgb.g, rgb.b, alpha]
 }
 
 //==============================================================================
@@ -160,6 +168,21 @@ export class PathManager
                 this.__paths[pathId].pathType = pathType;
             }
         }
+    }
+
+    pathStyles()
+    //==========
+    {
+        const styles = []
+        for (const mapType of this.pathTypes()) {
+            const defn = PathTypeMap.get(mapType.type)
+            styles.push({
+                type: defn.type,
+                colour: defn.colour,
+                dashed: defn.dashed || false
+            })
+        }
+        return styles
     }
 
     pathTypes()
@@ -335,7 +358,7 @@ export class PathManager
                 this.__ui.enableFeature(featureId, enable, force);
             }
             this.__pathtypeEnabled[pathType] = enable;
-            this.#notifyWatchers()
+            this.#notifyWatchers({pathType})
         }
     }
 
@@ -390,11 +413,11 @@ export class PathManager
         this.#watcherCallbacks.delete(watcherId)
     }
 
-    #notifyWatchers()
-    //===============
+    #notifyWatchers(changes={})
+    //=========================
     {
         for (const callback of this.#watcherCallbacks.values()) {
-            callback()
+            callback(changes)
         }
     }
 }

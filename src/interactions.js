@@ -122,7 +122,7 @@ function getRenderedLabel(properties)
 
 export class UserInteractions
 {
-    #paths3dLayer
+    #paths3dLayer = null
 
     constructor(flatmap)
     {
@@ -300,7 +300,9 @@ export class UserInteractions
     enable3dPaths(enable=true)
     //========================
     {
-        this.#paths3dLayer.enable(enable)
+        if (this.#paths3dLayer) {
+            this.#paths3dLayer.enable(enable)
+        }
     }
 
     getSystems()
