@@ -36,9 +36,20 @@ class ArcMapLayer extends ArcLayer
 {
     static layerName = 'ArcMapLayer'
 
+    #dirty = false
+    #pathData
+
     constructor(...args)
     {
         super(...args)
+        this.#pathData = new Map([...this.props.data].map(ann => [+ann.featureId, ann]))
+        this.#pathData.forEach(ann => delete ann['hidden'])
+    }
+
+    get featureIds()
+    //==============
+    {
+        return [...this.#pathData.keys()]
     }
 
     getShaders()
@@ -49,6 +60,27 @@ class ArcMapLayer extends ArcLayer
                      .replace('isValid == 0.0', `isValid == 0.0 ${transparencyCheck}`)
         shaders.vs = `#version 300 es\n${shaders.vs}`
         return shaders
+    }
+    setDataProperty(featureId, key, enabled)
+    //======================================
+    {
+        const properties = this.#pathData.get(+featureId)
+        if (properties) {
+            if (!(key in properties) || properties[key] !== enabled) {
+                properties[key] = enabled
+                this.#dirty = true
+            }
+        }
+    }
+
+    redraw(force=false)
+    //=================
+    {
+        if (force || this.#dirty) {
+            this.internalState.changeFlags.dataChanged = true
+            this.setNeedsUpdate()
+            this.#dirty = false
+        }
     }
 }
 
@@ -106,7 +138,9 @@ export class Paths3DLayer
 {
     #arcLayers = new Map()
     #deckOverlay = null
+    #dimmed = false
     #enabled = false
+    #featureToLayer = new Map()
     #knownTypes = []
     #map
     #pathData
@@ -144,8 +178,91 @@ export class Paths3DLayer
                 this.#deckOverlay.finalize()
                 this.#deckOverlay = null
             }
+            this.#featureToLayer = new Map()
         }
         this.#enabled = enable
+    }
+
+    queryFeaturesAtPoint(point)
+    //=========================
+    {
+        if (this.#deckOverlay) {
+            return this.#deckOverlay
+                       .pickMultipleObjects(point)
+                       .map(o => this.#makeMapFeature(o.object))
+        }
+        return []
+    }
+
+    redraw(force=false)
+    //=================
+    {
+        for (const layer of this.#arcLayers.values()) {
+            layer.redraw(force)
+        }
+    }
+
+    removeFeatureState(featureId, key)
+    //================================
+    {
+        const layer = this.#featureToLayer.get(+featureId)
+        if (layer) {
+            layer.setDataProperty(featureId, key, false)
+            layer.redraw()
+        }
+    }
+
+    setFeatureState(featureId, state)
+    //===============================
+    {
+        const layer = this.#featureToLayer.get(+featureId)
+        if (layer) {
+            for (const [key, value] of Object.entries(state)) {
+                layer.setDataProperty(featureId, key, value)
+            }
+            layer.redraw()
+        }
+    }
+
+    setPaint(options)
+    //===============
+    {
+        const dimmed = options.dimmed || false
+        if (this.#dimmed !== dimmed) {
+            this.#dimmed = dimmed
+            this.redraw(true)
+        }
+    }
+
+    #addArcLayer(pathType)
+    //====================
+    {
+        const layer = this.#pathStyles.get(pathType).dashed
+                        ? new ArcDashedLayer(this.#layerOptions(pathType))
+                        : new ArcMapLayer(this.#layerOptions(pathType))
+        layer.featureIds.forEach(id => this.#featureToLayer.set(+id, layer))
+        this.#arcLayers.set(pathType, layer)
+    }
+
+    #removeArcLayer(pathType)
+    //=======================
+    {
+        const layer = this.#arcLayers.get(pathType)
+        if (layer) {
+            layer.featureIds.forEach(id => this.#featureToLayer.delete(+id))
+            this.#arcLayers.delete(pathType)
+        }
+    }
+
+    #pathColour(properties)
+    //=====================
+    {
+        if (properties.hidden) {
+            return [0, 0, 0, 0]
+        }
+        return pathColourArray(properties.kind,
+                               properties.active || properties.selected ? 255
+                                                                        : this.#dimmed ? 20 : 160)
     }
 
     #pathStateChanged(changes={})
@@ -156,10 +273,9 @@ export class Paths3DLayer
                 const pathType = changes.pathType
                 const enabled = this.#pathManager.pathTypeEnabled(pathType)
                 if (enabled && !this.#arcLayers.has(pathType)) {
-                    const pathStyles = this.#pathManager.pathStyles()
-                    this.#arcLayers.set(pathType, this.#arcLayer(pathType, this.#pathStyles.get(pathType).dashed))
+                    this.#addArcLayer(pathType)
                 } else if (!enabled && this.#arcLayers.has(pathType)) {
-                    this.#arcLayers.delete(pathType)
+                    this.#removeArcLayer(pathType)
                 }
                 this.#deckOverlay.setProps({
                     layers:  [...this.#arcLayers.values()]
@@ -168,57 +284,50 @@ export class Paths3DLayer
         }
     }
 
-    #layerOptions(type)
-    //=================
+
+    #layerOptions(pathType)
+    //=====================
     {
         const pathData = [...this.#pathData.values()]
-                                 .filter(ann => (this.#knownTypes.includes(ann.kind) && (ann.kind === type)
-                                             || !this.#knownTypes.includes(ann.kind) && (type === 'other')))
+                                 .filter(ann => (this.#knownTypes.includes(ann.kind) && (ann.kind === pathType)
+                                             || !this.#knownTypes.includes(ann.kind) && (pathType === 'other')))
         return {
-            id: `arc-${type}`,
+            id: `arc-${pathType}`,
             data: pathData,
             pickable: true,
             autoHighlight: true,
             numSegments: 400,
-            onHover: (i, e) => {
-                if (i.object) {
-                    // change width
-                    const lineFeatureId = +i.object.featureId
-                    this.#ui.activateFeature(this.#ui.mapFeature(lineFeatureId))
-                    for (const featureId of this.#pathManager.lineFeatureIds([lineFeatureId])) {
-                        if (+featureId !== lineFeatureId) {
-                            this.#ui.activateFeature(this.#ui.mapFeature(featureId))
-                        }
-                    }
-                    return true   // stop bubbling up...
-                }
-            },
             // Styles
             getSourcePosition: f => f.pathStartPosition,
             getTargetPosition: f => f.pathEndPosition,
-            getSourceColor: f => pathColourArray(f.kind, 160),
-            getTargetColor: f => pathColourArray(f.kind, 160),
-            highlightColor: o => pathColourArray(o.object.kind),
+            getSourceColor: this.#pathColour.bind(this),
+            getTargetColor: this.#pathColour.bind(this),
+            highlightColor: o => this.#pathColour(o.object),
             opacity: 1.0,
             getWidth: 3,
         }
     }
 
-    #arcLayer(type, dashed)
-    //=====================
+    #makeMapFeature(pickedObject)
+    //===========================
     {
-        return dashed ? new ArcDashedLayer(this.#layerOptions(type))
-                      : new ArcMapLayer(this.#layerOptions(type))
+        // Mock up a map vector feature
+        return {
+            id: pickedObject.featureId,
+            source: 'vector-tiles',
+            sourceLayer: `${pickedObject.layer}_${pickedObject['tile-layer']}`,
+            properties: pickedObject,
+            arc3dLayer: true
+        }
     }
 
     #setupDeckOverlay()
     //=================
     {
         [...this.#pathStyles.values()].filter(style => this.#pathManager.pathTypeEnabled(style.type))
-                                      .forEach(style => this.#arcLayers.set(style.type, this.#arcLayer(style.type, style.dashed)))
+                                      .forEach(style => this.#addArcLayer(style.type))
         this.#deckOverlay = new DeckOverlay({
             layers: [...this.#arcLayers.values()],
-            getTooltip: ({object}) => object && object.label
         })
     }
 }

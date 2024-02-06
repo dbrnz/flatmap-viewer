@@ -59,9 +59,6 @@ export const PATH_STYLE_RULES =
 export function pathColourArray(pathType, alpha=255)
 //==================================================
 {
-    if (pathType === 'hidden') {
-        return [0, 0, 0, 0]
-    }
     const rgb = colord(PathTypeMap.has(pathType)
                         ? PathTypeMap.get(pathType).colour
                         : '#FF0').toRgb()

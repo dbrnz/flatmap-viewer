@@ -129,7 +129,7 @@ export class UserInteractions
         this._flatmap = flatmap;
         this._map = flatmap.map;
 
-        this._activeFeatures = [];
+        this._activeFeatures = new Set()
         this._selectedFeatureIds = new Map();
         this._currentPopup = null;
         this._infoControl = null;
@@ -278,11 +278,20 @@ export class UserInteractions
         }
     }
 
+    #setPaint(options)
+    //================
+    {
+        this._layerManager.setPaint(options)
+        if (this.#paths3dLayer) {
+            this.#paths3dLayer.setPaint(options)
+        }
+    }
+
     setPaint(options)
     //===============
     {
         this.__colourOptions = options;
-        this._layerManager.setPaint(options);
+        this.#setPaint(options);
     }
 
     getLayers()
@@ -334,19 +343,43 @@ export class UserInteractions
         return undefined;
     }
 
+    #getFeatureState(feature)
+    //=======================
+    {
+        return this._map.getFeatureState(feature)
+    }
+
+    #removeFeatureState(feature, key)
+    //===============================
+    {
+        this._map.removeFeatureState(feature, key)
+        if (this.#paths3dLayer) {
+            this.#paths3dLayer.removeFeatureState(feature.id, key)
+        }
+    }
+
+    #setFeatureState(feature, state)
+    //==============================
+    {
+        this._map.setFeatureState(feature, state)
+        if (this.#paths3dLayer) {
+            this.#paths3dLayer.setFeatureState(feature.id, state)
+        }
+    }
+
     enableMapFeature(feature, enable=true)
     //====================================
     {
         if (feature !== undefined) {
-            const state = this._map.getFeatureState(feature);
+            const state = this.#getFeatureState(feature);
             if  ('hidden' in state) {
                 if (enable) {
-                    this._map.removeFeatureState(feature, 'hidden');
+                    this.#removeFeatureState(feature, 'hidden');
                 } else if (!state.hidden) {
-                    this._map.setFeatureState(feature, { 'hidden': true });
+                    this.#setFeatureState(feature, { hidden: true });
                 }
             } else if (!enable) {
-                this._map.setFeatureState(feature, { 'hidden': true });
+                this.#setFeatureState(feature, { hidden: true });
             }
             this.__enableFeatureMarker(feature.id, enable);
         }
@@ -394,7 +427,7 @@ export class UserInteractions
     //=======================
     {
         if (feature.id) {
-            const state = this._map.getFeatureState(feature);
+            const state = this.#getFeatureState(feature);
             return (state !== undefined
                 && (!('hidden' in state) || !state.hidden));
         }
@@ -428,16 +461,16 @@ export class UserInteractions
         } else {
             const feature = this.mapFeature(featureId);
             if (feature !== undefined) {
-                const state = this._map.getFeatureState(feature);
+                const state = this.#getFeatureState(feature);
                 if (state !== undefined && (!('hidden' in state) || !state.hidden)) {
-                    this._map.setFeatureState(feature, { 'selected': true });
+                    this.#setFeatureState(feature, { selected: true });
                     this._selectedFeatureIds.set(featureId, 1);
                     result = true;
                 }
             }
         }
         if (result && noSelection) {
-            this._layerManager.setPaint({...this.__colourOptions, dimmed: dim});
+            this.#setPaint({...this.__colourOptions, dimmed: dim});
         }
         return result;
     }
@@ -453,13 +486,13 @@ export class UserInteractions
             } else {
                 const feature = this.mapFeature(featureId);
                 if (feature !== undefined) {
-                    this._map.removeFeatureState(feature, 'selected');
+                    this.#removeFeatureState(feature, 'selected');
                     this._selectedFeatureIds.delete(+featureId);
                 }
             }
         }
         if (this._selectedFeatureIds.size === 0) {
-            this._layerManager.setPaint({...this.__colourOptions, dimmed: false});
+            this.#setPaint({...this.__colourOptions, dimmed: false});
         }
     }
 
@@ -469,28 +502,42 @@ export class UserInteractions
         for (const featureId of this._selectedFeatureIds.keys()) {
             const feature = this.mapFeature(featureId);
             if (feature !== undefined) {
-                this._map.removeFeatureState(feature, 'selected');
+                this.#removeFeatureState(feature, 'selected');
             }
         }
         this._selectedFeatureIds.clear();
-        this._layerManager.setPaint({...this.__colourOptions, dimmed: false});
+        this.#setPaint({...this.__colourOptions, dimmed: false});
     }
 
     activateFeature(feature)
     //======================
     {
         if (feature !== undefined) {
-            this._map.setFeatureState(feature, { active: true });
-            this._activeFeatures.push(feature);
+            this.#setFeatureState(feature, { active: true });
+            this._activeFeatures.add(feature);
+        }
+    }
+
+    activateLineFeatures(lineFeatures)
+    //================================
+    {
+        for (const lineFeature of lineFeatures) {
+            const lineFeatureId = +lineFeature.properties.featureId  // Ensure numeric
+            this.activateFeature(lineFeature)
+            const lineIds = new Set(lineFeatures.map(f => f.properties.featureId))
+            for (const featureId of this.__pathManager.lineFeatureIds(lineIds)) {
+                this.activateFeature(this.mapFeature(featureId))
+            }
         }
     }
 
     resetActiveFeatures_()
     //====================
     {
-        while (this._activeFeatures.length > 0) {
-            this._map.removeFeatureState(this._activeFeatures.pop(), 'active');
+        for (const feature of this._activeFeatures) {
+            this.#removeFeatureState(feature, 'active');
         }
+        this._activeFeatures.clear()
     }
 
     smallestAnnotatedPolygonFeature_(features)
@@ -502,7 +549,7 @@ export class UserInteractions
         let smallestFeature = null;
         for (const feature of features) {
             if (feature.geometry.type.includes('Polygon')
-             && this._map.getFeatureState(feature)['map-annotation']) {
+             && this.#getFeatureState(feature)['map-annotation']) {
                 const polygon = turf.geometry(feature.geometry.type, feature.geometry.coordinates);
                 const area = turfArea(polygon);
                 if (smallestFeature === null || smallestArea > area) {
@@ -777,6 +824,19 @@ export class UserInteractions
         this.resetActiveFeatures_();
     }
 
+    #renderedFeatures(point)
+    //======================
+    {
+        let features = []
+        if (this.#paths3dLayer) {
+            features = this.#paths3dLayer.queryFeaturesAtPoint(point)
+        }
+        if (features.length === 0) {
+            features = this._map.queryRenderedFeatures(point)
+        }
+        return features.filter(feature => this.__featureEnabled(feature));
+    }
+
     mouseMoveEvent_(event)
     //====================
     {
@@ -795,8 +855,7 @@ export class UserInteractions
         }
 
         // Get all the features at the current point
-        const features = this._map.queryRenderedFeatures(event.point)
-                             .filter(feature => this.__featureEnabled(feature));
+        const features = this.#renderedFeatures(event.point)
         if (features.length === 0) {
             this._lastFeatureMouseEntered = null;
             this._lastFeatureModelsMouse = null;
@@ -836,16 +895,7 @@ export class UserInteractions
         if (lineFeatures.length > 0) {
             tooltip = this.lineTooltip_(lineFeatures);
             tooltipFeature = lineFeatures[0];
-            for (const lineFeature of lineFeatures) {
-                const lineFeatureId = +lineFeature.properties.featureId;  // Ensure numeric
-                this.activateFeature(lineFeature);
-                const lineIds = new Set(lineFeatures.map(f => f.properties.featureId));
-                for (const featureId of this.__pathManager.lineFeatureIds(lineIds)) {
-                    if (+featureId !== lineFeatureId) {
-                        this.activateFeature(this.mapFeature(featureId));
-                    }
-                }
-            }
+            this.activateLineFeatures(lineFeatures)
         } else {
             let labelledFeatures = features.filter(feature => (('hyperlink' in feature.properties
                                                              || 'label' in feature.properties)
@@ -945,7 +995,7 @@ export class UserInteractions
     //=============================
     {
         if (feature !== undefined) {
-            const clickedFeatureId = feature.id;
+            const clickedFeatureId = +feature.id;
             const dim = !('properties' in feature
                        && 'kind' in feature.properties
                        && ['cell-type', 'scaffold', 'tissue'].includes(feature.properties.kind));
@@ -984,8 +1034,8 @@ export class UserInteractions
         }
 
         this.__clearActiveMarker();
-        const clickedFeatures = this._map.queryRenderedFeatures(event.point)
-                                    .filter(feature => this.__featureEnabled(feature));
+
+        const clickedFeatures = this.#renderedFeatures(event.point)
         if (clickedFeatures.length == 0) {
             this.unselectFeatures();
             return;
@@ -1062,7 +1112,7 @@ export class UserInteractions
     //=========================================
     {
         this.__pathManager.enablePathsByType('centreline', enable, force);
-        this._layerManager.setPaint({showCentrelines: enable});
+        this.#setPaint({showCentrelines: enable});
     }
 
     enableSckanPaths(sckanState, enable=true)
@@ -1089,7 +1139,7 @@ export class UserInteractions
     excludeAnnotated(exclude=false)
     //=============================
     {
-        this._layerManager.setPaint({excludeAnnotated: exclude});
+        this.#setPaint({excludeAnnotated: exclude});
     }
 
     //==============================================================================
