@@ -54,7 +54,7 @@ class ArcMapLayer extends ArcLayer
 
 //==============================================================================
 
-const makeDashed = `  float alpha = floor(fract(float(gl_VertexID)/6.0)+0.5);
+const makeDashedTriangles = `  float alpha = floor(fract(float(gl_VertexID)/12.0)+0.5);
   if (vColor.a != 0.0) vColor.a = alpha;
 `
 
@@ -71,7 +71,7 @@ class ArcDashedLayer extends ArcMapLayer
     //==========
     {
         const shaders = super.getShaders()
-        shaders.vs = shaders.vs.replace('DECKGL_FILTER_COLOR(', `${makeDashed}\n  DECKGL_FILTER_COLOR(`)
+        shaders.vs = shaders.vs.replace('DECKGL_FILTER_COLOR(', `${makeDashedTriangles}\n  DECKGL_FILTER_COLOR(`)
         return shaders
     }
 
@@ -81,13 +81,14 @@ class ArcDashedLayer extends ArcMapLayer
         const {numSegments} = this.props
         let positions = []
         for (let i = 0; i < numSegments; i++) {
-            positions = positions.concat([i, 1, 0, i, -1, 0]);
+            positions = positions.concat([i,  1, 0, i,  -1, 0, i+1,  1, 0,
+                                          i, -1, 0, i+1, 1, 0, i+1, -1, 0])
         }
         const model = new Model(gl, {
             ...this.getShaders(),
             id: this.props.id,
             geometry: new Geometry({
-                drawMode: GL.TRIANGLE_STRIP,
+                drawMode: GL.TRIANGLES,
                 attributes: {
                     positions: new Float32Array(positions)
                 }
