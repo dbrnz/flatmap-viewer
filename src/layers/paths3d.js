@@ -87,7 +87,7 @@ class ArcMapLayer extends ArcLayer
 //==============================================================================
 
 const makeDashedTriangles = `  float alpha = floor(fract(float(gl_VertexID)/12.0)+0.5);
-  if (vColor.a != 0.0) vColor.a = alpha;
+  if (vColor.a != 0.0) vColor.a *= alpha;
 `
 
 class ArcDashedLayer extends ArcMapLayer
