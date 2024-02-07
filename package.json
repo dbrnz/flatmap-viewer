@@ -17,7 +17,6 @@
   "author": "David Brooks",
   "license": "MIT",
   "dependencies": {
-    "@abi-software/mapbox-gl-draw-freehand-mode": "^2.2.0",
     "@babel/runtime": "^7.10.4",
     "@deck.gl/core": "^8.9.33",
     "@deck.gl/layers": "^8.9.33",

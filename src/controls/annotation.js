@@ -44,8 +44,6 @@ limitations under the License.
 import MapboxDraw from "@mapbox/mapbox-gl-draw"
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
 
-// NB: https://github.com/bemky/mapbox-gl-draw-freehand-mode/issues/25
-import FreehandMode from '@abi-software/mapbox-gl-draw-freehand-mode'
 
 //==============================================================================
 
@@ -230,10 +228,6 @@ export class AnnotationDrawControl
             },
             userProperties: true,
             keybindings: true,
-            modes: {
-                ...MapboxDraw.modes,
-                draw_polygon: FreehandMode
-            },
             styles: drawStyles
         })
         this.__map = null
