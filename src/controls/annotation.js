@@ -218,7 +218,7 @@ export class AnnotationDrawControl
 
         this.__flatmap = flatmap
         this.__committedFeatures = new Map()
-        this.__uncommittedFeatures = new Map()
+        this.__uncommittedFeatureIds = new Set()
         this.__visible = visible
         this.__draw = new MapboxDraw({
             displayControlsDefault: false,
@@ -305,7 +305,7 @@ export class AnnotationDrawControl
     #sendEvent(type, feature)
     //=======================
     {
-        this.__uncommittedFeatures.set(feature.id, feature)
+        this.__uncommittedFeatureIds.add(feature.id)
         this.__flatmap.annotationEvent(type, feature)
     }
 
@@ -331,7 +331,11 @@ export class AnnotationDrawControl
     {
         const feature = this.#cleanFeature(event)
         if (feature) {
-            this.#sendEvent('deleted', feature)
+            if (this.__uncommittedFeatureIds.has(feature.id)) {
+                // Ignore delete on an uncommitted create or update
+            } else {
+                this.#sendEvent('deleted', feature)
+            }
         }
     }
 
@@ -340,7 +344,11 @@ export class AnnotationDrawControl
     {
         const feature = this.#cleanFeature(event)
         if (feature) {
-            this.#sendEvent('updated', feature)
+            if (this.__uncommittedFeatureIds.has(feature.id)) {
+                // Ignore updates on an uncommitted create or update
+            } else {
+                this.#sendEvent('updated', feature)
+            }
         }
     }
 
@@ -348,8 +356,12 @@ export class AnnotationDrawControl
     //================
     {
         const feature = event.feature
+        if (event.type !== 'deleted') {
+            // In case it's been update or deleted before the committal
+            this.__draw.add(feature)
+        }
         this.__committedFeatures.set(feature.id, feature)
-        this.__uncommittedFeatures.delete(feature.id)
+        this.__uncommittedFeatureIds.delete(feature.id)
     }
 
     rollbackEvent(event)
@@ -359,17 +371,17 @@ export class AnnotationDrawControl
         if (event.type === 'created') {
             this.__draw.delete(feature.id)
             this.__committedFeatures.delete(feature.id)
-            this.__uncommittedFeatures.delete(feature.id)
+            this.__uncommittedFeatureIds.delete(feature.id)
         } else if (event.type === 'deleted') {
             this.__draw.add(feature)
             this.__committedFeatures.set(feature.id, feature)
-            this.__uncommittedFeatures.delete(feature.id)
+            this.__uncommittedFeatureIds.delete(feature.id)
         } else if (event.type === 'updated') {
             const savedFeature = this.__committedFeatures.get(feature.id)
             if (savedFeature) {
                 this.__draw.delete(feature.id)
                 this.__draw.add(savedFeature)
-                this.__uncommittedFeatures.delete(feature.id)
+                this.__uncommittedFeatureIds.delete(feature.id)
             }
         }
     }
@@ -380,7 +392,7 @@ export class AnnotationDrawControl
         feature = Object.assign({}, feature, {type: 'Feature'})
         const ids = this.__draw.add(feature)
         this.__committedFeatures.set(ids[0], feature)
-        this.__uncommittedFeatures.delete(ids[0])
+        this.__uncommittedFeatureIds.delete(ids[0])
     }
 }
 
