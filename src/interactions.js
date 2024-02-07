@@ -45,6 +45,7 @@ import {AnnotatedControl, BackgroundControl, LayerControl, NerveControl,
 import {AnnotationRegionControl} from './controls/annotation'
 import {PathControl} from './controls/paths';
 import {SearchControl} from './controls/search';
+import {MinimapControl} from './controls/minimap';
 import {SystemsControl} from './controls/systems';
 import {TaxonsControl} from './controls/taxons';
 import {latex2Svg} from './mathjax';
@@ -122,6 +123,8 @@ function getRenderedLabel(properties)
 
 export class UserInteractions
 {
+    #minimap = null
+
     constructor(flatmap)
     {
         this._flatmap = flatmap;
@@ -192,6 +195,26 @@ export class UserInteractions
         // All taxons of connectivity paths are enabled by default
         this.__enabledConnectivityTaxons = new Set(this._flatmap.taxonIdentifiers);
 
+        // Add a minimap if option set
+        if (flatmap.options.minimap) {
+            this.#minimap = new MinimapControl(flatmap, flatmap.options.minimap);
+            this._map.addControl(this.#minimap);
+        }
+
+        // Do we want a fullscreen control?
+        if (flatmap.options.fullscreenControl === true) {
+            this._map.addControl(new maplibregl.FullscreenControl(), 'top-right');
+        }
+
+        // Add navigation controls if option set
+        if (flatmap.options.navigationControl) {
+            const value = flatmap.options.navigationControl;
+            const position = ((typeof value === 'string')
+                           && ['top-left', 'top-right', 'bottom-right', 'bottom-left'].includes(value))
+                           ? value : 'bottom-right';
+            this._map.addControl(new NavigationControl(flatmap), position);
+        }
+
         // Add various controls when running standalone
         if (flatmap.options.standalone) {
             // Add a control to search annotations if option set
@@ -244,6 +267,12 @@ export class UserInteractions
         this._map.on('move', this.panZoomEvent_.bind(this, 'pan'));
         this._map.on('zoom', this.panZoomEvent_.bind(this, 'zoom'));
         this.__pan_zoom_enabled = false;
+    }
+
+    get minimap()
+    //===========
+    {
+        return this.#minimap
     }
 
     get pathManager()

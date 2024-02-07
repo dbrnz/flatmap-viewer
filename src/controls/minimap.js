@@ -151,12 +151,7 @@ export class MinimapControl
             container: container,
             style: map.getStyle(),
             bounds: map.getBounds()
-
         });
-
-        // Finish initialising once the map has loaded
-
-        this._miniMap.on('load', this.load_.bind(this));
 
         return this._container;
     }
@@ -169,8 +164,8 @@ export class MinimapControl
         this._container = null;
     }
 
-    load_()
-    //=====
+    initialise()
+    //==========
     {
         const opts = this._options;
         const parentMap = this._map;
@@ -184,7 +179,7 @@ export class MinimapControl
         ];
         interactions.forEach(i => miniMap[i].disable());
 
-        // Set background if specified (defaults is the parent map's)
+        // Set background if specified (default is the parent map's)
 
         if (this._background !== null) {
             miniMap.setPaintProperty('background', 'background-color', this._background);

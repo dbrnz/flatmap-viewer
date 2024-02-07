@@ -37,8 +37,6 @@ import {MapServer, loadJSON} from './mapserver.js';
 import {SearchIndex} from './search.js';
 import {UserInteractions} from './interactions.js';
 
-import {MinimapControl} from './controls/minimap.js';
-import {NavigationControl} from './controls/controls.js';
 import {APINATOMY_PATH_PREFIX} from './pathways';
 
 import * as images from './images.js';
@@ -166,33 +164,16 @@ class FlatMap
 
         this._map.setRenderWorldCopies(false);
 
-        // Do we want a fullscreen control?
-
-        if (mapDescription.options.fullscreenControl === true) {
-            this._map.addControl(new maplibregl.FullscreenControl(), 'top-right');
-        }
-
         // Disable map rotation
 
         this._map.dragRotate.disable();
         this._map.touchZoomRotate.disableRotation();
-
-        // Add navigation controls if option set
-
-        if (mapDescription.options.navigationControl) {
-            const value = mapDescription.options.navigationControl;
-            const position = ((typeof value === 'string')
-                           && ['top-left', 'top-right', 'bottom-right', 'bottom-left'].includes(value))
-                           ? value : 'bottom-right';
-            this._map.addControl(new NavigationControl(this), position);
-        }
 
         // Finish initialisation when all sources have loaded
         // and map has rendered
 
         this._userInteractions = null;
         this._initialState = null;
-        this._minimap = null;
 
         this._map.on('idle', () => {
             if (this._userInteractions === null) {
@@ -211,14 +192,9 @@ class FlatMap
                     this._userInteractions.setState(this._options.state);
                 }
                 this._initialState = this.getState();
-
-                // Add a minimap if option set
-
-                if (this.options.minimap) {
-                    this._minimap = new MinimapControl(this, this.options.minimap);
-                        this._map.addControl(this._minimap);
-                    }
-
+                if (this._userInteractions.minimap) {
+                    this._userInteractions.minimap.initialise()
+                }
                 this._resolve(this);
             }
         });
@@ -859,8 +835,8 @@ class FlatMap
 
         this._map.setPaintProperty('background', 'background-color', colour);
 
-        if (this._minimap) {
-            this._minimap.setBackgroundColour(colour);
+        if (this._userInteractions.minimap) {
+            this._userInteractions.minimap.setBackgroundColour(colour);
         }
     }
 
@@ -874,8 +850,8 @@ class FlatMap
     {
         this._map.setPaintProperty('background', 'background-opacity', opacity);
 
-        if (this._minimap) {
-            this._minimap.setBackgroundOpacity(opacity);
+        if (this._userInteractions.minimap) {
+            this._userInteractions.minimap.setBackgroundOpacity(opacity);
         }
     }
 
@@ -887,8 +863,8 @@ class FlatMap
     showMinimap(show)
     //===============
     {
-        if (this._minimap) {
-            this._minimap.show(show);
+        if (this._userInteractions.minimap) {
+            this._userInteractions.minimap.show(show);
         }
 
     }
