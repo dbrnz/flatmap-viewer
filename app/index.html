@@ -15,9 +15,16 @@
         overflow: hidden;
         font: 10pt "Helvetica Neue", Arial, Helvetica, sans-serif;
       }
-      .selection {
+      .top-bar {
         padding-top: 10px;
         padding-left: 10px;
+        padding-right: 10px;
+      }
+      .draw-update {
+        float: right;
+      }
+      #drawing-id {
+        padding-right: 10px;
       }
       #map-selector {
         margin-left: 4px;
@@ -33,9 +40,16 @@
   </head>
   <body>
     <div>
-      <div class="selection">
-        <label for="map-selector">Select map:</label>
-        <select id="map-selector"></select>
+      <div class='top-bar'>
+        <span class="selection">
+          <label for="map-selector">Select map:</label>
+          <select id="map-selector"></select>
+        </span>
+        <span class='draw-update'>
+          <label id="drawing-id">Id:</label>
+          <input type="button" id="drawing-ok" value="OK"/>
+          <input type="button" id="drawing-cancel" value="Cancel"/>
+        </span>
       </div>
       <div id="map-canvas" class="map"></div>
     </div>

@@ -27,6 +27,43 @@ export { MapManager };
 
 //==============================================================================
 
+class DrawControl
+{
+    constructor(flatmap)
+    {
+        this._flatmap = flatmap
+        this._lastEvent = null
+
+        this._idField = document.getElementById('drawing-id')
+        this._okBtn = document.getElementById('drawing-ok')
+        this._cancelBtn = document.getElementById('drawing-cancel')
+
+        this._okBtn.addEventListener('click', e => {
+            if (this._lastEvent) {
+                this._flatmap.commitAnnotationEvent(this._lastEvent)
+                this._idField.innerText = ''
+                this._lastEvent = null
+            }
+        })
+
+        this._cancelBtn.addEventListener('click', e => {
+            if (this._lastEvent) {
+                this._flatmap.rollbackAnnotationEvent(this._lastEvent)
+                this._idField.innerText = ''
+                this._lastEvent = null
+            }
+        })
+    }
+
+    handleEvent(event)
+    {
+        console.log(event)
+        this._idField.innerText = `${event.type} ${event.feature.id}`
+        this._lastEvent = event
+    }
+}
+
+
 export async function standaloneViewer(map_endpoint=null, options={})
 {
     const requestUrl = new URL(window.location.href);
@@ -52,6 +89,7 @@ export async function standaloneViewer(map_endpoint=null, options={})
     });
 
     let currentMap = null;
+    let drawControl = null;
     let defaultBackground = localStorage.getItem('flatmap-background-colour') || 'black';
 
     const mapOptions = Object.assign({
@@ -90,6 +128,8 @@ export async function standaloneViewer(map_endpoint=null, options={})
         mapManager.loadMap(id, 'map-canvas', (eventType, ...args) => {
                 if (args[0].type === 'control' && args[0].control === 'background') {
                     mapOptions.background = args[0].value;
+                } else if (eventType === 'annotation') {
+                    drawControl.handleEvent(...args)
                 }
             }, mapOptions)
             .then(map => {
@@ -99,6 +139,7 @@ export async function standaloneViewer(map_endpoint=null, options={})
                 map.addMarker('UBERON:0001155'); // Colon
                 map.addMarker('UBERON:0001255'); // Bladder
                 currentMap = map;
+                drawControl = new DrawControl(map)
             })
             .catch(error => {
                 console.log(error);
