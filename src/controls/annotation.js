@@ -45,7 +45,7 @@ import MapboxDraw from "@mapbox/mapbox-gl-draw"
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
 
 // NB: https://github.com/bemky/mapbox-gl-draw-freehand-mode/issues/25
-import FreehandMode from 'mapbox-gl-draw-freehand-mode'
+import FreehandMode from '@abi-software/mapbox-gl-draw-freehand-mode'
 
 //==============================================================================
 
