@@ -18,6 +18,7 @@
   "license": "MIT",
   "dependencies": {
     "@abi-software/sparc-annotation": "^0.0.4",
+    "@abi-software/mapbox-gl-draw-freehand-mode": "^2.2.0",
     "@babel/runtime": "^7.10.4",
     "@fortawesome/fontawesome-free": "^6.4.0",
     "@mapbox/mapbox-gl-draw": "^1.4.3",
@@ -28,7 +29,6 @@
     "bezier-js": "^6.1.0",
     "jspanel4": "^4.16.1",
     "html-es6cape": "^2.0.2",
-    "mapbox-gl-draw-freehand-mode": "^2.1.0",
     "maplibre-gl": ">=3.6.0",
     "mathjax-full": "^3.2.2",
     "minisearch": "^2.2.1",
