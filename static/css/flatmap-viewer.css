@@ -230,6 +230,9 @@ label[for=layer-all-layers] {
     font-weight: bold;
 }
 
+/* Control buttons for standalone annotation */
+.mapbox-gl-draw_ctrl-draw-btn.active {
+    background-color: #FBB !important;
 }
 
 /* End of file */
