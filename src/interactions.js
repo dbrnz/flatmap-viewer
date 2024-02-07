@@ -326,15 +326,27 @@ export class UserInteractions
         }
     }
 
-    modifyDrawnAnnotatorFeature(operation, feature)
+    commitAnnotationEvent(event)
+    //==========================
+    {
+        if (this.#annotationDrawControl) {
+            this.#annotationDrawControl.commitEvent(event)
+        }
+    }
+
+    rollbackAnnotationEvent(event)
+    //==========================
+    {
+        if (this.#annotationDrawControl) {
+            this.#annotationDrawControl.rollbackEvent(event)
+        }
+    }
+
+    addAnnotationFeature(feature)
     //=============================================
     {
         if (this.#annotationDrawControl) {
-            if (operation === 'add') {
-                this.#annotationDrawControl.addFeature(feature)
-            } else if (operation === 'remove') {
-                this.#annotationDrawControl.removeFeature(feature)
-            }
+            this.#annotationDrawControl.addFeature(feature)
         }
     }
 

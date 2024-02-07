@@ -1051,34 +1051,65 @@ class FlatMap
     }
 
     /**
-     * Generate an ``'annotation-draw`` callback when a drawn annotation has changed.
+     * Generate an ``annotation`` callback event when a drawn annotation has been created
+     * a modified.
      *
-     * @param {string}  operation   Either ``created``, ``updated`` or ``deleted``
-     * @param {Object}  feature     A feature object with ``id`` and ``geometry`` fields
-     *                              of a feature that has been created, updated or deleted.
+     * @param eventType {string}   Either ``created``, ``updated`` or ``deleted``
+     * @param feature   {Object}   A feature object with ``id``, ``type``, and ``geometry``
+     *                             fields of a feature that has been created, updated or
+     *                             deleted.
      */
-    annotationDrawEvent(drawEvent, feature)
-    //=====================================
+    annotationEvent(eventType, feature)
+    //=================================
     {
-        this.callback('annotation-draw', {
-            type: drawEvent,
+        this.callback('annotation', {
+            type: eventType,
             feature: feature
         });
     }
 
     /**
-     * Add or remove a drawn annotation.
+     * Mark a drawn/changed annotation as having been accepted by the user.
      *
-     * @param {string} operation   Either ``add`` or ``remove``
-     * @param {Object} feature     The feature to add or remove
-     * @param {string} feature.id  The feature's id
-     * @param {Object} feature.geometry  The feature's geometry as GeoJSON
+     * @param event      {Object}     The object as received in an annotation callback
+     * @param event.type {string}     Either ``created``, ``updated`` or ``deleted``
+     * @param event.feature {Object}  A feature object.
      */
-    modifyDrawnAnnotatorFeature(operation, feature)
-    //=============================================
+    commitAnnotationEvent(event)
+    //==========================
     {
         if (this._userInteractions) {
-            this._userInteractions.modifyDrawnAnnotatorFeature(operation, feature)
+            this._userInteractions.commitAnnotationEvent(event)
+        }
+    }
+
+    /**
+     * Mark a drawn/changed annotation as having been rejected by the user.
+     *
+     * @param event      {Object}     The object as received in an annotation callback
+     * @param event.type {string}     Either ``created``, ``updated`` or ``deleted``
+     * @param event.feature {Object}  A feature object.
+     */
+    rollbackAnnotationEvent(event)
+    //============================
+    {
+        if (this._userInteractions) {
+            this._userInteractions.rollbackAnnotationEvent(event)
+        }
+    }
+
+    /**
+     * Add a drawn feature to the annotation drawing tool.
+     *
+     * @param feature    {Object}        The feature to add
+     * @param feature.id {string}        The feature's id
+     * @param feature.geometry {Object}  The feature's geometry as GeoJSON
+     */
+    addAnnotationFeature(feature)
+    //===========================
+    {
+        if (this._userInteractions) {
+            this._userInteractions.addAnnotationFeature(feature)
         }
     }
 

@@ -207,7 +207,8 @@ export const DRAW_ANNOTATION_LAYERS = [...drawStyleIds.map(id => `${id}.cold`),
 
 export class AnnotationDrawControl
 {
-    #visible
+    __visible
+
 
     constructor(flatmap, visible=false)
     {
@@ -216,7 +217,9 @@ export class AnnotationDrawControl
         MapboxDraw.constants.classes.CONTROL_GROUP = 'maplibregl-ctrl-group'
 
         this.__flatmap = flatmap
-        this.#visible = visible
+        this.__committedFeatures = new Map()
+        this.__uncommittedFeatures = new Map()
+        this.__visible = visible
         this.__draw = new MapboxDraw({
             displayControlsDefault: false,
             controls: {
@@ -255,7 +258,7 @@ export class AnnotationDrawControl
         map.on('draw.create', this.createdFeature.bind(this))
         map.on('draw.delete', this.deletedFeature.bind(this))
         map.on('draw.update', this.updatedFeature.bind(this))
-        this.show(this.#visible)
+        this.show(this.__visible)
         return this.__container
     }
 
@@ -272,17 +275,17 @@ export class AnnotationDrawControl
     {
         if (this.__container) {
             this.__container.style.display = visible ? 'block' : 'none'
-            if (visible && !this.#visible) {
+            if (visible && !this.__visible) {
                 for (const layerId of DRAW_ANNOTATION_LAYERS) {
                     this.__map.setLayoutProperty(layerId, 'visibility', 'visible')
                 }
-            } else if (!visible && this.#visible) {
+            } else if (!visible && this.__visible) {
                 for (const layerId of DRAW_ANNOTATION_LAYERS) {
                     this.__map.setLayoutProperty(layerId, 'visibility', 'none')
                 }
             }
         }
-        this.#visible = visible
+        this.__visible = visible
     }
 
     #cleanFeature(event)
@@ -292,8 +295,8 @@ export class AnnotationDrawControl
                                        .map(f => {
                                             return {
                                                 id: f.id,
+                                                type: 'Feature',
                                                 geometry: f.geometry
-                                                // properties
                                             }
                                         })
         return features.length ? features[0] : null
@@ -307,13 +310,13 @@ export class AnnotationDrawControl
             // Set properties to indicate that this is a drawn annotation
             this.__draw.setFeatureProperty(feature.id, 'drawn', true)
             this.__draw.setFeatureProperty(feature.id, 'label', 'Drawn annotation')
-            // They also need to be on the feature passed to the annotator
-            // for storage
+            // They need to be on the feature passed to the annotator for storage
             feature.properties = {
                 user_drawn: true,
                 user_label: 'Drawn annotation'
             }
-            this.__flatmap.annotationDrawEvent('created', feature)
+            this.__uncommittedFeatures.set(feature.id, feature)
+            this.__flatmap.annotationEvent('created', feature)
         }
     }
 
@@ -322,7 +325,8 @@ export class AnnotationDrawControl
     {
         const feature = this.#cleanFeature(event)
         if (feature) {
-            this.__flatmap.annotationDrawEvent('deleted', feature)
+            this.__uncommittedFeatures.set(feature.id, feature)
+            this.__flatmap.annotationEvent('deleted', feature)
         }
     }
 
@@ -331,20 +335,48 @@ export class AnnotationDrawControl
     {
         const feature = this.#cleanFeature(event)
         if (feature) {
-            this.__flatmap.annotationDrawEvent('updated', feature)
+            this.__uncommittedFeatures.set(feature.id, feature)
+            this.__flatmap.annotationEvent('updated', feature)
+        }
+    }
+
+    commitEvent(event)
+    //================
+    {
+        const feature = event.feature
+        this.__committedFeatures.set(feature.id, feature)
+        this.__uncommittedFeatures.delete(feature.id)
+    }
+
+    rollbackEvent(event)
+    //==================
+    {
+        const feature = event.feature
+        if (event.type === 'created') {
+            this.__draw.delete(feature.id)
+            this.__committedFeatures.delete(feature.id)
+            this.__uncommittedFeatures.delete(feature.id)
+        } else if (event.type === 'deleted') {
+            this.__draw.add(feature)
+            this.__committedFeatures.set(feature.id, feature)
+            this.__uncommittedFeatures.delete(feature.id)
+        } else if (event.type === 'updated') {
+            const savedFeature = this.__committedFeatures.get(feature.id)
+            if (savedFeature) {
+                this.__draw.delete(feature.id)
+                this.__draw.add(savedFeature)
+                this.__uncommittedFeatures.delete(feature.id)
+            }
         }
     }
 
     addFeature(feature)
     //=================
     {
-        this.__draw.add(feature)
-    }
-
-    removeFeature(feature)
-    //====================
-    {
-        this.__draw.delete(feature.id)
+        feature = Object.assign({}, feature, {type: 'Feature'})
+        const ids = this.__draw.add(feature)
+        this.__committedFeatures.set(ids[0], feature)
+        this.__uncommittedFeatures.delete(ids[0])
     }
 }
 
