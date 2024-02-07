@@ -248,11 +248,11 @@ export class UserInteractions
                 this._map.addControl(new TaxonsControl(flatmap));
             }
 
+            this._map.addControl(new Path3DControl(this));
+
             if (flatmap.options.annotator) {
                 this._map.addControl(new AnnotatorControl(flatmap));
             }
-
-            this._map.addControl(new Path3DControl(this));
         }
 
         // Add an initially hidden tool for drawing on the map.
