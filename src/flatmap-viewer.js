@@ -1053,10 +1053,9 @@ class FlatMap
     /**
      * Generate an ``'annotation-draw`` callback when a drawn annotation has changed.
      *
-     * @param {string}  operation       Either ``created``, ``updated`` or ``deleted``
-     * @param {string|Object}  feature  An object with ``id`` and ``geometry`` fields
-     *                                  for a feature that has been created or updated
-     *                                  or the ``id`` of a feature that has been deleted.
+     * @param {string}  operation   Either ``created``, ``updated`` or ``deleted``
+     * @param {Object}  feature     A feature object with ``id`` and ``geometry`` fields
+     *                              of a feature that has been created, updated or deleted.
      */
     annotationDrawEvent(drawEvent, feature)
     //=====================================

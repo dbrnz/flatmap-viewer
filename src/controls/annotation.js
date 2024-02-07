@@ -322,7 +322,7 @@ export class AnnotationDrawControl
     {
         const feature = this.#cleanFeature(event)
         if (feature) {
-            this.__flatmap.annotationDrawEvent('deleted', feature.id)
+            this.__flatmap.annotationDrawEvent('deleted', feature)
         }
     }
 
