@@ -27,7 +27,6 @@ import GL from '@luma.gl/constants'
 
 import {pathColourArray} from '../pathways'
 
-
 //==============================================================================
 
 const transparencyCheck = '|| length(vColor) == 0.0'
