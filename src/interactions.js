@@ -431,7 +431,7 @@ export class UserInteractions
     //================================
     {
         const ann = this._flatmap.annotation(featureId);
-        if ('sckan' in ann) {
+        if (ann && 'sckan' in ann) {
             const sckanState = this._layerManager.sckanState;
             if (sckanState === 'none'
              || sckanState === 'valid' && !ann.sckan
