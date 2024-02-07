@@ -200,13 +200,11 @@ class FlatMap
     //============================
     {
         // Load any images required by the map
-
         for (const image of this._options.images) {
             await this.addImage(image.id, image.url, '', image.options);
         }
 
         // Layers have now loaded so finish setting up
-
         this._userInteractions = new UserInteractions(this);
     }
 

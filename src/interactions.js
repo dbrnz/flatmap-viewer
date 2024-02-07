@@ -143,7 +143,6 @@ export class UserInteractions
         this._modal = false;
 
         // Default colour settings
-
         this.__colourOptions = {colour: true, outline: true};
 
         // Marker placement and interaction
