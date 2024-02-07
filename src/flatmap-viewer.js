@@ -1027,6 +1027,52 @@ class FlatMap
     }
 
     /**
+     * Show or hide a tool for drawing regions to annotate on the map.
+     *
+     * @param  {boolean}  [visible=true]
+     */
+    showAnnotator(visible=true)
+    //=========================
+    {
+        if (this._userInteractions !== null) {
+            this._userInteractions.showAnnotator(visible)
+        }
+    }
+
+    /**
+     * Generate a callback when a drawn annotation has changed.
+     *
+     * @param {string}  operation       Either ``created``, ``updated`` or ``deleted``
+     * @param {string|Object}  feature  An object with ``id`` and ``geometry`` fields
+     *                                  for a feature that has been created or updated
+     *                                  or the ``id`` of a feature that has been deleted.
+     */
+    annotationDrawEvent(drawEvent, feature)
+    //=====================================
+    {
+        this.callback('annotation-draw', {
+            type: drawEvent,
+            feature: feature
+        });
+    }
+
+    /**
+     * Add or remove a drawn annotation.
+     *
+     * @param {string} operation   Either ``add`` or ``remove``
+     * @param {Object} feature     The feature to add or remove
+     * @param {string} feature.id  The feature's id
+     * @param {Object} feature.geometry  The feature's geometry as GeoJSON
+     */
+    modifyDrawnAnnotatorFeature(operation, feature)
+    //=============================================
+    {
+        if (this._userInteractions) {
+            this._userInteractions.modifyDrawnAnnotatorFeature(operation, feature)
+        }
+    }
+
+    /**
      * Generate a callback as a result of some event with a flatmap feature.
      *
      * @param      {string}  eventType     The event type

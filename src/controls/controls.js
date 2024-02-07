@@ -526,19 +526,20 @@ export class NerveControl
 
 //==============================================================================
 
-export class AnnotatedControl
+export class AnnotatorControl
 {
-    constructor(ui, options={excludeAnnotated: false})
+    #enabled = false
+
+    constructor(flatmap)
     {
-        this.__ui = ui;
-        this.__map = undefined;
-        this.__exclude = options.excludeAnnotated || false;
+        this.__flatmap = flatmap
+        this.__map = null
     }
 
     getDefaultPosition()
     //==================
     {
-        return 'top-right';
+        return 'top-right'
     }
 
     onAdd(map)
@@ -552,9 +553,9 @@ export class AnnotatedControl
         this.__button.id = 'map-annotated-button';
         this.__button.className = 'control-button text-button';
         this.__button.setAttribute('type', 'button');
-        this.__button.setAttribute('aria-label', 'Show/hide annotated paths');
-        this.__button.textContent = 'UNANN';
-        this.__button.title = 'Show/hide annotated paths';
+        this.__button.setAttribute('aria-label', 'Draw on map for annotation');
+        this.__button.textContent = 'DRAW';
+        this.__button.title = 'Draw on map for annotation';
         this.__container.appendChild(this.__button);
 
         this.__container.addEventListener('click', this.onClick_.bind(this));
@@ -565,7 +566,7 @@ export class AnnotatedControl
     __setBackground()
     //===============
     {
-        if (this.__exclude) {
+        if (this.#enabled) {
             this.__button.setAttribute('style', 'background: red');
         } else {
             this.__button.removeAttribute('style');
@@ -575,17 +576,17 @@ export class AnnotatedControl
     onRemove()
     //========
     {
-        this.__container.parentNode.removeChild(this.__container);
-        this.__map = undefined;
+        this.__container.parentNode.removeChild(this.__container)
+        this.__map = null
     }
 
     onClick_(event)
     //=============
     {
         if (event.target.id === 'map-annotated-button') {
-            this.__exclude = !this.__exclude;
-            this.__setBackground();
-            this.__ui.excludeAnnotated(this.__exclude);
+            this.#enabled = !this.#enabled
+            this.__setBackground()
+            this.__flatmap.showAnnotator(this.#enabled)
         }
         event.stopPropagation();
     }

@@ -39,9 +39,9 @@ import {VECTOR_TILES_SOURCE} from './styling';
 import {SystemsManager} from './systems';
 
 import {displayedProperties, InfoControl} from './controls/info';
-import {AnnotatedControl, BackgroundControl, LayerControl, NerveControl,
+import {AnnotatorControl, BackgroundControl, LayerControl, NerveControl,
         SCKANControl} from './controls/controls';
-import {AnnotationRegionControl} from './controls/annotation'
+import {AnnotationDrawControl, DRAW_ANNOTATION_LAYERS} from './controls/annotation'
 import {PathControl} from './controls/paths';
 import {SearchControl} from './controls/search';
 import {MinimapControl} from './controls/minimap';
@@ -110,10 +110,13 @@ function labelPosition(feature)
 function getRenderedLabel(properties)
 {
     if (!('renderedLabel' in properties)) {
-        const label = ('label' in properties) ? (properties.label.substr(0, 1).toUpperCase()
-                                               + properties.label.substr(1)).replaceAll("\n", "<br/>")
-                                              : '';
-        properties.renderedLabel = label.replaceAll(/`\$([^\$]*)\$`/g, math => latex2Svg(math.slice(2, -2)));
+        const label = ('label' in properties) ? properties.label
+                    : ('user_label' in properties) ? properties.user_label
+                    : ''
+        const uppercaseLabel = (label !== '') ? (label.substr(0, 1).toUpperCase()
+                                               + label.substr(1)).replaceAll("\n", "<br/>")
+                                              : ''
+        properties.renderedLabel = uppercaseLabel.replaceAll(/`\$([^\$]*)\$`/g, math => latex2Svg(math.slice(2, -2)));
     }
     return properties.renderedLabel;
 }
@@ -122,6 +125,7 @@ function getRenderedLabel(properties)
 
 export class UserInteractions
 {
+    #annotationDrawControl = null
     #minimap = null
 
     constructor(flatmap)
@@ -237,15 +241,16 @@ export class UserInteractions
             } else {
                 // Connectivity taxon control for AC maps
                 this._map.addControl(new TaxonsControl(flatmap));
-//                this._map.addControl(new AnnotationControl(flatmap));
-                this._map.addControl(new AnnotationRegionControl(flatmap));
             }
 
             if (flatmap.options.annotator) {
-                // Show/hide annotated paths
-                this._map.addControl(new AnnotatedControl(this, flatmap.options.layerOptions));
+                this._map.addControl(new AnnotatorControl(flatmap));
             }
         }
+
+        // Add an initially hidden tool for drawing on the map.
+        this.#annotationDrawControl = new AnnotationDrawControl(flatmap, false)
+        this._map.addControl(this.#annotationDrawControl)
 
         // Handle mouse events
 
@@ -303,6 +308,26 @@ export class UserInteractions
         }
         if (Object.keys(options).length > 0) {
             this._map.jumpTo(options);
+        }
+    }
+
+    showAnnotator(visible=true)
+    //=========================
+    {
+        if (this.#annotationDrawControl) {
+            this.#annotationDrawControl.show(visible)
+        }
+    }
+
+    modifyDrawnAnnotatorFeature(operation, feature)
+    //=============================================
+    {
+        if (this.#annotationDrawControl) {
+            if (operation === 'add') {
+                this.#annotationDrawControl.addFeature(feature)
+            } else if (operation === 'remove') {
+                this.#annotationDrawControl.removeFeature(feature)
+            }
         }
     }
 
@@ -418,7 +443,7 @@ export class UserInteractions
             return (state !== undefined
                 && (!('hidden' in state) || !state.hidden));
         }
-        return false;
+        return DRAW_ANNOTATION_LAYERS.includes(feature.layer.id)
     }
 
     featureSelected_(featureId)
@@ -755,7 +780,9 @@ export class UserInteractions
             tooltip.push(`<div class="feature-error">Warning: ${properties.warning}</div>`)
         }
         let renderedLabel;
-        if (('label' in properties || 'hyperlink' in properties)
+        if (('label' in properties
+          || 'hyperlink' in properties
+          || 'user_label' in properties)
                 && (forceLabel || !('tooltip' in properties) || properties.tooltip)) {
             const renderedLabel = getRenderedLabel(properties);
             if ('hyperlink' in properties) {
@@ -868,7 +895,8 @@ export class UserInteractions
             }
         } else {
             let labelledFeatures = features.filter(feature => (('hyperlink' in feature.properties
-                                                             || 'label' in feature.properties)
+                                                             || 'label' in feature.properties
+                                                             || 'user_label' in feature.properties)
                                                          && (!('tooltip' in feature.properties)
                                                             || feature.properties.tooltip)))
                                            .sort((a, b) => (a.properties.area - b.properties.area));
@@ -881,6 +909,9 @@ export class UserInteractions
                     labelledFeatures = groupFeatures;
                 }
                 const feature = labelledFeatures[0];
+                if (feature.properties.user_drawn) {
+                    feature.id = feature.properties.id
+                }
                 tooltip = this.tooltipHtml_(feature.properties);
                 tooltipFeature = feature;
                 if (this._flatmap.options.debug) {  // Do this when Info on and not debug??

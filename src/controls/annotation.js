@@ -41,11 +41,11 @@ limitations under the License.
 
 //==============================================================================
 
-import MapboxDraw from "@mapbox/mapbox-gl-draw";
-import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css';
+import MapboxDraw from "@mapbox/mapbox-gl-draw"
+import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
 
 // NB: https://github.com/bemky/mapbox-gl-draw-freehand-mode/issues/25
-import FreehandMode from 'mapbox-gl-draw-freehand-mode';
+import FreehandMode from 'mapbox-gl-draw-freehand-mode'
 
 //==============================================================================
 
@@ -96,7 +96,11 @@ const drawStyles = [
       "type": "fill",
       "filter": ["all", ["==", "$type", "Polygon"], ["!=", "mode", "static"]],
       "paint": {
-        "fill-color": "#D20C0C",
+        'fill-color': [
+            'case',
+            ['boolean', ['feature-state', 'active'], false], '#D88',
+            '#020C0C'
+        ],
         "fill-outline-color": "#D20C0C",
         "fill-opacity": 0.1
       }
@@ -194,38 +198,25 @@ const drawStyles = [
 
 //==============================================================================
 
-export class AnnotationControl extends MapboxDraw
+const drawStyleIds = drawStyles.map(s => s.id)
+
+export const DRAW_ANNOTATION_LAYERS = [...drawStyleIds.map(id => `${id}.cold`),
+                                       ...drawStyleIds.map(id => `${id}.hot`)]
+
+//==============================================================================
+
+export class AnnotationDrawControl
 {
-    constructor(_flatmap) {
-        MapboxDraw.constants.classes.CONTROL_BASE  = 'maplibregl-ctrl';
-        MapboxDraw.constants.classes.CONTROL_PREFIX = 'maplibregl-ctrl-';
-        MapboxDraw.constants.classes.CONTROL_GROUP = 'maplibregl-ctrl-group';
-        super({
-            displayControlsDefault: false,
-            controls: {  // can modes be used for this??
-                point: true,
-                line_string: true,
-                polygon: true,
-                trash: true
-            },
-            userProperties: true,
-            modes: {
-                ...MapboxDraw.modes,
-                draw_polygon: FreehandMode
-            },
-            styles: drawStyles
-       });
-    }
-}
+    #visible
 
+    constructor(flatmap, visible=false)
+    {
+        MapboxDraw.constants.classes.CONTROL_BASE  = 'maplibregl-ctrl'
+        MapboxDraw.constants.classes.CONTROL_PREFIX = 'maplibregl-ctrl-'
+        MapboxDraw.constants.classes.CONTROL_GROUP = 'maplibregl-ctrl-group'
 
-export class AnnotationRegionControl
-{
-    constructor(flatmap, options) {
-        MapboxDraw.constants.classes.CONTROL_BASE  = 'maplibregl-ctrl';
-        MapboxDraw.constants.classes.CONTROL_PREFIX = 'maplibregl-ctrl-';
-        MapboxDraw.constants.classes.CONTROL_GROUP = 'maplibregl-ctrl-group';
-
+        this.__flatmap = flatmap
+        this.#visible = visible
         this.__draw = new MapboxDraw({
             displayControlsDefault: false,
             controls: {
@@ -241,94 +232,120 @@ export class AnnotationRegionControl
                 draw_polygon: FreehandMode
             },
             styles: drawStyles
-        });
-
-        this.__onAddOrig = this.__draw.onAdd;
-        this.__onRemoveOrig = this.__draw.onRemove;
-        this.__map = null;
-
-        const drawLineString = {
-            on: "click",
-            action: () => this.__draw.changeMode("draw_line_string"),
-            classes: ["mapbox-gl-draw_line"],
-            title:'LineString tool'
-        };
-        const drawPolygon = {
-            on: "click", action: () => this.__draw.changeMode("draw_polygon"),
-            classes: ["mapbox-gl-draw_polygon"],
-            title:'Polygon tool'
-        };
-        const drawPointBtn = {
-            on: "click",
-            action: () => this.__draw.changeMode("draw_point"),
-            classes: ["mapbox-gl-draw_point"],
-            title:'Marker tool'
-        };
-        const trashBtn = {
-            on: "click",
-            action: () => this.__draw.trash(),
-            classes: ["mapbox-gl-draw_trash"],
-            title:'Delete'
-        };
-        this.__buttons = [
-            drawPointBtn,
-            drawLineString,
-            drawPolygon,
-            trashBtn
-        ]
-        //this.__buttons = options.buttons || [];
+        })
+        this.__map = null
     }
 
-    onAdd(map) {
-        this.__map = map;
-        this.__elContainer = this.__onAddOrig(map);
-        this.__buttons.forEach((b) => {
-            this.__addButton(b);
-        });
+    onAdd(map)
+    //========
+    {
+        this.__map = map
+        this.__container = this.__draw.onAdd(map)
 
-        // Fix to allow deletion with Del Key when default trash icon is not shown. See https://github.com/mapbox/mapbox-gl-draw/issues/989
-        this.__draw.options.controls.trash = true;
+        // Fix to allow deletion with Del Key when default trash icon is not shown.
+        // See https://github.com/mapbox/mapbox-gl-draw/issues/989
+        this.__draw.options.controls.trash = true
 
         // Prevent firefox menu from appearing on Alt key up
         window.addEventListener('keyup', function (e) {
             if (e.key === "Alt") {
                 e.preventDefault();
             }
-        }, false);
-
-        map.on('draw.create', function (e) {
-            console.log(e);
-        });
-
-        return this.__elContainer;
+        }, false)
+        map.on('draw.create', this.createdFeature.bind(this))
+        map.on('draw.delete', this.deletedFeature.bind(this))
+        map.on('draw.update', this.updatedFeature.bind(this))
+        this.show(this.#visible)
+        return this.__container
     }
 
-    onRemove(map) {
-        this.__buttons.forEach((b) => {
-            this.__removeButton(b);
-        });
-        this.__onRemoveOrig(map);
+    onRemove()
+    //========
+    {
+        this.__container.parentNode.removeChild(this.__container)
+        this.__container = null
+        this.__map = null
     }
 
-    __addButton(opt) {
-        const elButton = document.createElement("button");
-        elButton.className = "mapbox-gl-draw_ctrl-draw-btn";
-        if (opt.classes instanceof Array) {
-            opt.classes.forEach((c) => {
-                elButton.classList.add(c);
-            });
+    show(visible=true)
+    //================
+    {
+        if (this.__container) {
+            this.__container.style.display = visible ? 'block' : 'none'
+            if (visible && !this.#visible) {
+                for (const layerId of DRAW_ANNOTATION_LAYERS) {
+                    this.__map.setLayoutProperty(layerId, 'visibility', 'visible')
+                }
+            } else if (!visible && this.#visible) {
+                for (const layerId of DRAW_ANNOTATION_LAYERS) {
+                    this.__map.setLayoutProperty(layerId, 'visibility', 'none')
+                }
+            }
         }
-        elButton.setAttribute('title', opt.title);
-        elButton.addEventListener(opt.on, opt.action);
-        this.__elContainer.appendChild(elButton);
-        opt.elButton = elButton;
+        this.#visible = visible
     }
 
-    __removeButton(opt) {
-        opt.elButton.removeEventListener(opt.on, opt.action);
-        opt.elButton.remove();
+    #cleanFeature(event)
+    //==================
+    {
+        const features = event.features.filter(f => f.type === 'Feature')
+                                       .map(f => {
+                                            return {
+                                                id: f.id,
+                                                geometry: f.geometry
+                                                // properties
+                                            }
+                                        })
+        return features.length ? features[0] : null
+    }
+
+    createdFeature(event)
+    //===================
+    {
+        const feature = this.#cleanFeature(event)
+        if (feature) {
+            // Set properties to indicate that this is a drawn annotation
+            this.__draw.setFeatureProperty(feature.id, 'drawn', true)
+            this.__draw.setFeatureProperty(feature.id, 'label', 'Drawn annotation')
+            // They also need to be on the feature passed to the annotator
+            // for storage
+            feature.properties = {
+                user_drawn: true,
+                user_label: 'Drawn annotation'
+            }
+            this.__flatmap.annotationDrawEvent('created', feature)
+        }
+    }
+
+    deletedFeature(event)
+    //===================
+    {
+        const feature = this.#cleanFeature(event)
+        if (feature) {
+            this.__flatmap.annotationDrawEvent('deleted', feature.id)
+        }
+    }
+
+    updatedFeature(event)
+    //===================
+    {
+        const feature = this.#cleanFeature(event)
+        if (feature) {
+            this.__flatmap.annotationDrawEvent('updated', feature)
+        }
+    }
+
+    addFeature(feature)
+    //=================
+    {
+        this.__draw.add(feature)
+    }
+
+    removeFeature(feature)
+    //====================
+    {
+        this.__draw.delete(feature.id)
     }
 }
-
 
 //==============================================================================
