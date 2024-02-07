@@ -197,11 +197,11 @@ export class AnnotationDrawControl
     //================
     {
         const feature = event.feature
-        if (event.type !== 'deleted') {
-            // In case it's been update or deleted before the committal
-            this.__draw.add(feature)
+        if (event.type === 'deleted') {
+            this.__committedFeatures.delete(feature.id)
+        } else {
+            this.__committedFeatures.set(feature.id, feature)
         }
-        this.__committedFeatures.set(feature.id, feature)
         this.__uncommittedFeatureIds.delete(feature.id)
     }
 
