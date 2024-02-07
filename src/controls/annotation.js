@@ -302,6 +302,13 @@ export class AnnotationDrawControl
         return features.length ? features[0] : null
     }
 
+    #sendEvent(type, feature)
+    //=======================
+    {
+        this.__uncommittedFeatures.set(feature.id, feature)
+        this.__flatmap.annotationEvent(type, feature)
+    }
+
     createdFeature(event)
     //===================
     {
@@ -315,8 +322,7 @@ export class AnnotationDrawControl
                 user_drawn: true,
                 user_label: 'Drawn annotation'
             }
-            this.__uncommittedFeatures.set(feature.id, feature)
-            this.__flatmap.annotationEvent('created', feature)
+            this.#sendEvent('created', feature)
         }
     }
 
@@ -325,8 +331,7 @@ export class AnnotationDrawControl
     {
         const feature = this.#cleanFeature(event)
         if (feature) {
-            this.__uncommittedFeatures.set(feature.id, feature)
-            this.__flatmap.annotationEvent('deleted', feature)
+            this.#sendEvent('deleted', feature)
         }
     }
 
@@ -335,8 +340,7 @@ export class AnnotationDrawControl
     {
         const feature = this.#cleanFeature(event)
         if (feature) {
-            this.__uncommittedFeatures.set(feature.id, feature)
-            this.__flatmap.annotationEvent('updated', feature)
+            this.#sendEvent('updated', feature)
         }
     }
 
