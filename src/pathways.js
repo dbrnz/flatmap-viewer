@@ -20,6 +20,8 @@ limitations under the License.
 
 'use strict';
 
+import {colord} from 'colord'
+
 //==============================================================================
 
 import { reverseMap } from './utils';
@@ -49,8 +51,19 @@ const PATH_TYPES = [
     { type: "error", label: "Paths with errors or warnings", colour: "#FF0", enabled: false}
 ];
 
+const PathTypeMap = new Map(PATH_TYPES.map(t => [t.type, t]))
+
 export const PATH_STYLE_RULES =
     PATH_TYPES.flatMap(pathType => [['==', ['get', 'kind'], pathType.type], pathType.colour]);
+
+export function pathColourArray(pathType, alpha=255)
+//==================================================
+{
+    const rgb = colord(PathTypeMap.has(pathType)
+                        ? PathTypeMap.get(pathType).colour
+                        : '#FF0').toRgb()
+    return [rgb.r, rgb.g, rgb.b, alpha]
+}
 
 //==============================================================================
 
@@ -152,6 +165,21 @@ export class PathManager
                 this.__paths[pathId].pathType = pathType;
             }
         }
+    }
+
+    pathStyles()
+    //==========
+    {
+        const styles = []
+        for (const mapType of this.pathTypes()) {
+            const defn = PathTypeMap.get(mapType.type)
+            styles.push({
+                type: defn.type,
+                colour: defn.colour,
+                dashed: defn.dashed || false
+            })
+        }
+        return styles
     }
 
     pathTypes()
@@ -291,6 +319,7 @@ export class PathManager
     enablePathsBySystem(system, enable, force=false)
     //==============================================
     {
+        let changed = false;
         for (const pathId of system.pathIds) {
             const path = this.__paths[pathId];
             if (this.__pathtypeEnabled[path.pathType]
@@ -303,12 +332,16 @@ export class PathManager
                 for (const featureId of featureIds) {
                     this.__ui.enableFeature(featureId, enable, force);
                 }
+                changed = true
             }
             path.systemCount += (enable ? 1 : -1);
             if (path.systemCount < 0) {
                 path.systemCount = 0;
             }
             // TODO? Show connectors and parent components of these paths??
+        }
+        if (changed) {
+            this.#notifyWatchers()
         }
     }
 
@@ -322,7 +355,14 @@ export class PathManager
                 this.__ui.enableFeature(featureId, enable, force);
             }
             this.__pathtypeEnabled[pathType] = enable;
+            this.#notifyWatchers({pathType})
         }
+    }
+
+    pathTypeEnabled(pathType)
+    //=======================
+    {
+        return this.__pathtypeEnabled[pathType] || false
     }
 
     nodePathModels(nodeId)
@@ -351,6 +391,31 @@ export class PathManager
             }
         }
         return nodeIds;
+    }
+
+    #lastWatcherId = 0
+    #watcherCallbacks = new Map()
+
+    addWatcher(callback)
+    //==================
+    {
+        this.#lastWatcherId += 1
+        this.#watcherCallbacks.set(this.#lastWatcherId, callback)
+        return this.#lastWatcherId
+    }
+
+    removeWatcher(watcherId)
+    //======================
+    {
+        this.#watcherCallbacks.delete(watcherId)
+    }
+
+    #notifyWatchers(changes={})
+    //=========================
+    {
+        for (const callback of this.#watcherCallbacks.values()) {
+            callback(changes)
+        }
     }
 }
 

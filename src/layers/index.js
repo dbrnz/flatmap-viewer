@@ -22,10 +22,10 @@ limitations under the License.
 
 //==============================================================================
 
-import {PATHWAYS_LAYER} from './pathways.js';
+import {PATHWAYS_LAYER} from '../pathways.js';
+import * as utils from '../utils.js';
 
 import * as style from './styling.js';
-import * as utils from './utils.js';
 
 const FEATURES_LAYER = 'features';
 const RASTER_LAYERS_NAME = 'Background image layer';

@@ -162,8 +162,8 @@ class FlatMap
 
         // Disable map rotation
 
-        this._map.dragRotate.disable();
-        this._map.touchZoomRotate.disableRotation();
+        //this._map.dragRotate.disable();
+        //this._map.touchZoomRotate.disableRotation();
 
         // Finish initialisation when all sources have loaded
         // and map has rendered
@@ -869,6 +869,19 @@ class FlatMap
     {
         if (this._userInteractions !== null) {
             return this._userInteractions.enableLayer(layerId, enable);
+        }
+    }
+
+    /**
+     * Show/hide 3D path view.
+     *
+     * @param      {boolean}  [enable=true]
+     */
+    enable3dPaths(enable=true)
+    //========================
+    {
+        if (this._userInteractions !== null) {
+            this._userInteractions.enable3dPaths(enable)
         }
     }
 
