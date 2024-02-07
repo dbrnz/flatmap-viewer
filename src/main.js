@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019  David Brooks
+Copyright (c) 2019 - 2024 David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -33,36 +33,43 @@ class DrawControl
     {
         this._flatmap = flatmap
         this._lastEvent = null
-
         this._idField = document.getElementById('drawing-id')
+
         this._okBtn = document.getElementById('drawing-ok')
+        if (this._okBtn) {
+            this._okBtn.addEventListener('click', e => {
+                if (this._lastEvent) {
+                    this._flatmap.commitAnnotationEvent(this._lastEvent)
+                    this._idField.innerText = ''
+                    this._lastEvent = null
+                }
+            })
+        }
+
         this._cancelBtn = document.getElementById('drawing-cancel')
-
-        this._okBtn.addEventListener('click', e => {
-            if (this._lastEvent) {
-                this._flatmap.commitAnnotationEvent(this._lastEvent)
-                this._idField.innerText = ''
-                this._lastEvent = null
-            }
-        })
-
-        this._cancelBtn.addEventListener('click', e => {
-            if (this._lastEvent) {
-                this._flatmap.rollbackAnnotationEvent(this._lastEvent)
-                this._idField.innerText = ''
-                this._lastEvent = null
-            }
-        })
+        if (this._cancelBtn) {
+            this._cancelBtn.addEventListener('click', e => {
+                if (this._lastEvent) {
+                    this._flatmap.rollbackAnnotationEvent(this._lastEvent)
+                    this._idField.innerText = ''
+                    this._lastEvent = null
+                }
+            })
+        }
     }
 
     handleEvent(event)
+    //================
     {
         console.log(event)
-        this._idField.innerText = `${event.type} ${event.feature.id}`
-        this._lastEvent = event
+        if (this._idField) {
+            this._idField.innerText = `Annotation ${event.type}, Id: ${event.feature.id}`
+            this._lastEvent = event
+        }
     }
 }
 
+//==============================================================================
 
 export async function standaloneViewer(map_endpoint=null, options={})
 {
@@ -221,3 +228,6 @@ export async function standaloneViewer(map_endpoint=null, options={})
 
     loadMap(mapId, mapTaxon, mapSex);
 }
+
+//==============================================================================
+
