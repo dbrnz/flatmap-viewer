@@ -1038,7 +1038,7 @@ class FlatMap
     }
 
     /**
-     * Generate a callback when a drawn annotation has changed.
+     * Generate an ``'annotation-draw`` callback when a drawn annotation has changed.
      *
      * @param {string}  operation       Either ``created``, ``updated`` or ``deleted``
      * @param {string|Object}  feature  An object with ``id`` and ``geometry`` fields
