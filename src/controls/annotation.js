@@ -56,9 +56,6 @@ export const DRAW_ANNOTATION_LAYERS = [...drawStyleIds.map(id => `${id}.cold`),
 
 export class AnnotationDrawControl
 {
-    __visible
-
-
     constructor(flatmap, visible=false)
     {
         MapboxDraw.constants.classes.CONTROL_BASE  = 'maplibregl-ctrl'
