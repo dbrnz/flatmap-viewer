@@ -235,6 +235,12 @@ export class AnnotationDrawControl
         this.__committedFeatures.set(ids[0], feature)
         this.__uncommittedFeatureIds.delete(ids[0])
     }
+
+    refreshGeometry(feature)
+    //======================
+    {
+        return this.__draw.get(feature.id) || null
+    }
 }
 
 //==============================================================================

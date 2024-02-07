@@ -350,6 +350,14 @@ export class UserInteractions
         }
     }
 
+    refreshAnnotationFeatureGeometry(feature)
+    //=======================================
+    {
+        if (this.#annotationDrawControl) {
+            this.#annotationDrawControl.refreshGeometry(feature)
+        }
+    }
+
     #setPaint(options)
     //================
     {

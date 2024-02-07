@@ -39,9 +39,11 @@ class DrawControl
         if (this._okBtn) {
             this._okBtn.addEventListener('click', e => {
                 if (this._lastEvent) {
+                    const feature = this._flatmap.refreshAnnotationFeatureGeometry(this._lastEvent.feature)
                     this._flatmap.commitAnnotationEvent(this._lastEvent)
                     this._idField.innerText = ''
                     this._lastEvent = null
+                    // Send `feature`, along with user comments, to the annotation service
                 }
             })
         }

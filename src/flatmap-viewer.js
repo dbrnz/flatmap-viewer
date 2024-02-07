@@ -1114,6 +1114,24 @@ class FlatMap
     }
 
     /**
+     * Return the feature as it is currently drawn. This is so
+     * the correct geometry can be saved with a feature should
+     * a user make changes before submitting dialog provided
+     * by an external annotator.
+     *
+     * @param feature    {Object}  The drawn feature to refresh.
+     * @returns {Object|null}  The feature with currently geometry or ``null``
+     *                         if the feature has been deleted.
+     */
+    refreshAnnotationFeatureGeometry(feature)
+    //=======================================
+    {
+        if (this._userInteractions) {
+            this._userInteractions.refreshAnnotationFeatureGeometry(feature)
+        }
+    }
+
+    /**
      * Generate a callback as a result of some event with a flatmap feature.
      *
      * @param      {string}  eventType     The event type
