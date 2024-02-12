@@ -99,6 +99,9 @@ function expandBounds(bbox1, bbox2, padding)
 
 function labelPosition(feature)
 {
+    if (feature.geometry.type === 'Point') {
+        return feature.geometry.coordinates
+    }
     const polygon = feature.geometry.coordinates;
     // Rough heuristic. Area is in km^2; below appears to be good enough.
     const precision = ('area' in feature.properties)
