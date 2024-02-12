@@ -258,6 +258,9 @@ export class UserInteractions
             }
         }
 
+        // Initialise map annotation
+        this.__setupAnnotation()
+
         // Add an initially hidden tool for drawing on the map.
         this.#annotationDrawControl = new AnnotationDrawControl(flatmap, false)
         this._map.addControl(this.#annotationDrawControl)
@@ -358,6 +361,32 @@ export class UserInteractions
     {
         if (this.#annotationDrawControl) {
             return this.#annotationDrawControl.refreshGeometry(feature)
+        }
+    }
+
+    __setupAnnotation()
+    //=================
+    {
+        // Relate external annotation identifiers to map (GeoJSON) ids
+        this.__featureIdToMapId = new Map([...this._flatmap.annotations.entries()]
+                                                  .map(idAnn => [idAnn[1].id, idAnn[0]]))
+        // Flag features that have annotations
+        for (const mapId of this.__featureIdToMapId.values()) {
+            const feature = this.mapFeature(mapId)
+            if (feature !== undefined) {
+                this._map.setFeatureState(feature, { 'map-annotation': true })
+            }
+        }
+    }
+
+    setFeatureAnnotated(featureId)
+    //============================
+    {
+        // External feature id to map's GeoJSON id
+        const mapId = this.__featureIdToMapId.get(featureId)
+        const feature = this.mapFeature(mapId)
+        if (feature !== undefined) {
+            this._map.setFeatureState(feature, { 'annotated': true })
         }
     }
 
