@@ -589,16 +589,16 @@ class FlatMap
     }
 
     /**
-     * Get feature ids of all nodes of a path model.
+     * Get GeoJSON feature ids of all nodes of a path model.
      *
      * @param      {string}  pathId  The path model identifier
-     * @return     {set<number>}  Local (GeoJSON) identifiers of features on the path
+     * @return     {Array<string>}   GeoJSON identifiers of features on the path
      */
     pathModelNodes(modelId)
     //=====================
     {
         if (this._userInteractions !== null) {
-            return this._userInteractions.pathModelNodes(modelId);
+            return new [...this._userInteractions.pathModelNodes(modelId)]
         }
     }
 
