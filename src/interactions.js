@@ -384,9 +384,11 @@ export class UserInteractions
     {
         // External feature id to map's GeoJSON id
         const mapId = this.__featureIdToMapId.get(featureId)
-        const feature = this.mapFeature(mapId)
-        if (feature !== undefined) {
-            this._map.setFeatureState(feature, { 'annotated': true })
+        if (mapId) {
+            const feature = this.mapFeature(mapId)
+            if (feature !== undefined) {
+                this._map.setFeatureState(feature, { 'annotated': true })
+            }
         }
     }
 
