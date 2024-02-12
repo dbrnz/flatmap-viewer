@@ -602,6 +602,19 @@ class FlatMap
         }
     }
 
+    /**
+     * Get GeoJSON feature ids of all features identified with a taxon.
+     *
+     * @param      {string}  taxonId  The taxon identifier
+     * @return     {Array<string>}    GeoJSON identifiers of features on the path
+     */
+    taxonFeatureIds(taxonId)
+    //======================
+    {
+        const featureIds = this.__taxonToFeatureIds.get(utils.normaliseId(taxonId))
+        return [...new Set(featureIds ? featureIds : [])]
+    }
+
     get layers()
     //==========
     {
@@ -1329,6 +1342,42 @@ class FlatMap
         if (this._userInteractions !== null) {
             const featureIds = this.modelFeatureIdList(externalIds);
             this._userInteractions.zoomToFeatures(featureIds, options);
+        }
+    }
+
+    /**
+     * Select features on the map.
+     *
+     * @param {string | Array.<string>}  geojsonIds  A single GeoJSON feature identifiers
+     *                                               or an array of identifiers.
+     */
+    selectGeoJSONFeatures(geojsonIds)
+    //===============================
+    {
+        if (this._userInteractions !== null) {
+            this._userInteractions.selectFeatures(geojsonIds)
+        }
+    }
+
+    /**
+     * Select features and zoom the map to them.
+     *
+     * @param {string | Array.<string>}  geojsonIds  A single GeoJSON feature identifiers
+     *                                               or an array of identifiers.
+     * @param {Object}  [options]
+     * @param {boolean} [options.noZoomIn=false]  Don't zoom in (although zoom out as necessary)
+     * @param {number}  [options.padding=10]  Padding in pixels around the composite bounding box
+     */
+    zoomToGeoJSONFeatures(geojsonIds, options=null)
+    //=============================================
+    {
+        options = utils.setDefaults(options, {
+            select: true,
+            highlight: false,
+            padding:100
+        })
+        if (this._userInteractions !== null) {
+            this._userInteractions.zoomToFeatures(geojsonIds, options)
         }
     }
 }
