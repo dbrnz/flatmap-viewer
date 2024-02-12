@@ -1140,7 +1140,7 @@ class FlatMap
     //=======================================
     {
         if (this._userInteractions) {
-            this._userInteractions.refreshAnnotationFeatureGeometry(feature)
+            return this._userInteractions.refreshAnnotationFeatureGeometry(feature)
         }
     }
 

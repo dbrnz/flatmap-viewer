@@ -354,7 +354,7 @@ export class UserInteractions
     //=======================================
     {
         if (this.#annotationDrawControl) {
-            this.#annotationDrawControl.refreshGeometry(feature)
+            return this.#annotationDrawControl.refreshGeometry(feature)
         }
     }
 
