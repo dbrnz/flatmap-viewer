@@ -788,28 +788,31 @@ export class UserInteractions
     //=======================================
     {
         const ann = this._flatmap.annotation(featureId);
-        if (ann) {  // The feature exists
+        const drawn = options && options.annotationFeatureGeometry
+        if (ann || drawn) {  // The feature exists or it is a drawn annotation
+            if (ann) {
+                
+                // Remove any existing popup
 
-            // Remove any existing popup
-
-            if (this._currentPopup) {
-                if (options && options.preserveSelection) {
-                    this._currentPopup.options.preserveSelection = options.preserveSelection;
+                if (this._currentPopup) {
+                    if (options && options.preserveSelection) {
+                        this._currentPopup.options.preserveSelection = options.preserveSelection;
+                    }
+                    this._currentPopup.remove();
                 }
-                this._currentPopup.remove();
+
+                // Clear selection if we are not preserving it
+
+                if (options && options.preserveSelection) {
+                    delete options.preserveSelection;       // Don't pass to onClose()
+                } else {                                    // via the popup's options
+                    this.unselectFeatures();
+                }
+
+                // Select the feature
+
+                this.selectFeature(featureId);
             }
-
-            // Clear selection if we are not preserving it
-
-            if (options && options.preserveSelection) {
-                delete options.preserveSelection;       // Don't pass to onClose()
-            } else {                                    // via the popup's options
-                this.unselectFeatures();
-            }
-
-            // Select the feature
-
-            this.selectFeature(featureId);
 
             // Find the pop-up's postion
 
@@ -818,6 +821,8 @@ export class UserInteractions
                && options.positionAtLastClick
                && this.__lastClickLngLat !== null) {
                 location = this.__lastClickLngLat;
+            } else if (drawn) {
+                location = options.annotationFeatureGeometry
             } else {
                 // Position popup at the feature's 'centre'
                 location = this.__markerPosition(featureId, ann);
