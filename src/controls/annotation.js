@@ -205,6 +205,12 @@ export class AnnotationDrawControl
         this.__uncommittedFeatureIds.delete(feature.id)
     }
 
+    abortEvent(event)
+    //===================
+    {
+        this.#sendEvent('aborted', event)
+    }
+
     rollbackEvent(event)
     //==================
     {

@@ -340,6 +340,14 @@ export class UserInteractions
         }
     }
 
+    abortAnnotationEvent(event)
+    //==========================
+    {
+        if (this.#annotationDrawControl) {
+            this.#annotationDrawControl.abortEvent(event)
+        }
+    }
+
     rollbackAnnotationEvent(event)
     //==========================
     {
@@ -835,7 +843,16 @@ export class UserInteractions
             }
             this.setModal_();
             this._currentPopup = new maplibregl.Popup(options).addTo(this._map);
-            this._currentPopup.on('close', this.__onCloseCurrentPopup.bind(this));
+            this._currentPopup.on('close', () => {
+                this.__onCloseCurrentPopup.bind(this)
+                if (drawn) {
+                    this.abortAnnotationEvent({
+                        featureId: featureId,
+                        content: content,
+                        ...options
+                    })
+                }
+            });
             this._currentPopup.setLngLat(location);
             if (typeof content === 'object') {
                 this._currentPopup.setDOMContent(content);
