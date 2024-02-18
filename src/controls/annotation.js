@@ -146,7 +146,10 @@ export class AnnotationDrawControl
     #sendEvent(type, feature)
     //=======================
     {
-        this.__uncommittedFeatureIds.add(feature.id)
+        if (feature.id) {
+            // Add when the event is 'created', 'updated' or 'deleted'
+            this.__uncommittedFeatureIds.add(feature.id)
+        }
         this.__flatmap.annotationEvent(type, feature)
     }
 
@@ -208,6 +211,7 @@ export class AnnotationDrawControl
     abortEvent(event)
     //===================
     {
+        // Used as a flag to indicate the popup is closed
         this.#sendEvent('aborted', event)
     }
 
