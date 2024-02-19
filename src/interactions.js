@@ -796,31 +796,29 @@ export class UserInteractions
     //=======================================
     {
         const ann = this._flatmap.annotation(featureId);
-        const drawn = options && options.annotationFeatureGeometry
+        const drawn = options && options.annotationFeatureGeometry;
         if (ann || drawn) {  // The feature exists or it is a drawn annotation
-            if (ann) {
-                
-                // Remove any existing popup
 
-                if (this._currentPopup) {
-                    if (options && options.preserveSelection) {
-                        this._currentPopup.options.preserveSelection = options.preserveSelection;
-                    }
-                    this._currentPopup.remove();
-                }
+            // Remove any existing popup
 
-                // Clear selection if we are not preserving it
-
+            if (this._currentPopup) {
                 if (options && options.preserveSelection) {
-                    delete options.preserveSelection;       // Don't pass to onClose()
-                } else {                                    // via the popup's options
-                    this.unselectFeatures();
+                    this._currentPopup.options.preserveSelection = options.preserveSelection;
                 }
-
-                // Select the feature
-
-                this.selectFeature(featureId);
+                this._currentPopup.remove();
             }
+
+            // Clear selection if we are not preserving it
+
+            if (options && options.preserveSelection) {
+                delete options.preserveSelection;       // Don't pass to onClose()
+            } else {                                    // via the popup's options
+                this.unselectFeatures();
+            }
+
+            // Select the feature
+
+            this.selectFeature(featureId);
 
             // Find the pop-up's postion
 
@@ -830,7 +828,7 @@ export class UserInteractions
                && this.__lastClickLngLat !== null) {
                 location = this.__lastClickLngLat;
             } else if (drawn) {
-                location = options.annotationFeatureGeometry
+                location = options.annotationFeatureGeometry; // Popup at the centroid of the feature
             } else {
                 // Position popup at the feature's 'centre'
                 location = this.__markerPosition(featureId, ann);
@@ -843,16 +841,10 @@ export class UserInteractions
             }
             this.setModal_();
             this._currentPopup = new maplibregl.Popup(options).addTo(this._map);
-            this._currentPopup.on('close', () => {
-                this.__onCloseCurrentPopup.bind(this)
-                if (drawn) {
-                    this.abortAnnotationEvent({
-                        featureId: featureId,
-                        content: content,
-                        ...options
-                    })
-                }
-            });
+            this._currentPopup.on('close', this.__onCloseCurrentPopup.bind(this));
+            if (drawn) {
+                this._currentPopup.on('close', this.abortAnnotationEvent.bind(this));
+            }
             this._currentPopup.setLngLat(location);
             if (typeof content === 'object') {
                 this._currentPopup.setDOMContent(content);
