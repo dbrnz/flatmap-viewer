@@ -96,6 +96,7 @@ export class AnnotationDrawControl
                 e.preventDefault();
             }
         }, false)
+        map.on('draw.modechange', this.featureModeChanged.bind(this))
         map.on('draw.create', this.createdFeature.bind(this))
         map.on('draw.delete', this.deletedFeature.bind(this))
         map.on('draw.update', this.updatedFeature.bind(this))
@@ -194,6 +195,12 @@ export class AnnotationDrawControl
                 this.#sendEvent('updated', feature)
             }
         }
+    }
+
+    featureModeChanged(event)
+    //=================
+    {
+        this.#sendEvent('modeChanged', event)
     }
 
     commitEvent(event)
