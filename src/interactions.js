@@ -341,7 +341,7 @@ export class UserInteractions
     }
 
     abortAnnotationEvent(event)
-    //==========================
+    //=========================
     {
         if (this.#annotationDrawControl) {
             this.#annotationDrawControl.abortEvent(event)
@@ -349,7 +349,7 @@ export class UserInteractions
     }
 
     rollbackAnnotationEvent(event)
-    //==========================
+    //============================
     {
         if (this.#annotationDrawControl) {
             this.#annotationDrawControl.rollbackEvent(event)
@@ -828,7 +828,9 @@ export class UserInteractions
                && this.__lastClickLngLat !== null) {
                 location = this.__lastClickLngLat;
             } else if (drawn) {
-                location = options.annotationFeatureGeometry; // Popup at the centroid of the feature
+                // Popup at the centroid of the feature
+                // Calculated with the feature geometry coordinates
+                location = options.annotationFeatureGeometry;
             } else {
                 // Position popup at the feature's 'centre'
                 location = this.__markerPosition(featureId, ann);

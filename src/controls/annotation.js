@@ -198,8 +198,9 @@ export class AnnotationDrawControl
     }
 
     featureModeChanged(event)
-    //=================
+    //=======================
     {
+        // Used as a flag to indicate the feature mode
         this.#sendEvent('modeChanged', event)
     }
 
@@ -216,9 +217,10 @@ export class AnnotationDrawControl
     }
 
     abortEvent(event)
-    //===================
+    //===============
     {
         // Used as a flag to indicate the popup is closed
+        // Rollback should be performed when triggered 'aborted' event
         this.#sendEvent('aborted', event)
     }
 
