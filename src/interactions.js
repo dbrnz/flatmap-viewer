@@ -1176,7 +1176,7 @@ export class UserInteractions
             this.unselectFeatures();
             return;
         }
-        const clickedFeature = clickedFeatures[0];
+        const clickedFeature = clickedFeatures.filter((f)=>f.id)[0];
         this.selectionEvent_(event.originalEvent, clickedFeature);
         if (this._modal) {
             // Remove tooltip, reset active features, etc
