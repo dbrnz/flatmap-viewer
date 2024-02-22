@@ -268,6 +268,7 @@ export class UserInteractions
         // Handle mouse events
 
         this._map.on('click', this.clickEvent_.bind(this));
+        this._map.on('touchend', this.clickEvent_.bind(this));
         this._map.on('mousemove', this.mouseMoveEvent_.bind(this));
         this._lastFeatureMouseEntered = null;
         this._lastFeatureModelsMouse = null;
