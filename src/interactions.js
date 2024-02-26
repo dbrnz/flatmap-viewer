@@ -1186,6 +1186,7 @@ export class UserInteractions
             return;
         }
         const clickedFeature = clickedFeatures.filter((f)=>f.id)[0];
+        const clickedDrawnFeature = clickedFeatures.filter((f)=>!f.id)[0];
         this.selectionEvent_(event.originalEvent, clickedFeature);
         if (this._modal) {
             // Remove tooltip, reset active features, etc
@@ -1198,6 +1199,8 @@ export class UserInteractions
             if ('properties' in clickedFeature && 'hyperlink' in clickedFeature.properties) {
                 window.open(clickedFeature.properties.hyperlink, '_blank');
             }
+        } else if (clickedDrawnFeature !== undefined) {
+            this.__featureEvent('click', clickedDrawnFeature);
         }
     }
 
