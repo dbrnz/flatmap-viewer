@@ -357,11 +357,11 @@ export class UserInteractions
         }
     }
 
-    clearAnnotationEvent()
-    //====================
+    clearAnnotationFeature()
+    //======================
     {
         if (this.#annotationDrawControl) {
-            this.#annotationDrawControl.clearEvent()
+            this.#annotationDrawControl.clearFeature()
         }
     }
 

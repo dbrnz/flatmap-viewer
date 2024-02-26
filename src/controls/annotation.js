@@ -246,8 +246,8 @@ export class AnnotationDrawControl
         }
     }
     
-    clearEvent()
-    //==========
+    clearFeature()
+    //============
     {
         this.__draw.deleteAll()
     }

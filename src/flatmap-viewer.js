@@ -1114,11 +1114,11 @@ class FlatMap
     /**
      * Clear all drawn annotations from current annotation layer.
      */
-    clearAnnotationEvent()
-    //====================
+    clearAnnotationFeature()
+    //======================
     {
         if (this._userInteractions) {
-            this._userInteractions.clearAnnotationEvent()
+            this._userInteractions.clearAnnotationFeature()
         }
     }
 
