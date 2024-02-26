@@ -357,6 +357,14 @@ export class UserInteractions
         }
     }
 
+    clearAnnotationEvent()
+    //====================
+    {
+        if (this.#annotationDrawControl) {
+            this.#annotationDrawControl.clearEvent()
+        }
+    }
+
     addAnnotationFeature(feature)
     //===========================
     {

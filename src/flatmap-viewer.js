@@ -1110,6 +1110,17 @@ class FlatMap
             this._userInteractions.rollbackAnnotationEvent(event)
         }
     }
+  
+    /**
+     * Clear all drawn annotations from current annotation layer.
+     */
+    clearAnnotationEvent()
+    //====================
+    {
+        if (this._userInteractions) {
+            this._userInteractions.clearAnnotationEvent()
+        }
+    }
 
     /**
      * Add a drawn feature to the annotation drawing tool.

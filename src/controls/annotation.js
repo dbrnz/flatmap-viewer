@@ -245,6 +245,12 @@ export class AnnotationDrawControl
             }
         }
     }
+    
+    clearEvent()
+    //==========
+    {
+        this.__draw.deleteAll()
+    }
 
     addFeature(feature)
     //=================
