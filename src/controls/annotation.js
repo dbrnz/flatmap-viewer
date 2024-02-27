@@ -96,6 +96,7 @@ export class AnnotationDrawControl
                 e.preventDefault();
             }
         }, false)
+        map.on('draw.modechange', this.featureModeChanged.bind(this))
         map.on('draw.create', this.createdFeature.bind(this))
         map.on('draw.delete', this.deletedFeature.bind(this))
         map.on('draw.update', this.updatedFeature.bind(this))
@@ -146,7 +147,10 @@ export class AnnotationDrawControl
     #sendEvent(type, feature)
     //=======================
     {
-        this.__uncommittedFeatureIds.add(feature.id)
+        if (feature.id) {
+            // Add when the event is 'created', 'updated' or 'deleted'
+            this.__uncommittedFeatureIds.add(feature.id)
+        }
         this.__flatmap.annotationEvent(type, feature)
     }
 
@@ -193,6 +197,13 @@ export class AnnotationDrawControl
         }
     }
 
+    featureModeChanged(event)
+    //=======================
+    {
+        // Used as a flag to indicate the feature mode
+        this.#sendEvent('modeChanged', event)
+    }
+
     commitEvent(event)
     //================
     {
@@ -203,6 +214,14 @@ export class AnnotationDrawControl
             this.__committedFeatures.set(feature.id, feature)
         }
         this.__uncommittedFeatureIds.delete(feature.id)
+    }
+
+    abortEvent(event)
+    //===============
+    {
+        // Used as a flag to indicate the popup is closed
+        // Rollback should be performed when triggered 'aborted' event
+        this.#sendEvent('aborted', event)
     }
 
     rollbackEvent(event)
@@ -225,6 +244,12 @@ export class AnnotationDrawControl
                 this.__uncommittedFeatureIds.delete(feature.id)
             }
         }
+    }
+    
+    clearFeature()
+    //============
+    {
+        this.__draw.deleteAll()
     }
 
     addFeature(feature)

@@ -268,6 +268,7 @@ export class UserInteractions
         // Handle mouse events
 
         this._map.on('click', this.clickEvent_.bind(this));
+        this._map.on('touchend', this.clickEvent_.bind(this));
         this._map.on('mousemove', this.mouseMoveEvent_.bind(this));
         this._lastFeatureMouseEntered = null;
         this._lastFeatureModelsMouse = null;
@@ -340,11 +341,27 @@ export class UserInteractions
         }
     }
 
+    abortAnnotationEvent(event)
+    //=========================
+    {
+        if (this.#annotationDrawControl) {
+            this.#annotationDrawControl.abortEvent(event)
+        }
+    }
+
     rollbackAnnotationEvent(event)
-    //==========================
+    //============================
     {
         if (this.#annotationDrawControl) {
             this.#annotationDrawControl.rollbackEvent(event)
+        }
+    }
+
+    clearAnnotationFeature()
+    //======================
+    {
+        if (this.#annotationDrawControl) {
+            this.#annotationDrawControl.clearFeature()
         }
     }
 
@@ -788,7 +805,8 @@ export class UserInteractions
     //=======================================
     {
         const ann = this._flatmap.annotation(featureId);
-        if (ann) {  // The feature exists
+        const drawn = options && options.annotationFeatureGeometry;
+        if (ann || drawn) {  // The feature exists or it is a drawn annotation
 
             // Remove any existing popup
 
@@ -818,6 +836,10 @@ export class UserInteractions
                && options.positionAtLastClick
                && this.__lastClickLngLat !== null) {
                 location = this.__lastClickLngLat;
+            } else if (drawn) {
+                // Popup at the centroid of the feature
+                // Calculated with the feature geometry coordinates
+                location = options.annotationFeatureGeometry;
             } else {
                 // Position popup at the feature's 'centre'
                 location = this.__markerPosition(featureId, ann);
@@ -831,6 +853,9 @@ export class UserInteractions
             this.setModal_();
             this._currentPopup = new maplibregl.Popup(options).addTo(this._map);
             this._currentPopup.on('close', this.__onCloseCurrentPopup.bind(this));
+            if (drawn) {
+                this._currentPopup.on('close', this.abortAnnotationEvent.bind(this));
+            }
             this._currentPopup.setLngLat(location);
             if (typeof content === 'object') {
                 this._currentPopup.setDOMContent(content);
@@ -1160,7 +1185,8 @@ export class UserInteractions
             this.unselectFeatures();
             return;
         }
-        const clickedFeature = clickedFeatures[0];
+        const clickedFeature = clickedFeatures.filter((f)=>f.id)[0];
+        const clickedDrawnFeature = clickedFeatures.filter((f)=>!f.id)[0];
         this.selectionEvent_(event.originalEvent, clickedFeature);
         if (this._modal) {
             // Remove tooltip, reset active features, etc
@@ -1173,6 +1199,8 @@ export class UserInteractions
             if ('properties' in clickedFeature && 'hyperlink' in clickedFeature.properties) {
                 window.open(clickedFeature.properties.hyperlink, '_blank');
             }
+        } else if (clickedDrawnFeature !== undefined) {
+            this.__featureEvent('click', clickedDrawnFeature);
         }
     }
 
