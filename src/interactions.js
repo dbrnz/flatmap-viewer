@@ -1202,11 +1202,11 @@ export class UserInteractions
             this.__resetFeatureDisplay();
             this.unselectFeatures();
             this.__clearModal();
-        } else if (clickedDrawnFeature !== undefined && !inDrawing) {
+        } else if (clickedDrawnFeature && !inDrawing) {
             // When feature and drawn feature are coinciding, click on annotation layer by default
             // While in drawing, DISABLE 'click' event on annotation layer
             this.__featureEvent('click', clickedDrawnFeature);
-        } else if (clickedFeature !== undefined) {
+        } else if (clickedFeature) {
             this.__lastClickLngLat = event.lngLat;
             this.__featureEvent('click', clickedFeature);
             if ('properties' in clickedFeature && 'hyperlink' in clickedFeature.properties) {

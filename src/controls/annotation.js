@@ -202,11 +202,7 @@ export class AnnotationDrawControl
     //=====================
     {
         // Used as a flag to indicate the feature mode
-        if (event.mode.startsWith('draw')) {
-            this.__inDrawing = true
-        } else {
-            this.__inDrawing = false
-        }
+        this.__inDrawing = (event.mode.startsWith('draw'))
         this.#sendEvent('modeChanged', event)
     }
 
