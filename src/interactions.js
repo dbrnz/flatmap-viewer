@@ -1193,22 +1193,25 @@ export class UserInteractions
             this.unselectFeatures();
             return;
         }
-        const clickedFeature = clickedFeatures.filter((f)=>f.id)[0];
-        const clickedDrawnFeature = clickedFeatures.filter((f)=>!f.id)[0];
+        const inDrawing = this.inDrawingAnnotationMode()
+        const clickedDrawnFeature = clickedFeatures.filter((f) => !f.id)[0];
+        const clickedFeature = clickedFeatures.filter((f) => f.id)[0];
         this.selectionEvent_(event.originalEvent, clickedFeature);
         if (this._modal) {
             // Remove tooltip, reset active features, etc
             this.__resetFeatureDisplay();
             this.unselectFeatures();
             this.__clearModal();
+        } else if (clickedDrawnFeature !== undefined && !inDrawing) {
+            // When feature and drawn feature are coinciding, click on annotation layer by default
+            // While in drawing, DISABLE 'click' event on annotation layer
+            this.__featureEvent('click', clickedDrawnFeature);
         } else if (clickedFeature !== undefined) {
             this.__lastClickLngLat = event.lngLat;
             this.__featureEvent('click', clickedFeature);
             if ('properties' in clickedFeature && 'hyperlink' in clickedFeature.properties) {
                 window.open(clickedFeature.properties.hyperlink, '_blank');
             }
-        } else if (clickedDrawnFeature !== undefined) {
-            this.__featureEvent('click', clickedDrawnFeature);
         }
     }
 
