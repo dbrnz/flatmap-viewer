@@ -484,7 +484,7 @@ class FlatMap
     /**
      * Flag the feature as having external annotation.
      *
-     * @param      {string}  featureId  The feature's identifier
+     * @param      {string}  featureId  The feature's external identifier
      */
     setFeatureAnnotated(featureId)
     //============================
