@@ -147,6 +147,7 @@ export async function standaloneViewer(map_endpoint=null, options={})
                 map.addMarker('UBERON:0000945'); // Stomach
                 map.addMarker('UBERON:0001155'); // Colon
                 map.addMarker('UBERON:0001255'); // Bladder
+                map.addMarker('UBERON:0001759'); // Vagus
                 currentMap = map;
                 drawControl = new DrawControl(map)
             })
