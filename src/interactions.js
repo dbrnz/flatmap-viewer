@@ -333,6 +333,14 @@ export class UserInteractions
         }
     }
 
+    inDrawingAnnotationMode()
+    //=======================
+    {
+        if (this.#annotationDrawControl) {
+            return this.#annotationDrawControl.inDrawingMode()
+        }
+    }
+
     commitAnnotationEvent(event)
     //==========================
     {

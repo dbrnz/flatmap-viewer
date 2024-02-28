@@ -78,6 +78,7 @@ export class AnnotationDrawControl
             keybindings: true
         })
         this.__map = null
+        this.__inDrawing = false
     }
 
     onAdd(map)
@@ -96,7 +97,7 @@ export class AnnotationDrawControl
                 e.preventDefault();
             }
         }, false)
-        map.on('draw.modechange', this.featureModeChanged.bind(this))
+        map.on('draw.modechange', this.modeChangedEvent.bind(this))
         map.on('draw.create', this.createdFeature.bind(this))
         map.on('draw.delete', this.deletedFeature.bind(this))
         map.on('draw.update', this.updatedFeature.bind(this))
@@ -197,11 +198,22 @@ export class AnnotationDrawControl
         }
     }
 
-    featureModeChanged(event)
-    //=======================
+    modeChangedEvent(event)
+    //=====================
     {
         // Used as a flag to indicate the feature mode
+        if (event.mode.startsWith('draw')) {
+            this.__inDrawing = true
+        } else {
+            this.__inDrawing = false
+        }
         this.#sendEvent('modeChanged', event)
+    }
+
+    inDrawingMode()
+    //=============
+    {
+        return this.__inDrawing
     }
 
     commitEvent(event)
