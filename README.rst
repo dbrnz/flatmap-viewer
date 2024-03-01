@@ -26,7 +26,7 @@ Running
 
 ::
 
-    $ npm start
+    $ npm run dev
 
 Maps can then be viewed at http://localhost:3000
 

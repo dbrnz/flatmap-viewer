@@ -7,20 +7,21 @@
     "url": "git+https://github.com/AnatomicMaps/flatmap-viewer.git"
   },
   "main": "src/main.js",
+  "type": "module",
   "files": [
     "src",
     "static"
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node app",
-    "build": "webpack --mode production",
+    "dev": "vite serve app --port 3000",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
     "docs": "cd docs; poetry run make html"
   },
   "author": "David Brooks",
   "license": "MIT",
   "dependencies": {
-    "@babel/runtime": "^7.10.4",
     "@deck.gl/core": "^8.9.33",
     "@deck.gl/layers": "^8.9.33",
     "@deck.gl/mapbox": "^8.9.33",
@@ -38,22 +39,8 @@
     "polylabel": "^1.1.0"
   },
   "devDependencies": {
-    "@babel/core": "^7.5.5",
-    "@babel/plugin-transform-runtime": "^7.5.5",
-    "@babel/preset-env": "^7.10.4",
-    "babel-loader": "^8.1.0",
-    "browser-sync": "^2.26.7",
-    "bs-fullscreen-message": "^1.1.0",
-    "clean-webpack-plugin": "^3.0.0",
-    "css-loader": "^6.7.3",
     "eslint": "^8.7.0",
-    "express": "^4.17.1",
-    "html-webpack-plugin": "^4.5.2",
-    "strip-ansi": "^7.0.1",
-    "style-loader": "^3.3.2",
-    "webpack": "^5.16.0",
-    "webpack-cli": "^4.4.0",
-    "webpack-dev-middleware": "^4.1.0",
-    "webpack-node-externals": "^1.7.2"
+    "typescript": "^5.2.2",
+    "vite": "^5.1.4"
   }
 }
