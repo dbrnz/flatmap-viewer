@@ -18,11 +18,15 @@ limitations under the License.
 
 ******************************************************************************/
 
-class FeatureFilter
-{
-    #filter
+type FilterExpression = Record<string, any>
 
-    constructor(filter)
+//==============================================================================
+
+export class FeatureFilter
+{
+    #filter: FilterExpression
+
+    constructor(filter: FilterExpression)
     {
         this.#filter = filter
     }
@@ -33,8 +37,8 @@ class FeatureFilter
         return this.#makeStyleFilter(this.#filter)
     }
 
-    #makeStyleFilter(filter)
-    //======================
+    #makeStyleFilter(filter: FilterExpression): Array<any>
+    //====================================================
     {
         // We expect an object, so check and warn...
         if (!filter || filter.constructor !== Object) {
@@ -70,8 +74,6 @@ class FeatureFilter
                 } else {
                     styleFilter.push('!', filterExpr)
                 }
-            } else if (!!expr && expr.constructor === Object) {
-                styleFilter.push(this.#makeStyleFilter(value))
             } else {
                 if (Array.isArray(expr)) {
                     styleFilter.push('any', ...expr.map(e => ['==', key, e]))
@@ -87,15 +89,15 @@ class FeatureFilter
 
 //==============================================================================
 
-function testFilter(f)
-//====================
+function testFilter(f: FilterExpression)
+//======================================
 {
     const featureFilter = new FeatureFilter(f)
     console.log(f, '--->', featureFilter.makeStyleFilter())
 }
 
-function testFilters()
-//====================
+export function testFilters()
+//===========================
 {
     /*
         { HAS: 'prop' } ---> [ 'has', 'prop' ]
@@ -177,5 +179,9 @@ function testFilters()
         }
     })
 }
+
+//==============================================================================
+
+//testFilters()
 
 //==============================================================================
