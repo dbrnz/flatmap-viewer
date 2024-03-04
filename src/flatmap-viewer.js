@@ -81,7 +81,7 @@ export class FlatMap
         this._pathways = mapDescription.pathways;
         this._resolve = resolve;
         this._map = null;
-        this.__searchIndex = new SearchIndex(this);
+        this.__searchIndex = new SearchIndex();
         this.__idToAnnotation = new Map();
         this.__datasetToFeatureIds = new Map();
         this.__modelToFeatureIds = new Map();
@@ -96,7 +96,7 @@ export class FlatMap
 
         // Set base of source URLs in map's style
 
-        for (const [id, source] of Object.entries(mapDescription.style.sources)) {
+        for (const source of Object.values(mapDescription.style.sources)) {
             if (source.url) {
                 source.url = this.makeServerUrl(source.url);
             }
@@ -1683,11 +1683,11 @@ export class MapManager
                         options: mapOptions,
                         layers: mapLayers,
                         markers: mapMarkers,
-                        annotations: annotations,
                         number: this._mapNumber,
-                        pathways: pathways,
-                        provenance, provenance,
-                        callback: callback
+                        annotations,
+                        pathways,
+                        provenance,
+                        callback
                     },
                     resolve);
 
