@@ -31,21 +31,18 @@ export class FeatureFilter
         this.#filter = filter
     }
 
-    makeStyleFilter()
+    makeStyleFilter(): maplibregl.FilterSpecification
     //===============
     {
         return this.#makeStyleFilter(this.#filter)
     }
 
-    #makeStyleFilter(filter: FilterExpression): Array<any>
-    //====================================================
+    #makeStyleFilter(filter: FilterExpression): maplibregl.FilterSpecification
+    //========================================================================
     {
-        // We expect an object, so check and warn...
-        if (!filter || filter.constructor !== Object) {
-            console.warn(`makeFilter: Invalid filter expression: ${filter}`)
-            return []
+        if (filter.constructor !== Object) {    // We allow boolean values
+            return !!filter
         }
-
         const styleFilter = []
         for (const [key, expr] of Object.entries(filter)) {
             if (key === 'AND' || key === 'OR') {
@@ -59,20 +56,24 @@ export class FeatureFilter
                 styleFilter.push('has', expr)
             } else if (key === 'NOT') {
                 const filterExpr = this.#makeStyleFilter(expr)
-                if (filterExpr.length === 2 && ['has', '!has'].includes(filterExpr[0])) {
-                    if (filterExpr[0] === 'has') {
-                        styleFilter.push('!has', filterExpr[1])
+                if (Array.isArray(filterExpr)) {
+                    if (filterExpr.length === 2 && ['has', '!has'].includes(filterExpr[0])) {
+                        if (filterExpr[0] === 'has') {
+                            styleFilter.push('!has', filterExpr[1])
+                        } else {
+                            styleFilter.push('has', filterExpr[1])
+                        }
+                    } else if (filterExpr.length === 3 && ['==', '!='].includes(filterExpr[0])) {
+                        if (filterExpr[0] === '==') {
+                            styleFilter.push('!=', filterExpr[1], filterExpr[2])
+                        } else {
+                            styleFilter.push('==', filterExpr[1], filterExpr[2])
+                        }
                     } else {
-                        styleFilter.push('has', filterExpr[1])
-                    }
-                } else if (filterExpr.length === 3 && ['==', '!='].includes(filterExpr[0])) {
-                    if (filterExpr[0] === '==') {
-                        styleFilter.push('!=', filterExpr[1], filterExpr[2])
-                    } else {
-                        styleFilter.push('==', filterExpr[1], filterExpr[2])
+                        styleFilter.push('!', filterExpr)
                     }
                 } else {
-                    styleFilter.push('!', filterExpr)
+                    styleFilter.push(!filterExpr)
                 }
             } else {
                 if (Array.isArray(expr)) {
@@ -82,9 +83,8 @@ export class FeatureFilter
                 }
             }
         }
-        return styleFilter
+        return styleFilter as maplibregl.FilterSpecification
     }
-
 }
 
 //==============================================================================
