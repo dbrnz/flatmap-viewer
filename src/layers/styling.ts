@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019  David Brooks
+Copyright (c) 2019 - 2024  David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,31 +18,31 @@ limitations under the License.
 
 ******************************************************************************/
 
-'use strict';
+import {ObjectRecord} from '../types'
 
 //==============================================================================
 
-export const VECTOR_TILES_SOURCE = 'vector-tiles';
+export const VECTOR_TILES_SOURCE = 'vector-tiles'
 
 //==============================================================================
 
-import {UNCLASSIFIED_TAXON_ID} from '../flatmap-viewer';
-import {PATH_STYLE_RULES} from '../pathways';
+import {UNCLASSIFIED_TAXON_ID} from '../flatmap-viewer'
+import {PATH_STYLE_RULES} from '../pathways'
 
 //==============================================================================
 
-const COLOUR_ACTIVE    = 'blue';
-const COLOUR_ANNOTATED = '#C8F';
-const COLOUR_SELECTED  = '#0F0';
-const COLOUR_HIDDEN    = '#D8D8D8';
+const COLOUR_ACTIVE    = 'blue'
+const COLOUR_ANNOTATED = '#C8F'
+const COLOUR_SELECTED  = '#0F0'
+const COLOUR_HIDDEN    = '#D8D8D8'
 
-const CENTRELINE_ACTIVE = '#888';
-const CENTRELINE_COLOUR = '#CCC';
+const CENTRELINE_ACTIVE = '#888'
+const CENTRELINE_COLOUR = '#CCC'
 
-const FEATURE_SELECTED_BORDER = 'black';
+const FEATURE_SELECTED_BORDER = 'black'
 
-const NERVE_ACTIVE = '#222';
-const NERVE_SELECTED = 'red';
+const NERVE_ACTIVE = '#222'
+const NERVE_SELECTED = 'red'
 
 //==============================================================================
 
@@ -53,60 +53,86 @@ const STROKE_INTERPOLATION = [
      2, ["*", ['var', 'width'], ["^", 2, -0.5]],
      7, ["*", ['var', 'width'], ["^", 2,  2.5]],
      9, ["*", ['var', 'width'], ["^", 2,  3.0]]
-];
+]
 
 //==============================================================================
 
-class VectorStyleLayer
+type MaplibreStyleLayerType = 'fill' | 'line' | 'symbol' | 'raster' | 'background'
+
+export type StylingLayer = VectorStyleLayer | RasterLayer
+
+//==============================================================================
+
+class StyleLayer
 {
-    constructor(id, suffix, sourceLayer)
+    constructor(readonly id: string, readonly source: string, readonly type: MaplibreStyleLayerType)
     {
-        this.__id = `${id}_${suffix}`;
-        this.__sourceLayer = sourceLayer;
-        this.__lastPaintStyle = {};
     }
 
-    get id()
+    style(_: ObjectRecord): maplibregl.LayerSpecification
+    //===================================================
     {
-        return this.__id;
+        return {
+            id: this.id,
+            source: this.source,
+            type: this.type
+        }
+    }
+}
+
+//==============================================================================
+
+export class VectorStyleLayer extends StyleLayer
+{
+    __lastPaintStyle: ObjectRecord
+    __sourceLayer: string
+
+    constructor(id: string, suffix: string, sourceLayer: string, type: MaplibreStyleLayerType)
+    {
+        super(`${id}_${suffix}`, VECTOR_TILES_SOURCE, type)
+        this.__sourceLayer = sourceLayer
+        this.__lastPaintStyle = {}
     }
 
-    makeFilter(options)
+    makeFilter(_: ObjectRecord): maplibregl.FilterSpecification
+    //=========================================================
     {
-        return null;
+        return true
     }
 
-    paintStyle(options, changes=false)
+    paintStyle(_: ObjectRecord, __: boolean=false): ObjectRecord
+    //==========================================================
     {
-        return {};
+        return {}
     }
 
-    __paintChanges(newPaintStyle)
+    __paintChanges(newPaintStyle: ObjectRecord)
     {
-        const paintChanges = {};
+        const paintChanges: ObjectRecord = {}
         for (const [property, value] of Object.entries(newPaintStyle)) {
             if (!(property in this.__lastPaintStyle)
              || JSON.stringify(value) !== JSON.stringify(this.__lastPaintStyle[property])) {
-                paintChanges[property] = value;
+                paintChanges[property] = value
             }
         }
-        return paintChanges;
+        return paintChanges
     }
 
-    changedPaintStyle(newPaintStyle, changes=false)
+    changedPaintStyle(newPaintStyle: ObjectRecord, changes: boolean=false): ObjectRecord
+    //==================================================================================
     {
-        const paintStyle = changes ? this.__paintChanges(newPaintStyle) : newPaintStyle;
-        this.__lastPaintStyle = newPaintStyle;
-        return paintStyle;
+        const paintStyle = changes ? this.__paintChanges(newPaintStyle) : newPaintStyle
+        this.__lastPaintStyle = newPaintStyle
+        return paintStyle
     }
 
-    style()
+    style(options: ObjectRecord)
+    //==========================
     {
         return {
-            'id': this.__id,
-            'source': VECTOR_TILES_SOURCE,
+            ...super.style(options),
             'source-layer': this.__sourceLayer
-        };
+        } as maplibregl.LayerSpecification
     }
 }
 
@@ -114,16 +140,16 @@ class VectorStyleLayer
 
 export class BodyLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'body', sourceLayer);
+        super(id, 'body', sourceLayer, 'fill')
     }
 
-    style(options)
+    style(options: ObjectRecord)
+    //==========================
     {
         return {
-            ...super.style(),
-            'type': 'fill',
+            ...super.style(options),
             'filter': [
                 'all',
                 ['==', '$type', 'Polygon'],
@@ -133,7 +159,7 @@ export class BodyLayer extends VectorStyleLayer
                 'fill-color': '#CCC',
                 'fill-opacity': 0.1
             }
-        };
+        } as maplibregl.FillLayerSpecification
     }
 }
 
@@ -141,15 +167,16 @@ export class BodyLayer extends VectorStyleLayer
 
 export class FeatureFillLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'fill', sourceLayer);
+        super(id, 'fill', sourceLayer, 'fill')
     }
 
-    paintStyle(options, changes=false)
+    paintStyle(options: ObjectRecord, changes: boolean=false)
+    //=======================================================
     {
-        const coloured = !('colour' in options) || options.colour;
-        const dimmed = 'dimmed' in options && options.dimmed;
+        const coloured = !('colour' in options) || options.colour
+        const dimmed = 'dimmed' in options && options.dimmed
         const paintStyle = {
             'fill-color': [
                 'case',
@@ -168,15 +195,15 @@ export class FeatureFillLayer extends VectorStyleLayer
                 ['boolean', ['feature-state', 'active'], false], 0.7,
                 (coloured && !dimmed) ? 0.01 : 0.1
             ]
-        };
-        return super.changedPaintStyle(paintStyle, changes);
+        }
+        return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(options)
+    style(options: ObjectRecord)
+    //==========================
     {
         return {
-            ...super.style(),
-            'type': 'fill',
+            ...super.style(options),
             'filter': [
                 'all',
                 ['==', '$type', 'Polygon'],
@@ -187,7 +214,7 @@ export class FeatureFillLayer extends VectorStyleLayer
                 'fill-sort-key': ['get', 'scale']
             },
             'paint': this.paintStyle(options)
-        };
+        } as maplibregl.FillLayerSpecification
     }
 }
 
@@ -195,69 +222,70 @@ export class FeatureFillLayer extends VectorStyleLayer
 
 export class FeatureBorderLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'border', sourceLayer);
+        super(id, 'border', sourceLayer, 'line')
     }
 
-    paintStyle(options, changes=false)
+    paintStyle(options: ObjectRecord, changes=false)
+    //==============================================
     {
-        const coloured = !('colour' in options) || options.colour;
-        const outlined = !('outline' in options) || options.outline;
-        const dimmed = 'dimmed' in options && options.dimmed;
-        const activeRasterLayer = 'activeRasterLayer' in options && options.activeRasterLayer;
-        const lineColour = ['case'];
-        lineColour.push(['boolean', ['feature-state', 'hidden'], false], COLOUR_HIDDEN);
-        lineColour.push(['boolean', ['feature-state', 'selected'], false], FEATURE_SELECTED_BORDER);
+        const coloured = !('colour' in options) || options.colour
+        const outlined = !('outline' in options) || options.outline
+        const dimmed = 'dimmed' in options && options.dimmed
+        const activeRasterLayer = 'activeRasterLayer' in options && options.activeRasterLayer
+        const lineColour: Array<any> = ['case']
+        lineColour.push(['boolean', ['feature-state', 'hidden'], false], COLOUR_HIDDEN)
+        lineColour.push(['boolean', ['feature-state', 'selected'], false], FEATURE_SELECTED_BORDER)
         if (coloured && outlined) {
-            lineColour.push(['boolean', ['feature-state', 'active'], false], COLOUR_ACTIVE);
+            lineColour.push(['boolean', ['feature-state', 'active'], false], COLOUR_ACTIVE)
         }
-        lineColour.push(['boolean', ['feature-state', 'annotated'], false], COLOUR_ANNOTATED);
-        lineColour.push(['has', 'colour'], ['get', 'colour']);
-        lineColour.push('#444');
+        lineColour.push(['boolean', ['feature-state', 'annotated'], false], COLOUR_ANNOTATED)
+        lineColour.push(['has', 'colour'], ['get', 'colour'])
+        lineColour.push('#444')
 
-        const lineOpacity = ['case'];
-        lineOpacity.push(['boolean', ['feature-state', 'hidden'], false], 0.05);
+        const lineOpacity: Array<any> = ['case']
+        lineOpacity.push(['boolean', ['feature-state', 'hidden'], false], 0.05)
         if (coloured && outlined) {
-            lineOpacity.push(['boolean', ['feature-state', 'active'], false], 0.9);
+            lineOpacity.push(['boolean', ['feature-state', 'active'], false], 0.9)
         }
-        lineOpacity.push(['boolean', ['feature-state', 'selected'], false], 0.9);
-        lineOpacity.push(['boolean', ['feature-state', 'annotated'], false], 0.9);
+        lineOpacity.push(['boolean', ['feature-state', 'selected'], false], 0.9)
+        lineOpacity.push(['boolean', ['feature-state', 'annotated'], false], 0.9)
         if (activeRasterLayer) {
-            lineOpacity.push((outlined && !dimmed) ? 0.3 : 0.1);
+            lineOpacity.push((outlined && !dimmed) ? 0.3 : 0.1)
         } else {
-            lineOpacity.push(0.5);
+            lineOpacity.push(0.5)
         }
 
-        const lineWidth = ['case'];
-        lineWidth.push(['boolean', ['get', 'invisible'], false], 0.2);
-        lineWidth.push(['boolean', ['feature-state', 'selected'], false], 1.5);
+        const lineWidth: Array<any> = ['case']
+        lineWidth.push(['boolean', ['get', 'invisible'], false], 0.2)
+        lineWidth.push(['boolean', ['feature-state', 'selected'], false], 1.5)
         if (coloured && outlined) {
-            lineWidth.push(['boolean', ['feature-state', 'active'], false], 1.5);
+            lineWidth.push(['boolean', ['feature-state', 'active'], false], 1.5)
         }
-        lineWidth.push(['boolean', ['feature-state', 'annotated'], false], 3.5);
-        lineWidth.push(['has', 'colour'], 0.7);
-        lineWidth.push((coloured && outlined) ? 0.5 : 0.1);
+        lineWidth.push(['boolean', ['feature-state', 'annotated'], false], 3.5)
+        lineWidth.push(['has', 'colour'], 0.7)
+        lineWidth.push((coloured && outlined) ? 0.5 : 0.1)
 
         return super.changedPaintStyle({
             'line-color': lineColour,
             'line-opacity': lineOpacity,
             'line-width': lineWidth
-        }, changes);
+        }, changes)
     }
 
-    style(options)
+    style(options: ObjectRecord)
+    //==========================
     {
         return {
-            ...super.style(),
-            'type': 'line',
+            ...super.style(options),
             'filter': [
                 'all',
                 ['==', '$type', 'Polygon'],
                 ['!has', 'node']
             ],
             'paint': this.paintStyle(options)
-        };
+        } as maplibregl.LineLayerSpecification
     }
 }
 
@@ -265,16 +293,19 @@ export class FeatureBorderLayer extends VectorStyleLayer
 
 export class FeatureLineLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer, options={})
+    __dashed: boolean
+
+    constructor(id: string, sourceLayer: string, options: ObjectRecord={})
     {
-        const dashed = ('dashed' in options && options.dashed);
-        super(id, `feature-${dashed ? 'line-dash' : 'line'}`, sourceLayer);
-        this.__dashed = dashed;
+        const dashed = ('dashed' in options && options.dashed)
+        super(id, `feature-${dashed ? 'line-dash' : 'line'}`, sourceLayer, 'line')
+        this.__dashed = dashed
     }
 
-    makeFilter(options={})
+    makeFilter(_: ObjectRecord={})
+    //============================
     {
-        return this.__dashed ? [
+        return (this.__dashed ? [
             'all',
             ['==', '$type', 'LineString'],
             ['==', 'type', 'line-dash']
@@ -286,13 +317,14 @@ export class FeatureLineLayer extends VectorStyleLayer
                 ['==', 'type', 'bezier'],
                 ['==', 'type', 'line']
             ]
-        ];
+        ]) as maplibregl.FilterSpecification
     }
 
-    paintStyle(options, changes=false)
+    paintStyle(options: ObjectRecord, changes=false)
+    //==============================================
     {
-        const coloured = !('colour' in options) || options.colour;
-        const paintStyle = {
+        const coloured = !('colour' in options) || options.colour
+        const paintStyle: ObjectRecord = {
             'line-color': [
                 'case',
                 ['boolean', ['feature-state', 'hidden'], false], COLOUR_HIDDEN,
@@ -328,21 +360,21 @@ export class FeatureLineLayer extends VectorStyleLayer
             ]
             // Need to vary width based on zoom??
             // Or opacity??
-        };
-        if (this.__dashed) {
-            paintStyle['line-dasharray'] = [3, 2];
         }
-        return super.changedPaintStyle(paintStyle, changes);
+        if (this.__dashed) {
+            paintStyle['line-dasharray'] = [3, 2]
+        }
+        return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(options)
+    style(options: ObjectRecord)
+    //==========================
     {
         return {
-            ...super.style(),
-            'type': 'line',
+            ...super.style(options),
             'filter': this.makeFilter(options),
             'paint': this.paintStyle(options)
-        };
+        } as maplibregl.LineLayerSpecification
     }
 }
 
@@ -350,18 +382,18 @@ export class FeatureLineLayer extends VectorStyleLayer
 
 export class FeatureDashLineLayer extends FeatureLineLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, sourceLayer, {dashed: true});
+        super(id, sourceLayer, {dashed: true})
     }
 }
 
 //==============================================================================
 
-function sckanFilter(options)
+function sckanFilter(options: ObjectRecord)
 {
-    const sckanState = !'sckan' in options ? 'all'
-                     : options.sckan.toLowerCase();
+    const sckanState = !('sckan' in options) ? 'all'
+                     : options.sckan.toLowerCase()
     const sckanFilter =
         sckanState == 'none' ? [
             ['!', ['has', 'sckan']]
@@ -384,31 +416,30 @@ function sckanFilter(options)
                 ['!=', ['get', 'sckan'], true]
             ]
         ]] :
-        [ ];
-    return sckanFilter;
+        [true]
+    return sckanFilter
 }
 
 //==============================================================================
 
 export class AnnotatedPathLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'annotated-path', sourceLayer);
+        super(id, 'annotated-path', sourceLayer, 'line')
     }
 
-    makeFilter(options={})
+    makeFilter(options: ObjectRecord={})
+    //==================================
     {
-        return [
-            'all',
-            ...sckanFilter(options)
-        ];
+        return sckanFilter(options)[0] as maplibregl.FilterSpecification
     }
 
-    paintStyle(options={}, changes=false)
+    paintStyle(options: ObjectRecord={}, changes=false)
+    //=================================================
     {
-        const dimmed = 'dimmed' in options && options.dimmed;
-        const exclude = 'excludeAnnotated' in options && options.excludeAnnotated;
+        const dimmed = 'dimmed' in options && options.dimmed
+        const exclude = 'excludeAnnotated' in options && options.excludeAnnotated
         const paintStyle = {
             'line-color': COLOUR_ANNOTATED,
             'line-dasharray': [5, 0.5, 3, 0.5],
@@ -436,21 +467,21 @@ export class AnnotatedPathLayer extends VectorStyleLayer
                     ],
                 STROKE_INTERPOLATION
             ]
-        };
-        return super.changedPaintStyle(paintStyle, changes);
+        }
+        return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(options)
+    style(options: ObjectRecord)
+    //==========================
     {
         return {
-            ...super.style(),
-            'type': 'line',
+            ...super.style(options),
             'filter': this.makeFilter(options),
             'paint': this.paintStyle(options),
             'layout': {
                 'line-cap': 'square'
             }
-        };
+        } as maplibregl.LineLayerSpecification
     }
 }
 
@@ -458,36 +489,40 @@ export class AnnotatedPathLayer extends VectorStyleLayer
 
 export class PathLineLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer, options={})
+    __dashed: boolean
+    __highlight: boolean
+
+    constructor(id: string, sourceLayer: string, options={})
     {
-        const dashed = ('dashed' in options && options.dashed);
-        const highlight = ('highlight' in options && options.highlight);
-        super(id, `path${highlight ? '-highlight' : ''}-${dashed ? 'line-dash' : 'line'}`, sourceLayer);
-        this.__dashed = dashed;
-        this.__highlight = highlight;
+        const dashed = !!('dashed' in options && options.dashed)
+        const highlight = !!('highlight' in options && options.highlight)
+        super(id, `path${highlight ? '-highlight' : ''}-${dashed ? 'line-dash' : 'line'}`, sourceLayer, 'line')
+        this.__dashed = dashed
+        this.__highlight = highlight
     }
 
-    makeFilter(options={})
+    makeFilter(options: ObjectRecord={})
+    //==================================
     {
-        const sckan_filter = sckanFilter(options);
-        let taxonFilter = [];
+        const sckan_filter = sckanFilter(options)
+        let taxonFilter: Array<any> = []
         if ('taxons' in options) {
             if (options.taxons.length) {
-                taxonFilter.push('any');
+                taxonFilter.push('any')
                 for (const taxon of options.taxons) {
                     if (taxon !== UNCLASSIFIED_TAXON_ID) {
-                        taxonFilter.push(['in', taxon, ['get', 'taxons']]);
+                        taxonFilter.push(['in', taxon, ['get', 'taxons']])
                     } else {
-                        taxonFilter.push(['case', ['has', 'taxons'], false, true]);
+                        taxonFilter.push(['case', ['has', 'taxons'], false, true])
                     }
                 }
-                taxonFilter = [taxonFilter];
+                taxonFilter = [taxonFilter]
             } else {
-                taxonFilter.push(false);
+                taxonFilter.push(false)
             }
         }
 
-        return this.__dashed ? [
+        return (this.__dashed ? [
             'all',
             ['==', ['get', 'type'], 'line-dash'],
             ...sckan_filter,
@@ -504,14 +539,15 @@ export class PathLineLayer extends VectorStyleLayer
                     ...taxonFilter
                 ]
             ]
-        ];
+        ]) as maplibregl.FilterSpecification
     }
 
-    paintStyle(options={}, changes=false)
+    paintStyle(options: ObjectRecord={}, changes=false)
+    //=================================================
     {
-        const dimmed = 'dimmed' in options && options.dimmed;
-        const exclude = 'excludeAnnotated' in options && options.excludeAnnotated;
-        const paintStyle = {
+        const dimmed = 'dimmed' in options && options.dimmed
+        const exclude = 'excludeAnnotated' in options && options.excludeAnnotated
+        const paintStyle: ObjectRecord = {
             'line-color': [
                 'let', 'active', ['to-number', ['feature-state', 'active'], 0],
                 [ 'case',
@@ -564,24 +600,24 @@ export class PathLineLayer extends VectorStyleLayer
                 ],
                 STROKE_INTERPOLATION
             ]
-        };
-        if (this.__dashed) {
-            paintStyle['line-dasharray'] = [1, 1];
         }
-        return super.changedPaintStyle(paintStyle, changes);
+        if (this.__dashed) {
+            paintStyle['line-dasharray'] = [1, 1]
+        }
+        return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(options={})
+    style(options: ObjectRecord={})
+    //=============================
     {
         return {
-            ...super.style(),
-            'type': 'line',
+            ...super.style(options),
             'filter': this.makeFilter(options),
             'layout': {
                 'line-cap': 'butt'
             },
             'paint': this.paintStyle(options)
-        };
+        } as maplibregl.LineLayerSpecification
     }
 }
 
@@ -589,9 +625,9 @@ export class PathLineLayer extends VectorStyleLayer
 
 export class PathDashlineLayer extends PathLineLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, sourceLayer, {dashed: true});
+        super(id, sourceLayer, {dashed: true})
     }
 }
 
@@ -599,17 +635,19 @@ export class PathDashlineLayer extends PathLineLayer
 
 export class PathHighlightLayer extends PathLineLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, sourceLayer, {highlight: true});
+        super(id, sourceLayer, {highlight: true})
     }
 }
 
+//==============================================================================
+
 export class PathDashHighlightLayer extends PathLineLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, sourceLayer, {dashed: true, highlight: true});
+        super(id, sourceLayer, {dashed: true, highlight: true})
     }
 }
 
@@ -617,15 +655,17 @@ export class PathDashHighlightLayer extends PathLineLayer
 
 class CentrelineLayer extends VectorStyleLayer
 {
-    constructor(id, type, sourceLayer)
+    __type: string
+
+    constructor(id: string, type: string, sourceLayer: string)
     {
-        super(id, `centreline-${type}`, sourceLayer);
-        this.__type = type;
+        super(id, `centreline-${type}`, sourceLayer, 'line')
+        this.__type = type
     }
 
-    paintStyle(options, changes=false)
+    paintStyle(_: ObjectRecord, changes=false)
+    //========================================
     {
-        const coloured = !('colour' in options) || options.colour;
         const paintStyle = {
             'line-color': (this.__type == 'edge') ? '#000' : [
                 'case',
@@ -648,15 +688,15 @@ class CentrelineLayer extends VectorStyleLayer
             ]
             // Need to vary width based on zoom??
             // Or opacity??
-        };
-        return super.changedPaintStyle(paintStyle, changes);
+        }
+        return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(options)
+    style(options: ObjectRecord)
+    //==========================
     {
         return {
-            ...super.style(),
-            'type': 'line',
+            ...super.style(options),
             'filter': [
                 'all',
                 ['==', '$type', 'LineString'],
@@ -668,42 +708,43 @@ class CentrelineLayer extends VectorStyleLayer
                 'line-cap': 'round',
                 'line-join': 'bevel'
             }
-        };
+        } as maplibregl.LineLayerSpecification
     }
 }
 
+//==============================================================================
 
 export class CentrelineEdgeLayer extends CentrelineLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'edge', sourceLayer);
+        super(id, 'edge', sourceLayer)
     }
-
 }
+
+//==============================================================================
 
 export class CentrelineTrackLayer extends CentrelineLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'track', sourceLayer);
+        super(id, 'track', sourceLayer)
     }
-
-
 }
 
 //==============================================================================
 
 export class CentrelineNodeFillLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'node-fill', sourceLayer);
+        super(id, 'node-fill', sourceLayer, 'fill')
     }
 
-    paintStyle(options={}, changes=false)
+    paintStyle(options: ObjectRecord={}, changes=false)
+    //=================================================
     {
-        const showNodes = options.showCentrelines || false;
+        const showNodes = ('showCentrelines' in options) && options.showCentrelines
         const paintStyle = {
                 'fill-color': [
                     'case',
@@ -713,14 +754,14 @@ export class CentrelineNodeFillLayer extends VectorStyleLayer
                 ],
                 'fill-opacity': showNodes ? 0.8 : 0.01
             }
-        return super.changedPaintStyle(paintStyle, changes);
+        return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(options)
+    style(options: ObjectRecord)
+    //==========================
     {
         return {
-            ...super.style(),
-            'type': 'fill',
+            ...super.style(options),
             'filter': [
                 'all',
                 ['==', '$type', 'Polygon'],
@@ -730,20 +771,23 @@ export class CentrelineNodeFillLayer extends VectorStyleLayer
                 'fill-sort-key': ['get', 'scale']
             },
             'paint': this.paintStyle(options)
-        };
+        } as maplibregl.FillLayerSpecification
     }
 }
 
+//==============================================================================
+
 export class CentrelineNodeBorderLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'node-border', sourceLayer);
+        super(id, 'node-border', sourceLayer, 'line')
     }
 
-    paintStyle(options={}, changes=false)
+    paintStyle(options: ObjectRecord={}, changes=false)
+    //=================================================
     {
-        const showNodes = options.showCentrelines || false;
+        const showNodes = options.showCentrelines || false
         const paintStyle = {
                 'line-color': '#000',
                 'line-opacity': showNodes ? 0.1 : 0.01,
@@ -754,21 +798,21 @@ export class CentrelineNodeBorderLayer extends VectorStyleLayer
                         STROKE_INTERPOLATION
                 ]
             }
-        return super.changedPaintStyle(paintStyle, changes);
+        return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(options)
+    style(options: ObjectRecord)
+    //==========================
     {
         return {
-            ...super.style(),
-            'type': 'line',
+            ...super.style(options),
             'filter': [
                 'all',
                 ['==', '$type', 'Polygon'],
                 ['has', 'node']
             ],
             'paint':  this.paintStyle(options)
-        };
+        } as maplibregl.LineLayerSpecification
     }
 }
 
@@ -776,16 +820,16 @@ export class CentrelineNodeBorderLayer extends VectorStyleLayer
 
 export class FeatureNerveLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'nerve-path', sourceLayer);
+        super(id, 'nerve-path', sourceLayer, 'line')
     }
 
-    style(options)
+    style(options: ObjectRecord)
+    //==========================
     {
         return {
-            ...super.style(),
-            'type': 'line',
+            ...super.style(options),
             'filter': [
                  'all',
                  ['==', '$type', 'LineString'],
@@ -822,7 +866,7 @@ export class FeatureNerveLayer extends VectorStyleLayer
                     ]
                 ]
             }
-        };
+        } as maplibregl.LineLayerSpecification
     }
 }
 
@@ -830,16 +874,16 @@ export class FeatureNerveLayer extends VectorStyleLayer
 
 export class NervePolygonBorder extends VectorStyleLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'nerve-border', sourceLayer);
+        super(id, 'nerve-border', sourceLayer, 'line')
     }
 
-    style(options)
+    style(options: ObjectRecord)
+    //==========================
     {
         return {
-            ...super.style(),
-            'type': 'line',
+            ...super.style(options),
             'filter': [
                 'all',
                 ['==', '$type', 'Polygon'],
@@ -866,7 +910,7 @@ export class NervePolygonBorder extends VectorStyleLayer
                     2
                 ]
             }
-        };
+        } as maplibregl.LineLayerSpecification
     }
 }
 
@@ -874,14 +918,15 @@ export class NervePolygonBorder extends VectorStyleLayer
 
 export class NervePolygonFill extends VectorStyleLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'nerve-fill', sourceLayer);
+        super(id, 'nerve-fill', sourceLayer, 'fill')
     }
 
-    paintStyle(options={}, changes=false)
+    paintStyle(options: ObjectRecord={}, changes=false)
+    //=================================================
     {
-        const dimmed = 'dimmed' in options && options.dimmed;
+        const dimmed = 'dimmed' in options && options.dimmed
         const paintStyle = {
             'fill-color': [
                 'let', 'active', ['to-number', ['feature-state', 'active'], 0],
@@ -909,15 +954,15 @@ export class NervePolygonFill extends VectorStyleLayer
                 ], dimmed ? 0.1 : 0.5,
                 0.01
             ]
-        };
-        return super.changedPaintStyle(paintStyle, changes);
+        }
+        return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(options={})
+    style(options: ObjectRecord={})
+    //=============================
     {
         return {
-            ...super.style(),
-            'type': 'fill',
+            ...super.style(options),
             'filter': [
                 'all',
                 ['==', '$type', 'Polygon'],
@@ -930,7 +975,7 @@ export class NervePolygonFill extends VectorStyleLayer
                 ]
             ],
             'paint': this.paintStyle(options)
-        };
+        } as maplibregl.FillLayerSpecification
     }
 }
 
@@ -938,16 +983,16 @@ export class NervePolygonFill extends VectorStyleLayer
 
 export class FeatureLargeSymbolLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'large-symbol', sourceLayer);
+        super(id, 'large-symbol', sourceLayer, 'symbol')
     }
 
-    style(options)
+    style(options: ObjectRecord)
+    //==========================
     {
         return {
-            ...super.style(),
-            'type': 'symbol',
+            ...super.style(options),
             'minzoom': 3,
             //'maxzoom': 7,
             'filter': [
@@ -974,7 +1019,7 @@ export class FeatureLargeSymbolLayer extends VectorStyleLayer
                     '#000'
                 ]
             }
-        };
+        } as maplibregl.SymbolLayerSpecification
     }
 }
 
@@ -982,16 +1027,16 @@ export class FeatureLargeSymbolLayer extends VectorStyleLayer
 
 export class FeatureSmallSymbolLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'small-symbol', sourceLayer);
+        super(id, 'small-symbol', sourceLayer, 'symbol')
     }
 
-    style(options)
+    style(options: ObjectRecord)
+    //==========================
     {
         return {
-            ...super.style(),
-            'type': 'symbol',
+            ...super.style(options),
             'minzoom': 6,
             'filter': [
                 'all',
@@ -1007,7 +1052,7 @@ export class FeatureSmallSymbolLayer extends VectorStyleLayer
                 'text-font': ['Open Sans Regular'],
                 'text-line-height': 1,
                 'text-max-width': 5,
-                'text-size': {'stops': [[5, 8], [7, 12], [9, 20]]},
+                'text-size': ['interpolate', ['linear'], ['zoom'], 5, 8, 7, 12, 9, 20],
                 'icon-text-fit': 'both'
             },
             'paint': {
@@ -1017,60 +1062,56 @@ export class FeatureSmallSymbolLayer extends VectorStyleLayer
                     '#000'
                 ]
             }
-        };
+        } as maplibregl.SymbolLayerSpecification
     }
 }
 
 //==============================================================================
 
-export class BackgroundLayer
+export class BackgroundLayer extends StyleLayer
 {
+    static defaultSettings = {
+        colour: 'white',
+        opacity: 1.0
+    }
     constructor()
     {
-        this.__id = 'background';
+        super('background', 'background', 'background')
     }
 
-    get id()
+    style(options: ObjectRecord={})
+    //=============================
     {
-        return this.__id;
-    }
-
-    style(backgroundColour, opacity=1.0)
-    {
+        const settings = Object.assign({}, BackgroundLayer.defaultSettings, options)
         return {
-            'id': this.__id,
-            'type': 'background',
+            ...super.style(options),
             'paint': {
-                'background-color': backgroundColour,
-                'background-opacity': opacity
+                'background-color': settings.colour,
+                'background-opacity': settings.opacity
             }
-        };
+        } as maplibregl.BackgroundLayerSpecification
     }
 }
 
 //==============================================================================
 
-export class RasterLayer
+export class RasterLayer extends StyleLayer
 {
-    constructor(id)
+    constructor(id: string)
     {
-        this.__id = id;
+        super(id, id, 'raster')
     }
 
-    get id()
+    style(options: ObjectRecord)
+    //==========================
     {
-        return this.__id;
-    }
-
-    style(options)
-    {
-        const coloured = !('colour' in options) || options.colour;
+        const coloured = !('colour' in options) || options.colour
         return {
-            'id': this.__id,
-            'source': this.__id,
-            'type': 'raster',
-            'visibility': coloured ? 'visible' : 'none'
-        };
+            ...super.style(options),
+            'layout': {
+                'visibility': coloured ? 'visible' : 'none'
+            }
+        } as maplibregl.RasterLayerSpecification
     }
 }
 
