@@ -101,6 +101,7 @@ export class AnnotationDrawControl
         map.on('draw.create', this.createdFeature.bind(this))
         map.on('draw.delete', this.deletedFeature.bind(this))
         map.on('draw.update', this.updatedFeature.bind(this))
+        map.on('draw.selectionchange', this.selectionChangedEvent.bind(this))
         this.show(this.__visible)
         return this.__container
     }
@@ -204,6 +205,13 @@ export class AnnotationDrawControl
         // Used as a flag to indicate the feature mode
         this.__inDrawing = (event.mode.startsWith('draw'))
         this.#sendEvent('modeChanged', event)
+    }
+
+    selectionChangedEvent(event)
+    //==========================
+    {
+        // Used to indicate a feature is selected or deselected
+        this.#sendEvent('selectionChanged', event)
     }
 
     inDrawingMode()
