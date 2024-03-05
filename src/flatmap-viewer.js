@@ -1156,6 +1156,24 @@ class FlatMap
     }
 
     /**
+     * Changes draw to another mode. The mode argument must be one of the following:
+     * `simple_select`, `direct_select`, `draw_line_string`,
+     * `draw_polygon` or `draw_point`. Options is accepted in first three modes.
+     * More details in mapbox-gl-draw github repository.
+     *
+     * @param type      {Object}     The object 
+     * @param type.mode {string}     Either ``simple_select``, ``direct_select``, etc
+     * @param type.options {Object}  Feature id(s) object.
+     */
+    changeAnnotationDrawMode(type)
+    //============================
+    {
+        if (this._userInteractions) {
+            this._userInteractions.changeAnnotationDrawMode(type)
+        }
+    }
+
+    /**
      * Generate a callback as a result of some event with a flatmap feature.
      *
      * @param      {string}  eventType     The event type

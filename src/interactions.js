@@ -389,6 +389,14 @@ export class UserInteractions
         }
     }
 
+    changeAnnotationDrawMode(type)
+    //=============================
+    {
+        if (this.#annotationDrawControl) {
+            this.#annotationDrawControl.changeMode(type)
+        }
+    }
+
     __setupAnnotation()
     //=================
     {
