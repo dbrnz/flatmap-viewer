@@ -190,9 +190,9 @@ export class AnnotationDrawControl
     //===================
     {
         const feature = this.#cleanFeature(event)
-        // specify updated callback type, either `move` or `change_coordinates`
-        feature.action = event.action
         if (feature) {
+            // specify updated callback type, either `move` or `change_coordinates`
+            feature.action = event.action
             if (this.__uncommittedFeatureIds.has(feature.id)) {
                 // Ignore updates on an uncommitted create or update
             } else {
