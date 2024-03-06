@@ -373,6 +373,14 @@ export class UserInteractions
         }
     }
 
+    trashAnnotationFeature()
+    //======================
+    {
+        if (this.#annotationDrawControl) {
+            this.#annotationDrawControl.trashFeature()
+        }
+    }
+
     addAnnotationFeature(feature)
     //===========================
     {

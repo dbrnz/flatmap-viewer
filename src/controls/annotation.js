@@ -270,6 +270,12 @@ export class AnnotationDrawControl
         this.__draw.deleteAll()
     }
 
+    trashFeature()
+    //============
+    {
+        this.__draw.trash()
+    }
+
     addFeature(feature)
     //=================
     {

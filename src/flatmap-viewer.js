@@ -1123,6 +1123,17 @@ class FlatMap
     }
 
     /**
+     * Fire trash to enter `updated` or `deleted` feature event.
+     */
+    trashAnnotationFeature()
+    //======================
+    {
+        if (this._userInteractions) {
+            this._userInteractions.trashAnnotationFeature()
+        }
+    }
+
+    /**
      * Add a drawn feature to the annotation drawing tool.
      *
      * @param feature    {Object}        The feature to add
