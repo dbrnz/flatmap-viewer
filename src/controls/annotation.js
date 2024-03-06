@@ -290,11 +290,6 @@ export class AnnotationDrawControl
     {
         // Change the mode directly without listening to modes callback
         this.__draw.changeMode(type.mode, type.options)
-        // Fire `trash` action
-        // `simple_select` for delete and `direct_select` for edit
-        if (type.mode === 'simple_select' || type.mode === 'direct_select') {
-            this.__draw.trash()
-        }
     }
 }
 
