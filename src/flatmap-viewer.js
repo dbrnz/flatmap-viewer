@@ -1025,7 +1025,11 @@ class FlatMap
             'models',
             'source',
             'taxons',
-            'hyperlinks'
+            'hyperlinks',
+            'completeness',
+            'missing-nodes',
+            'alert',
+            'biological-sex'
         ];
         const jsonProperties = [
             'hyperlinks'
