@@ -101,6 +101,7 @@ export class AnnotationDrawControl
         map.on('draw.create', this.createdFeature.bind(this))
         map.on('draw.delete', this.deletedFeature.bind(this))
         map.on('draw.update', this.updatedFeature.bind(this))
+        map.on('draw.selectionchange', this.selectionChangedEvent.bind(this))
         this.show(this.__visible)
         return this.__container
     }
@@ -190,6 +191,8 @@ export class AnnotationDrawControl
     {
         const feature = this.#cleanFeature(event)
         if (feature) {
+            // specify updated callback type, either `move` or `change_coordinates`
+            feature.action = event.action
             if (this.__uncommittedFeatureIds.has(feature.id)) {
                 // Ignore updates on an uncommitted create or update
             } else {
@@ -204,6 +207,13 @@ export class AnnotationDrawControl
         // Used as a flag to indicate the feature mode
         this.__inDrawing = (event.mode.startsWith('draw'))
         this.#sendEvent('modeChanged', event)
+    }
+
+    selectionChangedEvent(event)
+    //==========================
+    {
+        // Used to indicate a feature is selected or deselected
+        this.#sendEvent('selectionChanged', event)
     }
 
     inDrawingMode()
@@ -260,6 +270,12 @@ export class AnnotationDrawControl
         this.__draw.deleteAll()
     }
 
+    trashFeature()
+    //============
+    {
+        this.__draw.trash()
+    }
+
     addFeature(feature)
     //=================
     {
@@ -273,6 +289,13 @@ export class AnnotationDrawControl
     //======================
     {
         return this.__draw.get(feature.id) || null
+    }
+
+    changeMode(type)
+    //===============
+    {
+        // Change the mode directly without listening to modes callback
+        this.__draw.changeMode(type.mode, type.options)
     }
 }
 

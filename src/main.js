@@ -64,7 +64,7 @@ class DrawControl
     //================
     {
         console.log(event)
-        if (this._idField) {
+        if (this._idField && event.type !== 'modeChanged' && event.type !== 'selectionChanged') {
             this._idField.innerText = `Annotation ${event.type}, Id: ${event.feature.id}`
             this._lastEvent = event
         }

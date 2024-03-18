@@ -373,6 +373,14 @@ export class UserInteractions
         }
     }
 
+    trashAnnotationFeature()
+    //======================
+    {
+        if (this.#annotationDrawControl) {
+            this.#annotationDrawControl.trashFeature()
+        }
+    }
+
     addAnnotationFeature(feature)
     //===========================
     {
@@ -386,6 +394,14 @@ export class UserInteractions
     {
         if (this.#annotationDrawControl) {
             return this.#annotationDrawControl.refreshGeometry(feature)
+        }
+    }
+
+    changeAnnotationDrawMode(type)
+    //=============================
+    {
+        if (this.#annotationDrawControl) {
+            this.#annotationDrawControl.changeMode(type)
         }
     }
 

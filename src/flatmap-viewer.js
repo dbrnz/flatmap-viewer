@@ -1123,6 +1123,17 @@ class FlatMap
     }
 
     /**
+     * Fire trash to enter `updated` or `deleted` feature event.
+     */
+    trashAnnotationFeature()
+    //======================
+    {
+        if (this._userInteractions) {
+            this._userInteractions.trashAnnotationFeature()
+        }
+    }
+
+    /**
      * Add a drawn feature to the annotation drawing tool.
      *
      * @param feature    {Object}        The feature to add
@@ -1152,6 +1163,24 @@ class FlatMap
     {
         if (this._userInteractions) {
             return this._userInteractions.refreshAnnotationFeatureGeometry(feature)
+        }
+    }
+
+    /**
+     * Changes draw to another mode. The mode argument must be one of the following:
+     * `simple_select`, `direct_select`, `draw_line_string`,
+     * `draw_polygon` or `draw_point`. Options is accepted in first three modes.
+     * More details in mapbox-gl-draw github repository.
+     *
+     * @param type      {Object}     The object 
+     * @param type.mode {string}     Either ``simple_select``, ``direct_select``, etc
+     * @param type.options {Object}  Feature id(s) object.
+     */
+    changeAnnotationDrawMode(type)
+    //============================
+    {
+        if (this._userInteractions) {
+            this._userInteractions.changeAnnotationDrawMode(type)
         }
     }
 
