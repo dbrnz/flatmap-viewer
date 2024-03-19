@@ -31,7 +31,8 @@ import MiniSearch from 'minisearch';
 export const indexedProperties = [
     'label',
     'models',
-    'source'
+    'source',
+    'alert'
 ];
 
 //==============================================================================
