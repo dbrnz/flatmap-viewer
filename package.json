@@ -21,9 +21,9 @@
   "license": "MIT",
   "dependencies": {
     "@babel/runtime": "^7.10.4",
-    "@deck.gl/core": "^8.9.33",
-    "@deck.gl/layers": "^8.9.33",
-    "@deck.gl/mapbox": "^8.9.33",
+    "@deck.gl/core": "^8.9.35",
+    "@deck.gl/layers": "^8.9.35",
+    "@deck.gl/mapbox": "^8.9.35",
     "@mapbox/mapbox-gl-draw": "^1.4.3",
     "@turf/area": "^6.5.0",
     "@turf/bbox": "^6.5.0",
