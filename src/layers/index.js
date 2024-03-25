@@ -66,6 +66,12 @@ class MapStylingLayers
         return this.__active;
     }
 
+    get map()
+    //=======
+    {
+        return this.__map
+    }
+
     addLayer(styleLayer, options)
     //===========================
     {
@@ -108,6 +114,8 @@ class MapStylingLayers
 
 class MapFeatureLayers extends MapStylingLayers
 {
+    #pathLayers = []
+
     constructor(flatmap, layer, options)
     {
         super(flatmap, layer, options);
@@ -139,35 +147,46 @@ class MapFeatureLayers extends MapStylingLayers
         this.setPaint(this.__layerOptions);
     }
 
-    __addStyleLayer(styleClass, sourceLayer=FEATURES_LAYER)
-    //=====================================================
+    __addStyleLayer(styleClass, sourceLayer=FEATURES_LAYER, path2dLayer=false)
+    //========================================================================
     {
         const styleLayer = new styleClass(`${this.__id}_${sourceLayer}`,
-                                          this.vectorSourceId(sourceLayer));
-        this.addLayer(styleLayer, this.__layerOptions);
+                                          this.vectorSourceId(sourceLayer))
+        this.addLayer(styleLayer, this.__layerOptions)
+        if (path2dLayer) {
+            this.#pathLayers.push(styleLayer)
+        }
     }
 
     __addPathwayStyleLayers()
     //=======================
     {
-        const pathwaysVectorSource = this.vectorSourceId(PATHWAYS_LAYER);
+        const pathwaysVectorSource = this.vectorSourceId(PATHWAYS_LAYER)
         if (this.__map.getSource('vector-tiles')
                 .vectorLayerIds
                 .includes(pathwaysVectorSource)) {
-            this.__addStyleLayer(style.AnnotatedPathLayer, PATHWAYS_LAYER);
+            this.__addStyleLayer(style.AnnotatedPathLayer, PATHWAYS_LAYER, true)
 
-            this.__addStyleLayer(style.CentrelineEdgeLayer, PATHWAYS_LAYER);
-            this.__addStyleLayer(style.CentrelineTrackLayer, PATHWAYS_LAYER);
+            this.__addStyleLayer(style.CentrelineEdgeLayer, PATHWAYS_LAYER)
+            this.__addStyleLayer(style.CentrelineTrackLayer, PATHWAYS_LAYER)
 
-            this.__addStyleLayer(style.PathLineLayer, PATHWAYS_LAYER);
-            this.__addStyleLayer(style.PathDashlineLayer, PATHWAYS_LAYER);
+            this.__addStyleLayer(style.PathLineLayer, PATHWAYS_LAYER, true)
+            this.__addStyleLayer(style.PathDashlineLayer, PATHWAYS_LAYER, true)
 
-            this.__addStyleLayer(style.NervePolygonBorder, PATHWAYS_LAYER);
-            this.__addStyleLayer(style.NervePolygonFill, PATHWAYS_LAYER);
-            this.__addStyleLayer(style.FeatureNerveLayer, PATHWAYS_LAYER);
+            this.__addStyleLayer(style.NervePolygonBorder, PATHWAYS_LAYER, true)
+            this.__addStyleLayer(style.NervePolygonFill, PATHWAYS_LAYER, true)
+            this.__addStyleLayer(style.FeatureNerveLayer, PATHWAYS_LAYER, true)
 
-            this.__addStyleLayer(style.PathHighlightLayer, PATHWAYS_LAYER);
-            this.__addStyleLayer(style.PathDashHighlightLayer, PATHWAYS_LAYER);
+            this.__addStyleLayer(style.PathHighlightLayer, PATHWAYS_LAYER, true)
+            this.__addStyleLayer(style.PathDashHighlightLayer, PATHWAYS_LAYER, true)
+        }
+    }
+
+    enablePaths2dLayer(visible)
+    //=========================
+    {
+        for (const layer of this.#pathLayers) {
+            this.map.setLayoutProperty(layer.id, 'visibility', visible ? 'visible' : 'none')
         }
     }
 
@@ -245,13 +264,14 @@ class MapRasterLayers extends MapStylingLayers
 
 export class LayerManager
 {
+    #featureLayers = new Map
     #paths3dLayer = null
+    #rasterLayer = null
 
     constructor(flatmap, ui)
     {
         this.__flatmap = flatmap;
         this.__map = flatmap.map;
-        this.__mapLayers = new Map;
         this.__layerOptions = utils.setDefaults(flatmap.options.layerOptions, {
             colour: true,
             outline: true,
@@ -270,20 +290,19 @@ export class LayerManager
 
             // Image layers are below all feature layers
             const bodyLayer = flatmap.layers[0];
-            const rasterLayers = new MapRasterLayers(this.__flatmap,
+            this.#rasterLayer = new MapRasterLayers(this.__flatmap,
                                                      this.__layerOptions,
                                                      bodyLayer.id);  // body layer if not FC??
             for (const layer of flatmap.layers) {
-                rasterLayers.addLayer(layer);
+                this.#rasterLayer.addLayer(layer);
             }
-            this.__mapLayers.set(RASTER_LAYERS_ID, rasterLayers);
         } else {
             this.__layerOptions.activeRasterLayer = false;
         }
         for (const layer of flatmap.layers) {
-            this.__mapLayers.set(layer.id, new MapFeatureLayers(this.__flatmap,
-                                                                layer,
-                                                                this.__layerOptions));
+            this.#featureLayers.set(layer.id, new MapFeatureLayers(this.__flatmap,
+                                                                   layer,
+                                                                   this.__layerOptions));
         }
 
         // Support 3D path view
@@ -293,8 +312,15 @@ export class LayerManager
     get layers()
     //==========
     {
-        const layers = [];
-        for (const mapLayer of this.__mapLayers.values()) {
+        const layers = []
+        if (this.#rasterLayer) {
+            layers.push({
+                id: this.#rasterLayer.id,
+                description: this.#rasterLayer.description,
+                enabled: this.#rasterLayer.active
+            })
+        }
+        for (const mapLayer of this.#featureLayers.values()) {
             layers.push({
                 id: mapLayer.id,
                 description: mapLayer.description,
@@ -313,16 +339,18 @@ export class LayerManager
     activate(layerId, enable=true)
     //============================
     {
-        const layer = this.__mapLayers.get(layerId);
-        if (layer !== undefined) {
-            layer.activate(enable);
-            if (layer.id === RASTER_LAYERS_ID) {
-                this.__layerOptions.activeRasterLayer = enable;
-                for (const mapLayer of this.__mapLayers.values()) {
-                    if (mapLayer.id !== RASTER_LAYERS_ID) {
-                        mapLayer.setPaint(this.__layerOptions);
-                    }
+        if (layerId === RASTER_LAYERS_ID) {
+            if (this.#rasterLayer) {
+                this.#rasterLayer.activate(enable)
+                this.__layerOptions.activeRasterLayer = enable
+                for (const mapLayer of this.#featureLayers.values()) {
+                    mapLayer.setPaint(this.__layerOptions)
                 }
+            }
+        } else {
+            const layer = this.#featureLayers.get(layerId)
+            if (layer) {
+                layer.activate(enable)
             }
         }
     }
@@ -359,9 +387,12 @@ export class LayerManager
     setPaint(options={})
     //==================
     {
-        this.__layerOptions = utils.setDefaults(options, this.__layerOptions);
-        for (const mapLayer of this.__mapLayers.values()) {
-            mapLayer.setPaint(this.__layerOptions);
+        this.__layerOptions = utils.setDefaults(options, this.__layerOptions)
+        if (this.#rasterLayer) {
+            this.#rasterLayer.setPaint(this.__layerOptions)
+        }
+        for (const mapLayer of this.#featureLayers.values()) {
+            mapLayer.setPaint(this.__layerOptions)
         }
         if (this.#paths3dLayer) {
             this.#paths3dLayer.setPaint(options)
@@ -372,7 +403,7 @@ export class LayerManager
     //===================
     {
         this.__layerOptions = utils.setDefaults(options, this.__layerOptions);
-        for (const mapLayer of this.__mapLayers.values()) {
+        for (const mapLayer of this.#featureLayers.values()) {
             mapLayer.setFilter(this.__layerOptions);
         }
     }
@@ -382,6 +413,9 @@ export class LayerManager
     {
         if (this.#paths3dLayer) {
             this.#paths3dLayer.enable(enable)
+            for (const mapLayer of this.#featureLayers.values()) {
+                mapLayer.enablePaths2dLayer(!enable)
+            }
         }
     }
 
