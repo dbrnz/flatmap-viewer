@@ -300,7 +300,8 @@ export class UserInteractions
         return {
             center: this._map.getCenter().toArray(),
             zoom: this._map.getZoom(),
-            layers: this.layers
+            bearing: this._map.getBearing(),
+            pitch: this._map.getPitch()
         };
     }
 
@@ -308,14 +309,11 @@ export class UserInteractions
     //=============
     {
         // Restore the map to a saved state
-        const options = {};
-        if ('center' in state) {
-            options['center'] = state.center;
-        }
-        if ('zoom' in state) {
-            options['zoom'] = state.zoom;
-            if ('center' in state) {
-                options['around'] = state.center;
+
+        const options = Object.assign({}, state)
+        if ('zoom' in options) {
+            if ('center' in options) {
+                options['around'] = options.center;
             } else {
                 options['around'] = [0, 0];
             }
