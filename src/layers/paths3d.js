@@ -236,11 +236,14 @@ export class Paths3DLayer
     #addArcLayer(pathType)
     //====================
     {
-        const layer = this.#pathStyles.get(pathType).dashed
-                        ? new ArcDashedLayer(this.#layerOptions(pathType))
-                        : new ArcMapLayer(this.#layerOptions(pathType))
-        layer.featureIds.forEach(id => this.#featureToLayer.set(+id, layer))
-        this.#arcLayers.set(pathType, layer)
+        const pathStyle = this.#pathStyles.get(pathType)
+        if (pathStyle) {
+            const layer = pathStyle.dashed
+                            ? new ArcDashedLayer(this.#layerOptions(pathType))
+                            : new ArcMapLayer(this.#layerOptions(pathType))
+            layer.featureIds.forEach(id => this.#featureToLayer.set(+id, layer))
+            this.#arcLayers.set(pathType, layer)
+        }
     }
 
     #removeArcLayer(pathType)
