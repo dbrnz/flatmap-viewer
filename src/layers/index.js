@@ -27,6 +27,8 @@ import * as utils from '../utils.js';
 
 import * as style from './styling.js';
 
+import {Paths3DLayer} from './paths3d'
+
 const FEATURES_LAYER = 'features';
 const RASTER_LAYERS_NAME = 'Background image layer';
 const RASTER_LAYERS_ID = 'background-image-layer';
@@ -243,7 +245,9 @@ class MapRasterLayers extends MapStylingLayers
 
 export class LayerManager
 {
-    constructor(flatmap)
+    #paths3dLayer = null
+
+    constructor(flatmap, ui)
     {
         this.__flatmap = flatmap;
         this.__map = flatmap.map;
@@ -281,6 +285,9 @@ export class LayerManager
                                                                 layer,
                                                                 this.__layerOptions));
         }
+
+        // Support 3D path view
+        this.#paths3dLayer = new Paths3DLayer(flatmap, ui)
     }
 
     get layers()
@@ -320,12 +327,44 @@ export class LayerManager
         }
     }
 
+    featuresAtPoint(point)
+    //====================
+    {
+        let features = []
+        if (this.#paths3dLayer) {
+            features = this.#paths3dLayer.queryFeaturesAtPoint(point)
+        }
+        if (features.length === 0) {
+            features = this.__map.queryRenderedFeatures(point)
+        }
+        return features
+    }
+
+    removeFeatureState(feature, key)
+    //==============================
+    {
+        if (this.#paths3dLayer) {
+            this.#paths3dLayer.removeFeatureState(feature.id, key)
+        }
+    }
+
+    setFeatureState(feature, state)
+    //=============================
+    {
+        if (this.#paths3dLayer) {
+            this.#paths3dLayer.setFeatureState(feature.id, state)
+        }
+    }
+
     setPaint(options={})
     //==================
     {
         this.__layerOptions = utils.setDefaults(options, this.__layerOptions);
         for (const mapLayer of this.__mapLayers.values()) {
             mapLayer.setPaint(this.__layerOptions);
+        }
+        if (this.#paths3dLayer) {
+            this.#paths3dLayer.setPaint(options)
         }
     }
 
@@ -335,6 +374,14 @@ export class LayerManager
         this.__layerOptions = utils.setDefaults(options, this.__layerOptions);
         for (const mapLayer of this.__mapLayers.values()) {
             mapLayer.setFilter(this.__layerOptions);
+        }
+    }
+
+    set3dMode(enable=true)
+    //====================
+    {
+        if (this.#paths3dLayer) {
+            this.#paths3dLayer.enable(enable)
         }
     }
 

@@ -36,7 +36,6 @@ import polylabel from 'polylabel';
 import {LayerManager} from './layers';
 import {PATHWAYS_LAYER, PathManager} from './pathways';
 import {VECTOR_TILES_SOURCE} from './layers/styling';
-import {Paths3DLayer} from './layers/paths3d'
 import {SystemsManager} from './systems';
 
 import {displayedProperties, InfoControl} from './controls/info';
@@ -132,7 +131,6 @@ export class UserInteractions
 {
     #annotationDrawControl = null
     #minimap = null
-    #paths3dLayer = null
 
     constructor(flatmap)
     {
@@ -166,9 +164,7 @@ export class UserInteractions
 
         flatmap.setInitialPosition();
 
-        // Add and manage our layers
-
-        this._layerManager = new LayerManager(flatmap);
+        // Track enabled features
 
         this.__featureEnabledCount = new Map(Array.from(this._flatmap.annotations.keys()).map(k => [+k, 0]));
 
@@ -180,9 +176,16 @@ export class UserInteractions
         this.__pathManager = new PathManager(flatmap, this, featuresEnabled);
 
         // The path types in this map
+
         const mapPathTypes = this.__pathManager.pathTypes();
 
+        // Add and manage our layers. NB. this needs to after we have a
+        // path manager but before path enabled state is set.
+
+        this._layerManager = new LayerManager(flatmap, this);
+
         // Set initial enabled state of paths
+
         for (const path of mapPathTypes) {
             this.__pathManager.enablePathsByType(path.type, path.enabled, true);
         }
@@ -215,9 +218,6 @@ export class UserInteractions
                            ? value : 'bottom-right';
             this._map.addControl(new NavigationControl(flatmap), position);
         }
-
-        // Support 3D path view
-        this.#paths3dLayer = new Paths3DLayer(flatmap, this)
 
         // Add various controls when running standalone
         if (flatmap.options.standalone) {
@@ -437,9 +437,6 @@ export class UserInteractions
     //================
     {
         this._layerManager.setPaint(options)
-        if (this.#paths3dLayer) {
-            this.#paths3dLayer.setPaint(options)
-        }
     }
 
     setPaint(options)
@@ -464,9 +461,7 @@ export class UserInteractions
     enable3dPaths(enable=true)
     //========================
     {
-        if (this.#paths3dLayer) {
-            this.#paths3dLayer.enable(enable)
-        }
+        this._layerManager.set3dMode(enable)
     }
 
     getSystems()
@@ -508,18 +503,14 @@ export class UserInteractions
     //===============================
     {
         this._map.removeFeatureState(feature, key)
-        if (this.#paths3dLayer) {
-            this.#paths3dLayer.removeFeatureState(feature.id, key)
-        }
+        this._layerManager.removeFeatureState(feature, key)
     }
 
     #setFeatureState(feature, state)
     //==============================
     {
         this._map.setFeatureState(feature, state)
-        if (this.#paths3dLayer) {
-            this.#paths3dLayer.setFeatureState(feature.id, state)
-        }
+        this._layerManager.setFeatureState(feature, state)
     }
 
     enableMapFeature(feature, enable=true)
@@ -992,13 +983,7 @@ export class UserInteractions
     #renderedFeatures(point)
     //======================
     {
-        let features = []
-        if (this.#paths3dLayer) {
-            features = this.#paths3dLayer.queryFeaturesAtPoint(point)
-        }
-        if (features.length === 0) {
-            features = this._map.queryRenderedFeatures(point)
-        }
+        const features = this._layerManager.featuresAtPoint(point)
         return features.filter(feature => this.__featureEnabled(feature));
     }
 
