@@ -1122,18 +1122,18 @@ class FlatMap
     //======================
     {
         if (this._userInteractions) {
-            this._userInteractions.clearAnnotationFeature()
+            this._userInteractions.clearAnnotationFeatures()
         }
     }
 
     /**
-     * Fire trash to enter `updated` or `deleted` feature event.
+     * Delete the selected drawn feature
      */
-    trashAnnotationFeature()
-    //======================
+    removeAnnotationFeature()
+    //=======================
     {
         if (this._userInteractions) {
-            this._userInteractions.trashAnnotationFeature()
+            this._userInteractions.removeAnnotationFeature()
         }
     }
 

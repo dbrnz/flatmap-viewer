@@ -365,19 +365,19 @@ export class UserInteractions
         }
     }
 
-    clearAnnotationFeature()
-    //======================
+    clearAnnotationFeatures()
+    //=======================
     {
         if (this.#annotationDrawControl) {
-            this.#annotationDrawControl.clearFeature()
+            this.#annotationDrawControl.clearFeatures()
         }
     }
 
-    trashAnnotationFeature()
-    //======================
+    removeAnnotationFeature()
+    //=======================
     {
         if (this.#annotationDrawControl) {
-            this.#annotationDrawControl.trashFeature()
+            this.#annotationDrawControl.removeFeature()
         }
     }
 

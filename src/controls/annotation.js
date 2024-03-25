@@ -264,14 +264,14 @@ export class AnnotationDrawControl
         }
     }
     
-    clearFeature()
-    //============
+    clearFeatures()
+    //=============
     {
         this.__draw.deleteAll()
     }
 
-    trashFeature()
-    //============
+    removeFeature()
+    //=============
     {
         this.__draw.trash()
     }
