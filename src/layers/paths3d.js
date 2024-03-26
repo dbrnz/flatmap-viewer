@@ -141,6 +141,7 @@ export class Paths3DLayer
     #deckOverlay = null
     #dimmed = false
     #enabled = false
+    #featureFilter = new PropertiesFilter()
     #featureToLayer = new Map()
     #knownTypes = []
     #map
@@ -246,6 +247,30 @@ export class Paths3DLayer
         }
     }
 
+    setFilter(filterExpression)
+    //=========================
+    {
+        this.#featureFilter = new PropertiesFilter(filterExpression)
+        if (this.#deckOverlay) {
+            const updatedLayers = new Map()
+            for (const [pathType, layer] of this.#arcLayers.entries()) {
+                layer.featureIds.forEach(id => this.#featureToLayer.delete(+id))
+                const pathStyle = this.#pathStyles.get(pathType)
+                if (pathStyle) {
+                    const updatedLayer = pathStyle.dashed
+                                    ? new ArcDashedLayer(this.#layerOptions(pathType))
+                                    : new ArcMapLayer(this.#layerOptions(pathType))
+                    updatedLayer.featureIds.forEach(id => this.#featureToLayer.set(+id, layer))
+                    updatedLayers.set(pathType, updatedLayer)
+                }
+            }
+            this.#arcLayers = updatedLayers
+            this.#deckOverlay.setProps({
+                layers:  [...this.#arcLayers.values()]
+            })
+        }
+    }
+
     setPaint(options)
     //===============
     {
@@ -313,8 +338,8 @@ export class Paths3DLayer
     //=====================
     {
         const filter = this.#pathFilters.get(pathType)
-        const pathData = filter ? [...this.#pathData.values()].filter(ann => filter.match(ann))
-                                : []
+        const pathData = (filter ? [...this.#pathData.values()].filter(ann => filter.match(ann))
+                                 : []).filter(ann => this.#featureFilter.match(ann))
         return {
             id: `arc-${pathType}`,
             data: pathData,

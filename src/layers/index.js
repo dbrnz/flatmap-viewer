@@ -406,6 +406,9 @@ export class LayerManager
         for (const mapLayer of this.#featureLayers.values()) {
             mapLayer.setFilter(this.__layerOptions);
         }
+        if (this.#paths3dLayer) {
+            this.#paths3dLayer.setFilter(options)
+        }
     }
 
     set3dMode(enable=true)
