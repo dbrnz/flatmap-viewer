@@ -31,6 +31,7 @@
     "@turf/projection": "^6.5.0",
     "bezier-js": "^6.1.0",
     "colord": "^2.9.3",
+    "core-js-pure": "^3.36.1",
     "html-es6cape": "^2.0.2",
     "maplibre-gl": ">=3.6.0",
     "mathjax-full": "^3.2.2",
