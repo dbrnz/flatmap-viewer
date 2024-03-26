@@ -105,7 +105,6 @@ export class PropertiesFilter
         } else {
             this.#filter = Object.assign({}, filter)
         }
-        this.#notify()
     }
 
     #makeStyleFilter(filter)
