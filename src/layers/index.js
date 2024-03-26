@@ -410,10 +410,8 @@ export class LayerManager
         if (this.#paths3dLayer) {
             const sckanState = options.sckan || 'valid'
             const sckanFilter = (sckanState == 'none') ? {NOT: {HAS: 'sckan'}} :
-                                (sckanState == 'valid') ? {
-                                    OR: [{NOT: {HAS: 'sckan'}}, {sckan: true}]} :
-                                (sckanState == 'invalid') ? {
-                                    OR: [{NOT: {HAS: 'sckan'}}, {NOT: {sckan: true}}]} :
+                                (sckanState == 'valid') ? {sckan: true} :
+                                (sckanState == 'invalid') ? {NOT: {sckan: true}} :
                                 true
             const featureFilter = new PropertiesFilter(sckanFilter)
             if ('taxons' in options) {
