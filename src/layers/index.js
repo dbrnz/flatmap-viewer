@@ -28,6 +28,7 @@ import * as utils from '../utils.js';
 import * as style from './styling.js';
 
 import {Paths3DLayer} from './paths3d'
+import {PropertiesFilter} from './filter'
 
 const FEATURES_LAYER = 'features';
 const RASTER_LAYERS_NAME = 'Background image layer';
@@ -407,7 +408,18 @@ export class LayerManager
             mapLayer.setFilter(this.__layerOptions);
         }
         if (this.#paths3dLayer) {
-            this.#paths3dLayer.setFilter(options)
+            const sckanState = options.sckan || 'valid'
+            const sckanFilter = (sckanState == 'none') ? {NOT: {HAS: 'sckan'}} :
+                                (sckanState == 'valid') ? {
+                                    OR: [{NOT: {HAS: 'sckan'}}, {sckan: true}]} :
+                                (sckanState == 'invalid') ? {
+                                    OR: [{NOT: {HAS: 'sckan'}}, {NOT: {sckan: true}}]} :
+                                true
+            const featureFilter = new PropertiesFilter(sckanFilter)
+            if ('taxons' in options) {
+                featureFilter.narrow({taxons: options.taxons})
+            }
+            this.#paths3dLayer.setFilter(featureFilter)
         }
     }
 

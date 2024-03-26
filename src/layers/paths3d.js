@@ -247,10 +247,10 @@ export class Paths3DLayer
         }
     }
 
-    setFilter(filterExpression)
-    //=========================
+    setFilter(featureFilter)
+    //======================
     {
-        this.#featureFilter = new PropertiesFilter(filterExpression)
+        this.#featureFilter = featureFilter
         if (this.#deckOverlay) {
             const updatedLayers = new Map()
             for (const [pathType, layer] of this.#arcLayers.entries()) {
