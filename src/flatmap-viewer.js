@@ -437,6 +437,21 @@ class FlatMap
     }
 
     /**
+     * The map's URL on the map server.
+     *
+     * @type string
+     */
+    get url()
+    //========
+    {
+        let url = this.makeServerUrl('')
+        if (url.endsWith('/')) {
+            return url.substring(0, url.length - 1)
+        }
+        return url
+    }
+
+    /**
      * The map's ``index.json`` as returned from the map server.
      *
      * @type Object
