@@ -164,33 +164,35 @@ export class PropertiesFilter
             return !!filter
         }
         for (const [key, expr] of Object.entries(filter)) {
+            let matched = true
             if (key === 'AND' || key === 'OR') {
                 if (Array.isArray(expr) && expr.length >= 2) {
                     const matches = expr.map(e => this.#match(properties, e))
-                    return (key === 'AND') ? matches.reduce((result, match) => result && match, true)
-                                           : matches.reduce((result, match) => result || match, false)
+                    matched = (key === 'AND') ? matches.reduce((result, match) => result && match, true)
+                                              : matches.reduce((result, match) => result || match, false)
                 } else {
                     console.warn(`makeFilter: Invalid ${key} operands: ${expr}`)
                 }
             } else if (key === 'HAS') {
-                return (expr in properties)
+                matched = (expr in properties)
             } else if (key === 'NOT') {
-                return !this.#match(properties, expr)
-            } else if (!(key in properties)) {
-                return true
-            } else {
+                matched = !this.#match(properties, expr)
+            } else if (key in properties) {
                 const value = properties[key]
                 if (Array.isArray(value)) {
                     if (Array.isArray(expr)) {
-                        return !(new Set(value).isDisjointFrom(new Set(expr)))
+                        matched = !(new Set(value).isDisjointFrom(new Set(expr)))
                     } else {
-                        return value.includes(expr)
+                        matched = value.includes(expr)
                     }
                 } else if (Array.isArray(expr)) {
-                    return expr.includes(value)
+                    matched = expr.includes(value)
                 } else {
-                    return (value === expr)
+                    matched = (value === expr)
                 }
+            }
+            if (!matched) {
+                return false
             }
         }
         return true
