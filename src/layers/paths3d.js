@@ -26,6 +26,7 @@ import GL from '@luma.gl/constants'
 //==============================================================================
 
 import {pathColourArray} from '../pathways'
+import {PropertiesFilter} from './filter'
 
 //==============================================================================
 
@@ -60,6 +61,7 @@ class ArcMapLayer extends ArcLayer
         shaders.vs = `#version 300 es\n${shaders.vs}`
         return shaders
     }
+
     setDataProperty(featureId, key, enabled)
     //======================================
     {
@@ -143,6 +145,7 @@ export class Paths3DLayer
     #knownTypes = []
     #map
     #pathData
+    #pathFilters
     #pathManager
     #pathStyles
     #ui
@@ -162,7 +165,27 @@ export class Paths3DLayer
                                              && 'pathEndPosition' in ann)
                                  .map(ann => [ann.featureId, ann]))
         this.#pathStyles = new Map(this.#pathManager.pathStyles().map(s => [s.type, s]))
-        this.#knownTypes = [...this.#pathStyles.keys()].filter(t => t !== 'other')
+        const knownTypes = [...this.#pathStyles.keys()].filter(t => t !== 'other')
+        this.#pathFilters = new Map(
+            [...this.#pathStyles.keys()]
+                .map(pathType => [pathType, new PropertiesFilter({
+                    OR: [{
+                        AND: [
+                            {kind: knownTypes},
+                            {kind: pathType}
+                        ],
+                    },
+                    {
+                        AND: [
+                            {
+                                NOT: {kind: knownTypes}
+                            },
+                            (pathType === 'other')
+                        ]
+                    }]
+                })
+            ])
+        )
     }
 
     enable(enable=true)
@@ -286,13 +309,12 @@ export class Paths3DLayer
         }
     }
 
-
     #layerOptions(pathType)
     //=====================
     {
-        const pathData = [...this.#pathData.values()]
-                                 .filter(ann => (this.#knownTypes.includes(ann.kind) && (ann.kind === pathType)
-                                             || !this.#knownTypes.includes(ann.kind) && (pathType === 'other')))
+        const filter = this.#pathFilters.get(pathType)
+        const pathData = filter ? [...this.#pathData.values()].filter(ann => filter.match(ann))
+                                : []
         return {
             id: `arc-${pathType}`,
             data: pathData,
