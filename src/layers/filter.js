@@ -18,13 +18,56 @@ limitations under the License.
 
 ******************************************************************************/
 
-export class FeatureFilter
+export class PropertiesFilter
 {
     #filter
 
-    constructor(filter)
+    constructor(filter=true)
+    //======================
     {
-        this.#filter = filter
+        if (filter.constructor !== Object) {    // We allow boolean values
+            this.#filter = filter
+        } else {
+            this.#filter = Object.assign({}, filter)
+        }
+    }
+
+    clear()
+    //=====
+    {
+        if (this.#filter !== true) {
+            this.#filter = true
+        }
+    }
+
+    expand(filter)
+    //============
+    {
+        if (this.#filter === false) {
+            this.#filter = filter
+        } else if (this.#filter !== true) {
+            const copiedFilter = Object.assign({}, filter)
+            this.#filter = { "OR": [this.#filter, copiedFilter] }
+        }
+    }
+
+    invert()
+    //======
+    {
+        if (this.#filter === false) {
+            this.#filter = true
+        } else if (this.#filter === true) {
+            this.#filter = false
+        } else {
+            const copiedFilter = Object.assign({}, filter)
+            this.#filter = { "NOT": copiedFilter }
+        }
+    }
+
+    getFilter()
+    //=========
+    {
+        return this.#filter
     }
 
     makeStyleFilter()
@@ -33,10 +76,38 @@ export class FeatureFilter
         return this.#makeStyleFilter(this.#filter)
     }
 
+    match(properties)
+    //===============
+    {
+        return this.#match(properties, this.#filter)
+    }
+
+    narrow(filter)
+    //============
+    {
+        if (this.#filter === true) {
+            this.#filter = filter
+        } else if (this.#filter !== false) {
+            const copiedFilter = Object.assign({}, filter)
+            this.#filter = { "AND": [this.#filter, copiedFilter] }
+        }
+    }
+
+    setFilter(filter)
+    //===============
+    {
+        if (filter.constructor !== Object) {
+            this.#filter = filter
+        } else {
+            this.#filter = Object.assign({}, filter)
+        }
+        this.#notify()
+    }
+
     #makeStyleFilter(filter)
     //======================
     {
-        if (filter.constructor !== Object) {    // We allow boolean values
+        if (filter.constructor !== Object) {
             return !!filter
         }
         const styleFilter = []
@@ -81,19 +152,55 @@ export class FeatureFilter
         }
         return styleFilter
     }
+
+    #match(properties, filter)
+    //========================
+    {
+        if (filter.constructor !== Object) {
+            return !!filter
+        }
+        for (const [key, expr] of Object.entries(filter)) {
+            if (key === 'AND' || key === 'OR') {
+                if (Array.isArray(expr) && expr.length >= 2) {
+                    const matches = expr.map(e => this.#match(properties, e))
+                    return (key === 'AND') ? matches.reduce((result, match) => result && match, true)
+                                           : matches.reduce((result, match) => result || match, false)
+                } else {
+                    console.warn(`makeFilter: Invalid ${key} operands: ${expr}`)
+                }
+            } else if (key === 'HAS') {
+                return (expr in properties)
+            } else if (key === 'NOT') {
+                return !this.#match(properties, expr)
+            } else if (!(key in properties)) {
+                return true
+            } else if (Array.isArray(expr)) {
+                return expr.includes(properties[key])
+            } else {
+                return (properties[key] === expr)
+            }
+        }
+        return true
+    }
 }
 
 //==============================================================================
 
-function testFilter(f)
-//====================
-{
-    const featureFilter = new FeatureFilter(f)
-    console.log(f, '--->', featureFilter.makeStyleFilter())
+const testProperties = {
+    prop: 1,
+    prop1: 5,
+    prop2: 11,
 }
 
-export function testFilters()
-//===========================
+function testFilter(filter)
+//=========================
+{
+    const featureFilter = new PropertiesFilter(filter)
+    console.log(filter, '--->', featureFilter.makeStyleFilter(), featureFilter.match(testProperties))
+}
+
+function testFilters()
+//====================
 {
     /*
         { HAS: 'prop' } ---> [ 'has', 'prop' ]
@@ -113,6 +220,8 @@ export function testFilters()
         ]
     */
 
+    console.log('test properties', testProperties)
+
     testFilter({
         "HAS": "prop"
     })
@@ -125,6 +234,10 @@ export function testFilters()
         "NOT": {
             "prop": 1
         }
+    })
+
+    testFilter({
+        "prop": [1, 2]
     })
 
     testFilter({
