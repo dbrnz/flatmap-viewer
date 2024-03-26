@@ -18,6 +18,10 @@ limitations under the License.
 
 ******************************************************************************/
 
+import Set from 'core-js-pure/actual/set'
+
+//==============================================================================
+
 export class PropertiesFilter
 {
     #filter
@@ -174,10 +178,19 @@ export class PropertiesFilter
                 return !this.#match(properties, expr)
             } else if (!(key in properties)) {
                 return true
-            } else if (Array.isArray(expr)) {
-                return expr.includes(properties[key])
             } else {
-                return (properties[key] === expr)
+                const value = properties[key]
+                if (Array.isArray(value)) {
+                    if (Array.isArray(expr)) {
+                        return !(new Set(value).isDisjointFrom(new Set(expr)))
+                    } else {
+                        return value.includes(expr)
+                    }
+                } else if (Array.isArray(expr)) {
+                    return expr.includes(value)
+                } else {
+                    return (value === expr)
+                }
             }
         }
         return true
