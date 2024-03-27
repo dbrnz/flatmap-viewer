@@ -613,7 +613,7 @@ class FlatMap
     //=====================
     {
         if (this._userInteractions !== null) {
-            return new [...this._userInteractions.pathModelNodes(modelId)]
+            return [...this._userInteractions.pathModelNodes(modelId)]
         }
     }
 
