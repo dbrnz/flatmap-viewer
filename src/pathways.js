@@ -92,9 +92,6 @@ export class PathManager
                 pathLines[pathId] = path.lines;
                 pathNerves[pathId] = path.nerves;
                 this.__paths[pathId] = path;
-                for (const lineId of path.lines) {
-                    this.__ui.enableFeature(lineId, enabled, true);
-                }
                 this.__paths[pathId].systemCount = 0;
                 if ('models' in path) {
                     const modelId = path['models'];
@@ -314,6 +311,14 @@ export class PathManager
             this.addPathsToFeatureSet_(this.__pathsByType[pathType], featureIds);
         }
         return featureIds;
+    }
+
+    enablePathLines(enable, force=false)
+    //==================================
+    {
+        for (const lineId of Object.keys(this.__pathsByLine)) {
+            this.__ui.enableFeature(lineId, enable, force)
+        }
     }
 
     enablePathsBySystem(system, enable, force=false)

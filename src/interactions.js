@@ -180,11 +180,13 @@ export class UserInteractions
         const mapPathTypes = this.__pathManager.pathTypes();
 
         // Add and manage our layers. NB. this needs to after we have a
-        // path manager but before path enabled state is set.
+        // path manager but before paths are enabled
 
         this._layerManager = new LayerManager(flatmap, this);
 
         // Set initial enabled state of paths
+
+        this.__pathManager.enablePathLines(true, true)
 
         for (const path of mapPathTypes) {
             this.__pathManager.enablePathsByType(path.type, path.enabled, true);
