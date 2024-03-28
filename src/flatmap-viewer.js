@@ -901,15 +901,15 @@ class FlatMap
     }
 
     /**
-     * Show/hide 3D path view.
+     * Show/hide flight path view.
      *
      * @param      {boolean}  [enable=true]
      */
-    enable3dPaths(enable=true)
-    //========================
+    enableFlightPaths(enable=true)
+    //============================
     {
         if (this._userInteractions !== null) {
-            this._userInteractions.enable3dPaths(enable)
+            this._userInteractions.enableFlightPaths(enable)
         }
     }
 
@@ -1569,6 +1569,7 @@ export class MapManager
     * @arg options {Object} Configurable options for the map.
     * @arg options.background {string} Background colour of flatmap. Defaults to ``white``.
     * @arg options.debug {boolean} Enable debugging mode.
+    * @arg options.flightPaths {boolean} Enable flight path (3D) view of neuron paths
     * @arg options.fullscreenControl {boolean} Add a ``Show full screen`` button to the map.
     * @arg options.layerOptions {Object} Options to control colour and outlines of features
     * @arg options.layerOptions.colour {boolean} Use colour fill (if available) for features. Defaults to ``true``.

@@ -43,7 +43,7 @@ import {AnnotatorControl, BackgroundControl, LayerControl, NerveControl,
         SCKANControl} from './controls/controls';
 import {AnnotationDrawControl, DRAW_ANNOTATION_LAYERS} from './controls/annotation'
 import {PathControl} from './controls/paths';
-import {Path3DControl} from './controls/paths3d'
+import {FlightPathControl} from './controls/flightpaths'
 import {SearchControl} from './controls/search';
 import {MinimapControl} from './controls/minimap';
 import {SystemsControl} from './controls/systems';
@@ -253,7 +253,7 @@ export class UserInteractions
                 this._map.addControl(new TaxonsControl(flatmap));
             }
 
-            this._map.addControl(new Path3DControl(this));
+            this._map.addControl(new FlightPathControl(this, flatmap.options.flightPaths));
 
             if (flatmap.options.annotator) {
                 this._map.addControl(new AnnotatorControl(flatmap));
@@ -266,6 +266,11 @@ export class UserInteractions
         // Add an initially hidden tool for drawing on the map.
         this.#annotationDrawControl = new AnnotationDrawControl(flatmap, false)
         this._map.addControl(this.#annotationDrawControl)
+
+        // Set initial path viewing mode
+        if (flatmap.options.flightPaths === true) {
+            this._layerManager.setFlightPathMode(true)
+        }
 
         // Handle mouse events
 
@@ -458,10 +463,10 @@ export class UserInteractions
         this._layerManager.activate(layerId, enable);
     }
 
-    enable3dPaths(enable=true)
-    //========================
+    enableFlightPaths(enable=true)
+    //============================
     {
-        this._layerManager.set3dMode(enable)
+        this._layerManager.setFlightPathMode(enable)
     }
 
     getSystems()
@@ -1307,6 +1312,7 @@ export class UserInteractions
     // Marker handling
 
     __markerPosition(featureId, annotation)
+    //=====================================
     {
         if (this.__markerPositions.has(featureId)) {
             return this.__markerPositions.get(featureId);
@@ -1366,23 +1372,27 @@ export class UserInteractions
                     markerOptions.className = options.className;
                 }
                 const markerPosition = this.__markerPosition(featureId, annotation);
-                const marker = new maplibregl.Marker(markerOptions)
-                                             .setLngLat(markerPosition)
-                                             .addTo(this._map);
-                markerElement.addEventListener('mouseenter',
-                    this.markerMouseEvent_.bind(this, marker, anatomicalId));
-                markerElement.addEventListener('mousemove',
-                    this.markerMouseEvent_.bind(this, marker, anatomicalId));
-                markerElement.addEventListener('mouseleave',
-                    this.markerMouseEvent_.bind(this, marker, anatomicalId));
-                markerElement.addEventListener('click',
-                    this.markerMouseEvent_.bind(this, marker, anatomicalId));
+                if (options.cluster && this._layerManager) {
+                    this._layerManager.addMarkers([markerPosition])
+                } else {
+                    const marker = new maplibregl.Marker(markerOptions)
+                                                 .setLngLat(markerPosition)
+                                                 .addTo(this._map);
+                    markerElement.addEventListener('mouseenter',
+                        this.markerMouseEvent_.bind(this, marker, anatomicalId));
+                    markerElement.addEventListener('mousemove',
+                        this.markerMouseEvent_.bind(this, marker, anatomicalId));
+                    markerElement.addEventListener('mouseleave',
+                        this.markerMouseEvent_.bind(this, marker, anatomicalId));
+                    markerElement.addEventListener('click',
+                        this.markerMouseEvent_.bind(this, marker, anatomicalId));
 
-                this.__markerIdByMarker.set(marker, markerId);
-                this.__markerIdByFeatureId.set(+featureId, markerId);
-                this.__annotationByMarkerId.set(markerId, annotation);
-                if (!this.__featureEnabled(this.mapFeature(+featureId))) {
-                    markerElement.style.visibility = 'hidden';
+                    this.__markerIdByMarker.set(marker, markerId);
+                    this.__markerIdByFeatureId.set(+featureId, markerId);
+                    this.__annotationByMarkerId.set(markerId, annotation);
+                    if (!this.__featureEnabled(this.mapFeature(+featureId))) {
+                        markerElement.style.visibility = 'hidden';
+                    }
                 }
             }
         }

@@ -27,7 +27,7 @@ import * as utils from '../utils.js';
 
 import * as style from './styling.js';
 
-import {Paths3DLayer} from './paths3d'
+import {FlightPathLayer} from './flightpaths'
 import {PropertiesFilter} from './filter'
 
 const FEATURES_LAYER = 'features';
@@ -183,8 +183,8 @@ class MapFeatureLayers extends MapStylingLayers
         }
     }
 
-    enablePaths2dLayer(visible)
-    //=========================
+    setFlatPathMode(visible)
+    //======================
     {
         for (const layer of this.#pathLayers) {
             this.map.setLayoutProperty(layer.id, 'visibility', visible ? 'visible' : 'none')
@@ -266,7 +266,7 @@ class MapRasterLayers extends MapStylingLayers
 export class LayerManager
 {
     #featureLayers = new Map()
-    #paths3dLayer = null
+    #flightPathLayer = null
     #rasterLayer = null
 
     constructor(flatmap, ui)
@@ -306,8 +306,8 @@ export class LayerManager
                                                                    this.__layerOptions));
         }
 
-        // Support 3D path view
-        this.#paths3dLayer = new Paths3DLayer(flatmap, ui)
+        // Support flight path view
+        this.#flightPathLayer = new FlightPathLayer(flatmap, ui)
     }
 
     get layers()
@@ -360,8 +360,8 @@ export class LayerManager
     //====================
     {
         let features = []
-        if (this.#paths3dLayer) {
-            features = this.#paths3dLayer.queryFeaturesAtPoint(point)
+        if (this.#flightPathLayer) {
+            features = this.#flightPathLayer.queryFeaturesAtPoint(point)
         }
         if (features.length === 0) {
             features = this.__map.queryRenderedFeatures(point)
@@ -372,16 +372,16 @@ export class LayerManager
     removeFeatureState(feature, key)
     //==============================
     {
-        if (this.#paths3dLayer) {
-            this.#paths3dLayer.removeFeatureState(feature.id, key)
+        if (this.#flightPathLayer) {
+            this.#flightPathLayer.removeFeatureState(feature.id, key)
         }
     }
 
     setFeatureState(feature, state)
     //=============================
     {
-        if (this.#paths3dLayer) {
-            this.#paths3dLayer.setFeatureState(feature.id, state)
+        if (this.#flightPathLayer) {
+            this.#flightPathLayer.setFeatureState(feature.id, state)
         }
     }
 
@@ -395,8 +395,8 @@ export class LayerManager
         for (const mapLayer of this.#featureLayers.values()) {
             mapLayer.setPaint(this.__layerOptions)
         }
-        if (this.#paths3dLayer) {
-            this.#paths3dLayer.setPaint(options)
+        if (this.#flightPathLayer) {
+            this.#flightPathLayer.setPaint(options)
         }
     }
 
@@ -407,7 +407,7 @@ export class LayerManager
         for (const mapLayer of this.#featureLayers.values()) {
             mapLayer.setFilter(this.__layerOptions);
         }
-        if (this.#paths3dLayer) {
+        if (this.#flightPathLayer) {
             const sckanState = options.sckan || 'valid'
             const sckanFilter = (sckanState == 'none') ? {NOT: {HAS: 'sckan'}} :
                                 (sckanState == 'valid') ? {sckan: true} :
@@ -417,17 +417,17 @@ export class LayerManager
             if ('taxons' in options) {
                 featureFilter.narrow({taxons: options.taxons})
             }
-            this.#paths3dLayer.setFilter(featureFilter)
+            this.#flightPathLayer.setFilter(featureFilter)
         }
     }
 
-    set3dMode(enable=true)
-    //====================
+    setFlightPathMode(enable=true)
+    //============================
     {
-        if (this.#paths3dLayer) {
-            this.#paths3dLayer.enable(enable)
+        if (this.#flightPathLayer) {
+            this.#flightPathLayer.enable(enable)
             for (const mapLayer of this.#featureLayers.values()) {
-                mapLayer.enablePaths2dLayer(!enable)
+                mapLayer.setFlatPathMode(!enable)
             }
         }
     }

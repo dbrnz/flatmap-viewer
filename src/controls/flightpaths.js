@@ -18,7 +18,7 @@ limitations under the License.
 
 ******************************************************************************/
 
-export class Path3DControl
+export class FlightPathControl
 {
     #button
     #container
@@ -26,9 +26,10 @@ export class Path3DControl
     #map = null
     #flatmap
 
-    constructor(flatmap)
+    constructor(flatmap, enabled)
     {
         this.#flatmap = flatmap
+        this.#enabled = !!enabled
     }
 
     getDefaultPosition()
@@ -46,11 +47,15 @@ export class Path3DControl
         this.#button = document.createElement('button')
         this.#button.className = 'control-button text-button'
         this.#button.setAttribute('type', 'button')
-        this.#button.setAttribute('aria-label', 'Show 3D paths')
+        this.#button.setAttribute('aria-label', 'Show flight paths')
         this.#button.textContent = '3D'
-        this.#button.title = 'Show/hide 3D paths'
+        this.#button.title = 'Show/hide flight paths'
         this.#container.appendChild(this.#button)
         this.#container.addEventListener('click', this.onClick.bind(this))
+        if (this.#enabled) {
+            this.#button.classList.add('control-active')
+            this.__setBackground()
+        }
         return this.#container
     }
 
@@ -75,11 +80,11 @@ export class Path3DControl
     //=============
     {
         if (this.#button.classList.contains('control-active')) {
-            this.#flatmap.enable3dPaths(false)
+            this.#flatmap.enableFlightPaths(false)
             this.#button.classList.remove('control-active')
             this.#enabled = false
         } else {
-            this.#flatmap.enable3dPaths(true)
+            this.#flatmap.enableFlightPaths(true)
             this.#button.classList.add('control-active')
             this.#enabled = true
         }

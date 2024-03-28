@@ -135,7 +135,7 @@ class ArcDashedLayer extends ArcMapLayer
 
 //==============================================================================
 
-export class Paths3DLayer
+export class FlightPathLayer
 {
     #arcLayers = new Map()
     #deckOverlay = null
@@ -366,13 +366,14 @@ export class Paths3DLayer
             source: 'vector-tiles',
             sourceLayer: `${pickedObject.layer}_${pickedObject['tile-layer']}`,
             properties: pickedObject,
-            arc3dLayer: true
+            flightPath: true
         }
     }
 
     #setupDeckOverlay()
     //=================
     {
+        // One overlay layer for each path style
         [...this.#pathStyles.values()].filter(style => this.#pathManager.pathTypeEnabled(style.type))
                                       .forEach(style => this.#addArcLayer(style.type))
         this.#deckOverlay = new DeckOverlay({
