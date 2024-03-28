@@ -1046,19 +1046,17 @@ class FlatMap
             'alert',
             'biological-sex'
         ];
-        const jsonProperties = [
-            'hyperlinks'
-        ];
         for (const property of exportedProperties) {
             if (property in properties) {
                 const value = properties[property];
                 if (value !== undefined) {
-                    if (jsonProperties.includes(property)) {
-                        data[property] = JSON.parse(properties[property])
+                    if ((Array.isArray(value) && value.length)
+                     || (value.constructor === Object && Object.keys(value).length)) {
+                        data[property] = value
                     } else if (property === 'featureId') {
-                        data[property] = +properties[property];  // Ensure numeric
+                        data[property] = +value;  // Ensure numeric
                     } else {
-                        data[property] = properties[property];
+                        data[property] = value;
                     }
                 }
             }
