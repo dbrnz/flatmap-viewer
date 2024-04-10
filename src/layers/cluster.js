@@ -84,10 +84,11 @@ export class ClusteredMarkerLayer
                 'icon-image': 'clustered-marker',
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
-                'icon-offset': [0, -18],
+                'icon-offset': [0, -17],
+                'icon-size': 0.8,
                 'text-field': '{point_count_abbreviated}',
-                'text-size': 12,
-                'text-offset': [0, -2.1]
+                'text-size': 10,
+                'text-offset': [0, -1.93]
             }
         })
 
@@ -100,7 +101,7 @@ export class ClusteredMarkerLayer
                 'icon-image': 'unclustered-marker',
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
-                'icon-offset': [0, -18],
+                'icon-offset': [0, -17],
                 'icon-size': 0.6
             }
         })
