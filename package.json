@@ -33,7 +33,7 @@
     "colord": "^2.9.3",
     "core-js-pure": "^3.36.1",
     "html-es6cape": "^2.0.2",
-    "maplibre-gl": ">=3.6.0",
+    "maplibre-gl": ">=4.1.0",
     "mathjax-full": "^3.2.2",
     "minisearch": "^2.2.1",
     "polylabel": "^1.1.0"
