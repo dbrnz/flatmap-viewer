@@ -39,6 +39,8 @@ import {UserInteractions} from './interactions.js';
 
 import {APINATOMY_PATH_PREFIX} from './pathways';
 
+import {loadClusterIcons} from './layers/cluster'
+
 import * as images from './images.js';
 import * as utils from './utils.js';
 
@@ -203,6 +205,9 @@ class FlatMap
         for (const image of this._options.images) {
             await this.addImage(image.id, image.url, '', image.options);
         }
+
+        // Load icons used for clustered markers
+        await loadClusterIcons(this._map)
 
         // Layers have now loaded so finish setting up
         this._userInteractions = new UserInteractions(this);
@@ -966,6 +971,21 @@ class FlatMap
         return -1;
     }
 
+    addMarkers(anatomicalIds,  options={})
+    //====================================
+    {
+        const markerIds = []
+        for (const anatomicalId of anatomicalIds) {
+            if (this._userInteractions !== null) {
+                markerIds.push(this._userInteractions.addMarker(anatomicalId, options))
+            } else {
+                markerIds.push(-1)
+            }
+        }
+        return markerIds
+    }
+
+
     /**
      * Remove a marker from the map.
      *
@@ -975,7 +995,7 @@ class FlatMap
     removeMarker(markerId)
     //====================
     {
-        if (this._userInteractions !== null) {
+        if (markerId > -1 && this._userInteractions !== null) {
             this._userInteractions.removeMarker(markerId);
         }
     }

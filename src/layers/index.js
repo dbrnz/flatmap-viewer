@@ -25,6 +25,7 @@ limitations under the License.
 import {PATHWAYS_LAYER} from '../pathways.js';
 import * as utils from '../utils.js';
 
+import {ClusteredMarkerLayer} from './cluster'
 import * as style from './styling.js';
 
 import {FlightPathLayer} from './flightpaths'
@@ -266,6 +267,7 @@ class MapRasterLayers extends MapStylingLayers
 export class LayerManager
 {
     #featureLayers = new Map()
+    #markerLayer = null
     #flightPathLayer = null
     #rasterLayer = null
 
@@ -308,6 +310,9 @@ export class LayerManager
 
         // Support flight path view
         this.#flightPathLayer = new FlightPathLayer(flatmap, ui)
+
+        // Show clustered markers in a layer
+        this.#markerLayer = new ClusteredMarkerLayer(this.__flatmap)
     }
 
     get layers()
@@ -354,6 +359,18 @@ export class LayerManager
                 layer.activate(enable)
             }
         }
+    }
+
+    addMarkers(positions)
+    //===================
+    {
+        this.#markerLayer.addMarkers(positions)
+    }
+
+    clearMarkers()
+    //============
+    {
+        this.#markerLayer.clearMarkers()
     }
 
     featuresAtPoint(point)
