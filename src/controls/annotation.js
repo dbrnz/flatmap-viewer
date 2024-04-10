@@ -292,7 +292,7 @@ export class AnnotationDrawControl
     }
 
     changeMode(type)
-    //===============
+    //==============
     {
         // Change the mode directly without listening to modes callback
         this.__draw.changeMode(type.mode, type.options)

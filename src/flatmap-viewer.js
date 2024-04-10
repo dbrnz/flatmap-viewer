@@ -33,7 +33,7 @@ import '../static/css/flatmap-viewer.css';
 
 //==============================================================================
 
-import {MapServer, loadJSON} from './mapserver.js';
+import {MapServer} from './mapserver.js';
 import {SearchIndex} from './search.js';
 import {UserInteractions} from './interactions.js';
 
