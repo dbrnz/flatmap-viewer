@@ -25,6 +25,38 @@ limitations under the License.
 import { MapManager } from './flatmap-viewer';
 export { MapManager };
 
+const ALL_MARKERS = [
+// Most of these are around the heart
+    'UBERON:0003382',
+    'UBERON:0002348',
+    'UBERON:0002349',
+    'UBERON:0003379',
+    'UBERON:0001986',
+    'UBERON:0001074',
+    'UBERON:0003381',
+    'UBERON:0002165',
+    'UBERON:0002080',
+    'UBERON:0000948',
+    'UBERON:0002084',
+    'UBERON:0002078',
+    'UBERON:0002079',
+    'UBERON:0002349',
+    'UBERON:0002408',
+    'UBERON:0007240',
+    'UBERON:0002359',
+
+    'UBERON:0001508',
+    'UBERON:0037094',
+    'ILX:0738305',
+
+    'UBERON:0000948', // {className: 'heart-marker'}); // Heart
+    'UBERON:0002048', // Lung
+    'UBERON:0000945', // Stomach
+    'UBERON:0001155', // Colon
+    'UBERON:0001255', // Bladder
+    'UBERON:0001759', // Vagus
+]
+
 //==============================================================================
 
 class DrawControl
@@ -142,12 +174,15 @@ export async function standaloneViewer(map_endpoint=null, options={})
                 }
             }, mapOptions)
             .then(map => {
+/*
                 map.addMarker('UBERON:0000948', {className: 'heart-marker'}); // Heart
                 map.addMarker('UBERON:0002048'); // Lung
                 map.addMarker('UBERON:0000945'); // Stomach
                 map.addMarker('UBERON:0001155'); // Colon
                 map.addMarker('UBERON:0001255'); // Bladder
                 map.addMarker('UBERON:0001759'); // Vagus
+*/
+                map.addMarkers(ALL_MARKERS, {cluster: true})
                 currentMap = map;
                 drawControl = new DrawControl(map)
             })
