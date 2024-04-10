@@ -142,6 +142,7 @@ export async function standaloneViewer(map_endpoint=null, options={})
         showPosition: false,
         standalone: true,
         annotator: true,
+        flightPaths: true
     }, options);
 
     function loadMap(id, taxon, sex)
