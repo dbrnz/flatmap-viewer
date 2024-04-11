@@ -61,7 +61,7 @@ export function pathColourArray(pathType, alpha=255)
 {
     const rgb = colord(PathTypeMap.has(pathType)
                         ? PathTypeMap.get(pathType).colour
-                        : '#FF0').toRgb()
+                        : PathTypeMap.get('other').colour).toRgb()
     return [rgb.r, rgb.g, rgb.b, alpha]
 }
 
