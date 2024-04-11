@@ -344,14 +344,12 @@ export class FlightPathLayer
             id: `arc-${pathType}`,
             data: pathData,
             pickable: true,
-            autoHighlight: true,
             numSegments: 400,
             // Styles
             getSourcePosition: f => f.pathStartPosition,
             getTargetPosition: f => f.pathEndPosition,
             getSourceColor: this.#pathColour.bind(this),
             getTargetColor: this.#pathColour.bind(this),
-            highlightColor: o => this.#pathColour(o.object),
             opacity: 1.0,
             getWidth: 3,
         }
