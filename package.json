@@ -23,9 +23,9 @@
   "author": "David Brooks",
   "license": "MIT",
   "dependencies": {
-    "@deck.gl/core": "^8.9.35",
-    "@deck.gl/layers": "^8.9.35",
-    "@deck.gl/mapbox": "^8.9.35",
+    "@deck.gl/core": "^9.0.8",
+    "@deck.gl/layers": "^9.0.8",
+    "@deck.gl/mapbox": "^9.0.8",
     "@mapbox/mapbox-gl-draw": "^1.4.3",
     "@turf/area": "^6.5.0",
     "@turf/bbox": "^6.5.0",
