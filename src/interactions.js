@@ -1373,7 +1373,7 @@ export class UserInteractions
                 }
                 const markerPosition = this.__markerPosition(featureId, annotation);
                 if (options.cluster && this._layerManager) {
-                    this._layerManager.addMarkers([markerPosition])
+                    this._layerManager.addMarker(markerId, markerPosition, annotation)
                 } else {
                     const marker = new maplibregl.Marker(markerOptions)
                                                  .setLngLat(markerPosition)
@@ -1447,22 +1447,36 @@ export class UserInteractions
         // No tooltip when context menu is open
         if (this._modal
          || (this.__activeMarker !== null && event.type === 'mouseleave')) {
-            return;
+            return
         }
 
-        if (['mouseenter', 'mouseleave', 'click'].includes(event.type)) {
-            this.__activeMarker = marker;
+        if (['mouseenter', 'mousemove', 'click'].includes(event.type)) {
+            this.__activeMarker = marker
 
-            // Remove any existing tooltips
-            this.removeTooltip_();
-            marker.setPopup(null);
+            // Remove any tooltip
+            marker.setPopup(null)
 
             // Reset cursor
             marker.getElement().style.cursor = 'default';
 
-            if (['mouseenter', 'click'].includes(event.type)) {
-                const markerId = this.__markerIdByMarker.get(marker);
-                const annotation = this.__annotationByMarkerId.get(markerId);
+            const markerId = this.__markerIdByMarker.get(marker)
+            const annotation = this.__annotationByMarkerId.get(markerId)
+
+            this.markerEvent_(event, markerId, marker.getLngLat(),
+                                     anatomicalId, annotation)
+            event.stopPropagation()
+        }
+    }
+
+    markerEvent_(event, markerId, markerPosition, anatomicalId, annotation)
+    //=====================================================================
+    {
+        if (['mousemove', 'click'].includes(event.type)) {
+
+            // Remove any tooltips
+            this.removeTooltip_();
+
+            if (['mouseenter', 'mousemove', 'click'].includes(event.type)) {
                 // The marker's feature
                 const feature = this.mapFeature(annotation.featureId);
                 if (feature !== undefined) {
@@ -1476,13 +1490,12 @@ export class UserInteractions
                 }
                 // Show tooltip
                 const html = this.tooltipHtml_(annotation, true);
-                this.__showToolTip(html, marker.getLngLat());
+                this.__showToolTip(html, markerPosition);
 
                 // Send marker event message
-                this._flatmap.markerEvent(event.type, markerId, anatomicalId);
+                this._flatmap.markerEvent(event.type, markerId, anatomicalId)
             }
         }
-        event.stopPropagation();
     }
 
     __clearActiveMarker()
@@ -1531,7 +1544,7 @@ export class UserInteractions
             .setLngLat(location)
             .setDOMContent(element);
 
-        // Set the merker tooltip and show it
+        // Set the marker tooltip and show it
         marker.setPopup(this._tooltip);
         marker.togglePopup();
 

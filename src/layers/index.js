@@ -312,7 +312,7 @@ export class LayerManager
         this.#flightPathLayer = new FlightPathLayer(flatmap, ui)
 
         // Show clustered markers in a layer
-        this.#markerLayer = new ClusteredMarkerLayer(this.__flatmap)
+        this.#markerLayer = new ClusteredMarkerLayer(flatmap, ui)
     }
 
     get layers()
@@ -361,10 +361,10 @@ export class LayerManager
         }
     }
 
-    addMarkers(positions)
-    //===================
+    addMarker(id, position, properties={})
+    //====================================
     {
-        this.#markerLayer.addMarkers(positions)
+        this.#markerLayer.addMarker(id, position, properties)
     }
 
     clearMarkers()

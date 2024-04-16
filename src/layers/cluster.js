@@ -61,10 +61,12 @@ export class ClusteredMarkerLayer
        type: 'FeatureCollection',
        features: []
     }
+    #ui
 
-    constructor(flatmap)
+    constructor(flatmap, ui)
     {
         this.#flatmap = flatmap
+        this.#ui = ui
         this.#map = flatmap.map
 
         this.#map.addSource('markers', {
@@ -76,7 +78,7 @@ export class ClusteredMarkerLayer
         })
 
         this.#map.addLayer({
-            id: 'clusters',
+            id: 'clustered-markers',
             type: 'symbol',
             source: 'markers',
             filter: ['has', 'point_count'],
@@ -93,7 +95,7 @@ export class ClusteredMarkerLayer
         })
 
         this.#map.addLayer({
-            id: 'unclustered-point',
+            id: 'single-points',
             type: 'symbol',
             source: 'markers',
             filter: ['!', ['has', 'point_count']],
@@ -107,9 +109,9 @@ export class ClusteredMarkerLayer
         })
 
         // inspect a cluster on click
-        this.#map.on('click', 'clusters', async (e) => {
+        this.#map.on('click', 'clustered-markers', async (e) => {
             const features = this.#map.queryRenderedFeatures(e.point, {
-                layers: ['clusters']
+                layers: ['clustered-markers']
             })
             const clusterId = features[0].properties.cluster_id
             const zoom = await this.#map.getSource('markers').getClusterExpansionZoom(clusterId)
@@ -119,35 +121,46 @@ export class ClusteredMarkerLayer
             })
         })
 
-        this.#map.on('click', 'unclustered-point', (e) => {
-            const features = this.#map.queryRenderedFeatures(e.point, {
-                layers: ['clusters']
-            })
             console.log('Unclustered click', e, features)
-        })
+        this.#map.on('click', 'single-points', this.singleMarkerEvent.bind(this))
+        this.#map.on('mouseenter', 'single-points', this.singleMarkerEvent.bind(this))
+        this.#map.on('mousemove', 'single-points', this.singleMarkerEvent.bind(this))
 
-        this.#map.on('mouseenter', 'clusters', () => {
+        this.#map.on('mouseenter', 'clustered-markers', () => {
             this.#map.getCanvas().style.cursor = 'pointer'
         })
 
-        this.#map.on('mouseleave', 'clusters', () => {
+        this.#map.on('mouseleave', 'clustered-markers', () => {
             this.#map.getCanvas().style.cursor = ''
         })
     }
 
-    addMarkers(positions)
-    //===================
+    singleMarkerEvent(event)
+    //======================
     {
-        for (const position of positions) {
-            this.#points.features.push({
-                type: 'Feature',
-                properties: {},
-                geometry: {
-                    type: 'Point',
-                    coordinates: position
-                }
-            })
+        const features = this.#map.queryRenderedFeatures(event.point, {
+            layers: ['single-points']
+        })
+        for (const feature of features) {
+            const properties = feature.properties
+            const position = properties.markerPosition.slice(1, -1).split(',').map(p => +p)
+            this.#ui.markerEvent_(event, feature.id, position, properties.models, properties)
         }
+        event.originalEvent.stopPropagation()
+    }
+
+    addMarker(id, position, properties={})
+    //====================================
+    {
+        this.#points.features.push({
+            type: 'Feature',
+            id,
+            properties,
+            geometry: {
+                type: 'Point',
+                coordinates: position
+            }
+        })
         this.#map.getSource('markers')
                  .setData(this.#points)
     }
