@@ -955,8 +955,10 @@ class FlatMap
      *                                to place the marker.
      * @arg {Object} options          Configurable options for the marker.
      * @arg {string} options.className Space-separated CSS class names to add to marker element.
-     * @arg {string} options.colour   Colour of the default marker. Defaults to ``'#005974'``
-     *                                (dark blue).
+     * @arg {string} options.cluster  The marker will be clustered together with other geographically
+     *                                close markers. Defaults to ``true``.
+     * @arg {string} options.colour   Colour of the marker. Defaults to ``'#005974'``
+     *                                (dark cyan).
      * @arg {string} options.element  The DOM element to use as a marker. The default is
      *                                a dark blue droplet-shaped SVG marker.
      * @return     {integer}          The identifier for the resulting marker. -1 is returned if the
@@ -965,15 +967,33 @@ class FlatMap
     addMarker(anatomicalId,  options={})
     //==================================
     {
+        options = Object.assign({cluster: true}, options)
         if (this._userInteractions !== null) {
             return this._userInteractions.addMarker(anatomicalId, options);
         }
         return -1;
     }
 
+    /**
+     * Add a list of markers to the map.
+     *
+     * @param {Array.<string>}  anatomicalId  Anatomical identifiers of features on which
+     *                                to place markers.
+     * @arg {Object} options          Configurable options for the markers.
+     * @arg {string} options.className Space-separated CSS class names to add to marker elemens.
+     * @arg {string} options.cluster  The markers will be clustered together with other geographically
+     *                                close markers. Defaults to ``true``.
+     * @arg {string} options.colour   Colour of the markers. Defaults to ``'#005974'``
+     *                                (dark cyan).
+     * @arg {string} options.element  The DOM element to use as a marker. The default is
+     *                                a dark blue droplet-shaped SVG marker.
+     * @return     {array.<integer>}  The identifiers of the resulting markers. -1 is returned if the
+     *                                map doesn't contain a feature with the given anatomical identifier
+     */
     addMarkers(anatomicalIds,  options={})
     //====================================
     {
+        options = Object.assign({cluster: true}, options)
         const markerIds = []
         for (const anatomicalId of anatomicalIds) {
             if (this._userInteractions !== null) {
@@ -984,7 +1004,6 @@ class FlatMap
         }
         return markerIds
     }
-
 
     /**
      * Remove a marker from the map.
@@ -1028,7 +1047,7 @@ class FlatMap
      * Shows a popup at a marker.
      *
      * This method should only be called in response to a ``mouseenter`` event
-     * passed to the map's ``callback`` function as a popup won't be shown.
+     * passed to the map's ``callback`` function otherwise a popup won't be shown.
      *
      * @param      {integer}  markerId  The identifier of the marker
      * @param      {string | DOMElement}  content  The popup's content
