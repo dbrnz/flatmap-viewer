@@ -63,7 +63,7 @@ export const UNCLASSIFIED_TAXON_ID = 'NCBITaxon:2787823';   // unclassified entr
 * Maps are not created directly but instead are created and loaded by
 * :meth:`LoadMap` of :class:`MapManager`.
 */
-class FlatMap
+export class FlatMap
 {
     constructor(container, mapBaseUrl, mapDescription, resolve)
     {
