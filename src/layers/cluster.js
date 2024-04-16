@@ -121,7 +121,6 @@ export class ClusteredMarkerLayer
             })
         })
 
-            console.log('Unclustered click', e, features)
         this.#map.on('click', 'single-points', this.singleMarkerEvent.bind(this))
         this.#map.on('mouseenter', 'single-points', this.singleMarkerEvent.bind(this))
         this.#map.on('mousemove', 'single-points', this.singleMarkerEvent.bind(this))
