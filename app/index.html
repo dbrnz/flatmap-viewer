@@ -16,9 +16,8 @@
         font: 10pt "Helvetica Neue", Arial, Helvetica, sans-serif;
       }
       .top-bar {
-        padding-top: 10px;
-        padding-left: 10px;
-        padding-right: 10px;
+        padding: 10px;
+        padding-bottom: 0;
       }
       .draw-update {
         float: right;
@@ -26,27 +25,63 @@
       #drawing-id {
         padding-right: 10px;
       }
-      #map-selector {
+      .selector {
         margin-left: 4px;
       }
+      #server-selection {
+        float: right;
+      }
+      /* NB. MapLibre sets ``position: absolute`` of the map's canvas regardless
+          of what we set, so let's set it for initial rendering...
+       */
       #map-canvas {
         border: 1px solid black;
-        top: 36px;
-        left: 10px;
-        right: 10px;
-        bottom: 10px;
+        position: absolute;
+        left: 7px;
+        right: 7px;
+        top: 34px;
+        height: 80vh;
+      }
+      #info-display {
+        border: 1px solid black;
+        position: absolute;
+        left: 7px;
+        right: 7px;
+        top: 86vh;
+        bottom: 7px;
+        overflow: scroll;
+        padding: 2px;
+      }
+      .info.outermost {
+        margin-bottom: 4px;
+      }
+      span.spacer {
+        min-width: 16px;
+        display: inline-block;
+      }
+      span.prompt {
+        font-weight: bold;
+        min-width: 100px;
+        display: inline-block;
       }
     </style>
   </head>
   <body>
     <div>
       <div class='top-bar'>
-        <span class="selection">
+        <span>
           <label for="map-selector">Select map:</label>
-          <select id="map-selector"></select>
+          <select id="map-selector" class="selector"></select>
+        </span>
+        <span id="server-selection">
+          <label for="server-selector">Select map server:</label>
+          <select id="server-selector" class="selector"></select>
         </span>
       </div>
-      <div id="map-canvas" class="map"></div>
+      <div id="content">
+        <div id="info-display"></div>
+        <div id="map-canvas"></div>
+      </div>
     </div>
   </body>
   <script type="module" src="index.js"></script>
