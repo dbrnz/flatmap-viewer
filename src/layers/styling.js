@@ -76,6 +76,11 @@ class VectorStyleLayer
         return null;
     }
 
+    defaultFilter()
+    {
+        return null
+    }
+
     paintStyle(options, changes=false)
     {
         return {};
@@ -146,6 +151,16 @@ export class FeatureFillLayer extends VectorStyleLayer
         super(id, 'fill', sourceLayer);
     }
 
+    defaultFilter()
+    {
+        return [
+            'all',
+            ['==', '$type', 'Polygon'],
+            ['!=', 'models', 'UBERON:0013702'],
+            ['!has', 'node']
+        ]
+    }
+
     paintStyle(options, changes=false)
     {
         const coloured = !('colour' in options) || options.colour;
@@ -177,12 +192,7 @@ export class FeatureFillLayer extends VectorStyleLayer
         return {
             ...super.style(),
             'type': 'fill',
-            'filter': [
-                'all',
-                ['==', '$type', 'Polygon'],
-                ['!=', 'models', 'UBERON:0013702'],
-                ['!has', 'node']
-            ],
+            'filter': this.defaultFilter(),
             'layout': {
                 'fill-sort-key': ['get', 'scale']
             },
@@ -198,6 +208,15 @@ export class FeatureBorderLayer extends VectorStyleLayer
     constructor(id, sourceLayer)
     {
         super(id, 'border', sourceLayer);
+    }
+
+    defaultFilter()
+    {
+        return [
+            'all',
+            ['==', '$type', 'Polygon'],
+            ['!has', 'node']
+        ]
     }
 
     paintStyle(options, changes=false)
@@ -251,11 +270,7 @@ export class FeatureBorderLayer extends VectorStyleLayer
         return {
             ...super.style(),
             'type': 'line',
-            'filter': [
-                'all',
-                ['==', '$type', 'Polygon'],
-                ['!has', 'node']
-            ],
+            'filter': this.defaultFilter(),
             'paint': this.paintStyle(options)
         };
     }
@@ -272,21 +287,16 @@ export class FeatureLineLayer extends VectorStyleLayer
         this.__dashed = dashed;
     }
 
-    makeFilter(options={})
+    defaultFilter()
     {
-        return this.__dashed ? [
+        return [
             'all',
             ['==', '$type', 'LineString'],
-            ['==', 'type', 'line-dash']
-        ] : [
-            'all',
-            ['==', '$type', 'LineString'],
-            [
-                'any',
-                ['==', 'type', 'bezier'],
-                ['==', 'type', 'line']
-            ]
-        ];
+            this.__dashed ? ['==', 'type', 'line-dash']
+                          : [ 'any',
+                              ['==', 'type', 'bezier'],
+                              ['==', 'type', 'line']]
+        ]
     }
 
     paintStyle(options, changes=false)
@@ -340,7 +350,7 @@ export class FeatureLineLayer extends VectorStyleLayer
         return {
             ...super.style(),
             'type': 'line',
-            'filter': this.makeFilter(options),
+            'filter': this.defaultFilter(),
             'paint': this.paintStyle(options)
         };
     }
@@ -623,6 +633,16 @@ class CentrelineLayer extends VectorStyleLayer
         this.__type = type;
     }
 
+    defaultFilter()
+    {
+        return [
+            'all',
+            ['==', '$type', 'LineString'],
+            ['==', 'kind', 'centreline'],
+            ['has', 'label']
+        ]
+    }
+
     paintStyle(options, changes=false)
     {
         const coloured = !('colour' in options) || options.colour;
@@ -657,12 +677,7 @@ class CentrelineLayer extends VectorStyleLayer
         return {
             ...super.style(),
             'type': 'line',
-            'filter': [
-                'all',
-                ['==', '$type', 'LineString'],
-                ['==', 'kind', 'centreline'],
-                ['has', 'label']
-            ],
+            'filter': this.defaultFilter(),
             'paint': this.paintStyle(options),
             'layout': {
                 'line-cap': 'round',
@@ -701,6 +716,15 @@ export class CentrelineNodeFillLayer extends VectorStyleLayer
         super(id, 'node-fill', sourceLayer);
     }
 
+    defaultFilter()
+    {
+        return [
+            'all',
+            ['==', '$type', 'Polygon'],
+            ['has', 'node']
+        ]
+    }
+
     paintStyle(options={}, changes=false)
     {
         const showNodes = options.showCentrelines || false;
@@ -721,11 +745,7 @@ export class CentrelineNodeFillLayer extends VectorStyleLayer
         return {
             ...super.style(),
             'type': 'fill',
-            'filter': [
-                'all',
-                ['==', '$type', 'Polygon'],
-                ['has', 'node']
-            ],
+            'filter': this.defaultFilter(),
             'layout': {
                 'fill-sort-key': ['get', 'scale']
             },
@@ -739,6 +759,15 @@ export class CentrelineNodeBorderLayer extends VectorStyleLayer
     constructor(id, sourceLayer)
     {
         super(id, 'node-border', sourceLayer);
+    }
+
+    defaultFilter()
+    {
+        return [
+            'all',
+            ['==', '$type', 'Polygon'],
+            ['has', 'node']
+        ]
     }
 
     paintStyle(options={}, changes=false)
@@ -762,11 +791,7 @@ export class CentrelineNodeBorderLayer extends VectorStyleLayer
         return {
             ...super.style(),
             'type': 'line',
-            'filter': [
-                'all',
-                ['==', '$type', 'Polygon'],
-                ['has', 'node']
-            ],
+            'filter': this.defaultFilter(),
             'paint':  this.paintStyle(options)
         };
     }
@@ -781,17 +806,22 @@ export class FeatureNerveLayer extends VectorStyleLayer
         super(id, 'nerve-path', sourceLayer);
     }
 
+    defaultFilter()
+    {
+        return [
+            'all',
+            ['==', '$type', 'LineString'],
+            ['!=', 'kind', 'centreline'],
+            ['==', 'type', 'nerve']
+        ]
+    }
+
     style(options)
     {
         return {
             ...super.style(),
             'type': 'line',
-            'filter': [
-                 'all',
-                 ['==', '$type', 'LineString'],
-                 ['!=', 'kind', 'centreline'],
-                 ['==', 'type', 'nerve']
-            ],
+            'filter': this.defaultFilter(),
             'paint': {
                 'line-color': [
                     'case',
@@ -835,16 +865,21 @@ export class NervePolygonBorder extends VectorStyleLayer
         super(id, 'nerve-border', sourceLayer);
     }
 
+    defaultFilter()
+    {
+        return [
+            'all',
+            ['==', '$type', 'Polygon'],
+            ['==', 'type', 'nerve-section']
+        ]
+    }
+
     style(options)
     {
         return {
             ...super.style(),
             'type': 'line',
-            'filter': [
-                'all',
-                ['==', '$type', 'Polygon'],
-                ['==', 'type', 'nerve-section']
-            ],
+            'filter': this.defaultFilter(),
             'paint': {
                 'line-color': [
                     'case',
@@ -877,6 +912,21 @@ export class NervePolygonFill extends VectorStyleLayer
     constructor(id, sourceLayer)
     {
         super(id, 'nerve-fill', sourceLayer);
+    }
+
+    defaultFilter()
+    {
+        return [
+            'all',
+            ['==', '$type', 'Polygon'],
+            ['any',
+                ['==', 'type', 'arrow'],
+                ['==', 'type', 'bezier'],
+                ['==', 'type', 'junction'],
+                ['==', 'type', 'nerve'],
+                ['==', 'type', 'nerve-section']
+            ]
+        ]
     }
 
     paintStyle(options={}, changes=false)
@@ -917,18 +967,8 @@ export class NervePolygonFill extends VectorStyleLayer
     {
         return {
             ...super.style(),
+            'filter': this.defaultFilter(),
             'type': 'fill',
-            'filter': [
-                'all',
-                ['==', '$type', 'Polygon'],
-                ['any',
-                    ['==', 'type', 'arrow'],
-                    ['==', 'type', 'bezier'],
-                    ['==', 'type', 'junction'],
-                    ['==', 'type', 'nerve'],
-                    ['==', 'type', 'nerve-section']
-                ]
-            ],
             'paint': this.paintStyle(options)
         };
     }
@@ -943,6 +983,15 @@ export class FeatureLargeSymbolLayer extends VectorStyleLayer
         super(id, 'large-symbol', sourceLayer);
     }
 
+    defaultFilter()
+    {
+        return [
+            'all',
+            ['has', 'labelled'],
+            ['has', 'label']
+        ]
+    }
+
     style(options)
     {
         return {
@@ -950,11 +999,7 @@ export class FeatureLargeSymbolLayer extends VectorStyleLayer
             'type': 'symbol',
             'minzoom': 3,
             //'maxzoom': 7,
-            'filter': [
-                'all',
-                ['has', 'labelled'],
-                ['has', 'label']
-            ],
+            'filter': this.defaultFilter(),
             'layout': {
                 'visibility': 'visible',
                 'icon-allow-overlap': true,
@@ -987,17 +1032,22 @@ export class FeatureSmallSymbolLayer extends VectorStyleLayer
         super(id, 'small-symbol', sourceLayer);
     }
 
+    defaultFilter()
+    {
+        return [
+            'all',
+            ['has', 'label'],
+            ['>', 'scale', 5]
+        ]
+    }
+
     style(options)
     {
         return {
             ...super.style(),
             'type': 'symbol',
             'minzoom': 6,
-            'filter': [
-                'all',
-                ['has', 'label'],
-                ['>', 'scale', 5]
-            ],
+            'filter': this.defaultFilter(),
             'layout': {
                 'visibility': 'visible',
                 'icon-allow-overlap': true,
