@@ -68,14 +68,8 @@ export class PropertiesFilter
         }
     }
 
-    getFilter()
-    //=========
-    {
-        return this.#filter
-    }
-
-    makeStyleFilter()
-    //===============
+    getStyleFilter()
+    //==============
     {
         return this.#makeStyleFilter(this.#filter)
     }
@@ -204,7 +198,7 @@ function testFilter(filter)
 //=========================
 {
     const featureFilter = new PropertiesFilter(filter)
-    console.log(filter, '--->', featureFilter.makeStyleFilter(), featureFilter.match(testProperties))
+    console.log(filter, '--->', featureFilter.styleFilter(), featureFilter.match(testProperties))
 }
 
 function testFilters()
