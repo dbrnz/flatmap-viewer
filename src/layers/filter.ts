@@ -22,14 +22,7 @@ import Set from 'core-js/actual/set'
 
 //==============================================================================
 
-type ScalarType = boolean | number | string
-
-type PropertyKey = string
-type PropertyValue = ScalarType | ScalarType[]
-
-export type PropertiesType = Record<PropertyKey, PropertyValue>
-
-//==============================================================================
+import {PropertiesType, PropertyKey, PropertyValue, ScalarType} from '../types'
 
 type AndCondition = {
     AND: PropertiesFilterExpression[]
