@@ -22,12 +22,56 @@ import Set from 'core-js/actual/set'
 
 //==============================================================================
 
+type ScalarType = boolean | number | string
+
+type PropertyKey = string
+type PropertyValue = ScalarType | ScalarType[]
+
+export type PropertiesType = Record<PropertyKey, PropertyValue>
+
+//==============================================================================
+
+type AndCondition = {
+    AND: PropertiesFilterExpression[]
+}
+
+type HasCondition = {
+    HAS: PropertyKey
+}
+
+type NotCondition = {
+    NOT: PropertiesFilterExpression
+}
+
+type OrCondition = {
+    OR: PropertiesFilterExpression[]
+}
+
+type PropertyValueTest = { [key: PropertyKey]: PropertyValue }
+
+
+type PropertiesFilterExpression = AndCondition
+                                | HasCondition
+                                | NotCondition
+                                | OrCondition
+                                | PropertyValueTest
+
+export type PropertiesFilterSpecification = PropertiesFilterExpression | boolean
+
+//==============================================================================
+
+type StyleFilterValue = ScalarType | StyleFilterType
+
+type StyleFilterType = [string, ...StyleFilterValue[]]
+
+//==============================================================================
+
 export class PropertiesFilter
 {
-    #filter
+    #filter: PropertiesFilterSpecification
 
-    constructor(filter=true)
-    //======================
+    constructor(filter: PropertiesFilterSpecification=true)
+    //=====================================================
     {
         if (filter.constructor !== Object) {    // We allow boolean values
             this.#filter = filter
@@ -44,14 +88,14 @@ export class PropertiesFilter
         }
     }
 
-    expand(filter)
-    //============
+    expand(filter: PropertiesFilterSpecification)
+    //===========================================
     {
         if (this.#filter === false) {
             this.#filter = filter
         } else if (this.#filter !== true) {
-            const copiedFilter = Object.assign({}, filter)
-            this.#filter = { "OR": [this.#filter, copiedFilter] }
+            const copiedFilter = Object.assign({}, filter) as PropertiesFilterExpression
+            this.#filter = { OR: [this.#filter, copiedFilter] }
         }
     }
 
@@ -63,36 +107,36 @@ export class PropertiesFilter
         } else if (this.#filter === true) {
             this.#filter = false
         } else {
-            const copiedFilter = Object.assign({}, filter)
-            this.#filter = { "NOT": copiedFilter }
+            const copiedFilter = Object.assign({}, this.#filter) as PropertiesFilterExpression
+            this.#filter = { NOT: copiedFilter }
         }
     }
 
-    getStyleFilter()
-    //==============
+    getStyleFilter(): StyleFilterType
+    //===============================
     {
         return this.#makeStyleFilter(this.#filter)
     }
 
-    match(properties)
-    //===============
+    match(properties: PropertiesType): boolean
+    //========================================
     {
         return this.#match(properties, this.#filter)
     }
 
-    narrow(filter)
-    //============
+    narrow(filter: PropertiesFilterSpecification)
+    //===========================================
     {
         if (this.#filter === true) {
             this.#filter = filter
         } else if (this.#filter !== false) {
-            const copiedFilter = Object.assign({}, filter)
-            this.#filter = { "AND": [this.#filter, copiedFilter] }
+            const copiedFilter = Object.assign({}, filter) as PropertiesFilterExpression
+            this.#filter = { AND: [this.#filter, copiedFilter] }
         }
     }
 
-    setFilter(filter)
-    //===============
+    setFilter(filter: PropertiesFilterSpecification)
+    //==============================================
     {
         if (filter.constructor !== Object) {
             this.#filter = filter
@@ -101,8 +145,8 @@ export class PropertiesFilter
         }
     }
 
-    #makeStyleFilter(filter)
-    //======================
+    #makeStyleFilter(filter: PropertiesFilterSpecification): StyleFilterType
+    //======================================================================
     {
         if (filter.constructor !== Object) {
             return ['boolean', !!filter]
@@ -141,11 +185,11 @@ export class PropertiesFilter
                 }
             }
         }
-        return styleFilter
+        return styleFilter as StyleFilterType
     }
 
-    #match(properties, filter)
-    //========================
+    #match(properties: PropertiesType, filter: PropertiesFilterSpecification): boolean
+    //================================================================================
     {
         if (filter.constructor !== Object) {
             return !!filter
@@ -194,11 +238,11 @@ const testProperties = {
     prop2: 11,
 }
 
-function testFilter(filter)
-//=========================
+function testFilter(filter: PropertiesFilterSpecification)
+//========================================================
 {
     const featureFilter = new PropertiesFilter(filter)
-    console.log(filter, '--->', featureFilter.styleFilter(), featureFilter.match(testProperties))
+    console.log(filter, '--->', featureFilter.getStyleFilter(), featureFilter.match(testProperties))
 }
 
 function testFilters()
