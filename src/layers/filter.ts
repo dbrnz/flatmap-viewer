@@ -24,38 +24,60 @@ import Set from 'core-js/actual/set'
 
 import {PropertiesType, PropertyKey, PropertyValue, ScalarType} from '../types'
 
-type AndCondition = {
+/**
+ * ``True`` iff all PropertiesFilterExpression are ``true``
+ */
+export type AndCondition = {
     AND: PropertiesFilterExpression[]
 }
 
+/**
+ * ``True`` iff the ``PropertyKey`` is in the given ``properties`` record
+ */
 type HasCondition = {
     HAS: PropertyKey
 }
 
-type NotCondition = {
+/**
+ * ``True`` iff the PropertiesFilterExpression is ``false``
+ */
+export type NotCondition = {
     NOT: PropertiesFilterExpression
 }
 
-type OrCondition = {
+/**
+ * ``True`` iff any PropertiesFilterExpression is ``true``
+ */
+export type OrCondition = {
     OR: PropertiesFilterExpression[]
 }
 
-type PropertyValueTest = { [key: PropertyKey]: PropertyValue }
+/**
+ * Compare the value of ``properties[key]`` in the given record
+ * with the provided PropertyValue and resolve ``True`` iff:
+ *
+ * *   both ``value`` and PropertyValue are Arrays and the
+ *     arrays have at least one common value;
+ * *   ``value`` is an array which includes PropertyValue;
+ * *   PropertyValue is an array which includes ``value``;
+ * *   ``value`` is equal to PropertyValue (neither are arrays)
+ */
+export type PropertyValueTest = { [key: PropertyKey]: PropertyValue }
 
 
-type PropertiesFilterExpression = AndCondition
-                                | HasCondition
-                                | NotCondition
-                                | OrCondition
-                                | PropertyValueTest
+export type PropertiesFilterExpression = AndCondition
+                                       | HasCondition
+                                       | NotCondition
+                                       | OrCondition
+                                       | PropertyValueTest
 
 export type PropertiesFilterSpecification = PropertiesFilterExpression | boolean
 
 //==============================================================================
 
-type StyleFilterValue = ScalarType | StyleFilterType
+export type StyleFilterValue = ScalarType | StyleFilterType
 
-type StyleFilterType = [string, ...StyleFilterValue[]]
+export type StyleFilterType = [string, ...StyleFilterValue[]]
 
 //==============================================================================
 

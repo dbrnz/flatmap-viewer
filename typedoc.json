@@ -1,0 +1,19 @@
+{
+    "$schema": "https://typedoc.org/schema.json",
+    "includeVersion": true,
+    "plugin": [
+        "@mxssfd/typedoc-theme",
+        "typedoc-plugin-markdown"
+    ],
+    "theme": "my-theme",
+    "entryPoints": ["./lib/index.ts", "./src/*"],
+    "entryPointStrategy": "expand",
+    "excludeNotDocumented": false,
+    "excludeNotDocumentedKinds": [],
+    "excludePrivate": false,
+    "sort": ["static-first", "kind", "enum-value-ascending"],
+    "out": "./tsdocs",
+    "searchGroupBoosts": {
+        "Classes": 1.5
+    }
+}
