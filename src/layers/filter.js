@@ -111,7 +111,7 @@ export class PropertiesFilter
     //======================
     {
         if (filter.constructor !== Object) {
-            return !!filter
+            return ['boolean', !!filter]
         }
         const styleFilter = []
         for (const [key, expr] of Object.entries(filter)) {
@@ -127,13 +127,7 @@ export class PropertiesFilter
             } else if (key === 'NOT') {
                 const filterExpr = this.#makeStyleFilter(expr)
                 if (Array.isArray(filterExpr)) {
-                    if (filterExpr.length === 2 && ['has', '!has'].includes(filterExpr[0])) {
-                        if (filterExpr[0] === 'has') {
-                            styleFilter.push('!has', filterExpr[1])
-                        } else {
-                            styleFilter.push('has', filterExpr[1])
-                        }
-                    } else if (filterExpr.length === 3 && ['==', '!='].includes(filterExpr[0])) {
+                    if (filterExpr.length === 3 && ['==', '!='].includes(filterExpr[0])) {
                         if (filterExpr[0] === '==') {
                             styleFilter.push('!=', filterExpr[1], filterExpr[2])
                         } else {

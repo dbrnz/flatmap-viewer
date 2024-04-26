@@ -131,8 +131,8 @@ export class BodyLayer extends VectorStyleLayer
             'type': 'fill',
             'filter': [
                 'all',
-                ['==', '$type', 'Polygon'],
-                ['==', 'models', 'UBERON:0013702']
+                ['==', ['geometry-type'], 'Polygon'],
+                ['==', ['get', 'models'], 'UBERON:0013702']
             ],
             'paint': {
                 'fill-color': '#CCC',
@@ -155,9 +155,9 @@ export class FeatureFillLayer extends VectorStyleLayer
     {
         return [
             'all',
-            ['==', '$type', 'Polygon'],
-            ['!=', 'models', 'UBERON:0013702'],
-            ['!has', 'node']
+            ['==', ['geometry-type'], 'Polygon'],
+            ['!=', ['get', 'models'], 'UBERON:0013702'],
+            ['!', ['has', 'node']]
         ]
     }
 
@@ -214,8 +214,8 @@ export class FeatureBorderLayer extends VectorStyleLayer
     {
         return [
             'all',
-            ['==', '$type', 'Polygon'],
-            ['!has', 'node']
+            ['==', ['geometry-type'], 'Polygon'],
+            ['!', ['has', 'node']]
         ]
     }
 
@@ -291,11 +291,11 @@ export class FeatureLineLayer extends VectorStyleLayer
     {
         return [
             'all',
-            ['==', '$type', 'LineString'],
-            this.__dashed ? ['==', 'type', 'line-dash']
+            ['==', ['geometry-type'], 'LineString'],
+            this.__dashed ? ['==', ['get', 'type'], 'line-dash']
                           : [ 'any',
-                              ['==', 'type', 'bezier'],
-                              ['==', 'type', 'line']]
+                              ['==', ['get', 'type'], 'bezier'],
+                              ['==', ['get', 'type'], 'line']]
         ]
     }
 
@@ -637,8 +637,8 @@ class CentrelineLayer extends VectorStyleLayer
     {
         return [
             'all',
-            ['==', '$type', 'LineString'],
-            ['==', 'kind', 'centreline'],
+            ['==', ['geometry-type'], 'LineString'],
+            ['==', ['get', 'kind'], 'centreline'],
             ['has', 'label']
         ]
     }
@@ -720,7 +720,7 @@ export class CentrelineNodeFillLayer extends VectorStyleLayer
     {
         return [
             'all',
-            ['==', '$type', 'Polygon'],
+            ['==', ['geometry-type'], 'Polygon'],
             ['has', 'node']
         ]
     }
@@ -765,7 +765,7 @@ export class CentrelineNodeBorderLayer extends VectorStyleLayer
     {
         return [
             'all',
-            ['==', '$type', 'Polygon'],
+            ['==', ['geometry-type'], 'Polygon'],
             ['has', 'node']
         ]
     }
@@ -810,9 +810,9 @@ export class FeatureNerveLayer extends VectorStyleLayer
     {
         return [
             'all',
-            ['==', '$type', 'LineString'],
-            ['!=', 'kind', 'centreline'],
-            ['==', 'type', 'nerve']
+            ['==', ['geometry-type'], 'LineString'],
+            ['!=', ['get', 'kind'], 'centreline'],
+            ['==', ['get', 'type'], 'nerve']
         ]
     }
 
@@ -869,8 +869,8 @@ export class NervePolygonBorder extends VectorStyleLayer
     {
         return [
             'all',
-            ['==', '$type', 'Polygon'],
-            ['==', 'type', 'nerve-section']
+            ['==', ['geometry-type'], 'Polygon'],
+            ['==', ['get', 'type'], 'nerve-section']
         ]
     }
 
@@ -918,13 +918,13 @@ export class NervePolygonFill extends VectorStyleLayer
     {
         return [
             'all',
-            ['==', '$type', 'Polygon'],
+            ['==', ['geometry-type'], 'Polygon'],
             ['any',
-                ['==', 'type', 'arrow'],
-                ['==', 'type', 'bezier'],
-                ['==', 'type', 'junction'],
-                ['==', 'type', 'nerve'],
-                ['==', 'type', 'nerve-section']
+                ['==', ['get', 'type'], 'arrow'],
+                ['==', ['get', 'type'], 'bezier'],
+                ['==', ['get', 'type'], 'junction'],
+                ['==', ['get', 'type'], 'nerve'],
+                ['==', ['get', 'type'], 'nerve-section']
             ]
         ]
     }
@@ -1037,7 +1037,7 @@ export class FeatureSmallSymbolLayer extends VectorStyleLayer
         return [
             'all',
             ['has', 'label'],
-            ['>', 'scale', 5]
+            ['>', ['get', 'scale'], 5]
         ]
     }
 
