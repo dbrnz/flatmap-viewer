@@ -951,7 +951,7 @@ export class FlatMap
      *                                to place the marker.
      * @arg {Object} options          Configurable options for the marker.
      * @arg {string} options.className Space-separated CSS class names to add to marker element.
-     * @arg {string} options.cluster  The marker will be clustered together with other geographically
+     * @arg {boolean} options.cluster  The marker will be clustered together with other geographically
      *                                close markers. Defaults to ``true``.
      * @arg {string} options.colour   Colour of the marker. Defaults to ``'#005974'``
      *                                (dark cyan).
@@ -977,7 +977,7 @@ export class FlatMap
      *                                to place markers.
      * @arg {Object} options          Configurable options for the markers.
      * @arg {string} options.className Space-separated CSS class names to add to marker elemens.
-     * @arg {string} options.cluster  The markers will be clustered together with other geographically
+     * @arg {boolean} options.cluster  The markers will be clustered together with other geographically
      *                                close markers. Defaults to ``true``.
      * @arg {string} options.colour   Colour of the markers. Defaults to ``'#005974'``
      *                                (dark cyan).
