@@ -25,42 +25,42 @@ import Set from 'core-js/actual/set'
 import {PropertiesType, PropertyKey, PropertyValue, ScalarType} from '../types'
 
 /**
- * ``True`` iff all PropertiesFilterExpression are ``true``
+ * `True` iff all `PropertiesFilterExpressions` are `true`
  */
 export type AndCondition = {
     AND: PropertiesFilterExpression[]
 }
 
 /**
- * ``True`` iff the ``PropertyKey`` is in the given ``properties`` record
+ * `True` iff the `PropertyKey` is in the given `properties` record
  */
-type HasCondition = {
+export type HasCondition = {
     HAS: PropertyKey
 }
 
 /**
- * ``True`` iff the PropertiesFilterExpression is ``false``
+ * `True` iff the `PropertiesFilterExpression` is `false`
  */
 export type NotCondition = {
     NOT: PropertiesFilterExpression
 }
 
 /**
- * ``True`` iff any PropertiesFilterExpression is ``true``
+ * `True` iff any `PropertiesFilterExpression` is `true`
  */
 export type OrCondition = {
     OR: PropertiesFilterExpression[]
 }
 
 /**
- * Compare the value of ``properties[key]`` in the given record
- * with the provided PropertyValue and resolve ``True`` iff:
+ * Compare the value of `properties[key]` in the given `properties`
+ * record with `PropertyValue` and resolve `True` iff either:
  *
- * *   both ``value`` and PropertyValue are Arrays and the
- *     arrays have at least one common value;
- * *   ``value`` is an array which includes PropertyValue;
- * *   PropertyValue is an array which includes ``value``;
- * *   ``value`` is equal to PropertyValue (neither are arrays)
+ * 1.  `value` and `PropertyValue` are both arrays and they
+ *     have at least one common value, or:
+ * 2.   `value` is an array which includes `PropertyValue`, or:
+ * 3.  `PropertyValue` is an array which includes `value`, or:
+ * 4.  neither are arrays and `value` is equal to `PropertyValue`
  */
 export type PropertyValueTest = { [key: PropertyKey]: PropertyValue }
 
