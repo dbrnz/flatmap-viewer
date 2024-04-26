@@ -1,4 +1,4 @@
-/******************************************************************************
+/*==============================================================================
 
 Flatmap viewer and annotation tool
 
@@ -16,11 +16,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-******************************************************************************/
-
-'use strict';
-
-//==============================================================================
+==============================================================================*/
 
 // A PMID is a "1- to 8-digit accession number with no leading zeros"
 const ZERO_PAD_PREFIXES = {
