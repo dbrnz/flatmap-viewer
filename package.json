@@ -34,7 +34,7 @@
     "@turf/projection": "^6.5.0",
     "bezier-js": "^6.1.0",
     "colord": "^2.9.3",
-    "core-js-pure": "^3.36.1",
+    "core-js": "^3.37.0",
     "html-es6cape": "^2.0.2",
     "maplibre-gl": ">=4.1.0",
     "mathjax-full": "^3.2.2",
@@ -42,6 +42,7 @@
     "polylabel": "^1.1.0"
   },
   "devDependencies": {
+    "@types/core-js": "^2.5.8",
     "@types/node": "^20.12.7",
     "eslint": "^8.7.0",
     "glob": "^10.3.12",

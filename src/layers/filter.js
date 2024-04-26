@@ -18,7 +18,7 @@ limitations under the License.
 
 ******************************************************************************/
 
-import Set from 'core-js-pure/actual/set'
+import Set from 'core-js/actual/set'
 
 //==============================================================================
 
