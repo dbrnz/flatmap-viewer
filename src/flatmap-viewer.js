@@ -18,6 +18,7 @@ limitations under the License.
 
 ==============================================================================*/
 
+import Set from 'core-js/actual/set'
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
@@ -56,6 +57,25 @@ export const UNCLASSIFIED_TAXON_ID = 'NCBITaxon:2787823';   // unclassified entr
 
 //==============================================================================
 
+
+const EXCLUDED_FEATURE_FILTER_KEYS = [
+    'bounds',
+    'class',
+    'featureId',
+    'geometry',
+    'id',
+    'label',
+    'layer',
+    'markerPosition',
+    'name',
+    'nerveId',
+    'nodeId',
+    'pathStartPosition',
+    'pathEndPosition',
+    'source',
+    'tile-layer',
+]
+
 /**
 * Maps are not created directly but instead are created and loaded by
 * :meth:`LoadMap` of :class:`MapManager`.
@@ -87,6 +107,7 @@ export class FlatMap
         this.__mapSourceToFeatureIds = new Map();
         this.__annIdToFeatureId = new Map();
         this.__taxonToFeatureIds = new Map();
+        this.__featurePropertyValues = new Map()
 
         for (const [featureId, annotation] of Object.entries(mapDescription.annotations)) {
             this.__addAnnotation(featureId, annotation);
@@ -230,6 +251,23 @@ export class FlatMap
         return 'version' in this.__details
             && this.__details.version >= MAP_MAKER_FLIGHTPATHS_VERSION
     }
+
+    /**
+     * Valid keys and their value ranges for filtering feature
+     * visiblity and highlighting
+     *
+     * @return {Object}  Value ranges are string arrays
+     */
+    featureFilterRanges()
+    //===================
+    {
+        const filterRanges = {}
+        for (const [key, value] of this.__featurePropertyValues.entries()) {
+            filterRanges[key] = [...value.values()]
+        }
+        return filterRanges
+    }
+
     // Map control methods
 
     /**
@@ -562,6 +600,23 @@ export class FlatMap
         this.__updateFeatureIdMap('models', this.__modelToFeatureIds, ann);
         this.__updateFeatureIdMap('source', this.__mapSourceToFeatureIds, ann);
         this.__updateFeatureIdMap('taxons', this.__taxonToFeatureIds, ann, UNCLASSIFIED_TAXON_ID);
+
+        // Annotations contain all of a feature's properties so note them
+        // for the user to know what can be used for feature filtering
+
+        for (const [key, value] of Object.entries(ann)) {
+            if (!EXCLUDED_FEATURE_FILTER_KEYS.includes(key)) {
+                if (!this.__featurePropertyValues.has(key)) {
+                    this.__featurePropertyValues.set(key, new Set())
+                }
+                const valueSet = this.__featurePropertyValues.get(key)
+                if (Array.isArray(value)) {
+                    this.__featurePropertyValues.set(key, valueSet.union(new Set(value.map(v => `${v}`))))
+                } else {
+                    valueSet.add(`${value}`)
+                }
+            }
+        }
         this.__annIdToFeatureId.set(ann.id, featureId);
     }
 
