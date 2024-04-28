@@ -43,6 +43,7 @@ import * as utils from './utils.js';
 //==============================================================================
 
 const MAP_MAKER_SEPARATE_LAYERS_VERSION = 1.4;
+const MAP_MAKER_FLIGHTPATHS_VERSION = 1.6
 
 //==============================================================================
 
@@ -218,6 +219,17 @@ export class FlatMap
         return this._bounds;
     }
 
+    /**
+     * Does the flatmap contain flightpath information?
+     *
+     * @return boolean
+     */
+    get has_flightpaths()
+    //===================
+    {
+        return 'version' in this.__details
+            && this.__details.version >= MAP_MAKER_FLIGHTPATHS_VERSION
+    }
     // Map control methods
 
     /**

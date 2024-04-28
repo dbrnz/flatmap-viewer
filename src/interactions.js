@@ -249,7 +249,9 @@ export class UserInteractions
                 this._map.addControl(new TaxonsControl(flatmap));
             }
 
-            this._map.addControl(new FlightPathControl(this, flatmap.options.flightPaths));
+            if (flatmap.has_flightpaths) {
+                this._map.addControl(new FlightPathControl(this, flatmap.options.flightPaths));
+            }
 
             if (flatmap.options.annotator) {
                 this._map.addControl(new AnnotatorControl(flatmap));
