@@ -35,7 +35,7 @@ export const displayedProperties = [
 
 //==============================================================================
 
-class InfoDisplay
+export class InfoDisplay
 {
     constructor()
     {

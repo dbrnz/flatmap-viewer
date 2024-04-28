@@ -111,7 +111,7 @@ export class SearchIndex
 
 //==============================================================================
 
-class SearchResults
+export class SearchResults
 {
     constructor(results)
     {
