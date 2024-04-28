@@ -247,8 +247,14 @@ export class FlightPathLayer
         }
     }
 
-    setFilter(featureFilter)
-    //======================
+    clearVisibilityFilter()
+    //=====================
+    {
+        this.setVisibilityFilter(new PropertiesFilter(true))
+    }
+
+    setVisibilityFilter(featureFilter)
+    //================================
     {
         this.#featureFilter = featureFilter
         if (this.#deckOverlay) {

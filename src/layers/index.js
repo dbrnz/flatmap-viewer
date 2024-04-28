@@ -209,6 +209,41 @@ class MapFeatureLayers extends MapStylingLayers
             }
         }
     }
+
+    clearVisibilityFilter()
+    //=====================
+    {
+        for (const layer of this.__layers) {
+            this.__map.setFilter(layer.id, layer.defaultFilter(), {validate: false})
+        }
+    }
+
+    setVisibilityFilter(filter)
+    //=========================
+    {
+        for (const layer of this.__layers) {
+            const styleFilter = layer.defaultFilter()
+            let newFilter = null
+            if (styleFilter) {
+                if (styleFilter[0] === 'all') {
+                    if (Array.isArray(filter) && filter[0] === 'all') {
+                        newFilter = [...styleFilter, ...filter.slice(1)]
+                    } else {
+                        newFilter = [...styleFilter, filter]
+                    }
+                } else if (filter[0] === 'all') {
+                    newFilter = [...filter, styleFilter]
+                } else {
+                    newFilter = [filter, styleFilter]
+                }
+            } else {
+                newFilter = filter
+            }
+            if (newFilter) {
+                this.__map.setFilter(layer.id, newFilter, {validate: true})
+            }
+        }
+    }
 }
 
 //==============================================================================
@@ -430,7 +465,30 @@ export class LayerManager
             if ('taxons' in options) {
                 featureFilter.narrow({taxons: options.taxons})
             }
-            this.#flightPathLayer.setFilter(featureFilter)
+            this.#flightPathLayer.setVisibilityFilter(featureFilter)
+        }
+    }
+
+    clearVisibilityFilter()
+    //=====================
+    {
+        for (const mapLayer of this.#featureLayers.values()) {
+            mapLayer.clearVisibilityFilter()
+        }
+        if (this.#flightPathLayer) {
+            this.#flightPathLayer.clearVisibilityFilter()
+        }
+    }
+
+    setVisibilityFilter(propertiesFilter)
+    //===================================
+    {
+        const styleFilter = propertiesFilter.getStyleFilter()
+        for (const mapLayer of this.#featureLayers.values()) {
+            mapLayer.setVisibilityFilter(styleFilter)
+        }
+        if (this.#flightPathLayer) {
+            this.#flightPathLayer.setVisibilityFilter(propertiesFilter)
         }
     }
 
