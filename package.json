@@ -7,13 +7,15 @@
     "url": "git+https://github.com/AnatomicMaps/flatmap-viewer.git"
   },
   "type": "module",
-  "main": "lib/index.ts",
   "files": [
-    "lib",
-    "src",
-    "static",
-    "thirdParty"
+    "dist"
   ],
+  "module": "./dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js"
+    }
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "vite serve app --port 3000",
