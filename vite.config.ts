@@ -3,13 +3,16 @@ import path from 'path'
 import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
 import { fileURLToPath } from 'node:url'
+import { libInjectCss } from 'vite-plugin-lib-inject-css'
 
 export default defineConfig({
   plugins: [
-    dts({ include: ['lib'] })
+    dts({ include: ['lib'] }),
+    libInjectCss()
   ],
   build: {
     copyPublicDir: false,
+    cssCodeSplit: true,
     lib: {
       entry: path.resolve(__dirname, 'src/index.ts'),
       name: 'FlatmapViewer',
