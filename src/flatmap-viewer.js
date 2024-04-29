@@ -253,8 +253,8 @@ export class FlatMap
     }
 
     /**
-     * Valid keys and their value ranges for filtering feature
-     * visiblity and highlighting
+     * Get valid keys and their value ranges to use when filtering feature
+     * and path visiblity.
      *
      * @return {Object}  Value ranges are string arrays
      */
@@ -266,6 +266,31 @@ export class FlatMap
             filterRanges[key] = [...value.values()]
         }
         return filterRanges
+    }
+
+
+    /**
+     * Clear any visibility filter on features and paths.
+     */
+    clearVisibilityFilter()
+    //=====================
+    {
+        if (this._userInteractions !== null) {
+            this._userInteractions.clearVisibilityFilter()
+        }
+    }
+
+    /**
+     * Sets a visibility filter for features and paths
+     *
+     * @param {PropertiesFilterSpecification}  [filterSpecification=true]  The filter specification
+     */
+    setVisibilityFilter(filterSpecification=true)
+    //===========================================
+    {
+        if (this._userInteractions !== null) {
+            this._userInteractions.setVisibilityFilter(filterSpecification)
+        }
     }
 
     // Map control methods

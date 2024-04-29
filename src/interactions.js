@@ -31,6 +31,7 @@ import polylabel from 'polylabel';
 
 import {LayerManager} from './layers';
 import {PATHWAYS_LAYER, PathManager} from './pathways';
+import {PropertiesFilter} from './layers/filter'
 import {VECTOR_TILES_SOURCE} from './layers/styling';
 import {SystemsManager} from './systems';
 
@@ -1236,6 +1237,18 @@ export class UserInteractions
                 this.activateFeature(this.mapFeature(featureId));
             }
         }
+    }
+
+    clearVisibilityFilter()
+    //=====================
+    {
+        this._layerManager.clearVisibilityFilter()
+    }
+
+    setVisibilityFilter(filterSpecification=true)
+    //===========================================
+    {
+        this._layerManager.setVisibilityFilter(new PropertiesFilter(filterSpecification))
     }
 
     enablePathsBySystem(system, enable=true, force=false)
