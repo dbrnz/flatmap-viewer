@@ -78,7 +78,9 @@ class ArcMapLayer extends ArcLayer
     //=================
     {
         if (force || this.#dirty) {
-            this.internalState.changeFlags.dataChanged = true
+            if (this.internalState) {
+                this.internalState.changeFlags.dataChanged = true
+            }
             this.setNeedsUpdate()
             this.#dirty = false
         }
