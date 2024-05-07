@@ -18,43 +18,50 @@ limitations under the License.
 
 ==============================================================================*/
 
-import { Control } from './controls';
+import { Control } from './controls'
 
 //==============================================================================
 
 export class TaxonsControl extends Control
 {
+    #taxons = new Map()
+
     constructor(flatmap)
     {
-        super(flatmap, 'taxon', 'taxons');
-        this.__taxonIds = flatmap.taxonIdentifiers.sort();
+        super(flatmap, 'taxon', 'taxons')
+        for (const taxonId of flatmap.taxonIdentifiers) {
+            this.#taxons.set(taxonId, this.__flatmap.taxonName(taxonId))
+        }
     }
 
     _addControlDetails()
     //==================
     {
-        let lines = 0;
-        let enabled = 0;
-        for (const taxonId of this.__taxonIds) {
-            const input = this._addControlLine(`${this.__prefix}${taxonId}`, taxonId);
-            input.checked = true;
-            enabled += 1;
-            lines += 1;
+        let lines = 0
+        let enabled = 0
+        // Sort into name order
+        const nameOrder = new Map([...this.#taxons]
+                            .sort((a, b) => Intl.Collator().compare(a[1], b[1])))
+        for (const [id, name] of nameOrder) {
+            const input = this._addControlLine(`${this.__prefix}${id}`, `${name}`);
+            input.checked = true
+            enabled += 1
+            lines += 1
         }
         return {
             enabled: enabled,
             total: lines
-        };
+        }
     }
 
     _enableAll(enable)
     //================
     {
-        for (const taxonId of this.__taxonIds) {
-            const checkbox = document.getElementById(`${this.__prefix}${taxonId}`);
+        for (const taxonId of this.#taxons.keys()) {
+            const checkbox = document.getElementById(`${this.__prefix}${taxonId}`)
             if (checkbox) {
                 checkbox.checked = enable;
-                this.__flatmap.enableConnectivityByTaxonIds(taxonId, enable);
+                this.__flatmap.enableConnectivityByTaxonIds(taxonId, enable)
             }
         }
     }
@@ -62,9 +69,9 @@ export class TaxonsControl extends Control
     __enableControl(id, enable)
     //=========================
     {
-        for (const taxonId of this.__taxonIds) {
+        for (const taxonId of this.#taxons.keys()) {
             if (id === taxonId) {
-                this.__flatmap.enableConnectivityByTaxonIds(taxonId, enable);
+                this.__flatmap.enableConnectivityByTaxonIds(taxonId, enable)
             }
         }
     }
