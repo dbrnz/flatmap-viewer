@@ -1416,6 +1416,9 @@ export class UserInteractions
     clearMarkers()
     //============
     {
+        if (this._layerManager) {
+            this._layerManager.clearMarkers()
+        }
         for (const marker of this.__markerIdByMarker.keys()) {
             marker.remove();
         }
