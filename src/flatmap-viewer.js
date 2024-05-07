@@ -270,7 +270,7 @@ export class FlatMap
 
     /**
      * Get valid keys and their value ranges to use when filtering feature
-     * and path visiblity.
+     * and path visibility.
      *
      * @return {Object}  Value ranges are string arrays
      */
@@ -283,7 +283,6 @@ export class FlatMap
         }
         return filterRanges
     }
-
 
     /**
      * Clear any visibility filter on features and paths.
