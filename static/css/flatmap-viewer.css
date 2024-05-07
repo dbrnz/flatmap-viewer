@@ -214,7 +214,7 @@ label[for=path-all-paths] {
     grid-template-columns: 3.8fr 0.2fr;
     column-gap: 10px;
     row-gap: 0.2em;
-    width: 300px;
+    width: 240px;
     font-size: 10pt;
     cursor: pointer;
     text-align: left;
