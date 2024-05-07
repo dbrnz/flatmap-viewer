@@ -82,9 +82,14 @@ const EXCLUDED_FEATURE_FILTER_KEYS = [
 */
 export class FlatMap
 {
-    constructor(container, mapBaseUrl, mapDescription, resolve)
+    #baseUrl
+    #mapServer
+    #taxonNames = new Map()
+
+    constructor(container, mapServer, mapDescription, resolve)
     {
-        this._baseUrl = mapBaseUrl;
+        this.#mapServer = mapServer
+        this.#baseUrl = mapServer.url()
         this.__id = mapDescription.id;
         this.__uuid = mapDescription.uuid;
         this.__details = mapDescription.details;
@@ -219,6 +224,12 @@ export class FlatMap
     async setupUserInteractions_()
     //============================
     {
+        // Get names of the taxons we have
+        await this.#setTaxonName(this.__taxon)
+        for (const taxon of this.taxonIdentifiers) {
+            await this.#setTaxonName(taxon)
+        }
+
         // Load any images required by the map
         for (const image of this._options.images) {
             await this.addImage(image.id, image.url, '', image.options);
@@ -448,9 +459,9 @@ export class FlatMap
             return url;
         } else if (url.startsWith('/')) {
             // We don't want embedded `{` and `}` characters escaped
-            return `${this._baseUrl}${resource}${this.__uuid}${url}`;
+            return `${this.#baseUrl}${resource}${this.__uuid}${url}`;
         } else {
-            return `${this._baseUrl}${resource}${this.__uuid}/${url}`;
+            return `${this.#baseUrl}${resource}${this.__uuid}/${url}`;
         }
     }
 
@@ -721,6 +732,26 @@ export class FlatMap
     {
         const featureIds = this.__taxonToFeatureIds.get(utils.normaliseId(taxonId))
         return [...new Set(featureIds ? featureIds : [])]
+    }
+
+    taxonName(taxonId)
+    //================
+    {
+        if (this.#taxonNames.has(taxonId)) {
+            return this.#taxonNames.get(taxonId)
+        }
+        return taxonId
+    }
+
+    async #setTaxonName(taxonId)
+    //==========================
+    {
+        if (!this.#taxonNames.has(taxonId)) {
+            const result = await this.#mapServer.loadJSON(`knowledge/label/${taxonId}`)
+            if ('label' in result) {
+                return this.#taxonNames.set(taxonId, result['label'])
+            }
+        }
     }
 
     get layers()
@@ -1846,7 +1877,7 @@ export class MapManager
                 // Display the map
 
                 this._mapNumber += 1;
-                const flatmap = new FlatMap(container, this._mapServer.url(),
+                const flatmap = new FlatMap(container, this._mapServer,
                     {
                         id: map,
                         uuid: mapId,
