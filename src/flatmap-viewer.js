@@ -43,6 +43,11 @@ import * as utils from './utils.js';
 
 //==============================================================================
 
+// The released version of the viewer
+export const VIEWER_VERSION = '2.8.1'
+
+//==============================================================================
+
 const MAP_MAKER_SEPARATE_LAYERS_VERSION = 1.4;
 const MAP_MAKER_FLIGHTPATHS_VERSION = 1.6
 
@@ -1606,6 +1611,11 @@ export class FlatMap
  */
 export class MapManager
 {
+    /**
+     * The released version of the viewer
+     */
+    static version = VIEWER_VERSION
+
     /* Create a MapManager */
     constructor(mapServerUrl, options={})
     {
