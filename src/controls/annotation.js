@@ -78,7 +78,6 @@ export class AnnotationDrawControl
             keybindings: true
         })
         this.__map = null
-        this.__inDrawing = false
     }
 
     onAdd(map)
@@ -204,8 +203,7 @@ export class AnnotationDrawControl
     modeChangedEvent(event)
     //=====================
     {
-        // Used as a flag to indicate the feature mode
-        this.__inDrawing = (event.mode.startsWith('draw'))
+        // Used to indicate the feature mode changes
         this.#sendEvent('modeChanged', event)
     }
 
@@ -214,12 +212,6 @@ export class AnnotationDrawControl
     {
         // Used to indicate a feature is selected or deselected
         this.#sendEvent('selectionChanged', event)
-    }
-
-    inDrawingMode()
-    //=============
-    {
-        return this.__inDrawing
     }
 
     commitEvent(event)

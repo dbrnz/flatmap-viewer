@@ -337,14 +337,6 @@ export class UserInteractions
         }
     }
 
-    inDrawingAnnotationMode()
-    //=======================
-    {
-        if (this.#annotationDrawControl) {
-            return this.#annotationDrawControl.inDrawingMode()
-        }
-    }
-
     commitAnnotationEvent(event)
     //==========================
     {
@@ -1198,7 +1190,6 @@ export class UserInteractions
             this.unselectFeatures();
             return;
         }
-        const inDrawing = this.inDrawingAnnotationMode()
         const clickedDrawnFeatures = clickedFeatures.filter((f) => !f.id);
         const clickedFeature = clickedFeatures.filter((f) => f.id)[0];
         this.selectionEvent_(event.originalEvent, clickedFeature);
