@@ -337,14 +337,6 @@ export class UserInteractions
         }
     }
 
-    inDrawingAnnotationMode()
-    //=======================
-    {
-        if (this.#annotationDrawControl) {
-            return this.#annotationDrawControl.inDrawingMode()
-        }
-    }
-
     commitAnnotationEvent(event)
     //==========================
     {
@@ -1198,8 +1190,7 @@ export class UserInteractions
             this.unselectFeatures();
             return;
         }
-        const inDrawing = this.inDrawingAnnotationMode()
-        const clickedDrawnFeature = clickedFeatures.filter((f) => !f.id)[0];
+        const clickedDrawnFeatures = clickedFeatures.filter((f) => !f.id);
         const clickedFeature = clickedFeatures.filter((f) => f.id)[0];
         this.selectionEvent_(event.originalEvent, clickedFeature);
         if (this._modal) {
@@ -1207,10 +1198,16 @@ export class UserInteractions
             this.__resetFeatureDisplay();
             this.unselectFeatures();
             this.__clearModal();
-        } else if (clickedDrawnFeature && !inDrawing) {
-            // When feature and drawn feature are coinciding, click on annotation layer by default
-            // While in drawing, DISABLE 'click' event on annotation layer
-            this.__featureEvent('click', clickedDrawnFeature);
+        } else if (clickedDrawnFeatures.length > 0) {
+            // Layer of existing drawn features
+            const clickedOnColdLayer = clickedDrawnFeatures.filter((f) => f.source === 'mapbox-gl-draw-cold')[0];
+            // Layer of currently drawing feature
+            const clickedOnHotLayer = clickedDrawnFeatures.filter((f) => f.source === 'mapbox-gl-draw-hot')[0];
+            this.__featureEvent('click',
+                clickedOnColdLayer ?
+                    clickedOnColdLayer : clickedFeature ?
+                        clickedFeature : clickedOnHotLayer
+            );
         } else if (clickedFeature) {
             this.__lastClickLngLat = event.lngLat;
             this.__featureEvent('click', clickedFeature);
