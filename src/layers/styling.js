@@ -551,9 +551,9 @@ export class PathLineLayer extends VectorStyleLayer
                     this.__highlight ? ['case',
                         ['boolean', ['get', 'invisible'], false], 0.1,
                         ['boolean', ['feature-state', 'selected'], false], [
-                            'case', ['boolean', ['feature-state', 'active'], false], 1.2,
+                            'case', ['boolean', ['feature-state', 'active'], false], 2.0,
                                 0.9],
-                        ['boolean', ['feature-state', 'active'], false], 0.9,
+                        ['boolean', ['feature-state', 'active'], false], 1.8,
                         0.0
                     ] : [
                      'case',
