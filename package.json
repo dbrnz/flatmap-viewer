@@ -38,6 +38,8 @@
     "bezier-js": "^6.1.0",
     "colord": "^2.9.3",
     "core-js": "^3.37.0",
+    "graphology": "^0.25.4",
+    "graphology-shortest-path": "^2.1.0",
     "html-es6cape": "^2.0.2",
     "maplibre-gl": ">=4.1.0",
     "mathjax-full": "^3.2.2",
