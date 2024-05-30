@@ -20,6 +20,21 @@ limitations under the License.
 
 import Graph from 'graphology'
 import {bidirectional} from 'graphology-shortest-path'
+import {subgraph} from 'graphology-operators'
+
+//==============================================================================
+
+// From https://stackoverflow.com/a/65064026
+
+export function pairwise<T>(a: T[]): [T, T]
+{
+    // @ts-ignore
+    return a.flatMap( (x) => {
+        return a.flatMap( (y) => {
+            return (x !== y) ? [[x, y]] : []
+        })
+    })
+}
 
 //==============================================================================
 
@@ -30,10 +45,47 @@ export class DiGraph extends Graph
         super({type: 'directed', allowSelfLoops: false})
     }
 
-    shortestPath(source, target)
-    //==========================
+    static fromGraph(data: Object): DiGraph
+    //=====================================
     {
-        return bidirectional(this, source, target)
+        const instance = new DiGraph()
+        instance.import(data)
+        return instance
+    }
+
+    children(term: string): string[]
+    //==============================
+    {
+        return this.inEdges(term)
+                   .map(edge => this.opposite(term, edge))
+    }
+
+    connectedSubgraph(nodes: string[]): DiGraph
+    //=========================================
+    {
+        const connectedNodes: Set<string> = new Set()
+        for (const [source, target] of pairwise(nodes)) {
+            const path = bidirectional(this, source, target)
+            if (path && path.length) {
+                for (const node of path) {
+                    connectedNodes.add(node)
+                }
+            }
+        }
+        return DiGraph.fromGraph(subgraph(this, connectedNodes))
+    }
+
+    parents(term: string): string[]
+    //=============================
+    {
+        return this.outEdges(term)
+                   .map(edge => this.opposite(term, edge))
+    }
+
+    shortestPath(source: string, target: string): string[]
+    //====================================================
+    {
+        return bidirectional(this, source, target) || []
     }
 }
 

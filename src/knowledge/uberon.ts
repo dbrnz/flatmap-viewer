@@ -175,8 +175,7 @@ class UberonHierarchy
     children(term: NormalisedUri): NormalisedUri[]
     //============================================
     {
-        return this.#graph.inEdges(term)
-                          .map(edge => this.#graph.opposite(term, edge))
+        return this.#graph.children(term)
     }
 
     label(term: NormalisedUri): string
@@ -188,8 +187,7 @@ class UberonHierarchy
     parents(term: NormalisedUri): NormalisedUri[]
     //===========================================
     {
-        return this.#graph.outEdges(term)
-                          .map(edge => this.#graph.opposite(term, edge))
+        return this.#graph.parents(term)
     }
 
     pathToRoot(term: NormalisedUri): NormalisedUri[]

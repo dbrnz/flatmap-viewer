@@ -18,25 +18,10 @@ limitations under the License.
 
 ==============================================================================*/
 
-import {DiGraph} from '../knowledge/graphs'
+import {DiGraph, pairwise} from '../knowledge/graphs'
 import {isUberon, normalisedUri, uberon} from '../knowledge/uberon'
 
 import {FlatMap} from '../flatmap-viewer'
-
-
-//==============================================================================
-
-// From https://stackoverflow.com/a/65064026
-
-function pairs<T>(a: T[]): [T, T]
-{
-    // @ts-ignore
-    return a.flatMap( (x) => {
-        return a.flatMap( (y) => {
-            return (x !== y) ? [[x, y]] : []
-        })
-    })
-}
 
 //==============================================================================
 
@@ -46,12 +31,42 @@ export interface DatasetTerms
     terms: string[]
 }
 
+type DatasetMarker = {
+    term: string
+    dataset: string
+    minZoom: number
+    maxZoom: number
+}
+
+export type ClusteredAnatomicalMarker = {
+    id: string
+    term: string
+    position: [number, number]
+    /**
+     * { The number of datasets at the marker when ``index <= zoom < index+1`` }
+     */
+    zoomCount: number[]
+}
+
 //==============================================================================
 
-class DatasetMarkers
+const MAX_ZOOM = 12
+
+function depthToZoomRange(depth: number): [number, number]
 {
+    return (depth < 0)         ? [0, 1]
+         : (depth >= MAX_ZOOM) ? [MAX_ZOOM, MAX_ZOOM]
+         :                       [depth, depth+1]
+}
+
+//==============================================================================
+
+class DatasetMarkerSet
+{
+    #connectedTermGraph: DiGraph
     #datasetId: string
     #mapTermGraph: MapTermGraph
+    #markers: Map<string, DatasetMarker>
 
     constructor(datasetTerms: DatasetTerms, mapTermGraph: MapTermGraph)
     {
@@ -59,6 +74,57 @@ class DatasetMarkers
         this.#mapTermGraph = mapTermGraph
 
         const mapTerms = new Set(this.#validatedTerms(datasetTerms.terms))
+        mapTerms.add(uberon.anatomicalRoot)
+
+        this.#connectedTermGraph = mapTermGraph.connectedTermGraph([...mapTerms.values()])
+
+        this.#markers = new Map(this.#connectedTermGraph.nodes().map(term => {
+            const d = mapTermGraph.depth(term)
+            const zoomRange = depthToZoomRange(d)
+            return [ term, {
+                dataset: this.#datasetId,
+                term,
+                minZoom: zoomRange[0],
+                maxZoom: zoomRange[1]
+            }]
+        }))
+        for (const terminal of this.#connectedTermGraph.nodes()
+                                                 .filter(term => term !== uberon.anatomicalRoot
+                                                              && this.#connectedTermGraph.degree(term) == 1)) {
+            const marker = this.#markers.get(terminal)
+            marker.maxZoom = MAX_ZOOM
+            this.#setZoomFromParents(marker)
+        }
+        this.#markers.delete(uberon.anatomicalRoot)
+    }
+
+    get id(): string
+    {
+        return this.#datasetId
+    }
+
+    get markers(): DatasetMarker[]
+    {
+        return [...this.#markers.values()]
+    }
+
+    #setZoomFromParents(marker: DatasetMarker)
+    //========================================
+    {
+        if (marker.term === uberon.anatomicalRoot) {
+            return
+        }
+        for (const parent of this.#connectedTermGraph.parents(marker.term)) {
+            const parentMarker = this.#markers.get(parent)
+            if (parentMarker.maxZoom < marker.minZoom) {
+                parentMarker.maxZoom = marker.minZoom
+            }
+            if (parent === uberon.anatomicalRoot) {
+                marker.minZoom = 0
+            } else {
+                this.#setZoomFromParents(parentMarker)
+            }
+        }
     }
 
     #substituteTerm(term: string): string|null
@@ -69,7 +135,7 @@ class DatasetMarkers
             return null
         }
         for (const parent of parents) {
-            if (this.#mapTermGraph.hasNode(parent)) {
+            if (this.#mapTermGraph.hasTerm(parent)) {
                 return parent
             }
         }
@@ -81,7 +147,7 @@ class DatasetMarkers
     {
         const mapTerms = []
         for (const term of terms) {
-            if (this.#mapTermGraph.hasNode(term)) {
+            if (this.#mapTermGraph.hasTerm(term)) {
                 mapTerms.push(term)
             } else {
                 const substitute = this.#substituteTerm(term)
@@ -95,9 +161,29 @@ class DatasetMarkers
         }
         return mapTerms
     }
-
 }
 
+
+//==============================================================================
+
+class DatasetMarkers
+{
+
+    #markers: Map<string, ClusteredAnatomicalMarker> = new Map()
+
+    constructor(datasetTermsList: DatasetTerms[], mapTermGraph: MapTermGraph)
+    {
+        for (const datasetTerms of datasetTermsList) {
+            const dataSetMarkers = new DatasetMarkerSet(datasetTerms, mapTermGraph)
+            this.#mergeMarkers(dataSetMarkers.markers)
+        }
+    }
+
+    #mergeMarkers(_markers: DatasetMarker[])
+    {
+
+    }
+}
 
 //==============================================================================
 
@@ -115,24 +201,26 @@ export class MapTermGraph
             distance: 0
         })
         for (const term of mapUberons) {
-            this.#hierarchy.addNode(term, {
-                label: uberon.label(term),
-                distance: uberon.pathToRoot(term).length - 1
-            })
+            const rootPath = uberon.pathToRoot(term)
+            if (rootPath.length) {
+                this.#hierarchy.addNode(term, {
+                    label: uberon.label(term),
+                    distance: rootPath.length - 1
+                })
+            }
         }
 
         // Find the shortest path between each pair of Uberon terms used in the flatmap
         // and, if a path exists, add an edge to the hierarchy graph
 
-        for (const [source, target] of pairs(this.#hierarchy.nodes())) {
+        for (const [source, target] of pairwise(this.#hierarchy.nodes())) {
             const path = uberon.shortestPath(source, target)
-            if (path && path.length) {
+            if (path.length) {
                 this.#hierarchy.addEdge(source, target, {
                     parentDistance: path.length - 1
                 })
             }
         }
-        console.log(`Map hierarchical terms: ${this.#hierarchy.order}, Edges: ${this.#hierarchy.size}`)
 
         // For each term used by the flatmap find the closest term(s), in terms of path
         // length, that it is connected to and then delete edges connecting it to more
@@ -160,44 +248,36 @@ export class MapTermGraph
                 }
             }
         }
-
-        console.log(`--> hierarchical terms: ${this.#hierarchy.order}, Edges: ${this.#hierarchy.size}`)
     }
 
-    children(term: string): string[]
-    //==============================
+    addDatasetMarkers(datasetTermsList: DatasetTerms[])
+    //=================================================
     {
-        return this.#hierarchy.inEdges(term)
-                              .map(edge => this.#hierarchy.opposite(term, edge))
+        const dataSetMarkers = new DatasetMarkers(datasetTermsList, this)
+
     }
 
-    hasNode(term: string): boolean
-    //============================
+    clearMarkers()
+    //============
     {
-        return this.#hierarchy.hasNode(term)
     }
 
-    level(term: string): number
+    connectedTermGraph(terms: string[])
+    //=================================
+    {
+        return this.#hierarchy.connectedSubgraph(terms)
+    }
+
+    depth(term: string): number
     //=========================
     {
         return this.#hierarchy.getNodeAttribute(term, 'distance') as number
     }
 
-    parents(term: string): string[]
-    //=============================
+    hasTerm(term: string): boolean
+    //============================
     {
-        return this.#hierarchy.outEdges(term)
-                              .map(edge => this.#hierarchy.opposite(term, edge))
-    }
-
-    clearMarkers()
-    {
-
-    }
-
-    addDatasetMarkers(datasetTermsList: DatasetTerms[])
-    {
-
+        return this.#hierarchy.hasNode(term)
     }
 }
 
