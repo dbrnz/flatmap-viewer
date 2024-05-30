@@ -39,6 +39,7 @@
     "colord": "^2.9.3",
     "core-js": "^3.37.0",
     "graphology": "^0.25.4",
+    "graphology-operators": "^1.6.0",
     "graphology-shortest-path": "^2.1.0",
     "html-es6cape": "^2.0.2",
     "maplibre-gl": ">=4.1.0",
