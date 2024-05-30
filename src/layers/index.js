@@ -21,7 +21,8 @@ limitations under the License.
 import {PATHWAYS_LAYER} from '../pathways.js';
 import * as utils from '../utils.js';
 
-import {ClusteredMarkerLayer} from './cluster'
+import {ClusteredAnatomicalMarkerLayer} from './acluster'
+//import {ClusteredMarkerLayer} from './cluster'
 import * as style from './styling.js';
 
 import {FlightPathLayer} from './flightpaths'
@@ -343,7 +344,7 @@ export class LayerManager
         this.#flightPathLayer = new FlightPathLayer(flatmap, ui)
 
         // Show clustered markers in a layer
-        this.#markerLayer = new ClusteredMarkerLayer(flatmap, ui)
+        this.#markerLayer = new ClusteredAnatomicalMarkerLayer(flatmap, ui)
     }
 
     get layers()
@@ -395,7 +396,17 @@ export class LayerManager
     addMarker(id, position, properties={})
     //====================================
     {
-        this.#markerLayer.addMarker(id, position, properties)
+
+        const markers = [{
+            id,
+            position,
+            term: 'xx',
+            zoomCount: [
+                0, 9, 6, 1, 2, 1, 1, 7, 8
+            ]
+        }]
+        this.#markerLayer.addMarkers(markers)
+
     }
 
     clearMarkers()

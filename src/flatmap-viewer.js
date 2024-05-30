@@ -36,7 +36,7 @@ import {UserInteractions} from './interactions.js';
 
 import {APINATOMY_PATH_PREFIX} from './pathways';
 
-import {loadClusterIcons} from './layers/cluster'
+import {loadClusterIcons} from './layers/acluster.ts'
 
 import * as images from './images.js';
 import * as utils from './utils.js';
