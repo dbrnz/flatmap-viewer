@@ -1447,8 +1447,6 @@ export class UserInteractions
     {
         if (this._layerManager) {
             return this._layerManager.addDatasetMarkers(datasets)
-        } else {
-            return Array(datasets.length).fill(-1)
         }
     }
 

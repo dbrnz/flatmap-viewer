@@ -1156,16 +1156,15 @@ export class FlatMap
     /**
      * Add dataset markers to the map.
      *
-     * @param {Array.<{id: string, terms: string[]}>} datasets
-     * @return {array.<integer>}  The identifiers of the resulting dataset markers.
+     * @param {Array.<{id: string, terms: string[]}>} datasets  An array with an object for each dataset,
+     *                                                          specifying its identifier and an array of
+     *                                                          associated anatomical terms
      */
     addDatasetMarkers(datasets)
     //=========================
     {
         if (this._userInteractions !== null) {
-            return this._userInteractions.addDatasetMarkers(datasets)
-        } else {
-            return Array(datasets.length).fill(-1)
+            this._userInteractions.addDatasetMarkers(datasets)
         }
     }
 
