@@ -23,29 +23,15 @@ import {isUberon, normalisedUri, uberon} from '../knowledge/uberon'
 
 import {FlatMap} from '../flatmap-viewer'
 
-//==============================================================================
+import {Dataset} from './acluster'
 
-export interface DatasetTerms
-{
-    datasetId: string
-    terms: string[]
-}
+//==============================================================================
 
 type DatasetMarker = {
     term: string
-    dataset: string
+    datasetId: string
     minZoom: number
     maxZoom: number
-}
-
-export type ClusteredAnatomicalMarker = {
-    id: string
-    term: string
-    position: [number, number]
-    /**
-     * { The number of datasets at the marker when ``index <= zoom < index+1`` }
-     */
-    zoomCount: number[]
 }
 
 //==============================================================================
@@ -61,19 +47,19 @@ function depthToZoomRange(depth: number): [number, number]
 
 //==============================================================================
 
-class DatasetMarkerSet
+export class DatasetMarkerSet
 {
     #connectedTermGraph: DiGraph
     #datasetId: string
     #mapTermGraph: MapTermGraph
     #markers: Map<string, DatasetMarker>
 
-    constructor(datasetTerms: DatasetTerms, mapTermGraph: MapTermGraph)
+    constructor(dataset: Dataset, mapTermGraph: MapTermGraph)
     {
-        this.#datasetId = datasetTerms.datasetId
+        this.#datasetId = dataset.id
         this.#mapTermGraph = mapTermGraph
 
-        const mapTerms = new Set(this.#validatedTerms(datasetTerms.terms))
+        const mapTerms = new Set(this.#validatedTerms(dataset.terms))
         mapTerms.add(uberon.anatomicalRoot)
 
         this.#connectedTermGraph = mapTermGraph.connectedTermGraph([...mapTerms.values()])
@@ -82,7 +68,7 @@ class DatasetMarkerSet
             const d = mapTermGraph.depth(term)
             const zoomRange = depthToZoomRange(d)
             return [ term, {
-                dataset: this.#datasetId,
+                datasetId: this.#datasetId,
                 term,
                 minZoom: zoomRange[0],
                 maxZoom: zoomRange[1]
@@ -163,28 +149,6 @@ class DatasetMarkerSet
     }
 }
 
-
-//==============================================================================
-
-class DatasetMarkers
-{
-
-    #markers: Map<string, ClusteredAnatomicalMarker> = new Map()
-
-    constructor(datasetTermsList: DatasetTerms[], mapTermGraph: MapTermGraph)
-    {
-        for (const datasetTerms of datasetTermsList) {
-            const dataSetMarkers = new DatasetMarkerSet(datasetTerms, mapTermGraph)
-            this.#mergeMarkers(dataSetMarkers.markers)
-        }
-    }
-
-    #mergeMarkers(_markers: DatasetMarker[])
-    {
-
-    }
-}
-
 //==============================================================================
 
 export class MapTermGraph
@@ -248,18 +212,6 @@ export class MapTermGraph
                 }
             }
         }
-    }
-
-    addDatasetMarkers(datasetTermsList: DatasetTerms[])
-    //=================================================
-    {
-        const dataSetMarkers = new DatasetMarkers(datasetTermsList, this)
-
-    }
-
-    clearMarkers()
-    //============
-    {
     }
 
     connectedTermGraph(terms: string[])

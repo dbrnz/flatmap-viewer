@@ -27,7 +27,15 @@ import {SvgManager, SvgTemplateManager} from '../../thirdParty/maplibre-gl-svg/s
 
 import {FlatMap} from '../flatmap-viewer'
 import {UserInteractions} from '../interactions'
-import {ClusteredAnatomicalMarker} from './anatomical-cluster'
+import {DatasetMarkerSet, MapTermGraph} from './anatomical-cluster'
+
+//==============================================================================
+
+export interface Dataset
+{
+    id: string
+    terms: string[]
+}
 
 //==============================================================================
 
@@ -89,9 +97,27 @@ type GeoJSONFeatureCollection = {
 
 //==============================================================================
 
+type MarkerPoint = {
+    type: 'Feature'
+    id: number
+    properties: {
+        'zoom-count':  number[]
+        'dataset-ids': string[]
+    },
+    geometry: {
+        type: 'Point'
+        coordinates: [number, number]
+    }
+}
+
+//==============================================================================
+
 export class ClusteredAnatomicalMarkerLayer
 {
+    #flatmap: FlatMap
     #map: MapLibreMap
+    #mapTermGraph: MapTermGraph
+    #markersByDataset: Map<string, DatasetMarkerSet> = new Map()
     #maxZoom: number
     #points: GeoJSONFeatureCollection = {
        type: 'FeatureCollection',
@@ -102,8 +128,10 @@ export class ClusteredAnatomicalMarkerLayer
     constructor(flatmap: FlatMap, ui: UserInteractions)
     {
         this.#ui = ui
+        this.#flatmap = flatmap
         this.#map = flatmap.map
         this.#maxZoom = this.#map.getMaxZoom()
+        this.#mapTermGraph = new MapTermGraph(flatmap)
 
         this.#map.addSource(ANATOMICAL_MARKERS_SOURCE, {
             type: 'geojson',
@@ -169,37 +197,83 @@ console.log('cl handled...')
         event.originalEvent.stopPropagation()
     }
 
-    addMarkers(markers: ClusteredAnatomicalMarker[])
-    //==============================================
+
+
+    #update()
+    //=======
     {
-        for (const marker of markers) {
-console.log(marker)
-            const zoomCount = Array.from(marker.zoomCount)
-            while (zoomCount.length <= this.#maxZoom) {
-                zoomCount.push(marker.zoomCount[marker.zoomCount.length - 1])
-            }
-            this.#points.features.push({
-                type: 'Feature',
-                id: marker.id,
-                properties: {
-                    'zoom-count':  zoomCount
-                },
-                geometry: {
-                    type: 'Point',
-                    coordinates: marker.position
+        const termToMarkerPoints: Map<string, MarkerPoint[]> = new Map()
+        for (const datasetMarkerSet of this.#markersByDataset.values()) {
+            for (const datasetMarker of datasetMarkerSet.markers) {
+                if (!termToMarkerPoints.has(datasetMarker.term)) {
+                    const zoomCount = Array(this.#maxZoom + 1).fill(0)
+                    const datasetIds = []
+                    const markerPoints: MarkerPoint[] = []
+                    for (const featureId of this.#flatmap.modelFeatureIds(datasetMarker.term)) {
+                        const annotation = this.#flatmap.annotation(featureId)
+                        if (!('markerPosition' in annotation) && !annotation.geometry.includes('Polygon')) {
+                            continue;
+                        }
+                        const markerId = this.#ui.nextMarkerId()
+                        const markerPosition = this.#ui.markerPosition(featureId, annotation)
+                        markerPoints.push({
+                            type: 'Feature',
+                            id: markerId,
+                            properties: {
+                                'zoom-count':  zoomCount,
+                                'dataset-ids': datasetIds
+                            },
+                            geometry: {
+                                type: 'Point',
+                                coordinates: markerPosition
+                            }
+                        })
+                    }
+                    termToMarkerPoints.set(datasetMarker.term, markerPoints)
                 }
-            })
+                const markerPoint = termToMarkerPoints.get(datasetMarker.term)[0]
+                // We only need to update these property fields once all of the dataset's markers
+                // refer to the same two variables
+                const zoomCount = markerPoint.properties['zoom-count']
+                for (let zoom = 0; zoom <= this.#maxZoom; zoom += 1) {
+                    if (datasetMarker.minZoom <= zoom && zoom < datasetMarker.maxZoom) {
+                        zoomCount[zoom] += 1
+                    }
+                }
+                markerPoint.properties['dataset-ids'].push(datasetMarker.datasetId)
+            }
+        }
+        this.#points.features = []
+        for (const markerPoints of termToMarkerPoints.values()) {
+            this.#points.features.push(...markerPoints)
         }
         const source = this.#map.getSource(ANATOMICAL_MARKERS_SOURCE) as GeoJSONSource
         source.setData(this.#points)
     }
 
-    clearMarkers()
-    //============
+    addDatasetMarkers(datasets: Dataset[])
+    //====================================
     {
-        this.#points.features = []
-        const source = this.#map.getSource(ANATOMICAL_MARKERS_SOURCE) as GeoJSONSource
-        source.setData(this.#points)
+        for (const dataset of datasets) {
+            this.#markersByDataset.set(dataset.id, new DatasetMarkerSet(dataset, this.#mapTermGraph))
+        }
+        this.#update()
+    }
+
+    clearDatasetMarkers()
+    //===================
+    {
+        this.#markersByDataset.clear()
+        this.#update()
+    }
+
+    removeDatasetMarker(datasetId: string)
+    //====================================
+    {
+        if (this.#markersByDataset.has(datasetId)) {
+            this.#markersByDataset.delete(datasetId)
+        }
+        this.#update()
     }
 }
 

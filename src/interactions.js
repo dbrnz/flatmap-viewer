@@ -127,6 +127,7 @@ function getRenderedLabel(properties)
 export class UserInteractions
 {
     #annotationDrawControl = null
+    #lastMarkerId = 900000
     #minimap = null
 
     constructor(flatmap)
@@ -149,7 +150,6 @@ export class UserInteractions
         // Marker placement and interaction
 
         this.__activeMarker = null;
-        this.__lastMarkerId = 900000;
         this.__markerIdByMarker = new Map();
         this.__markerIdByFeatureId = new Map();
         this.__annotationByMarkerId = new Map();
@@ -853,7 +853,7 @@ export class UserInteractions
                 location = options.annotationFeatureGeometry;
             } else {
                 // Position popup at the feature's 'centre'
-                location = this.__markerPosition(featureId, ann);
+                location = this.markerPosition(featureId, ann);
             }
 
             // Make sure the feature is on screen
@@ -1319,8 +1319,8 @@ export class UserInteractions
 
     // Marker handling
 
-    __markerPosition(featureId, annotation)
-    //=====================================
+    markerPosition(featureId, annotation)
+    //===================================
     {
         if (this.__markerPositions.has(featureId)) {
             return this.__markerPositions.get(featureId);
@@ -1346,6 +1346,13 @@ export class UserInteractions
         return position;
     }
 
+    nextMarkerId()
+    //============
+    {
+        this.#lastMarkerId += 1
+        return this.#lastMarkerId
+    }
+
     addMarker(anatomicalId, options={})
     //=================================
     {
@@ -1359,8 +1366,7 @@ export class UserInteractions
             }
             if (!('marker' in annotation)) {
                 if (markerId === -1) {
-                    this.__lastMarkerId += 1;
-                    markerId = this.__lastMarkerId;
+                    markerId = this.nextMarkerId()
                 }
 
                 // MapLibre dynamically sets a transform on marker elements so in
@@ -1379,7 +1385,7 @@ export class UserInteractions
                 if ('className' in options) {
                     markerOptions.className = options.className;
                 }
-                const markerPosition = this.__markerPosition(featureId, annotation);
+                const markerPosition = this.markerPosition(featureId, annotation);
                 if (options.cluster && this._layerManager) {
                     this._layerManager.addMarker(markerId, markerPosition, annotation)
                 } else {
@@ -1433,6 +1439,32 @@ export class UserInteractions
                 this.__annotationByMarkerId.remove(id);
                 break;
             }
+        }
+    }
+
+    addDatasetMarkers(datasets)
+    //=========================
+    {
+        if (this._layerManager) {
+            return this._layerManager.addDatasetMarkers(datasets)
+        } else {
+            return Array(datasets.length).fill(-1)
+        }
+    }
+
+    clearDatasetMarkers()
+    //===================
+    {
+        if (this._layerManager) {
+            this._layerManager.clearDatasetMarkers()
+        }
+    }
+
+    removeDatasetMarker(datasetId)
+    //============================
+    {
+        if (this._layerManager) {
+            this._layerManager.removeDatasetMarker(markedatasetIdrId)
         }
     }
 

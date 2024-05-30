@@ -22,7 +22,7 @@ import {PATHWAYS_LAYER} from '../pathways.js';
 import * as utils from '../utils.js';
 
 import {ClusteredAnatomicalMarkerLayer} from './acluster'
-//import {ClusteredMarkerLayer} from './cluster'
+
 import * as style from './styling.js';
 
 import {FlightPathLayer} from './flightpaths'
@@ -343,7 +343,7 @@ export class LayerManager
         // Support flight path view
         this.#flightPathLayer = new FlightPathLayer(flatmap, ui)
 
-        // Show clustered markers in a layer
+        // Show anatomical clustered markers in a layer
         this.#markerLayer = new ClusteredAnatomicalMarkerLayer(flatmap, ui)
     }
 
@@ -413,6 +413,24 @@ export class LayerManager
     //============
     {
         this.#markerLayer.clearMarkers()
+    }
+
+    addDatasetMarkers(datasets)
+    //=========================
+    {
+        this.#markerLayer.addDatasetMarkers(datasets)
+    }
+
+    clearDatasetMarkers()
+    //===================
+    {
+        this.#markerLayer.clearMarkers()
+    }
+
+    removeDatasetMarker(datasetId)
+    //============================
+    {
+        this.#markerLayer.removeDatasetMarker(datasetId)
     }
 
     featuresAtPoint(point)

@@ -1154,6 +1154,47 @@ export class FlatMap
     }
 
     /**
+     * Add dataset markers to the map.
+     *
+     * @param {Array.<{id: string, terms: string[]}>} datasets
+     * @return {array.<integer>}  The identifiers of the resulting dataset markers.
+     */
+    addDatasetMarkers(datasets)
+    //=========================
+    {
+        if (this._userInteractions !== null) {
+            return this._userInteractions.addDatasetMarkers(datasets)
+        } else {
+            return Array(datasets.length).fill(-1)
+        }
+    }
+
+    /**
+     * Remove all dataset markers from the map.
+     */
+    clearDatasetMarkers()
+    //===================
+    {
+        if (this._userInteractions !== null) {
+            this._userInteractions.clearDatasetMarkers()
+        }
+    }
+
+    /**
+     * Remove markers for a dataset from the map.
+     *
+     * @param {integer}  datasetId  The a dataset marker identifier as passed
+     *                              to ``addDatasetMarkers()``
+     */
+    removeDatasetMarker(datasetId)
+    //===========================
+    {
+        if (this._userInteractions !== null) {
+            this._userInteractions.removeDatasetMarker(datasetId)
+        }
+    }
+
+    /**
      * Return the set of anatomical identifiers visible in the current map view.
      *
      * @return {Array.<string>} A list of identifiers
