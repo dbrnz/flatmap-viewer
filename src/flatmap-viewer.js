@@ -30,17 +30,17 @@ import '../static/css/flatmap-viewer.css';
 
 //==============================================================================
 
-import {MapServer} from './mapserver.js';
-import {SearchIndex} from './search.js';
-import {UserInteractions} from './interactions.js';
+import {MapServer} from './mapserver'
+import {SearchIndex} from './search'
+import {UserInteractions} from './interactions'
 import {MapTermGraph, sparcTermGraph} from './knowledge'
 
-import {APINATOMY_PATH_PREFIX} from './pathways';
+import {APINATOMY_PATH_PREFIX} from './pathways'
 
-import {loadClusterIcons} from './layers/acluster.ts'
+import {loadClusterIcons} from './layers/acluster'
 
-import * as images from './images.js';
-import * as utils from './utils.js';
+import * as images from './images'
+import * as utils from './utils'
 
 //==============================================================================
 
