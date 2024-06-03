@@ -18,10 +18,8 @@ limitations under the License.
 
 ==============================================================================*/
 
-import {DiGraph, pairwise} from '../knowledge/graphs'
-import {isUberon, normalisedUri, uberon} from '../knowledge/uberon'
-
-import {FlatMap} from '../flatmap-viewer'
+import {ANATOMICAL_ROOT, MapTermGraph, sparcTermGraph} from '../knowledge'
+import {DiGraph} from '../knowledge/graphs'
 
 import {Dataset} from './acluster'
 
@@ -60,7 +58,7 @@ export class DatasetMarkerSet
         this.#mapTermGraph = mapTermGraph
 
         const mapTerms = new Set(this.#validatedTerms(dataset.terms))
-        mapTerms.add(uberon.anatomicalRoot)
+        mapTerms.add(ANATOMICAL_ROOT)
 
         this.#connectedTermGraph = mapTermGraph.connectedTermGraph([...mapTerms.values()])
 
@@ -75,13 +73,13 @@ export class DatasetMarkerSet
             }]
         }))
         for (const terminal of this.#connectedTermGraph.nodes()
-                                                 .filter(term => term !== uberon.anatomicalRoot
+                                                 .filter(term => term !== ANATOMICAL_ROOT
                                                               && this.#connectedTermGraph.degree(term) == 1)) {
             const marker = this.#markers.get(terminal)
             marker.maxZoom = MAX_ZOOM
             this.#setZoomFromParents(marker)
         }
-        this.#markers.delete(uberon.anatomicalRoot)
+        this.#markers.delete(ANATOMICAL_ROOT)
     }
 
     get id(): string
@@ -97,7 +95,7 @@ export class DatasetMarkerSet
     #setZoomFromParents(marker: DatasetMarker)
     //========================================
     {
-        if (marker.term === uberon.anatomicalRoot) {
+        if (marker.term === ANATOMICAL_ROOT) {
             return
         }
         for (const parent of this.#connectedTermGraph.parents(marker.term)) {
@@ -105,7 +103,7 @@ export class DatasetMarkerSet
             if (parentMarker.maxZoom < marker.minZoom) {
                 parentMarker.maxZoom = marker.minZoom
             }
-            if (parent === uberon.anatomicalRoot) {
+            if (parent === ANATOMICAL_ROOT) {
                 marker.minZoom = 0
             } else {
                 this.#setZoomFromParents(parentMarker)
@@ -116,8 +114,8 @@ export class DatasetMarkerSet
     #substituteTerm(term: string): string|null
     //========================================
     {
-        const parents = uberon.parents(term)
-        if (parents[0] === uberon.anatomicalRoot) {
+        const parents = sparcTermGraph.parents(term)
+        if (parents[0] === ANATOMICAL_ROOT) {
             return null
         }
         for (const parent of parents) {
@@ -146,90 +144,6 @@ export class DatasetMarkerSet
             }
         }
         return mapTerms
-    }
-}
-
-//==============================================================================
-
-export class MapTermGraph
-{
-    #hierarchy: DiGraph
-
-    constructor(flatmap: FlatMap)
-    {
-        const mapUberons = flatmap.anatomicalIdentifiers.map(t => normalisedUri(t))
-                                                        .filter(t => isUberon(t))
-        this.#hierarchy = new DiGraph()
-        this.#hierarchy.addNode(uberon.anatomicalRoot, {
-            label: uberon.label(uberon.anatomicalRoot),
-            distance: 0
-        })
-        for (const term of mapUberons) {
-            const rootPath = uberon.pathToRoot(term)
-            if (rootPath.length) {
-                this.#hierarchy.addNode(term, {
-                    label: uberon.label(term),
-                    distance: rootPath.length - 1
-                })
-            }
-        }
-
-        // Find the shortest path between each pair of Uberon terms used in the flatmap
-        // and, if a path exists, add an edge to the hierarchy graph
-
-        for (const [source, target] of pairwise(this.#hierarchy.nodes())) {
-            const path = uberon.shortestPath(source, target)
-            if (path.length) {
-                this.#hierarchy.addEdge(source, target, {
-                    parentDistance: path.length - 1
-                })
-            }
-        }
-
-        // For each term used by the flatmap find the closest term(s), in terms of path
-        // length, that it is connected to and then delete edges connecting it to more
-        // distant terms
-
-        for (const term of this.#hierarchy.nodes()) {
-            const parentEdges = this.#hierarchy.outEdges(term)
-                                               .map(edge => {
-                                                    return {
-                                                        edge: edge,
-                                                        parent: this.#hierarchy.opposite(term, edge),
-                                                        distance: this.#hierarchy.getEdgeAttribute(edge, 'parentDistance') as number
-                                                    }
-                                                })
-            if (parentEdges.length) {
-                parentEdges.sort((a, b) => a.distance - b.distance)
-                const distance = parentEdges[0].distance
-                let n = 1
-                while (n < parentEdges.length && distance == parentEdges[n].distance) {
-                    n += 1
-                }
-                while (n < parentEdges.length) {
-                    this.#hierarchy.dropEdge(parentEdges[n].edge)
-                    n += 1
-                }
-            }
-        }
-    }
-
-    connectedTermGraph(terms: string[])
-    //=================================
-    {
-        return this.#hierarchy.connectedSubgraph(terms)
-    }
-
-    depth(term: string): number
-    //=========================
-    {
-        return this.#hierarchy.getNodeAttribute(term, 'distance') as number
-    }
-
-    hasTerm(term: string): boolean
-    //============================
-    {
-        return this.#hierarchy.hasNode(term)
     }
 }
 

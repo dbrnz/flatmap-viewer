@@ -27,7 +27,8 @@ import {SvgManager, SvgTemplateManager} from '../../thirdParty/maplibre-gl-svg/s
 
 import {FlatMap} from '../flatmap-viewer'
 import {UserInteractions} from '../interactions'
-import {DatasetMarkerSet, MapTermGraph} from './anatomical-cluster'
+import {MapTermGraph} from '../knowledge'
+import {DatasetMarkerSet} from './anatomical-cluster'
 
 //==============================================================================
 
@@ -131,7 +132,7 @@ export class ClusteredAnatomicalMarkerLayer
         this.#flatmap = flatmap
         this.#map = flatmap.map
         this.#maxZoom = this.#map.getMaxZoom()
-        this.#mapTermGraph = new MapTermGraph(flatmap)
+        this.#mapTermGraph = flatmap.mapTermGraph
 
         this.#map.addSource(ANATOMICAL_MARKERS_SOURCE, {
             type: 'geojson',

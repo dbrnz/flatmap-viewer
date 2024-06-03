@@ -38,11 +38,51 @@ export function pairwise<T>(a: T[]): [T, T]
 
 //==============================================================================
 
+interface NodeData
+{
+    id: string
+}
+
+interface LinkData
+{
+    source: string
+    target: string
+}
+
+export interface NodeLinkGraph
+{
+    nodes: NodeData[]
+    links: LinkData[]
+}
+
+//==============================================================================
+
 export class DiGraph extends Graph
 {
     constructor()
     {
         super({type: 'directed', allowSelfLoops: false})
+    }
+
+    load(graph: NodeLinkGraph)
+    //========================
+    {
+        for (const node of graph.nodes) {
+            this.addNode(node.id)
+            for (const [key, value] of Object.entries(node)) {
+                if (key !== 'id') {
+                    this.setNodeAttribute(node.id, key, value)
+                }
+            }
+        }
+        for (const edge of graph.links) {
+            const edgeId = this.addEdge(edge.source, edge.target)
+            for (const [key, value] of Object.entries(edge)) {
+                if (key !== 'source' && key !== 'target') {
+                    this.setEdgeAttribute(edgeId, key, value)
+                }
+            }
+        }
     }
 
     static fromGraph(data: Object): DiGraph

@@ -33,6 +33,7 @@ import '../static/css/flatmap-viewer.css';
 import {MapServer} from './mapserver.js';
 import {SearchIndex} from './search.js';
 import {UserInteractions} from './interactions.js';
+import {MapTermGraph, sparcTermGraph} from './knowledge'
 
 import {APINATOMY_PATH_PREFIX} from './pathways';
 
@@ -89,6 +90,7 @@ export class FlatMap
 {
     #baseUrl
     #mapServer
+    #mapTermGraph = new MapTermGraph()
     #taxonNames = new Map()
 
     constructor(container, mapServer, mapDescription, resolve)
@@ -243,6 +245,10 @@ export class FlatMap
         // Load icons used for clustered markers
         await loadClusterIcons(this._map)
 
+        // Load anatomical term hierarchy for the flatmap
+        const termGraph = await this.#mapServer.loadJSON(`flatmap/${this.__uuid}/termgraph`)
+        this.#mapTermGraph.load(termGraph)
+
         // Layers have now loaded so finish setting up
         this._userInteractions = new UserInteractions(this);
     }
@@ -266,6 +272,12 @@ export class FlatMap
     {
         return 'version' in this.__details
             && this.__details.version >= MAP_MAKER_FLIGHTPATHS_VERSION
+    }
+
+    get mapTermGraph()
+    //================
+    {
+        return this.#mapTermGraph
     }
 
     /**
@@ -1682,7 +1694,8 @@ export class MapManager
                     map.separateLayers = ('version' in map && map.version >= MAP_MAKER_SEPARATE_LAYERS_VERSION);
                     this._mapList.push(map);
                 }
-                this._initialised = true;
+                await sparcTermGraph.load(this._mapServer)
+                this._initialised = true
             }
         });
     }
