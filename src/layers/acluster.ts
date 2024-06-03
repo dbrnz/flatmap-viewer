@@ -91,13 +91,6 @@ function zoomCountText(maxZoom: number)
 
 //==============================================================================
 
-type GeoJSONFeatureCollection = {
-    type: 'FeatureCollection'
-    features: GeoJSON.Feature[]
-}
-
-//==============================================================================
-
 type MarkerPoint = {
     type: 'Feature'
     id: number
@@ -105,10 +98,7 @@ type MarkerPoint = {
         'zoom-count':  number[]
         'dataset-ids': string[]
     },
-    geometry: {
-        type: 'Point'
-        coordinates: [number, number]
-    }
+    geometry: GeoJSON.Point
 }
 
 //==============================================================================
@@ -120,7 +110,7 @@ export class ClusteredAnatomicalMarkerLayer
     #mapTermGraph: MapTermGraph
     #markersByDataset: Map<string, DatasetMarkerSet> = new Map()
     #maxZoom: number
-    #points: GeoJSONFeatureCollection = {
+    #points: GeoJSON.FeatureCollection = {
        type: 'FeatureCollection',
        features: []
     }
