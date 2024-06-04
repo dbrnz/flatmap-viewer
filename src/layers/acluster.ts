@@ -40,7 +40,7 @@ export interface Dataset
 
 //==============================================================================
 
-const ANATOMICAL_MARKERS_LAYER = 'anatomical-markers-layer'
+export const ANATOMICAL_MARKERS_LAYER = 'anatomical-markers-layer'
 const ANATOMICAL_MARKERS_SOURCE = 'anatomical-markers-source'
 
 //==============================================================================
@@ -95,8 +95,11 @@ type MarkerPoint = {
     type: 'Feature'
     id: number
     properties: {
-        'zoom-count':  number[]
         'dataset-ids': string[]
+        featureId: number
+        label: string
+        models: string
+        'zoom-count':  number[]
     },
     geometry: GeoJSON.Point
 }
@@ -147,48 +150,7 @@ export class ClusteredAnatomicalMarkerLayer
                 'text-offset': [0, -1.93]
             }
         })
-
-        // inspect a cluster on click
-        this.#map.on('click', ANATOMICAL_MARKERS_LAYER, async (e) => {
-            const features = this.#map.queryRenderedFeatures(e.point, {
-                layers: [ANATOMICAL_MARKERS_LAYER]
-            })
-/* WIP
-            const clusterId = features[0].properties.cluster_id
-            const zoom = await this.#map.getSource('markers').getClusterExpansionZoom(clusterId)
-            this.#map.easeTo({
-                center: features[0].geometry.coordinates,
-                zoom
-            })
-*/
-        })
-
-        this.#map.on('mouseenter', ANATOMICAL_MARKERS_LAYER, () => {
-            this.#map.getCanvas().style.cursor = 'pointer'
-        })
-
-        this.#map.on('mouseleave', ANATOMICAL_MARKERS_LAYER, () => {
-            this.#map.getCanvas().style.cursor = ''
-        })
     }
-
-    singleMarkerEvent(event)
-    //======================
-    {
-console.log('cl', event.type)
-        const features = this.#map.queryRenderedFeatures(event.point, {
-            layers: ['single-points']
-        })
-        for (const feature of features) {
-            const properties = feature.properties
-            const position = properties.markerPosition.slice(1, -1).split(',').map(p => +p)
-            this.#ui.markerEvent_(event, feature.id, position, properties.models, properties)
-        }
-console.log('cl handled...')
-        event.originalEvent.stopPropagation()
-    }
-
-
 
     #update()
     //=======
@@ -211,8 +173,11 @@ console.log('cl handled...')
                             type: 'Feature',
                             id: markerId,
                             properties: {
-                                'zoom-count':  zoomCount,
-                                'dataset-ids': datasetIds
+                                'dataset-ids': datasetIds,
+                                featureId,
+                                label: annotation.label,
+                                'models': datasetMarker.term,
+                                'zoom-count':  zoomCount
                             },
                             geometry: {
                                 type: 'Point',

@@ -21,7 +21,7 @@ limitations under the License.
 import {PATHWAYS_LAYER} from '../pathways.js';
 import * as utils from '../utils.js';
 
-import {ClusteredAnatomicalMarkerLayer} from './acluster'
+import {ANATOMICAL_MARKERS_LAYER, ClusteredAnatomicalMarkerLayer} from './acluster'
 
 import * as style from './styling.js';
 
@@ -431,6 +431,9 @@ export class LayerManager
         let features = []
         if (this.#flightPathLayer) {
             features = this.#flightPathLayer.queryFeaturesAtPoint(point)
+        }
+        if (features.length === 0) {
+            features = this.__map.queryRenderedFeatures(point, {layers: [ANATOMICAL_MARKERS_LAYER]})
         }
         if (features.length === 0) {
             features = this.__map.queryRenderedFeatures(point)
