@@ -31,6 +31,7 @@ import polylabel from 'polylabel';
 
 import {LayerManager} from './layers';
 import {PATHWAYS_LAYER, PathManager} from './pathways';
+import {ANATOMICAL_MARKERS_LAYER} from './layers/acluster'
 import {PropertiesFilter} from './layers/filter'
 import {VECTOR_TILES_SOURCE} from './layers/styling';
 import {SystemsManager} from './systems';
@@ -954,8 +955,11 @@ export class UserInteractions
     __featureEvent(type, feature)
     //===========================
     {
-        if (feature.sourceLayer === PATHWAYS_LAYER) {  // I suspect this is never true as source layer
-                                                       // names are like `neural_routes_pathways`
+
+        if ('layer' in feature && feature.layer.id === ANATOMICAL_MARKERS_LAYER) {
+            return this._flatmap.markerEvent(type, feature.id, feature.properties);
+        } else if (feature.sourceLayer === PATHWAYS_LAYER) {  // I suspect this is never true as source layer
+                                                              // names are like `neural_routes_pathways`
             return this._flatmap.featureEvent(type, this.__pathManager.pathProperties(feature));
         } else if ('properties' in feature) {
             return this._flatmap.featureEvent(type, feature.properties);
@@ -1503,14 +1507,13 @@ export class UserInteractions
             const markerId = this.__markerIdByMarker.get(marker)
             const annotation = this.__annotationByMarkerId.get(markerId)
 
-            this.markerEvent_(event, markerId, marker.getLngLat(),
-                                     anatomicalId, annotation)
+            this.markerEvent_(event, markerId, marker.getLngLat(), annotation)
             event.stopPropagation()
         }
     }
 
-    markerEvent_(event, markerId, markerPosition, anatomicalId, annotation)
-    //=====================================================================
+    markerEvent_(event, markerId, markerPosition, annotation)
+    //=======================================================
     {
         if (['mousemove', 'click'].includes(event.type)) {
 
@@ -1534,7 +1537,7 @@ export class UserInteractions
                 this.__showToolTip(html, markerPosition);
 
                 // Send marker event message
-                this._flatmap.markerEvent(event.type, markerId, anatomicalId)
+                this._flatmap.markerEvent(event.type, markerId, annotation)
             }
         }
     }

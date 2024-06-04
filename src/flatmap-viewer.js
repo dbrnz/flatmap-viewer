@@ -1249,6 +1249,7 @@ export class FlatMap
             'featureId',
             'connectivity',
             'dataset',
+            'dataset-ids',
             'kind',
             'label',
             'models',
@@ -1269,6 +1270,8 @@ export class FlatMap
                         data[property] = value
                     } else if (property === 'featureId') {
                         data[property] = +value;  // Ensure numeric
+                    } else if (property === 'dataset-ids') {
+                        data[property] = JSON.parse(value)
                     } else {
                         data[property] = value;
                     }
@@ -1449,18 +1452,19 @@ export class FlatMap
     /**
      * Generate a callback as a result of some event with a marker.
      *
-     * @param      {string}  eventType     The event type
-     * @param      {integer}  markerId      The marker identifier
-     * @param      {string}  anatomicalId  The anatomical identifier for the marker
+     * @param      {string}  eventType   The event type
+     * @param      {integer}  markerId   The marker identifier
+     * @param      {Object}  properties  Properties associated with the marker
      */
-    markerEvent(eventType, markerId, anatomicalId)
-    //============================================
+    markerEvent(eventType, markerId, properties)
+    //==========================================
     {
-        this.callback(eventType, {
+
+        const data = Object.assign({}, this.__exportedProperties(properties), {
             type: 'marker',
-            id: markerId,
-            models: anatomicalId
-        });
+            id: markerId
+        })
+        this.callback(eventType, data)
     }
 
     /**
