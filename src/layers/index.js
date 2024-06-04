@@ -396,23 +396,15 @@ export class LayerManager
     addMarker(id, position, properties={})
     //====================================
     {
-
-        const markers = [{
-            id,
-            position,
-            term: 'xx',
-            zoomCount: [
-                0, 9, 6, 1, 2, 1, 1, 7, 8
-            ]
-        }]
-        this.#markerLayer.addMarkers(markers)
-
+    // Geographical clustering
+        //this.#markerLayer.addMarker(id, position, properties)
     }
 
     clearMarkers()
     //============
     {
-        this.#markerLayer.clearMarkers()
+    // Geographical clustering
+        //this.#markerLayer.clearMarkers()
     }
 
     addDatasetMarkers(datasets)
