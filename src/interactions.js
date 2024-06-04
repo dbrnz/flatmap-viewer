@@ -490,15 +490,26 @@ export class UserInteractions
         return undefined;
     }
 
+    #markerToFeature(feature)
+    //=======================
+    {
+        if ('layer' in feature && feature.layer.id === ANATOMICAL_MARKERS_LAYER) {
+            return this.mapFeature(feature.properties.featureId)
+        }
+        return feature
+    }
+
     #getFeatureState(feature)
     //=======================
     {
+        feature = this.#markerToFeature(feature)
         return this._map.getFeatureState(feature)
     }
 
     #removeFeatureState(feature, key)
     //===============================
     {
+        feature = this.#markerToFeature(feature)
         this._map.removeFeatureState(feature, key)
         this._layerManager.removeFeatureState(feature, key)
     }
@@ -506,6 +517,7 @@ export class UserInteractions
     #setFeatureState(feature, state)
     //==============================
     {
+        feature = this.#markerToFeature(feature)
         this._map.setFeatureState(feature, state)
         this._layerManager.setFeatureState(feature, state)
     }
@@ -1014,19 +1026,21 @@ export class UserInteractions
 
         // Simulate `mouseenter` events on features
 
-        const feature = features[0];
+        const feature = features[0]
+        const featureId = (feature.layer.id !== ANATOMICAL_MARKERS_LAYER) ? feature.id
+                                                                          : feature.properties.featureId
         const featureModels = ('properties' in feature && 'models' in feature.properties)
                             ? feature.properties.models
-                            : null;
-        if (this._lastFeatureMouseEntered !== feature.id
+                            : null
+        if (this._lastFeatureMouseEntered !== featureId
          && (this._lastFeatureModelsMouse === null
           || this._lastFeatureModelsMouse !== featureModels)) {
             if (this.__featureEvent('mouseenter', feature)) {
-                this._lastFeatureMouseEntered = feature.id;
-                this._lastFeatureModelsMouse = featureModels;
+                this._lastFeatureMouseEntered = featureId
+                this._lastFeatureModelsMouse = featureModels
             } else {
-                this._lastFeatureMouseEntered = null;
-                this._lastFeatureModelsMouse = null;
+                this._lastFeatureMouseEntered = null
+                this._lastFeatureModelsMouse = null
             }
         }
 
