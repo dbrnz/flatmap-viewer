@@ -96,8 +96,9 @@ export class DiGraph extends Graph
     children(term: string): string[]
     //==============================
     {
-        return this.inEdges(term)
-                   .map(edge => this.opposite(term, edge))
+        return this.hasNode(term) ? this.inEdges(term)
+                                        .map(edge => this.opposite(term, edge))
+                                  : []
     }
 
     connectedSubgraph(nodes: string[]): DiGraph
@@ -118,8 +119,9 @@ export class DiGraph extends Graph
     parents(term: string): string[]
     //=============================
     {
-        return this.outEdges(term)
-                   .map(edge => this.opposite(term, edge))
+        return this.hasNode(term) ? this.outEdges(term)
+                                        .map(edge => this.opposite(term, edge))
+                                  : []
     }
 
     shortestPath(source: string, target: string): string[]
