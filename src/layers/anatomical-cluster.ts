@@ -115,7 +115,8 @@ export class DatasetMarkerSet
     //========================================
     {
         const parents = sparcTermGraph.parents(term)
-        if (parents[0] === ANATOMICAL_ROOT) {
+        if (parents.length == 0
+         || parents[0] === ANATOMICAL_ROOT) {
             return null
         }
         for (const parent of parents) {
