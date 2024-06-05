@@ -24,6 +24,8 @@ import Set from 'core-js/actual/set'
 
 import {PropertiesType, PropertyKey, PropertyValue, ScalarType} from '../types'
 
+//==============================================================================
+
 /**
  * `True` iff all `PropertiesFilterExpressions` are `true`
  */
