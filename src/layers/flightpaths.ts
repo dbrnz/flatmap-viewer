@@ -20,13 +20,38 @@ limitations under the License.
 
 import {ArcLayer} from '@deck.gl/layers'
 import {MapboxOverlay as DeckOverlay} from '@deck.gl/mapbox'
-import {Model, Geometry} from '@luma.gl/core'
-import GL from '@luma.gl/constants'
+import {Model, Geometry} from '@luma.gl/engine'
+import {IControl, Map as MapLibreMap} from 'maplibre-gl'
 
 //==============================================================================
 
+import {FlatMap} from '../flatmap-viewer'
+import {PathManager} from '../pathways'
+import {UserInteractions} from '../interactions'
+
 import {pathColourArray} from '../pathways'
 import {PropertiesFilter} from './filter'
+
+//==============================================================================
+
+import {PropertiesType} from '../types'
+
+interface PathData extends PropertiesType {
+    featureId: string
+}
+
+interface PathStyle extends PropertiesType {
+    dashed: boolean
+    type: string
+}
+
+interface LayerOptions extends PropertiesType {
+    dimmed: boolean
+}
+
+interface PathStateChanges {
+    pathType?: string
+}
 
 //==============================================================================
 
@@ -37,35 +62,35 @@ class ArcMapLayer extends ArcLayer
     static layerName = 'ArcMapLayer'
 
     #dirty = false
-    #pathData
+    #pathDataMap: Map<number, PathData>
 
     constructor(...args)
     {
         super(...args)
-        this.#pathData = new Map([...this.props.data].map(ann => [+ann.featureId, ann]))
-        this.#pathData.forEach(ann => delete ann['hidden'])
+        this.#pathDataMap = new Map([...(this.props.data as PathData[])].map(ann => [+ann.featureId, ann]))
+        this.#pathDataMap.forEach(ann => delete ann['hidden'])
     }
 
     get featureIds()
     //==============
     {
-        return [...this.#pathData.keys()]
+        return [...this.#pathDataMap.keys()]
     }
+
 
     getShaders()
     //==========
     {
         const shaders = super.getShaders()
-        shaders.fs = `#version 300 es\n${shaders.fs}`
-                     .replace('isValid == 0.0', `isValid == 0.0 ${transparencyCheck}`)
-        shaders.vs = `#version 300 es\n${shaders.vs}`
+        shaders.fs = shaders.fs.replace('isValid == 0.0', `isValid == 0.0 ${transparencyCheck}`)
         return shaders
     }
 
-    setDataProperty(featureId, key, enabled)
-    //======================================
+
+    setDataProperty(featureId: string, key: string, enabled: boolean)
+    //===============================================================
     {
-        const properties = this.#pathData.get(+featureId)
+        const properties = this.#pathDataMap.get(+featureId)
         if (properties) {
             if (!(key in properties) || properties[key] !== enabled) {
                 properties[key] = enabled
@@ -74,13 +99,11 @@ class ArcMapLayer extends ArcLayer
         }
     }
 
-    redraw(force=false)
-    //=================
+    redraw(force: boolean=false)
+    //==========================
     {
         if (force || this.#dirty) {
-            if (this.internalState) {
-                this.internalState.changeFlags.dataChanged = true
-            }
+            this.setChangeFlags({dataChanged: 'redraw'})
             this.setNeedsUpdate()
             this.#dirty = false
         }
@@ -97,11 +120,6 @@ class ArcDashedLayer extends ArcMapLayer
 {
     static layerName = 'ArcDashedLayer'
 
-    constructor(...args)
-    {
-        super(...args)
-    }
-
     getShaders()
     //==========
     {
@@ -110,8 +128,8 @@ class ArcDashedLayer extends ArcMapLayer
         return shaders
     }
 
-    _getModel(gl)
-    //===========
+    _getModel()
+    //=========
     {
         const {numSegments} = this.props
         let positions = []
@@ -119,11 +137,12 @@ class ArcDashedLayer extends ArcMapLayer
             positions = positions.concat([i,  1, 0, i,  -1, 0, i+1,  1, 0,
                                           i, -1, 0, i+1, 1, 0, i+1, -1, 0])
         }
-        const model = new Model(gl, {
+        const model = new Model(this.context.device, {
             ...this.getShaders(),
             id: this.props.id,
+            bufferLayout: this.getAttributeManager()!.getBufferLayouts(),
             geometry: new Geometry({
-                drawMode: GL.TRIANGLES,
+                topology: 'triangle-list',
                 attributes: {
                     positions: new Float32Array(positions)
                 }
@@ -139,34 +158,31 @@ class ArcDashedLayer extends ArcMapLayer
 
 export class FlightPathLayer
 {
-    #arcLayers = new Map()
-    #deckOverlay = null
-    #dimmed = false
-    #enabled = false
-    #featureFilter = new PropertiesFilter()
-    #featureToLayer = new Map()
-    #knownTypes = []
-    #map
-    #pathData
-    #pathFilters
-    #pathManager
-    #pathStyles
-    #ui
+    #arcLayers: Map<string, ArcMapLayer> = new Map()
+    #deckOverlay: DeckOverlay|null = null
+    #dimmed: boolean = false
+    #enabled: boolean = false
+    #featureFilter: PropertiesFilter = new PropertiesFilter()
+    #featureToLayer: Map<number, ArcMapLayer> = new Map()
+    #map: MapLibreMap
+    #pathDataMap: Map<number, PathData>
+    #pathFilters: Map<string, PropertiesFilter>
+    #pathManager: PathManager
+    #pathStyles: Map<string, PathStyle>
 
-    constructor(flatmap, ui)
+    constructor(flatmap: FlatMap, ui: UserInteractions)
     {
-        this.#ui = ui
         this.#map = flatmap.map
         this.#pathManager = ui.pathManager
         this.#pathManager.addWatcher(this.#pathStateChanged.bind(this))
-        this.#pathData = new Map([...flatmap.annotations.values()]
-                                 .filter(ann => ann['tile-layer'] === 'pathways'
-                                             && ann['geometry'] === 'LineString'
-                                             && 'type' in ann && ann['type'].startsWith('line')
-                                             && 'kind' in ann
-                                             && 'pathStartPosition' in ann
-                                             && 'pathEndPosition' in ann)
-                                 .map(ann => [ann.featureId, ann]))
+        this.#pathDataMap = new Map([...flatmap.annotations.values()]
+                                    .filter(ann => ann['tile-layer'] === 'pathways'
+                                                && ann['geometry'] === 'LineString'
+                                                && 'type' in ann && ann['type'].startsWith('line')
+                                                && 'kind' in ann
+                                                && 'pathStartPosition' in ann
+                                                && 'pathEndPosition' in ann)
+                                    .map(ann => [ann.featureId, ann]))
         this.#pathStyles = new Map(this.#pathManager.pathStyles().map(s => [s.type, s]))
         const knownTypes = [...this.#pathStyles.keys()].filter(t => t !== 'other')
         this.#pathFilters = new Map(
@@ -180,10 +196,8 @@ export class FlightPathLayer
                     },
                     {
                         AND: [
-                            {
-                                NOT: {kind: knownTypes}
-                            },
-                            (pathType === 'other')
+                            {NOT: {kind: knownTypes}},
+                            {pathType: 'other'}
                         ]
                     }]
                 })
@@ -191,15 +205,15 @@ export class FlightPathLayer
         )
     }
 
-    enable(enable=true)
-    //=================
+    enable(enable: boolean=true)
+    //==========================
     {
         if (enable && !this.#enabled) {
             this.#setupDeckOverlay()
-            this.#map.addControl(this.#deckOverlay)
+            this.#map.addControl(this.#deckOverlay as IControl)
         } else if (!enable && this.#enabled) {
             if (this.#deckOverlay) {
-                this.#map.removeControl(this.#deckOverlay)
+                this.#map.removeControl(this.#deckOverlay as IControl)
                 this.#deckOverlay.finalize()
                 this.#deckOverlay = null
             }
@@ -219,16 +233,16 @@ export class FlightPathLayer
         return []
     }
 
-    redraw(force=false)
-    //=================
+    redraw(force: boolean=false)
+    //==========================
     {
         for (const layer of this.#arcLayers.values()) {
             layer.redraw(force)
         }
     }
 
-    removeFeatureState(featureId, key)
-    //================================
+    removeFeatureState(featureId: string, key: string)
+    //================================================
     {
         const layer = this.#featureToLayer.get(+featureId)
         if (layer) {
@@ -237,8 +251,8 @@ export class FlightPathLayer
         }
     }
 
-    setFeatureState(featureId, state)
-    //===============================
+    setFeatureState(featureId: string, state: Object)
+    //===============================================
     {
         const layer = this.#featureToLayer.get(+featureId)
         if (layer) {
@@ -255,8 +269,8 @@ export class FlightPathLayer
         this.setVisibilityFilter(new PropertiesFilter(true))
     }
 
-    setVisibilityFilter(featureFilter)
-    //================================
+    setVisibilityFilter(featureFilter: PropertiesFilter)
+    //==================================================
     {
         this.#featureFilter = featureFilter
         if (this.#deckOverlay) {
@@ -279,8 +293,8 @@ export class FlightPathLayer
         }
     }
 
-    setPaint(options)
-    //===============
+    setPaint(options: LayerOptions)
+    //=============================
     {
         const dimmed = options.dimmed || false
         if (this.#dimmed !== dimmed) {
@@ -289,8 +303,8 @@ export class FlightPathLayer
         }
     }
 
-    #addArcLayer(pathType)
-    //====================
+    #addArcLayer(pathType: string)
+    //============================
     {
         const pathStyle = this.#pathStyles.get(pathType)
         if (pathStyle) {
@@ -302,8 +316,8 @@ export class FlightPathLayer
         }
     }
 
-    #removeArcLayer(pathType)
-    //=======================
+    #removeArcLayer(pathType: string)
+    //===============================
     {
         const layer = this.#arcLayers.get(pathType)
         if (layer) {
@@ -312,8 +326,8 @@ export class FlightPathLayer
         }
     }
 
-    #pathColour(properties)
-    //=====================
+    #pathColour(properties: PropertiesType)
+    //=====================================
     {
         if (properties.hidden) {
             return [0, 0, 0, 0]
@@ -323,8 +337,8 @@ export class FlightPathLayer
                                                                         : this.#dimmed ? 20 : 160)
     }
 
-    #pathStateChanged(changes={})
-    //===========================
+    #pathStateChanged(changes: PathStateChanges)
+    //==========================================
     {
         if (this.#deckOverlay) {
             if ('pathType' in changes) {
@@ -342,12 +356,12 @@ export class FlightPathLayer
         }
     }
 
-    #layerOptions(pathType)
-    //=====================
+    #layerOptions(pathType: string)
+    //=============================
     {
         const filter = this.#pathFilters.get(pathType)
-        const pathData = (filter ? [...this.#pathData.values()].filter(ann => filter.match(ann))
-                                 : []).filter(ann => this.#featureFilter.match(ann))
+        const pathData: PathData[] = (filter ? [...this.#pathDataMap.values()].filter(ann => filter.match(ann))
+                                             : []).filter(ann => this.#featureFilter.match(ann))
         return {
             id: `arc-${pathType}`,
             data: pathData,
@@ -363,8 +377,8 @@ export class FlightPathLayer
         }
     }
 
-    #makeMapFeature(pickedObject)
-    //===========================
+    #makeMapFeature(pickedObject: PropertiesType)
+    //===========================================
     {
         // Mock up a map vector feature
         return {
