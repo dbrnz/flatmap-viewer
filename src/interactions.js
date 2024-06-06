@@ -1621,6 +1621,9 @@ export class UserInteractions
         if (this.__pan_zoom_enabled) {
             this._flatmap.panZoomEvent(type);
         }
+        if (type === 'zoom') {
+            this._layerManager.zoomEvent()
+        }
     }
 }
 

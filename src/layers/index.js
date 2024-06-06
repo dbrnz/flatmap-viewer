@@ -28,6 +28,7 @@ import * as style from './styling.js';
 import {DeckGlOverlay} from './deckgl'
 import {FlightPathLayer} from './flightpaths'
 import {PropertiesFilter} from './filter'
+import {SvgLayer} from './svglayer'
 
 const FEATURES_LAYER = 'features';
 const RASTER_LAYERS_NAME = 'Background image layer';
@@ -301,8 +302,9 @@ export class LayerManager
 {
     #deckGlOverlay
     #featureLayers = new Map()
-    #markerLayer = null
-    #flightPathLayer = null
+    #flightPathLayer
+    #markerLayer
+    #modelLayer
     #rasterLayer = null
 
     constructor(flatmap, ui)
@@ -350,6 +352,9 @@ export class LayerManager
 
         // Support flight path view
         this.#flightPathLayer = new FlightPathLayer(this.#deckGlOverlay, flatmap, ui)
+
+        // Simulation models are in SVG
+        this.#modelLayer = new SvgLayer(this.#deckGlOverlay, flatmap)
     }
 
     get layers()
@@ -530,6 +535,12 @@ export class LayerManager
                 mapLayer.setFlatPathMode(!enable)
             }
         }
+    }
+
+    zoomEvent()
+    //=========
+    {
+        this.#modelLayer.zoomEvent()
     }
 
     enableSckanPaths(sckanState, enable=true)
