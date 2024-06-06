@@ -37,8 +37,8 @@ import {PropertiesType} from '../types'
 
 interface PathProperties extends PropertiesType {
     featureId: string,
-    pathEndPosition: Position,
-    pathStartPosition: Position
+    pathEndPosition: number[],
+    pathStartPosition: number[]
 }
 
 interface PathStyle extends PropertiesType {
@@ -265,8 +265,8 @@ export class FlightPathLayer
             pickable: true,
             numSegments: 400,
             // Styles
-            getSourcePosition: (f: PathProperties) => f.pathStartPosition,
-            getTargetPosition: (f: PathProperties) => f.pathEndPosition,
+            getSourcePosition: (f: PathProperties) => (f.pathStartPosition as Position),
+            getTargetPosition: (f: PathProperties) => (f.pathEndPosition as Position),
             getSourceColor: this.#pathColour.bind(this),
             getTargetColor: this.#pathColour.bind(this),
             opacity: 1.0,
