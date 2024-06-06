@@ -22,7 +22,6 @@ import {Layer} from '@deck.gl/core'
 import {MapboxOverlay} from '@deck.gl/mapbox'
 
 import {IControl, Map as MapLibreMap} from 'maplibre-gl'
-//import {Matrix4} from '@math.gl/core';
 
 //==============================================================================
 
