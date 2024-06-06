@@ -25,6 +25,7 @@ import {ANATOMICAL_MARKERS_LAYER, ClusteredAnatomicalMarkerLayer} from './aclust
 
 import * as style from './styling.js';
 
+import {DeckGlOverlay} from './deckgl'
 import {FlightPathLayer} from './flightpaths'
 import {PropertiesFilter} from './filter'
 
@@ -298,6 +299,7 @@ class MapRasterLayers extends MapStylingLayers
 
 export class LayerManager
 {
+    #deckGlOverlay
     #featureLayers = new Map()
     #markerLayer = null
     #flightPathLayer = null
@@ -340,11 +342,14 @@ export class LayerManager
                                                                    this.__layerOptions));
         }
 
-        // Support flight path view
-        this.#flightPathLayer = new FlightPathLayer(flatmap, ui)
-
         // Show anatomical clustered markers in a layer
         this.#markerLayer = new ClusteredAnatomicalMarkerLayer(flatmap, ui)
+
+        // We use ``deck.gl`` for some layers
+        this.#deckGlOverlay = new DeckGlOverlay(flatmap)
+
+        // Support flight path view
+        this.#flightPathLayer = new FlightPathLayer(this.#deckGlOverlay, flatmap, ui)
     }
 
     get layers()
