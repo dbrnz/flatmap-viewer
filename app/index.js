@@ -215,7 +215,8 @@ export async function standaloneViewer(mapEndpoints={}, options={})
         showId: true,
         showPosition: false,
         standalone: true,
-        flightPaths: false
+        flightPaths: false,
+        maxZoom: 12
     }, options)
 
     // Everything setup so start by getting a map manager

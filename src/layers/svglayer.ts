@@ -38,7 +38,7 @@ const FC_LV_MYOCYTE_BOUNDS: Bounds = [[-7.09305, -0.35484], [-6.06056, -0.03271]
 
 const LAYER_OFFSET = new Matrix4().translate([0, 0, 2000])
 
-const MIN_VISIBLE_ZOOM = 7
+const MIN_VISIBLE_ZOOM = 8
 
 //==============================================================================
 
@@ -95,7 +95,7 @@ export class SvgLayer
         this.#layerProps = [    // @ts-ignore
             {
                 id: 'bitmap',
-                image: 'http://localhost:8000/myocyte',
+                image: 'http://localhost:8000/image/CardiomyocyteV1.png',
                 bounds: imageBounds(FC_LV_MYOCYTE_BOUNDS),
                 pickable: false,
                 modelMatrix: LAYER_OFFSET,
@@ -108,7 +108,7 @@ export class SvgLayer
                 filled: true,
                 pickable: false,
                 getFillColor: [255, 255, 255],
-                opacity: 0.3,
+                opacity: 0.7,
                 modelMatrix: LAYER_OFFSET,
                 visible: this.#visible
             }
@@ -127,3 +127,15 @@ export class SvgLayer
 }
 
 //==============================================================================
+
+/*
+
+*   Rasterise SVG to get bit map
+*   Can we put bitmap tiles into a bounded area??
+
+    *   Yes -- https://deck.gl/docs/api-reference/geo-layers/tile-layer
+    *   can set minZoom (to 8) and extent
+
+
+
+ */
