@@ -1131,12 +1131,17 @@ export class UserInteractions
         if (html !== '' || this._flatmap.options.showId && feature !== null) {
             let header = '';
             if (this._flatmap.options.showPosition) {
-                const pt = turf.point(lngLat.toArray());
-                const gps = turfProjection.toMercator(pt);
-                const coords = gps.geometry.coordinates;
+                let coords
+                if (this._flatmap.options.showLngLat) {
+                    coords = lngLat.toArray()
+                } else {
+                    const pt = turf.point(lngLat.toArray())
+                    const gps = turfProjection.toMercator(pt)
+                    coords = gps.geometry.coordinates
+                }
                 header = (feature === null)
                              ? JSON.stringify(coords)
-                             : `${JSON.stringify(coords)} (${feature.id})`;
+                             : `${JSON.stringify(coords)} (${feature.id})`
             }
             if (this._flatmap.options.showId && feature !== null && 'id' in feature.properties) {
                 header = `${header} ${feature.properties.id}`;
