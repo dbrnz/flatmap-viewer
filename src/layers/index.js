@@ -416,7 +416,7 @@ export class LayerManager
     clearDatasetMarkers()
     //===================
     {
-        this.#markerLayer.clearMarkers()
+        this.#markerLayer.clearDatasetMarkers()
     }
 
     removeDatasetMarker(datasetId)
