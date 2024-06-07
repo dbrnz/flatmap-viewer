@@ -55,19 +55,19 @@ const keyPrompts = [
     ['git-status', 'Git'],
     ['server', 'Map server'],
     ['sckan', 'SCKAN release'],
-    ['connectivity', 'Connectivity']
+    ['connectivity', 'SCKAN connectivity']
 ]
 
-function fieldAsHtml(dict, level)
-//===============================
+function fieldAsHtml(dict, level, sckan=false)
+//============================================
 {
     const html = []
     for (const key of Object.keys(dict)) {
         let value = dict[key]
         if (value instanceof Object && value.constructor === Object) {
-            value = fieldAsHtml(value, level + 1)
+            value = fieldAsHtml(value, level + 1, sckan)
         }
-        const prompt = key.at(0).toUpperCase() + key.slice(1)
+        const prompt = (sckan && key==='date') ? 'Version' : key.at(0).toUpperCase() + key.slice(1)
         html.push(`<div class="info"><span class="prompt">${'<span class="spacer">&nbsp;</span>'.repeat(level)}${prompt}:</span> ${value}</div>`)
     }
     return html.join('\n')
@@ -81,7 +81,7 @@ function objectAsHtml(dict)
         if (key in dict) {
             let value = dict[key]
             if (value instanceof Object && value.constructor === Object) {
-                value = fieldAsHtml(value, 1)
+                value = fieldAsHtml(value, 1, (key==='connectivity'))
             }
             html.push(`<div class='info outermost'><span class="prompt">${prompt}:</span> ${value}</div>`)
         }
@@ -203,7 +203,11 @@ export async function standaloneViewer(mapEndpoints={}, options={})
     let viewMapSex = requestUrl.searchParams.get('sex')
 
     const mapSelector = document.getElementById('map-selector')
-    const mapInfo = document.getElementById('info-display')
+    const mapGeneration = document.getElementById('map-generation')
+    const mapProvenance = document.getElementById('provenance-display')
+
+    const mapIdToName = new Map()
+    const mapGenerations = new Map()
 
     let defaultBackground = localStorage.getItem('flatmap-background-colour') || 'black'
     const mapOptions = Object.assign({
@@ -246,15 +250,14 @@ export async function standaloneViewer(mapEndpoints={}, options={})
         mapId = null
         mapTaxon = null
         mapSex = null
-        viewMapId = null
-        viewMapTaxon = null
-        viewMapSex = null
         await setMapList(currentManager)
     }
 
     async function setMapList(manager)
     //================================
     {
+        mapIdToName.clear()
+        mapGenerations.clear()
         const latestMaps = new Map()
         const maps = await manager.allMaps()
         for (const map of Object.values(maps)) {
@@ -273,33 +276,52 @@ export async function standaloneViewer(mapEndpoints={}, options={})
             } else if (latestMaps.get(mapName).created < map.created) {
                 latestMaps.set(mapName, map)
             }
+            const id = ('uuid' in map) ? map.uuid : map.id
+            mapIdToName.set(id, mapName)
+            if (!mapGenerations.has(mapName)) {
+                mapGenerations.set(mapName, [map])
+            } else {
+                mapGenerations.get(mapName).push(map)
+            }
         }
-        // Sort in created order with most recent first
-        const sortedMaps = new Map([...latestMaps].sort((a, b) => (a[1].created < b[1].created) ? 1
-                                                                : (a[1].created > b[1].created) ? -1
-                                                                : 0))
+
+        // The name of the map being viewed
+        const viewName = mapIdToName.get(viewMapId)
+
+        // Sort maps into name order
+        const sortedMaps = new Map([...latestMaps]
+                                .sort((a, b) => Intl.Collator().compare(a[0], b[0])))
         const mapList = []
         for (const [name, map] of sortedMaps.entries()) {
-            const text = [ name, map.created ]
-            let selected = ''
+            // Sort generations into created order with most recent first
+            const reverseDateOrder = mapGenerations.get(name)
+                                            .sort((a, b) => (a.created < b.created) ? 1
+                                                          : (a.created > b.created) ? -1
+                                                          : 0)
+            mapGenerations.set(name, reverseDateOrder)
             const id = ('uuid' in map) ? map.uuid : map.id
             if (mapId === null && id === viewMapId) {
                 mapId = id
-                selected = 'selected'
             } else if (mapId === null
                     && mapTaxon === null
                     && map.taxon === viewMapTaxon
                     && !('biologicalSex' in map || map.biologicalSex === viewMapSex)) {
                 mapTaxon = viewMapTaxon
                 mapSex = viewMapSex
-                selected = 'selected'
             }
-            mapList.push(`<option value="${id}" ${selected}>${text.join(' -- ')}</option>`)
+            const selected = (name === viewName) ? 'selected' : ''
+            mapList.push(`<option value="${id}" ${selected}>${name}</option>`)
         }
         mapList.splice(0, 0, '<option value="">Select flatmap...</option>')
 
         mapSelector.innerHTML = mapList.join('')
         mapSelector.onchange = (e) => {
+            if (e.target.value !== '') {
+                setGenerationSelector(e.target.value)
+                loadMap(currentManager, e.target.value)
+            }
+        }
+        mapGeneration.onchange = (e) => {
             if (e.target.value !== '') {
                 loadMap(currentManager, e.target.value)
             }
@@ -313,7 +335,21 @@ export async function standaloneViewer(mapEndpoints={}, options={})
             mapSelector.options[1].selected = true
         }
 
+        setGenerationSelector(mapId)
         loadMap(currentManager, mapId, mapTaxon, mapSex)
+    }
+
+    function setGenerationSelector(mapId)
+    //===================================
+    {
+        const generationList = []
+        const mapName = mapIdToName.get(mapId)
+        for (const map of mapGenerations.get(mapName)) {
+            const id = ('uuid' in map) ? map.uuid : map.id
+            const selected = (mapId === id) ? 'selected' : ''
+            generationList.push(`<option value="${id}" ${selected}>${map.created}</option>`)
+        }
+        mapGeneration.innerHTML = generationList.join('')
     }
 
     function loadMap(manager, id, taxon=null, sex=null)
@@ -322,7 +358,7 @@ export async function standaloneViewer(mapEndpoints={}, options={})
         if (currentMap !== null) {
             currentMap.close()
         }
-        mapInfo.innerHTML = ''
+        mapProvenance.innerHTML = ''
         if (id !== null) {
             requestUrl.searchParams.set('id', id)
             requestUrl.searchParams.delete('taxon')
@@ -351,8 +387,8 @@ export async function standaloneViewer(mapEndpoints={}, options={})
             }, mapOptions)
         .then(map => {
             currentMap = map
-            mapInfo.innerHTML = objectAsHtml(Object.assign({server: mapEndpoints[currentServer]},
-                                                           map.provenance))
+            mapProvenance.innerHTML = objectAsHtml(Object.assign({server: mapEndpoints[currentServer]},
+                                                                 map.provenance))
             drawControl = new DrawControl(map)
         })
         .catch(error => {
