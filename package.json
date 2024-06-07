@@ -21,6 +21,7 @@
     "start": "vite serve app --port 3000",
     "prepare": "tsc --p ./tsconfig-build.json && vite build",
     "preview": "vite preview",
+    "build": "vite build app --base /viewer/",
     "docs": "cd docs; poetry run make html",
     "tsdoc": "typedoc"
   },
