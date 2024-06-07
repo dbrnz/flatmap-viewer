@@ -76,7 +76,6 @@ function fieldAsHtml(dict, level)
 function objectAsHtml(dict)
 //=========================
 {
-console.log(dict)  //////////////////////////
     const html = []
     for (const [key, prompt] of keyPrompts) {
         if (key in dict) {
