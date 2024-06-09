@@ -118,12 +118,17 @@ export class DatasetMarkerSet
          || parents[0] === ANATOMICAL_ROOT) {
             return null
         }
+        let max_depth = -1
+        let furthest_parent = null
         for (const parent of parents) {
-            if (this.#mapTermGraph.hasTerm(parent)) {
-                return parent
+            const depth = this.#mapTermGraph.depth(parent)
+            if (depth > max_depth) {
+                furthest_parent = parent
             }
         }
-        return this.#substituteTerm(parents[0])
+        return furthest_parent
+                ? furthest_parent
+                : this.#substituteTerm(parents[0])
     }
 
     #validatedTerms(terms: string[]): string[]
