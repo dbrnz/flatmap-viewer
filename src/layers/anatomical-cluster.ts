@@ -58,8 +58,6 @@ export class DatasetMarkerSet
         this.#mapTermGraph = mapTermGraph
 
         const mapTerms = new Set(this.#validatedTerms(dataset.terms))
-        mapTerms.add(ANATOMICAL_ROOT)
-
         this.#connectedTermGraph = mapTermGraph.connectedTermGraph([...mapTerms.values()])
 
         this.#markers = new Map(this.#connectedTermGraph.nodes().map(term => {
@@ -79,7 +77,6 @@ export class DatasetMarkerSet
             marker.maxZoom = MAX_ZOOM
             this.#setZoomFromParents(marker)
         }
-        this.#markers.delete(ANATOMICAL_ROOT)
     }
 
     get id(): string
@@ -96,6 +93,7 @@ export class DatasetMarkerSet
     //========================================
     {
         if (marker.term === ANATOMICAL_ROOT) {
+            marker.minZoom = 0
             return
         }
         for (const parent of this.#connectedTermGraph.parents(marker.term)) {
@@ -103,11 +101,7 @@ export class DatasetMarkerSet
             if (parentMarker.maxZoom < marker.minZoom) {
                 parentMarker.maxZoom = marker.minZoom
             }
-            if (parent === ANATOMICAL_ROOT) {
-                marker.minZoom = 0
-            } else {
-                this.#setZoomFromParents(parentMarker)
-            }
+            this.#setZoomFromParents(parentMarker)
         }
     }
 

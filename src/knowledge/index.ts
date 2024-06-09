@@ -23,9 +23,10 @@ import {DiGraph, NodeLinkGraph} from './graphs'
 
 //==============================================================================
 
+const BODY_PROPER = 'UBERON:0013702'
 const MULTICELLULAR_ORGANISM = 'UBERON:0000468'
 
-export const ANATOMICAL_ROOT = MULTICELLULAR_ORGANISM
+export const ANATOMICAL_ROOT = BODY_PROPER
 
 //==============================================================================
 
