@@ -308,7 +308,7 @@ export class LayerManager
 {
     #featureLayers = new Map()
     #markerLayer = null
-    #flightPathLayer = null
+    #flightPathLayer
     #rasterLayer = null
 
     constructor(flatmap, ui)
@@ -437,9 +437,7 @@ export class LayerManager
     //====================
     {
         let features = []
-        if (this.#flightPathLayer) {
-            features = this.#flightPathLayer.queryFeaturesAtPoint(point)
-        }
+        features = this.#flightPathLayer.queryFeaturesAtPoint(point)
         if (features.length === 0) {
             features = this.__map.queryRenderedFeatures(point, {layers: [ANATOMICAL_MARKERS_LAYER]})
         }
@@ -452,17 +450,13 @@ export class LayerManager
     removeFeatureState(feature, key)
     //==============================
     {
-        if (this.#flightPathLayer) {
-            this.#flightPathLayer.removeFeatureState(feature.id, key)
-        }
+        this.#flightPathLayer.removeFeatureState(feature.id, key)
     }
 
     setFeatureState(feature, state)
     //=============================
     {
-        if (this.#flightPathLayer) {
-            this.#flightPathLayer.setFeatureState(feature.id, state)
-        }
+        this.#flightPathLayer.setFeatureState(feature.id, state)
     }
 
     setPaint(options={})
@@ -475,9 +469,7 @@ export class LayerManager
         for (const mapLayer of this.#featureLayers.values()) {
             mapLayer.setPaint(this.__layerOptions)
         }
-        if (this.#flightPathLayer) {
-            this.#flightPathLayer.setPaint(options)
-        }
+        this.#flightPathLayer.setPaint(options)
     }
 
     setFilter(options={})
@@ -487,17 +479,14 @@ export class LayerManager
         for (const mapLayer of this.#featureLayers.values()) {
             mapLayer.setFilter(this.__layerOptions);
         }
-        if (this.#flightPathLayer) {
-            const sckanState = options.sckan || 'valid'
-            const sckanFilter = (sckanState == 'none') ? {NOT: {HAS: 'sckan'}} :
-                                (sckanState == 'valid') ? {sckan: true} :
-                                (sckanState == 'invalid') ? {NOT: {sckan: true}} :
-                                true
-            const featureFilter = new PropertiesFilter(sckanFilter)
-            if ('taxons' in options) {
-                featureFilter.narrow({taxons: options.taxons})
-            }
-            this.#flightPathLayer.setVisibilityFilter(featureFilter)
+        const sckanState = options.sckan || 'valid'
+        const sckanFilter = (sckanState == 'none') ? {NOT: {HAS: 'sckan'}} :
+                            (sckanState == 'valid') ? {sckan: true} :
+                            (sckanState == 'invalid') ? {NOT: {sckan: true}} :
+                            true
+        const featureFilter = new PropertiesFilter(sckanFilter)
+        if ('taxons' in options) {
+            featureFilter.narrow({taxons: options.taxons})
         }
     }
 
@@ -507,9 +496,7 @@ export class LayerManager
         for (const mapLayer of this.#featureLayers.values()) {
             mapLayer.clearVisibilityFilter()
         }
-        if (this.#flightPathLayer) {
-            this.#flightPathLayer.clearVisibilityFilter()
-        }
+        this.#flightPathLayer.clearVisibilityFilter()
     }
 
     setVisibilityFilter(propertiesFilter)
@@ -519,19 +506,15 @@ export class LayerManager
         for (const mapLayer of this.#featureLayers.values()) {
             mapLayer.setVisibilityFilter(styleFilter)
         }
-        if (this.#flightPathLayer) {
-            this.#flightPathLayer.setVisibilityFilter(propertiesFilter)
-        }
+        this.#flightPathLayer.setVisibilityFilter(propertiesFilter)
     }
 
     setFlightPathMode(enable=true)
     //============================
     {
-        if (this.#flightPathLayer) {
-            this.#flightPathLayer.enable(enable)
-            for (const mapLayer of this.#featureLayers.values()) {
-                mapLayer.setFlatPathMode(!enable)
-            }
+        this.#flightPathLayer.enable(enable)
+        for (const mapLayer of this.#featureLayers.values()) {
+            mapLayer.setFlatPathMode(!enable)
         }
     }
 
