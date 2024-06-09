@@ -135,8 +135,7 @@ export class ClusteredAnatomicalMarkerLayer
             id: ANATOMICAL_MARKERS_LAYER,
             type: 'symbol',
             source: ANATOMICAL_MARKERS_SOURCE,
-            filter: ['let', 'index', ['min', ['floor', ['zoom']],
-                                             ['-', ['length', ['get', 'zoom-count']], 1]],
+            filter: ['let', 'index', ['min', ['floor', ['zoom']], this.#maxZoom-1],
                         ['>', ['at', ['var', 'index'], ['get', 'zoom-count']], 0]
                     ],
             layout: {
