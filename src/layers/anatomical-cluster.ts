@@ -34,14 +34,8 @@ type DatasetMarker = {
 
 //==============================================================================
 
+const MIN_ZOOM =  2
 const MAX_ZOOM = 12
-
-function depthToZoomRange(depth: number): [number, number]
-{
-    return (depth < 0)         ? [0, 1]
-         : (depth >= MAX_ZOOM) ? [MAX_ZOOM, MAX_ZOOM]
-         :                       [depth, depth+1]
-}
 
 //==============================================================================
 
@@ -51,18 +45,20 @@ export class DatasetMarkerSet
     #datasetId: string
     #mapTermGraph: MapTermGraph
     #markers: Map<string, DatasetMarker>
+    #maxDepth: number
 
     constructor(dataset: Dataset, mapTermGraph: MapTermGraph)
     {
         this.#datasetId = dataset.id
         this.#mapTermGraph = mapTermGraph
+        this.#maxDepth = mapTermGraph.maxDepth
 
         const mapTerms = new Set(this.#validatedTerms(dataset.terms))
         this.#connectedTermGraph = mapTermGraph.connectedTermGraph([...mapTerms.values()])
 
         this.#markers = new Map(this.#connectedTermGraph.nodes().map(term => {
             const d = mapTermGraph.depth(term)
-            const zoomRange = depthToZoomRange(d)
+            const zoomRange = this.#depthToZoomRange(d)
             return [ term, {
                 datasetId: this.#datasetId,
                 term,
@@ -87,6 +83,15 @@ export class DatasetMarkerSet
     get markers(): DatasetMarker[]
     {
         return [...this.#markers.values()]
+    }
+
+    #depthToZoomRange(depth: number): [number, number]
+    //================================================
+    {
+        const zoom = MIN_ZOOM + Math.floor((MAX_ZOOM - MIN_ZOOM)*depth/this.#maxDepth)
+        return (zoom < 0)         ? [0, 1]
+             : (zoom >= MAX_ZOOM) ? [MAX_ZOOM, MAX_ZOOM]
+             :                      [zoom, zoom+1]
     }
 
     #setZoomFromParents(marker: DatasetMarker)

@@ -34,6 +34,13 @@ export class MapTermGraph
 {
     #hierarchy: DiGraph = new DiGraph()
 
+    get maxDepth(): number
+    //====================
+    {
+        const d = this.#hierarchy.getAttribute('depth')
+        return +d
+    }
+
     load(termGraph: NodeLinkGraph)
     //============================
     {
@@ -49,7 +56,9 @@ export class MapTermGraph
     depth(term: string): number
     //=========================
     {
-        return this.#hierarchy.getNodeAttribute(term, 'distance') as number
+        return this.hasTerm(term)
+                ? +this.#hierarchy.getNodeAttribute(term, 'depth')
+                : -1
     }
 
     hasTerm(term: string): boolean
