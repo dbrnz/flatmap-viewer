@@ -50,7 +50,7 @@ export class MapTermGraph
     connectedTermGraph(terms: string[])
     //=================================
     {
-        return this.#hierarchy.connectedSubgraph(terms)
+        return this.#hierarchy.connectedSubgraph([ANATOMICAL_ROOT, ...terms])
     }
 
     depth(term: string): number
