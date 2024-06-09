@@ -307,7 +307,7 @@ class MapRasterLayers extends MapStylingLayers
 export class LayerManager
 {
     #featureLayers = new Map()
-    #markerLayer = null
+    #markerLayer
     #flightPathLayer
     #rasterLayer = null
 
