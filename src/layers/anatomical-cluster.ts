@@ -34,14 +34,8 @@ type DatasetMarker = {
 
 //==============================================================================
 
+const MIN_ZOOM =  2
 const MAX_ZOOM = 12
-
-function depthToZoomRange(depth: number): [number, number]
-{
-    return (depth < 0)         ? [0, 1]
-         : (depth >= MAX_ZOOM) ? [MAX_ZOOM, MAX_ZOOM]
-         :                       [depth, depth+1]
-}
 
 //==============================================================================
 
@@ -51,20 +45,20 @@ export class DatasetMarkerSet
     #datasetId: string
     #mapTermGraph: MapTermGraph
     #markers: Map<string, DatasetMarker>
+    #maxDepth: number
 
     constructor(dataset: Dataset, mapTermGraph: MapTermGraph)
     {
         this.#datasetId = dataset.id
         this.#mapTermGraph = mapTermGraph
+        this.#maxDepth = mapTermGraph.maxDepth
 
         const mapTerms = new Set(this.#validatedTerms(dataset.terms))
-        mapTerms.add(ANATOMICAL_ROOT)
-
         this.#connectedTermGraph = mapTermGraph.connectedTermGraph([...mapTerms.values()])
 
         this.#markers = new Map(this.#connectedTermGraph.nodes().map(term => {
             const d = mapTermGraph.depth(term)
-            const zoomRange = depthToZoomRange(d)
+            const zoomRange = this.#depthToZoomRange(d)
             return [ term, {
                 datasetId: this.#datasetId,
                 term,
@@ -73,29 +67,40 @@ export class DatasetMarkerSet
             }]
         }))
         for (const terminal of this.#connectedTermGraph.nodes()
-                                                 .filter(term => term !== ANATOMICAL_ROOT
-                                                              && this.#connectedTermGraph.degree(term) == 1)) {
+                                                       .filter(term => term !== ANATOMICAL_ROOT
+                                                            && this.#connectedTermGraph.degree(term) == 1)) {
             const marker = this.#markers.get(terminal)
             marker.maxZoom = MAX_ZOOM
             this.#setZoomFromParents(marker)
         }
-        this.#markers.delete(ANATOMICAL_ROOT)
     }
 
     get id(): string
+    //==============
     {
         return this.#datasetId
     }
 
     get markers(): DatasetMarker[]
+    //============================
     {
         return [...this.#markers.values()]
+    }
+
+    #depthToZoomRange(depth: number): [number, number]
+    //================================================
+    {
+        const zoom = MIN_ZOOM + Math.floor((MAX_ZOOM - MIN_ZOOM)*depth/this.#maxDepth)
+        return (zoom < 0)         ? [0, 1]
+             : (zoom >= MAX_ZOOM) ? [MAX_ZOOM, MAX_ZOOM]
+             :                      [zoom, zoom+1]
     }
 
     #setZoomFromParents(marker: DatasetMarker)
     //========================================
     {
         if (marker.term === ANATOMICAL_ROOT) {
+            marker.minZoom = 0
             return
         }
         for (const parent of this.#connectedTermGraph.parents(marker.term)) {
@@ -103,11 +108,7 @@ export class DatasetMarkerSet
             if (parentMarker.maxZoom < marker.minZoom) {
                 parentMarker.maxZoom = marker.minZoom
             }
-            if (parent === ANATOMICAL_ROOT) {
-                marker.minZoom = 0
-            } else {
-                this.#setZoomFromParents(parentMarker)
-            }
+            this.#setZoomFromParents(parentMarker)
         }
     }
 
@@ -119,12 +120,17 @@ export class DatasetMarkerSet
          || parents[0] === ANATOMICAL_ROOT) {
             return null
         }
+        let max_depth = -1
+        let furthest_parent = null
         for (const parent of parents) {
-            if (this.#mapTermGraph.hasTerm(parent)) {
-                return parent
+            const depth = this.#mapTermGraph.depth(parent)
+            if (depth > max_depth) {
+                furthest_parent = parent
             }
         }
-        return this.#substituteTerm(parents[0])
+        return furthest_parent
+                ? furthest_parent
+                : this.#substituteTerm(parents[0])
     }
 
     #validatedTerms(terms: string[]): string[]

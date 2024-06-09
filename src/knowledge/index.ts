@@ -23,15 +23,23 @@ import {DiGraph, NodeLinkGraph} from './graphs'
 
 //==============================================================================
 
+const BODY_PROPER = 'UBERON:0013702'
 const MULTICELLULAR_ORGANISM = 'UBERON:0000468'
 
-export const ANATOMICAL_ROOT = MULTICELLULAR_ORGANISM
+export const ANATOMICAL_ROOT = BODY_PROPER
 
 //==============================================================================
 
 export class MapTermGraph
 {
     #hierarchy: DiGraph = new DiGraph()
+
+    get maxDepth(): number
+    //====================
+    {
+        const d = this.#hierarchy.getAttribute('depth')
+        return +d
+    }
 
     load(termGraph: NodeLinkGraph)
     //============================
@@ -48,7 +56,9 @@ export class MapTermGraph
     depth(term: string): number
     //=========================
     {
-        return this.#hierarchy.getNodeAttribute(term, 'distance') as number
+        return this.hasTerm(term)
+                ? +this.#hierarchy.getNodeAttribute(term, 'depth')
+                : -1
     }
 
     hasTerm(term: string): boolean

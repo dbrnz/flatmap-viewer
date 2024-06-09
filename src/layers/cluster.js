@@ -53,6 +53,8 @@ export async function loadClusterIcons(map)
 
 //==============================================================================
 
+// Geographical clustering
+
 export class ClusteredMarkerLayer
 {
     #flatmap
@@ -82,7 +84,7 @@ export class ClusteredMarkerLayer
             type: 'symbol',
             source: 'markers',
             filter: ['has', 'point_count'],
-            'layout': {
+            layout: {
                 'icon-image': 'clustered-marker',
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
@@ -99,7 +101,7 @@ export class ClusteredMarkerLayer
             type: 'symbol',
             source: 'markers',
             filter: ['!', ['has', 'point_count']],
-            'layout': {
+            layout: {
                 'icon-image': 'unclustered-marker',
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
@@ -151,6 +153,7 @@ export class ClusteredMarkerLayer
     addMarker(id, position, properties={})
     //====================================
     {
+// TODO: Don't add the marker if there already is one at the exact position
         this.#points.features.push({
             type: 'Feature',
             id,

@@ -135,8 +135,7 @@ export class ClusteredAnatomicalMarkerLayer
             id: ANATOMICAL_MARKERS_LAYER,
             type: 'symbol',
             source: ANATOMICAL_MARKERS_SOURCE,
-            filter: ['let', 'index', ['min', ['floor', ['zoom']],
-                                             ['-', ['length', ['get', 'zoom-count']], 1]],
+            filter: ['let', 'index', ['min', ['floor', ['zoom']], this.#maxZoom-1],
                         ['>', ['at', ['var', 'index'], ['get', 'zoom-count']], 0]
                     ],
             layout: {
@@ -177,7 +176,7 @@ export class ClusteredAnatomicalMarkerLayer
                                 featureId,
                                 label: annotation.label,
                                 'models': datasetMarker.term,
-                                'zoom-count':  zoomCount
+                                'zoom-count': zoomCount
                             },
                             geometry: {
                                 type: 'Point',
@@ -188,8 +187,8 @@ export class ClusteredAnatomicalMarkerLayer
                     termToMarkerPoints.set(datasetMarker.term, markerPoints)
                 }
                 const markerPoint = termToMarkerPoints.get(datasetMarker.term)[0]
-                // We only need to update these property fields once all of the dataset's markers
-                // refer to the same two variables
+                // We only need to update these property fields once, as all of the dataset's markers
+                // refer to the same two property variables
                 const zoomCount = markerPoint.properties['zoom-count']
                 for (let zoom = 0; zoom <= this.#maxZoom; zoom += 1) {
                     if (datasetMarker.minZoom <= zoom && zoom < datasetMarker.maxZoom) {

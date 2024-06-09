@@ -36,6 +36,14 @@ const RASTER_LAYERS_ID = 'background-image-layer';
 
 //==============================================================================
 
+export function inAnatomicalClusterLayer(feature)
+{
+    return ('layer' in feature
+         && feature.layer.id === ANATOMICAL_MARKERS_LAYER)
+}
+
+//==============================================================================
+
 class MapStylingLayers
 {
     constructor(flatmap, layer, options)
@@ -426,7 +434,7 @@ export class LayerManager
     clearDatasetMarkers()
     //===================
     {
-        this.#markerLayer.clearMarkers()
+        this.#markerLayer.clearDatasetMarkers()
     }
 
     removeDatasetMarker(datasetId)

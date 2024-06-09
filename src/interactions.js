@@ -29,9 +29,8 @@ import polylabel from 'polylabel';
 
 //==============================================================================
 
-import {LayerManager} from './layers';
+import {inAnatomicalClusterLayer, LayerManager} from './layers';
 import {PATHWAYS_LAYER, PathManager} from './pathways';
-import {ANATOMICAL_MARKERS_LAYER} from './layers/acluster'
 import {PropertiesFilter} from './layers/filter'
 import {VECTOR_TILES_SOURCE} from './layers/styling';
 import {SystemsManager} from './systems';
@@ -493,7 +492,7 @@ export class UserInteractions
     #markerToFeature(feature)
     //=======================
     {
-        if ('layer' in feature && feature.layer.id === ANATOMICAL_MARKERS_LAYER) {
+        if (inAnatomicalClusterLayer(feature)) {
             return this.mapFeature(feature.properties.featureId)
         }
         return feature
@@ -968,7 +967,7 @@ export class UserInteractions
     //===========================
     {
 
-        if ('layer' in feature && feature.layer.id === ANATOMICAL_MARKERS_LAYER) {
+        if (inAnatomicalClusterLayer(feature)) {
             return this._flatmap.markerEvent(type, feature.id, feature.properties);
         } else if (feature.sourceLayer === PATHWAYS_LAYER) {  // I suspect this is never true as source layer
                                                               // names are like `neural_routes_pathways`
@@ -1027,8 +1026,8 @@ export class UserInteractions
         // Simulate `mouseenter` events on features
 
         const feature = features[0]
-        const featureId = (feature.layer.id !== ANATOMICAL_MARKERS_LAYER) ? feature.id
-                                                                          : feature.properties.featureId
+        const featureId = inAnatomicalClusterLayer(feature) ? feature.id
+                                                            : feature.properties.featureId
         const featureModels = ('properties' in feature && 'models' in feature.properties)
                             ? feature.properties.models
                             : null
