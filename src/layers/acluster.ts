@@ -176,7 +176,7 @@ export class ClusteredAnatomicalMarkerLayer
                                 featureId,
                                 label: annotation.label,
                                 'models': datasetMarker.term,
-                                'zoom-count':  zoomCount
+                                'zoom-count': zoomCount
                             },
                             geometry: {
                                 type: 'Point',

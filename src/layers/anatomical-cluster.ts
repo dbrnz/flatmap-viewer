@@ -67,8 +67,8 @@ export class DatasetMarkerSet
             }]
         }))
         for (const terminal of this.#connectedTermGraph.nodes()
-                                                 .filter(term => term !== ANATOMICAL_ROOT
-                                                              && this.#connectedTermGraph.degree(term) == 1)) {
+                                                       .filter(term => term !== ANATOMICAL_ROOT
+                                                            && this.#connectedTermGraph.degree(term) == 1)) {
             const marker = this.#markers.get(terminal)
             marker.maxZoom = MAX_ZOOM
             this.#setZoomFromParents(marker)
@@ -76,11 +76,13 @@ export class DatasetMarkerSet
     }
 
     get id(): string
+    //==============
     {
         return this.#datasetId
     }
 
     get markers(): DatasetMarker[]
+    //============================
     {
         return [...this.#markers.values()]
     }
