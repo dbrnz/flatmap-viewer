@@ -29,6 +29,7 @@ import {FlatMap} from '../flatmap-viewer'
 import {UserInteractions} from '../interactions'
 import {MapTermGraph} from '../knowledge'
 import {DatasetMarkerSet} from './anatomical-cluster'
+import {PropertiesType} from '../types'
 
 //==============================================================================
 
@@ -91,16 +92,11 @@ function zoomCountText(maxZoom: number)
 
 //==============================================================================
 
-type MarkerPoint = {
-    type: 'Feature'
+interface MarkerPoint
+{
+    type: string
     id: number
-    properties: {
-        'dataset-ids': string[]
-        featureId: number
-        label: string
-        models: string
-        'zoom-count':  number[]
-    },
+    properties: PropertiesType
     geometry: GeoJSON.Point
 }
 
@@ -108,6 +104,7 @@ type MarkerPoint = {
 
 export class ClusteredAnatomicalMarkerLayer
 {
+    #featureToMarkerPoint: Map<number, MarkerPoint> = new Map()
     #flatmap: FlatMap
     #map: MapLibreMap
     #mapTermGraph: MapTermGraph
@@ -147,8 +144,19 @@ export class ClusteredAnatomicalMarkerLayer
                 'text-field': zoomCountText(this.#maxZoom),
                 'text-size': 10,
                 'text-offset': [0, -1.93]
+            },
+            paint: {
+                'icon-opacity': ['case', ['boolean', ['get', 'hidden'], false], 0.2, 1],
+                'text-opacity': ['case', ['boolean', ['get', 'hidden'], false], 0.2, 1]
             }
         })
+    }
+
+    #showPoints()
+    //===========
+    {
+        const source = this.#map.getSource(ANATOMICAL_MARKERS_SOURCE) as GeoJSONSource
+        source.setData(this.#points)
     }
 
     #update()
@@ -168,7 +176,7 @@ export class ClusteredAnatomicalMarkerLayer
                         }
                         const markerId = this.#ui.nextMarkerId()
                         const markerPosition = this.#ui.markerPosition(featureId, annotation)
-                        markerPoints.push({
+                        const markerPoint = {
                             type: 'Feature',
                             id: markerId,
                             properties: {
@@ -181,8 +189,14 @@ export class ClusteredAnatomicalMarkerLayer
                             geometry: {
                                 type: 'Point',
                                 coordinates: markerPosition
-                            }
-                        })
+                            } as GeoJSON.Point
+                        }
+                        const markerState = this.#ui.getFeatureState(featureId)
+                        if (markerState && 'hidden' in markerState) {
+                            markerPoint.properties['hidden'] = markerState.hidden
+                        }
+                        this.#featureToMarkerPoint.set(+featureId, markerPoint)
+                        markerPoints.push(markerPoint)
                     }
                     termToMarkerPoints.set(datasetMarker.term, markerPoints)
                 }
@@ -195,15 +209,14 @@ export class ClusteredAnatomicalMarkerLayer
                         zoomCount[zoom] += 1
                     }
                 }
-                markerPoint.properties['dataset-ids'].push(datasetMarker.datasetId)
+                (markerPoint.properties['dataset-ids'] as string[]).push(datasetMarker.datasetId)
             }
         }
         this.#points.features = []
         for (const markerPoints of termToMarkerPoints.values()) {
-            this.#points.features.push(...markerPoints)
+            this.#points.features.push(...(markerPoints as GeoJSON.Feature<GeoJSON.Point, GeoJSON.GeoJsonProperties>[]))
         }
-        const source = this.#map.getSource(ANATOMICAL_MARKERS_SOURCE) as GeoJSONSource
-        source.setData(this.#points)
+        this.#showPoints()
     }
 
     addDatasetMarkers(datasets: Dataset[])
@@ -229,6 +242,31 @@ export class ClusteredAnatomicalMarkerLayer
             this.#markersByDataset.delete(datasetId)
         }
         this.#update()
+    }
+    removeFeatureState(featureId: number, key: string)
+    //================================================
+    {
+        if (key === 'hidden') {
+            if (this.#featureToMarkerPoint.has(+featureId)) {
+                const markerPoint = this.#featureToMarkerPoint.get(+featureId)
+                if ('hidden' in markerPoint.properties) {
+                    delete markerPoint.properties.hidden
+                    this.#showPoints()
+                }
+            }
+        }
+    }
+
+    setFeatureState(featureId: number, state: PropertiesType)
+    //=======================================================
+    {
+        if ('hidden' in state) {
+            if (this.#featureToMarkerPoint.has(+featureId)) {
+                const markerPoint = this.#featureToMarkerPoint.get(+featureId)
+                markerPoint.properties.hidden = state.hidden
+                this.#showPoints()
+            }
+        }
     }
 }
 

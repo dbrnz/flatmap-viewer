@@ -505,6 +505,20 @@ export class UserInteractions
         return this._map.getFeatureState(feature)
     }
 
+
+    getFeatureState(featureId)
+    //========================
+    {
+        const feature = this.mapFeature(featureId)
+        if (feature) {
+            const state = this._map.getFeatureState(feature)
+            if (Object.keys(state).length) {
+                return state
+            }
+        }
+        return undefined
+    }
+
     #removeFeatureState(feature, key)
     //===============================
     {

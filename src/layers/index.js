@@ -451,12 +451,14 @@ export class LayerManager
     //==============================
     {
         this.#flightPathLayer.removeFeatureState(feature.id, key)
+        this.#markerLayer.removeFeatureState(feature.id, key)
     }
 
     setFeatureState(feature, state)
     //=============================
     {
         this.#flightPathLayer.setFeatureState(feature.id, state)
+        this.#markerLayer.setFeatureState(feature.id, state)
     }
 
     setPaint(options={})
