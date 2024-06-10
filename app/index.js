@@ -246,9 +246,6 @@ export async function standaloneViewer(mapEndpoints={}, options={})
         mapId = null
         mapTaxon = null
         mapSex = null
-        viewMapId = null
-        viewMapTaxon = null
-        viewMapSex = null
         await setMapList(currentManager)
     }
 
