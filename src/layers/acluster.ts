@@ -146,8 +146,8 @@ export class ClusteredAnatomicalMarkerLayer
                 'text-offset': [0, -1.93]
             },
             paint: {
-                'icon-opacity': ['case', ['boolean', ['get', 'hidden'], false], 0.2, 1],
-                'text-opacity': ['case', ['boolean', ['get', 'hidden'], false], 0.2, 1]
+                'icon-opacity': ['case', ['boolean', ['get', 'hidden'], false], 0, 1],
+                'text-opacity': ['case', ['boolean', ['get', 'hidden'], false], 0, 1]
             }
         })
     }
