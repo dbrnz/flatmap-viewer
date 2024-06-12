@@ -137,8 +137,11 @@ export class DatasetMarkerSet
     //========================================
     {
         const mapTerms = []
-        for (const term of terms) {
-            if (this.#mapTermGraph.hasTerm(term)) {
+        for (let term of terms) {
+            term = term.trim()
+            if (term === '') {
+                continue
+            } else if (this.#mapTermGraph.hasTerm(term)) {
                 mapTerms.push(term)
             } else {
                 const substitute = this.#substituteTerm(term)
