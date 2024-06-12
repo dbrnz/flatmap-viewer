@@ -22,6 +22,7 @@ import {Map as MapLibreMap} from 'maplibre-gl'
 
 import {BitmapLayer, BitmapLayerProps} from '@deck.gl/layers';
 import {GeoJsonLayer, GeoJsonLayerProps} from '@deck.gl/layers';
+import {MVTLayer, TileLayer} from '@deck.gl/geo-layers'
 import {Matrix4} from '@math.gl/core';
 
 //==============================================================================
@@ -119,8 +120,40 @@ export class SvgLayer
     //=======
     {
         const layers = [
-            new GeoJsonLayer(this.#layerProps[1]),
-            new BitmapLayer(this.#layerProps[0])
+            //new GeoJsonLayer(this.#layerProps[1]),
+            //new BitmapLayer(this.#layerProps[0])
+/*
+            new TileLayer({
+                id: 'TileLayer',
+                data: 'http://localhost:8000/flatmap/cardiac-myocyte/tiles/cardiac-myocyte_image/{z}/{x}/{y}',
+                minZoom: 8,
+                maxZoom: 12,
+                renderSubLayers: props => {
+                    const {boundingBox} = props.tile
+                    return new BitmapLayer(props, {
+                        data: null,
+                        image: props.data,
+                        bounds: [boundingBox[0][0], boundingBox[0][1], boundingBox[1][0], boundingBox[1][1]]
+                    })
+                },
+                modelMatrix: LAYER_OFFSET,
+            }),
+*/
+            new MVTLayer({
+                id: 'MVTLayer',
+                data: [
+                    'http://localhost:8000/flatmap/cardiac-myocyte/mvtiles/{z}/{x}/{y}'
+                ],
+                minZoom: 6,
+                maxZoom: 12,
+                getFillColor: [0, 240, 240],
+                getLineWidth: 2,
+                getLineColor: [192, 0, 0],
+                getPointRadius: 2,
+                pointRadiusUnits: 'pixels',
+                stroked: true,
+                modelMatrix: LAYER_OFFSET,
+            })
         ]
         this.#deckOverlay.setLayers(layers)
     }
