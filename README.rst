@@ -11,14 +11,14 @@ Standalone Use
 Requirements
 ------------
 
-* `nodejs <https://nodejs.org/en/download/>`_
+*   `nodejs <https://nodejs.org/en/download/>`_
 
 
 Installation
 ------------
 
-1) Clone this repository.
-2) Run ``npm install``
+1)  Clone this repository.
+2)  Run ``npm install``
 
 
 Running
