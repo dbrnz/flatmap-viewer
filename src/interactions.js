@@ -1141,7 +1141,9 @@ export class UserInteractions
     //=======================================
     {
         // Show a tooltip
-        if (html !== '' || this._flatmap.options.showId && feature !== null) {
+        if (html !== ''
+        || this._flatmap.options.showPosition
+        || this._flatmap.options.showId && feature !== null) {
             let header = '';
             if (this._flatmap.options.showPosition) {
                 const pt = turf.point(lngLat.toArray());
