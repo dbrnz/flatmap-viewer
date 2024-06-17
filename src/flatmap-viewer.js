@@ -33,7 +33,7 @@ import '../static/css/flatmap-viewer.css';
 import {MapServer} from './mapserver'
 import {SearchIndex} from './search'
 import {UserInteractions} from './interactions'
-import {MapTermGraph, sparcTermGraph} from './knowledge'
+import {MapTermGraph, SparcTermGraph} from './knowledge'
 
 import {APINATOMY_PATH_PREFIX} from './pathways'
 
@@ -90,7 +90,7 @@ export class FlatMap
 {
     #baseUrl
     #mapServer
-    #mapTermGraph = new MapTermGraph()
+    #mapTermGraph
     #taxonNames = new Map()
 
     constructor(container, mapServer, mapDescription, resolve)
@@ -120,6 +120,7 @@ export class FlatMap
         this.__annIdToFeatureId = new Map();
         this.__taxonToFeatureIds = new Map();
         this.__featurePropertyValues = new Map()
+        this.#mapTermGraph = new MapTermGraph(mapDescription.sparcTermGraph)
 
         for (const [featureId, annotation] of Object.entries(mapDescription.annotations)) {
             this.__addAnnotation(featureId, annotation);
@@ -1671,6 +1672,8 @@ export class MapManager
      */
     static version = VIEWER_VERSION
 
+    #sparcTermGraph = new SparcTermGraph()
+
     /* Create a MapManager */
     constructor(mapServerUrl, options={})
     {
@@ -1698,7 +1701,7 @@ export class MapManager
                     map.separateLayers = ('version' in map && map.version >= MAP_MAKER_SEPARATE_LAYERS_VERSION);
                     this._mapList.push(map);
                 }
-                await sparcTermGraph.load(this._mapServer)
+                await this.#sparcTermGraph.load(this._mapServer)
                 this._initialised = true
             }
         });
@@ -1958,7 +1961,8 @@ export class MapManager
                         number: this._mapNumber,
                         pathways: pathways,
                         provenance, provenance,
-                        callback: callback
+                        callback: callback,
+                        sparcTermGraph: this.#sparcTermGraph
                     },
                     resolve);
 
