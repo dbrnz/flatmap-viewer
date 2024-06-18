@@ -168,6 +168,8 @@ export class UserInteractions
 
         const featuresEnabled = flatmap.options.style !== 'functional';
 
+        this.tooltipDelay = flatmap.options.tooltipDelay || 0;
+
         // Path visibility is either controlled externally or by a local control
         // FC path visiblitity is determined by system visiblity
 
@@ -274,9 +276,10 @@ export class UserInteractions
 
         // Handle mouse events
 
+        const handleMouseMoveEvent = this.mouseMoveEvent_.bind(this);
         this._map.on('click', this.clickEvent_.bind(this));
         this._map.on('touchend', this.clickEvent_.bind(this));
-        this._map.on('mousemove', debounce(this.mouseMoveEvent_.bind(this), 25));
+        this._map.on('mousemove', debounce(handleMouseMoveEvent, this.tooltipDelay));
         this._lastFeatureMouseEntered = null;
         this._lastFeatureModelsMouse = null;
         this.__lastClickLngLat = null;
