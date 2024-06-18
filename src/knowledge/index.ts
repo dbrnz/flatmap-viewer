@@ -32,7 +32,19 @@ export const ANATOMICAL_ROOT = BODY_PROPER
 
 export class MapTermGraph
 {
+    #sparcTermGraph: SparcTermGraph
     #hierarchy: DiGraph = new DiGraph()
+
+    constructor(sparcTermGraph: SparcTermGraph)
+    {
+        this.#sparcTermGraph = sparcTermGraph
+    }
+
+    get sparcTermGraph(): SparcTermGraph
+    //==================================
+    {
+        return this.#sparcTermGraph
+    }
 
     get maxDepth(): number
     //====================
@@ -70,23 +82,9 @@ export class MapTermGraph
 
 //==============================================================================
 
-class SparcTermGraph
+export class SparcTermGraph
 {
-    static #instance: SparcTermGraph|null = null
     #graph: DiGraph = new DiGraph()
-
-    constructor()
-    {
-        if (SparcTermGraph.#instance) {
-            throw new Error('Use SparcTermGraph.instance() instead of `new`')
-        }
-        SparcTermGraph.#instance = this
-    }
-
-    static instance()
-    {
-        return SparcTermGraph.#instance ?? (SparcTermGraph.#instance = new SparcTermGraph())
-    }
 
     async load(mapServer: MapServer)
     //==============================
@@ -101,9 +99,5 @@ class SparcTermGraph
         return this.#graph.parents(term)
     }
 }
-
-//==============================================================================
-
-export const sparcTermGraph = SparcTermGraph.instance()
 
 //==============================================================================
