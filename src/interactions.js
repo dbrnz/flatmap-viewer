@@ -26,7 +26,6 @@ import * as turf from '@turf/helpers';
 import * as turfProjection from '@turf/projection';
 
 import polylabel from 'polylabel';
-import { debounce } from 'lodash';
 
 //==============================================================================
 
@@ -279,7 +278,7 @@ export class UserInteractions
         const handleMouseMoveEvent = this.mouseMoveEvent_.bind(this);
         this._map.on('click', this.clickEvent_.bind(this));
         this._map.on('touchend', this.clickEvent_.bind(this));
-        this._map.on('mousemove', debounce(handleMouseMoveEvent, this.tooltipDelay));
+        this._map.on('mousemove', utils.debounce(handleMouseMoveEvent, this.tooltipDelay));
         this._lastFeatureMouseEntered = null;
         this._lastFeatureModelsMouse = null;
         this.__lastClickLngLat = null;
