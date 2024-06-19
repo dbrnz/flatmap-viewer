@@ -1814,6 +1814,7 @@ export class MapManager
     * @arg options.showPosition {boolean} Show ``position`` of tooltip.
     * @arg options.standalone {boolean} Viewer is running ``standalone``, as opposed to integrated into
     *                                   another application so show a number of controls. Defaults to ``false``.
+    * @arg options.tooltipDelay {number} The number of milliseconds to delay the tooltip showing.
     * @example
     * const humanMap1 = mapManager.loadMap('humanV1', 'div-1');
     *
