@@ -147,7 +147,7 @@ export function reverseMap(mapping)
 
 //==============================================================================
 
-export function debounce(fn, wait = 0) {
+export function delay(fn, wait = 0) {
     let timeout;
     return function(...args) {
       clearTimeout(timeout);
