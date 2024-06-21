@@ -30,7 +30,14 @@ export const displayedProperties = [
     'fc-kind',
     'name',
     ...indexedProperties,
-    'featureId'
+    'featureId',
+
+    'shape-type',
+    'geom-type',
+    'area',
+    'aspect',
+    'coverage',
+    'bbox-coverage',
 ];
 
 //==============================================================================
