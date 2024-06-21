@@ -1059,16 +1059,19 @@ export class UserInteractions
 
         let info = '';
         let tooltip = '';
+        let tooltipFeature = null;
         if (displayInfo) {
             if (!('tooltip' in features[0].properties)) {
                 this.activateFeature(features[0]);
             }
             info = this._infoControl.featureInformation(features, event.lngLat);
+        } else if (this._flatmap.options.showId) {
+            this.activateFeature(features[0])
+            tooltipFeature = features[0]
         }
         const lineFeatures = features.filter(feature => ('centreline' in feature.properties
                                                       || ('type' in feature.properties
                                                         && feature.properties.type.startsWith('line')) ));
-        let tooltipFeature = null;
         if (lineFeatures.length > 0) {
             tooltip = this.lineTooltip_(lineFeatures);
             tooltipFeature = lineFeatures[0];
