@@ -69,6 +69,7 @@ const EXCLUDED_FEATURE_FILTER_KEYS = [
     'class',
     'featureId',
     'geometry',
+    'geom-type',
     'id',
     'label',
     'layer',

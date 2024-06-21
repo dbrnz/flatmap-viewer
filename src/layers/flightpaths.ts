@@ -142,7 +142,8 @@ export class FlightPathLayer
         this.#pathManager.addWatcher(this.#pathStateChanged.bind(this))
         this.#pathFeatures = new Map([...flatmap.annotations.values()]
                                     .filter(ann => ann['tile-layer'] === 'pathways'
-                                                && ann['geometry'] === 'LineString'
+                                                && ('geometry' in ann && ann['geometry'] === 'LineString'
+                                                 || 'geom-type' in ann && ann['geom-type'] === 'LineString')
                                                 && 'type' in ann && ann['type'].startsWith('line')
                                                 && 'kind' in ann
                                                 && 'pathStartPosition' in ann
