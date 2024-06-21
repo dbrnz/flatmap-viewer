@@ -1146,17 +1146,17 @@ export class UserInteractions
         || this._flatmap.options.showId && feature !== null) {
             let header = '';
             if (this._flatmap.options.showPosition) {
-                let coords
+                const pt = turf.point(lngLat.toArray())
+                const gps = turfProjection.toMercator(pt)
+                const coords = JSON.stringify(gps.geometry.coordinates)
+                let geopos = null
                 if (this._flatmap.options.showLngLat) {
-                    coords = lngLat.toArray()
-                } else {
-                    const pt = turf.point(lngLat.toArray())
-                    const gps = turfProjection.toMercator(pt)
-                    coords = gps.geometry.coordinates
+                    geopos = JSON.stringify(lngLat.toArray())
                 }
+                const position = (geopos === null) ? coords : `${geopos}<br/>${coords}`
                 header = (feature === null)
-                             ? JSON.stringify(coords)
-                             : `${JSON.stringify(coords)} (${feature.id})`
+                             ? position
+                             : `${position} (${feature.id})`
             }
             if (this._flatmap.options.showId && feature !== null && 'id' in feature.properties) {
                 header = `${header} ${feature.properties.id}`;
