@@ -258,6 +258,7 @@ export class InfoControl
                     if (Object.keys(values).length > 0) {
                         displayValues.set(feature.id, values);
                     }
+                break    // Properties of only the innermost feature (when an `allProperties` option??)
                 }
             }
 
