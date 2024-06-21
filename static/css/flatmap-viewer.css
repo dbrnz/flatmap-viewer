@@ -73,7 +73,7 @@ li.flatmap-contextmenu-item:hover {
 #info-control-info {
     text-align: left;
     display: inline-grid;
-    grid-template-columns: 1fr 4fr;
+    grid-template-columns: 1fr 2.5fr;
     column-gap: 10px;
     row-gap: 0.2em;
     min-width: 200px;
