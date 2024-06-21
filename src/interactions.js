@@ -681,7 +681,9 @@ export class UserInteractions
     //======================
     {
         if (feature !== undefined) {
-            this.#setFeatureState(feature, { active: true });
+            if (feature.properties['shape-type'] === 'component') {
+                this.#setFeatureState(feature, { active: true });
+            }
             this._activeFeatures.add(feature);
         }
     }
