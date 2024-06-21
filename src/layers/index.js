@@ -312,7 +312,7 @@ export class LayerManager
     #featureLayers = new Map()
     #flightPathLayer
     #markerLayer
-    #modelLayer
+//    #modelLayer
     #rasterLayer = null
 
     constructor(flatmap, ui)
@@ -362,7 +362,7 @@ export class LayerManager
         this.#flightPathLayer = new FlightPathLayer(this.#deckGlOverlay, flatmap, ui)
 
         // Simulation models are in SVG
-        this.#modelLayer = new SvgLayer(this.#deckGlOverlay, flatmap)
+//        this.#modelLayer = new SvgLayer(this.#deckGlOverlay, flatmap)
     }
 
     get layers()
@@ -533,7 +533,7 @@ export class LayerManager
     zoomEvent()
     //=========
     {
-        this.#modelLayer.zoomEvent()
+//        this.#modelLayer.zoomEvent()
     }
 
     enableSckanPaths(sckanState, enable=true)
