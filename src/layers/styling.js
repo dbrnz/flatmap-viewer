@@ -157,8 +157,16 @@ export class BodyStyleLayer extends VectorStyleLayer
                 ['==', ['get', 'models'], 'UBERON:0013702']
             ],
             'paint': {
-                'fill-color': '#CCC',
-                'fill-opacity': 0.1
+                'fill-color': [
+                    'case',
+                    ['has', 'colour'], ['get', 'colour'],
+                    '#CCC'
+                ],
+                'fill-opacity': [
+                    'case',
+                    ['has', 'colour'], 1.0,
+                    0.1
+                ]
             }
         };
     }
