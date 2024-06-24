@@ -53,18 +53,37 @@ const STROKE_INTERPOLATION = [
 
 //==============================================================================
 
-class VectorStyleLayer
+export class StyleLayer
 {
-    constructor(id, suffix, sourceLayer)
+    #id
+
+    constructor(id)
     {
-        this.__id = `${id}_${suffix}`;
-        this.__sourceLayer = sourceLayer;
-        this.__lastPaintStyle = {};
+        this.#id = id
     }
 
     get id()
     {
-        return this.__id;
+        return this.#id
+    }
+
+    style(_options)
+    {
+        return {
+            'id': this.#id
+        }
+    }
+}
+
+//==============================================================================
+
+export class VectorStyleLayer extends StyleLayer
+{
+    constructor(id, suffix, sourceLayer)
+    {
+        super(`${id}_${suffix}`)
+        this.__sourceLayer = sourceLayer;
+        this.__lastPaintStyle = {};
     }
 
     makeFilter(options)
@@ -104,7 +123,7 @@ class VectorStyleLayer
     style()
     {
         return {
-            'id': this.__id,
+            ...super.style(),
             'source': VECTOR_TILES_SOURCE,
             'source-layer': this.__sourceLayer
         };
@@ -113,7 +132,7 @@ class VectorStyleLayer
 
 //==============================================================================
 
-export class BodyLayer extends VectorStyleLayer
+export class BodyStyleLayer extends VectorStyleLayer
 {
     constructor(id, sourceLayer)
     {
@@ -1069,22 +1088,17 @@ export class FeatureSmallSymbolLayer extends VectorStyleLayer
 
 //==============================================================================
 
-export class BackgroundLayer
+export class BackgroundStyleLayer extends StyleLayer
 {
     constructor()
     {
-        this.__id = 'background';
-    }
-
-    get id()
-    {
-        return this.__id;
+        super('background')
     }
 
     style(backgroundColour, opacity=1.0)
     {
         return {
-            'id': this.__id,
+            ...super.style(),
             'type': 'background',
             'paint': {
                 'background-color': backgroundColour,
@@ -1096,24 +1110,19 @@ export class BackgroundLayer
 
 //==============================================================================
 
-export class RasterLayer
+export class RasterStyleLayer extends StyleLayer
 {
     constructor(id)
     {
-        this.__id = id;
-    }
-
-    get id()
-    {
-        return this.__id;
+        super(id)
     }
 
     style(options)
     {
         const coloured = !('colour' in options) || options.colour;
         return {
-            'id': this.__id,
-            'source': this.__id,
+            ...super.style(),
+            'source': this.id,
             'type': 'raster',
             'visibility': coloured ? 'visible' : 'none'
         };
