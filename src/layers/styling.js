@@ -201,7 +201,10 @@ export class FeatureFillLayer extends VectorStyleLayer
                 ['boolean', ['feature-state', 'selected'], false], COLOUR_SELECTED,
                 ['boolean', ['feature-state', 'hidden'], false], COLOUR_HIDDEN,
                 ['has', 'colour'], ['get', 'colour'],
-                ['boolean', ['feature-state', 'active'], false], coloured ? '#D88' : '#CCC',
+                ['all',
+                    ['==', ['case', ['has', 'shape-type'], ['get', 'shape-type'], 'component'], 'component'],
+                    ['boolean', ['feature-state', 'active'], false]
+                ], coloured ? '#D88' : '#CCC',
                 'white'    // background colour? body colour ??
             ],
             'fill-opacity': [
@@ -210,7 +213,10 @@ export class FeatureFillLayer extends VectorStyleLayer
                 ['boolean', ['feature-state', 'selected'], false], 0.2,
                 ['has', 'opacity'], ['get', 'opacity'],
                 ['has', 'colour'], 1.0,
-                ['boolean', ['feature-state', 'active'], false], 0.7,
+                ['all',
+                    ['==', ['case', ['has', 'shape-type'], ['get', 'shape-type'], 'component'], 'component'],
+                    ['boolean', ['feature-state', 'active'], false]
+                ], 0.7,
                 (coloured && !dimmed) ? 0.01 : 0.1
             ]
         };
