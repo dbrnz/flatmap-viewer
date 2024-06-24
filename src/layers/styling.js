@@ -67,11 +67,18 @@ export class StyleLayer
         return this.#id
     }
 
-    style(_options)
+    style(layer, _options)
     {
-        return {
+        const style = {
             'id': this.#id
         }
+        if ('min-zoom' in layer) {
+            style['minzoom'] = layer['min-zoom']
+        }
+        if ('max-zoom' in layer) {
+            style['maxzoom'] = layer['max-zoom']
+        }
+        return style
     }
 }
 
@@ -120,10 +127,10 @@ export class VectorStyleLayer extends StyleLayer
         return paintStyle;
     }
 
-    style()
+    style(layer)
     {
         return {
-            ...super.style(),
+            ...super.style(layer),
             'source': VECTOR_TILES_SOURCE,
             'source-layer': this.__sourceLayer
         };
@@ -139,10 +146,10 @@ export class BodyStyleLayer extends VectorStyleLayer
         super(id, 'body', sourceLayer);
     }
 
-    style(options)
+    style(layer, options)
     {
         return {
-            ...super.style(),
+            ...super.style(layer),
             'type': 'fill',
             'filter': [
                 'all',
@@ -202,10 +209,10 @@ export class FeatureFillLayer extends VectorStyleLayer
         return super.changedPaintStyle(paintStyle, changes);
     }
 
-    style(options)
+    style(layer, options)
     {
         return {
-            ...super.style(),
+            ...super.style(layer),
             'type': 'fill',
             'filter': this.defaultFilter(),
             'layout': {
@@ -280,10 +287,10 @@ export class FeatureBorderLayer extends VectorStyleLayer
         }, changes);
     }
 
-    style(options)
+    style(layer, options)
     {
         return {
-            ...super.style(),
+            ...super.style(layer),
             'type': 'line',
             'filter': this.defaultFilter(),
             'paint': this.paintStyle(options)
@@ -360,10 +367,10 @@ export class FeatureLineLayer extends VectorStyleLayer
         return super.changedPaintStyle(paintStyle, changes);
     }
 
-    style(options)
+    style(layer, options)
     {
         return {
-            ...super.style(),
+            ...super.style(layer),
             'type': 'line',
             'filter': this.defaultFilter(),
             'paint': this.paintStyle(options)
@@ -465,10 +472,10 @@ export class AnnotatedPathLayer extends VectorStyleLayer
         return super.changedPaintStyle(paintStyle, changes);
     }
 
-    style(options)
+    style(layer, options)
     {
         return {
-            ...super.style(),
+            ...super.style(layer),
             'type': 'line',
             'filter': this.makeFilter(options),
             'paint': this.paintStyle(options),
@@ -596,10 +603,10 @@ export class PathLineLayer extends VectorStyleLayer
         return super.changedPaintStyle(paintStyle, changes);
     }
 
-    style(options={})
+    style(layer, options={})
     {
         return {
-            ...super.style(),
+            ...super.style(layer),
             'type': 'line',
             'filter': this.makeFilter(options),
             'layout': {
@@ -687,10 +694,10 @@ class CentrelineLayer extends VectorStyleLayer
         return super.changedPaintStyle(paintStyle, changes);
     }
 
-    style(options)
+    style(layer, options)
     {
         return {
-            ...super.style(),
+            ...super.style(layer),
             'type': 'line',
             'filter': this.defaultFilter(),
             'paint': this.paintStyle(options),
@@ -755,10 +762,10 @@ export class CentrelineNodeFillLayer extends VectorStyleLayer
         return super.changedPaintStyle(paintStyle, changes);
     }
 
-    style(options)
+    style(layer, options)
     {
         return {
-            ...super.style(),
+            ...super.style(layer),
             'type': 'fill',
             'filter': this.defaultFilter(),
             'layout': {
@@ -801,10 +808,10 @@ export class CentrelineNodeBorderLayer extends VectorStyleLayer
         return super.changedPaintStyle(paintStyle, changes);
     }
 
-    style(options)
+    style(layer, options)
     {
         return {
-            ...super.style(),
+            ...super.style(layer),
             'type': 'line',
             'filter': this.defaultFilter(),
             'paint':  this.paintStyle(options)
@@ -831,10 +838,10 @@ export class FeatureNerveLayer extends VectorStyleLayer
         ]
     }
 
-    style(options)
+    style(layer, options)
     {
         return {
-            ...super.style(),
+            ...super.style(layer),
             'type': 'line',
             'filter': this.defaultFilter(),
             'paint': {
@@ -889,10 +896,10 @@ export class NervePolygonBorder extends VectorStyleLayer
         ]
     }
 
-    style(options)
+    style(layer, options)
     {
         return {
-            ...super.style(),
+            ...super.style(layer),
             'type': 'line',
             'filter': this.defaultFilter(),
             'paint': {
@@ -978,10 +985,10 @@ export class NervePolygonFill extends VectorStyleLayer
         return super.changedPaintStyle(paintStyle, changes);
     }
 
-    style(options={})
+    style(layer, options={})
     {
         return {
-            ...super.style(),
+            ...super.style(layer),
             'filter': this.defaultFilter(),
             'type': 'fill',
             'paint': this.paintStyle(options)
@@ -1007,10 +1014,10 @@ export class FeatureLargeSymbolLayer extends VectorStyleLayer
         ]
     }
 
-    style(options)
+    style(layer, options)
     {
         return {
-            ...super.style(),
+            ...super.style(layer),
             'type': 'symbol',
             'minzoom': 3,
             //'maxzoom': 7,
@@ -1056,10 +1063,10 @@ export class FeatureSmallSymbolLayer extends VectorStyleLayer
         ]
     }
 
-    style(options)
+    style(layer, options)
     {
         return {
-            ...super.style(),
+            ...super.style(layer),
             'type': 'symbol',
             'minzoom': 6,
             'filter': this.defaultFilter(),
@@ -1098,7 +1105,7 @@ export class BackgroundStyleLayer extends StyleLayer
     style(backgroundColour, opacity=1.0)
     {
         return {
-            ...super.style(),
+            ...super.style({}),
             'type': 'background',
             'paint': {
                 'background-color': backgroundColour,
@@ -1117,11 +1124,11 @@ export class RasterStyleLayer extends StyleLayer
         super(id)
     }
 
-    style(options)
+    style(layer, options)
     {
         const coloured = !('colour' in options) || options.colour;
         return {
-            ...super.style(),
+            ...super.style(layer),
             'source': this.id,
             'type': 'raster',
             'visibility': coloured ? 'visible' : 'none'
