@@ -33,7 +33,7 @@ import '../static/css/flatmap-viewer.css';
 import {MapServer} from './mapserver'
 import {SearchIndex} from './search'
 import {UserInteractions} from './interactions'
-import {MapTermGraph, sparcTermGraph} from './knowledge'
+import {MapTermGraph, SparcTermGraph} from './knowledge'
 
 import {APINATOMY_PATH_PREFIX} from './pathways'
 
@@ -91,7 +91,8 @@ export class FlatMap
 {
     #baseUrl
     #mapServer
-    #mapTermGraph = new MapTermGraph()
+    #mapTermGraph
+    #startupState = -1
     #taxonNames = new Map()
 
     constructor(container, mapServer, mapDescription, resolve)
@@ -121,6 +122,7 @@ export class FlatMap
         this.__annIdToFeatureId = new Map();
         this.__taxonToFeatureIds = new Map();
         this.__featurePropertyValues = new Map()
+        this.#mapTermGraph = new MapTermGraph(mapDescription.sparcTermGraph)
 
         for (const [featureId, annotation] of Object.entries(mapDescription.annotations)) {
             this.__addAnnotation(featureId, annotation);
@@ -205,9 +207,11 @@ export class FlatMap
         this._initialState = null;
 
         this._map.on('idle', () => {
-            if (this._userInteractions === null) {
+            if (this.#startupState === -1) {
+                this.#startupState = 0
                 this.setupUserInteractions_();
-            } else if (this._initialState === null) {
+            } else if (this.#startupState === 1) {
+                this.#startupState = 2
                 this._map.setMinZoom(3.0);
                 this._map.setMaxBounds(null);
                 this._map.setRenderWorldCopies(true);
@@ -224,6 +228,7 @@ export class FlatMap
                 if (this._userInteractions.minimap) {
                     this._userInteractions.minimap.initialise()
                 }
+                this.#startupState = 3
                 this._resolve(this);
             }
         });
@@ -252,6 +257,9 @@ export class FlatMap
 
         // Layers have now loaded so finish setting up
         this._userInteractions = new UserInteractions(this);
+
+        // Continue initialising when next idle
+        this.#startupState = 1
     }
 
     /**
@@ -1672,6 +1680,8 @@ export class MapManager
      */
     static version = VIEWER_VERSION
 
+    #sparcTermGraph = new SparcTermGraph()
+
     /* Create a MapManager */
     constructor(mapServerUrl, options={})
     {
@@ -1699,7 +1709,7 @@ export class MapManager
                     map.separateLayers = ('version' in map && map.version >= MAP_MAKER_SEPARATE_LAYERS_VERSION);
                     this._mapList.push(map);
                 }
-                await sparcTermGraph.load(this._mapServer)
+                await this.#sparcTermGraph.load(this._mapServer)
                 this._initialised = true
             }
         });
@@ -1812,6 +1822,7 @@ export class MapManager
     * @arg options.showPosition {boolean} Show ``position`` of tooltip.
     * @arg options.standalone {boolean} Viewer is running ``standalone``, as opposed to integrated into
     *                                   another application so show a number of controls. Defaults to ``false``.
+    * @arg options.tooltipDelay {number} The number of milliseconds to delay the tooltip showing.
     * @example
     * const humanMap1 = mapManager.loadMap('humanV1', 'div-1');
     *
@@ -1959,7 +1970,8 @@ export class MapManager
                         number: this._mapNumber,
                         pathways: pathways,
                         provenance, provenance,
-                        callback: callback
+                        callback: callback,
+                        sparcTermGraph: this.#sparcTermGraph
                     },
                     resolve);
 

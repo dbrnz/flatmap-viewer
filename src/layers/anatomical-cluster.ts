@@ -18,7 +18,7 @@ limitations under the License.
 
 ==============================================================================*/
 
-import {ANATOMICAL_ROOT, MapTermGraph, sparcTermGraph} from '../knowledge'
+import {ANATOMICAL_ROOT, MapTermGraph} from '../knowledge'
 import {DiGraph} from '../knowledge/graphs'
 
 import {Dataset} from './acluster'
@@ -115,7 +115,7 @@ export class DatasetMarkerSet
     #substituteTerm(term: string): string|null
     //========================================
     {
-        const parents = sparcTermGraph.parents(term)
+        const parents = this.#mapTermGraph.sparcTermGraph.parents(term)
         if (parents.length == 0
          || parents[0] === ANATOMICAL_ROOT) {
             return null
