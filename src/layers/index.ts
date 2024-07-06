@@ -86,10 +86,12 @@ class FlatMapStylingLayer
         // for detail background (FC and AC)
         const layerId = `${layer.id}_${FEATURES_LAYER}`
         const source = flatmap.options.separateLayers ? layerId : FEATURES_LAYER
-        const bodyLayer = new BodyStyleLayer(layerId, source)
-        // @ts-ignore
-        this.#map.addLayer(bodyLayer.style(layer, this.#layerOptions))
-        this.#vectorStyleLayers.push(bodyLayer)
+        if (this.#map.getSource(style.VECTOR_TILES_SOURCE).vectorLayerIds.indexOf(source) >= 0) {
+            const bodyLayer = new BodyStyleLayer(layerId, source)
+            // @ts-ignore
+            this.#map.addLayer(bodyLayer.style(layer, this.#layerOptions))
+            this.#vectorStyleLayers.push(bodyLayer)
+        }
 
         // Image layers are below all feature layers
         if (flatmap.details['image-layers']) {
