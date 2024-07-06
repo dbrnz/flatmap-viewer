@@ -91,6 +91,7 @@ export class FlatMap
     #baseUrl
     #mapServer
     #mapTermGraph
+    #startupState = -1
     #taxonNames = new Map()
 
     constructor(container, mapServer, mapDescription, resolve)
@@ -205,9 +206,11 @@ export class FlatMap
         this._initialState = null;
 
         this._map.on('idle', () => {
-            if (this._userInteractions === null) {
+            if (this.#startupState === -1) {
+                this.#startupState = 0
                 this.setupUserInteractions_();
-            } else if (this._initialState === null) {
+            } else if (this.#startupState === 1) {
+                this.#startupState = 2
                 this._map.setMinZoom(3.0);
                 this._map.setMaxBounds(null);
                 this._map.setRenderWorldCopies(true);
@@ -224,6 +227,7 @@ export class FlatMap
                 if (this._userInteractions.minimap) {
                     this._userInteractions.minimap.initialise()
                 }
+                this.#startupState = 3
                 this._resolve(this);
             }
         });
@@ -252,6 +256,9 @@ export class FlatMap
 
         // Layers have now loaded so finish setting up
         this._userInteractions = new UserInteractions(this);
+
+        // Continue initialising when next idle
+        this.#startupState = 1
     }
 
     /**
