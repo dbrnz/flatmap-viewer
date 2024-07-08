@@ -25,6 +25,7 @@ import MiniSearch from 'minisearch';
 // The properties of a feature we index and show
 
 export const indexedProperties = [
+    'id',
     'label',
     'models',
     'source'

@@ -23,7 +23,7 @@ import { indexedProperties } from '../search.js';
 //==============================================================================
 
 export const displayedProperties = [
-    'id',
+//    'id',
     'class',
     'cd-class',
     'fc-class',
@@ -32,12 +32,18 @@ export const displayedProperties = [
     ...indexedProperties,
     'featureId',
 
+// Maybe have an developer mode/option to include these??
     'shape-type',
     'geom-type',
     'area',
     'aspect',
     'coverage',
     'bbox-coverage',
+
+    'left',
+    'right',
+    'baseline',
+    'metric-bounds'
 ];
 
 //==============================================================================
