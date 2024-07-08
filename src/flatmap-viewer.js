@@ -192,6 +192,12 @@ export class FlatMap
 
         mapOptions.hash = (mapDescription.options.debug === true);
 
+        // Set maxBounds if it is set in the map's options
+
+        if ('bounds' in mapDescription.options) {
+            mapOptions.maxBounds = mapDescription.options.bounds
+        }
+
         // Create the map
 
         this._map = new maplibregl.Map(mapOptions);
