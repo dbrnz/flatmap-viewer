@@ -118,7 +118,7 @@ function getRenderedLabel(properties)
         const uppercaseLabel = (label !== '') ? (label.substr(0, 1).toUpperCase()
                                                + label.substr(1)).replaceAll("\n", "<br/>")
                                               : ''
-        properties.renderedLabel = uppercaseLabel.replaceAll(/`\$([^\$]*)\$`/g, math => latex2Svg(math.slice(2, -2)));
+        properties.renderedLabel = uppercaseLabel.replaceAll(/\$([^\$]*)\$/g, math => latex2Svg(math.slice(1, -1)))
     }
     return properties.renderedLabel;
 }
