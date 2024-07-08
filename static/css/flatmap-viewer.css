@@ -161,6 +161,8 @@ li.flatmap-contextmenu-item:hover {
 /* Labels */
 
 .flatmap-feature-label {
+    fill: #8300bf;
+    stroke: #8300bf;
     color: #8300bf;
     font-size: 12pt;
 }
