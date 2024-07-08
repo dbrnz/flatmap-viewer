@@ -34,6 +34,7 @@ import {PATHWAYS_LAYER, PathManager} from './pathways';
 import {PropertiesFilter} from './layers/filter'
 import {VECTOR_TILES_SOURCE} from './layers/styling';
 import {SystemsManager} from './systems';
+import {FLATMAP_STYLE} from './flatmap-viewer'
 
 import {displayedProperties, InfoControl} from './controls/info';
 import {AnnotatorControl, BackgroundControl, LayerControl, NerveControl,
@@ -165,7 +166,7 @@ export class UserInteractions
 
         this.__featureEnabledCount = new Map(Array.from(this._flatmap.annotations.keys()).map(k => [+k, 0]));
 
-        const featuresEnabled = flatmap.options.style !== 'functional';
+        const featuresEnabled = flatmap.options.style !== FLATMAP_STYLE.FUNCTIONAL;
 
         this.tooltipDelay = flatmap.options.tooltipDelay || 0;
 
@@ -243,7 +244,7 @@ export class UserInteractions
                 this._map.addControl(new NerveControl(flatmap, this._layerManager, {showCentrelines: false}));
             }
 
-            if (flatmap.options.style === 'functional') {
+            if (flatmap.options.style === FLATMAP_STYLE.FUNCTIONAL) {
                 // SCKAN path and SYSTEMS controls for FC maps
                 this._map.addControl(new SystemsControl(flatmap, this.__systemsManager.systems));
                 this._map.addControl(new SCKANControl(flatmap, flatmap.options.layerOptions));

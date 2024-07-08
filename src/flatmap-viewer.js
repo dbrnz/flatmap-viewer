@@ -83,6 +83,17 @@ const EXCLUDED_FEATURE_FILTER_KEYS = [
     'tile-layer',
 ]
 
+//==============================================================================
+
+export class FLATMAP_STYLE
+{
+    FUNCTIONAL = 'functional'
+    ANATOMICAL = 'anatomical'
+    GENERIC = 'flatmap'
+}
+
+//==============================================================================
+
 /**
 * Maps are not created directly but instead are created and loaded by
 * :meth:`LoadMap` of :class:`MapManager`.
@@ -1863,9 +1874,9 @@ export class MapManager
                 // Note the kind of map
 
                 if ('style' in mapIndex) {
-                    mapOptions.style = mapIndex.style;  // Currently ``anatomical`` or ``functional``
+                    mapOptions.style = mapIndex.style;          // Currently ``anatomical`` or ``functional``
                 } else {
-                    mapOptions.style = 'flatmap';       // Default is a generic ``flatmap``
+                    mapOptions.style = FLATMAP_STYLE.GENERIC    // Default is a generic ``flatmap``
                 }
 
                 // Mapmaker has changed the name of the field to indicate that indicates if
