@@ -196,10 +196,11 @@ export class FlatMap
 
         this._map = new maplibregl.Map(mapOptions);
 
-        // Show tile boundaries if debugging
+        // Show extra information if debugging
 
         if (mapDescription.options.debug === true) {
             this._map.showTileBoundaries = true;
+            this._map.showCollisionBoxes = true;
         }
 
         // Don't wrap around at +/-180 degrees
