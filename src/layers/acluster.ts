@@ -203,15 +203,20 @@ export class ClusteredAnatomicalMarkerLayer
                     termToMarkerPoints.set(datasetMarker.term, markerPoints)
                 }
                 const markerPoint = termToMarkerPoints.get(datasetMarker.term)[0]
-                // We only need to update these property fields once, as all of the dataset's markers
-                // refer to the same two property variables
-                const zoomCount = markerPoint.properties['zoom-count']
-                for (let zoom = 0; zoom <= this.#maxZoom; zoom += 1) {
-                    if (datasetMarker.minZoom <= zoom && zoom < datasetMarker.maxZoom) {
-                        zoomCount[zoom] += 1
+                if (markerPoint) {
+                    // We only need to update these property fields once, as all of the dataset's markers
+                    // refer to the same two property variables
+                    const zoomCount = markerPoint.properties['zoom-count']
+                    for (let zoom = 0; zoom <= this.#maxZoom; zoom += 1) {
+                        if (datasetMarker.minZoom <= zoom && zoom < datasetMarker.maxZoom) {
+                            zoomCount[zoom] += 1
+                        }
                     }
+                    (markerPoint.properties['dataset-ids'] as string[]).push(datasetMarker.datasetId)
+                } else {
+                    // shouldn't get here...
+                    console.error(`Can't find marker for ${datasetMarker.term}...`)
                 }
-                (markerPoint.properties['dataset-ids'] as string[]).push(datasetMarker.datasetId)
             }
         }
         this.#points.features = []
