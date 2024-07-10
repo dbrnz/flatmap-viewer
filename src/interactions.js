@@ -1228,6 +1228,12 @@ export class UserInteractions
             return;
         }
 
+        // Reset pitch and bearing with a ``meta-click``
+        if (event.originalEvent.metaKey) {
+            this._map.resetNorthPitch({animate: false})
+            return
+        }
+
         this.__clearActiveMarker();
 
         const clickedFeatures = this.#renderedFeatures(event.point)
