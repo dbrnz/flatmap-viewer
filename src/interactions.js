@@ -1271,7 +1271,9 @@ export class UserInteractions
         } else if (clickedFeature) {
             this.__lastClickLngLat = event.lngLat;
             this.__featureEvent('click', clickedFeature);
-            if ('properties' in clickedFeature && 'hyperlink' in clickedFeature.properties) {
+
+            if (this._flatmap.options.standalone
+             && 'properties' in clickedFeature && 'hyperlink' in clickedFeature.properties) {
                 window.open(clickedFeature.properties.hyperlink, '_blank');
             }
         }
