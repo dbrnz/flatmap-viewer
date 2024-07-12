@@ -1081,7 +1081,9 @@ export class UserInteractions
             tooltipFeature = lineFeatures[0];
             this.activateLineFeatures(lineFeatures)
         } else {
-            let labelledFeatures = features.filter(feature => (('hyperlink' in feature.properties
+            const topSourceLayer = feature.sourceLayer
+            let labelledFeatures = features.filter(feature => (feature.sourceLayer === topSourceLayer
+                                                         && ('hyperlink' in feature.properties
                                                              || 'label' in feature.properties
                                                              || 'user_label' in feature.properties)
                                                          && (!('tooltip' in feature.properties)
