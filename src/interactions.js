@@ -1019,6 +1019,12 @@ export class UserInteractions
     mouseMoveEvent_(event)
     //====================
     {
+        this.#updateActiveFeature(event.point)
+    }
+
+    #updateActiveFeature(eventPoint)
+    //==============================
+    {
         // No tooltip when context menu is open
         if (this._modal) {
             return;
@@ -1034,7 +1040,7 @@ export class UserInteractions
         }
 
         // Get all the features at the current point
-        const features = this.#renderedFeatures(event.point)
+        const features = this.#renderedFeatures(eventPoint)
         if (features.length === 0) {
             this._lastFeatureMouseEntered = null;
             this._lastFeatureModelsMouse = null;
@@ -1064,11 +1070,12 @@ export class UserInteractions
         let info = '';
         let tooltip = '';
         let tooltipFeature = null;
+        const eventLngLat = this._map.unproject(eventPoint)
         if (displayInfo) {
             if (!('tooltip' in features[0].properties)) {
                 this.activateFeature(features[0]);
             }
-            info = this._infoControl.featureInformation(features, event.lngLat);
+            info = this._infoControl.featureInformation(features, eventLngLat);
         } else if (this._flatmap.options.showId) {
             this.activateFeature(features[0])
             tooltipFeature = features[0]
@@ -1143,7 +1150,7 @@ export class UserInteractions
         if (info !== '') {
             this._infoControl.show(info);
         }
-        this.__showToolTip(tooltip, event.lngLat, tooltipFeature);
+        this.__showToolTip(tooltip, eventLngLat, tooltipFeature);
     }
 
     __showToolTip(html, lngLat, feature=null)
@@ -1650,13 +1657,17 @@ export class UserInteractions
         this.__pan_zoom_enabled = enabled;
     }
 
-    panZoomEvent_(type)
-    //=================
+    panZoomEvent_(type, event)
+    //========================
     {
         if (this.__pan_zoom_enabled) {
             this._flatmap.panZoomEvent(type);
         }
         if (type === 'zoom') {
+            this.#updateActiveFeature([
+                event.originalEvent.layerX,
+                event.originalEvent.layerY
+            ])
             this._layerManager.zoomEvent()
         }
     }
