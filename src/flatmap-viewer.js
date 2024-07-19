@@ -1287,7 +1287,11 @@ export class FlatMap
             'missing-nodes',
             'alert',
             'biological-sex'
-        ];
+        ]
+        const encodedProperties = [
+            'dataset-ids',
+            'hyperlinks',
+        ]
         for (const property of exportedProperties) {
             if (property in properties) {
                 const value = properties[property];
@@ -1297,7 +1301,7 @@ export class FlatMap
                         data[property] = value
                     } else if (property === 'featureId') {
                         data[property] = +value;  // Ensure numeric
-                    } else if (property === 'dataset-ids') {
+                    } else if (encodedProperties.includes(property)) {
                         data[property] = JSON.parse(value)
                     } else {
                         data[property] = value;
