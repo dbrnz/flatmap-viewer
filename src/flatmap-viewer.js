@@ -1686,6 +1686,43 @@ export class FlatMap
             this._userInteractions.zoomToFeatures(geojsonIds, options)
         }
     }
+
+    //==========================================================================
+
+    /**
+     * Display an image on a given anatomical feature.
+     *
+     * @param   {string}   anatomicalId     The anatomical identifier of the feature on which
+     *                                      to place the image. The image is scaled to fit within
+     *                                      the feature's bounding box.
+     * @param   {string}   imageUrl         The URL of the image to display.
+     * @return  {string|null}               A identifying the image(s) added to the map. A map may
+     *                                      have several features corresponding to a particular
+     *                                      anatomical identifier, which will result in an image
+     *                                      being placed on each feature. ``null`` is returned if
+     *                                      there are no features with the given ``anatomicalId``.
+     */
+    addImage(anatomicalId, imageUrl) // : string[]
+    //==============================
+    {
+        if (this._userInteractions !== null) {
+            return this._userInteractions.addImage(anatomicalId, imageUrl)
+        }
+        return null
+    }
+
+    /**
+     * Remove images for an anatomical features.
+     *
+     * @param   {string}   mapImageId       An image identifier previously returned by ``addImage()``.
+     */
+    removeImage(mapImageId)
+    //=====================
+    {
+        if (this._userInteractions !== null) {
+            this._userInteractions.removeImage(mapImageId)
+        }
+    }
 }
 
 //==============================================================================

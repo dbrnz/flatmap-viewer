@@ -128,6 +128,8 @@ function getRenderedLabel(properties)
 export class UserInteractions
 {
     #annotationDrawControl = null
+    #imageLayerIds = new Map()
+    #lastImageId = 0
     #lastMarkerId = 900000
     #minimap = null
 
@@ -1673,6 +1675,66 @@ export class UserInteractions
             this._layerManager.zoomEvent()
         }
     }
+
+    //==========================================================================
+
+    addImage(anatomicalId, imageUrl)
+    //==============================
+    {
+        const featureIds = this._flatmap.modelFeatureIds(anatomicalId)
+        const imageIds = []
+        const mapImageId = `image-${this.#lastImageId}`
+        for (const featureId of featureIds) {
+            const annotation = this._flatmap.annotation(featureId)
+            if (!annotation.geometry.includes('Polygon')) {
+                continue;
+            }
+            this.#lastImageId += 1
+            const imageId = `${mapImageId}-${this.#lastImageId}`
+            const featureBounds = annotation.bounds
+            this._map.addSource(`${imageId}-source`, {
+                type: 'image',
+                url: imageUrl,
+                coordinates: [
+                    [featureBounds[0], featureBounds[3]],
+                    [featureBounds[2], featureBounds[3]],
+                    [featureBounds[2], featureBounds[1]],
+                    [featureBounds[0], featureBounds[1]],
+                ]
+            })
+            this._map.addLayer({
+                id: `${imageId}-layer`,
+                'type': 'raster',
+                'source': `${imageId}-source`,
+                'paint': {
+                    'raster-fade-duration': 0
+                }
+            })
+            imageIds.push(imageId)
+        }
+        if (imageIds.length === 0) {
+            console.warn(`Unable to find feature '${anatomicalId}' on which to place image`)
+            return null
+        }
+        this.#imageLayerIds.set(mapImageId, imageIds)
+        return mapImageId
+    }
+
+    removeImage(mapImageId)
+    //=====================
+    {
+        if (this.#imageLayerIds.has(mapImageId)) {
+            for (const imageId of this.#imageLayerIds.get(mapImageId)) {
+                this._map.removeSource(`${imageId}-source`)
+                const layerId = `${imageId}-layer`
+                if (map.getLayer(layerId)) {
+                    map.removeLayer(layerId)
+                }
+            }
+            this.#imageLayerIds.delete(mapImageId)
+        }
+    }
+
 }
 
 //==============================================================================
