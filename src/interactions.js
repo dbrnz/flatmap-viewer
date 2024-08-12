@@ -1735,6 +1735,19 @@ export class UserInteractions
         }
     }
 
+    //==========================================================================
+
+    getNervesIds()
+    //============
+    {
+        return this.__pathManager.centrelineIds
+    }
+
+    enableNeuronPathsByNerve(nerveId, enable=true)
+    //============================================
+    {
+        this.__pathManager.enablePathsByCentreline(nerveId, enable)
+    }
 }
 
 //==============================================================================

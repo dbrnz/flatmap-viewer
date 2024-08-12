@@ -67,6 +67,9 @@ export function pathColourArray(pathType, alpha=255)
 
 export class PathManager
 {
+    #centrelineIds = new Set()          // Set<string>
+    #pathsByCentreline = new Map()      // Map<string, Set<string>>
+
     constructor(flatmap, ui, enabled=true)
     {
         this.__ui = ui;
@@ -98,6 +101,13 @@ export class PathManager
                     }
                     this.__pathModelPaths[modelId].push(pathId);
                     this.__pathToPathModel[pathId] = modelId;
+                }
+                for (const id of (path.centrelines || [])) {
+                    this.#centrelineIds.add(id)
+                    if (!this.#pathsByCentreline.has(id)) {
+                        this.#pathsByCentreline.set(id, new Set())
+                    }
+                    this.#pathsByCentreline.get(id).add(pathId)
                 }
             }
         }
@@ -138,6 +148,12 @@ export class PathManager
         // Nerve centrelines are a special case with their own controls
         this.__haveCentrelines = false;
         this.__enabledCentrelines = false;
+    }
+
+    get centrelineIds()
+    //=================
+    {
+        return new Array(...this.#centrelineIds.values())
     }
 
     get haveCentrelines()
@@ -316,6 +332,19 @@ export class PathManager
     {
         for (const lineId of Object.keys(this.__pathsByLine)) {
             this.__ui.enableFeature(lineId, enable, force)
+        }
+    }
+
+    enablePathsByCentreline(centrelineId, enable, force=false)
+    //========================================================
+    {
+        if (this.#pathsByCentreline.has(centrelineId)) {
+            const featureIds = new Set()
+            this.addPathsToFeatureSet_(this.#pathsByCentreline.get(centrelineId), featureIds)
+            for (const featureId of featureIds) {
+                this.__ui.enableFeature(featureId, enable, force)
+            }
+            this.#notifyWatchers()
         }
     }
 

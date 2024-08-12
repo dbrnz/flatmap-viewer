@@ -1723,7 +1723,59 @@ export class FlatMap
             this._userInteractions.removeImage(mapImageId)
         }
     }
-}
+
+    //==========================================================================
+
+    /**
+     * Get a details of the nerve centrelines in the map.
+     *
+     * @return  {Array}
+     *                   {
+     *                       id
+     *                       label
+     *                       models
+     *                   }
+     *
+     */
+    getNerveDetails()
+    //===============
+    {
+        if (this._userInteractions !== null) {
+            return this._userInteractions.getNervesIds().map(id => {
+                const result = {id}
+                const annotation = this.__idToAnnotation.get(
+                                        this.__annIdToFeatureId.get(id))
+                if (annotation) {
+                    if ('label' in annotation) {
+                        result['label'] = annotation.label
+                    }
+                    if ('models' in annotation) {
+                        result['models'] = annotation.models
+                    }
+                }
+                return result
+             })
+        }
+        return []
+    }
+
+    /**
+     * Enable/disable the neuron paths associated with a nerve centreline.
+     *
+     * @param   {<string>}   nerveId      The identifier of a nerve centreline
+     * @param   {boolean}  [enable=true]
+     */
+    enableNeuronPathsByNerve(nerveId, enable=true)
+    //============================================
+    {
+        if (this._userInteractions !== null) {
+            this._userInteractions.enableNeuronPathsByNerve(nerveId, enable)
+        }
+    }
+
+    //==========================================================================
+
+}   // End of FlatMap class
 
 //==============================================================================
 
