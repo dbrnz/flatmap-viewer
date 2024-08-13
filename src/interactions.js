@@ -797,18 +797,18 @@ export class UserInteractions
      *
      * @param      {Array.<string>}  featureIds   An array of feature identifiers
      * @param      {Object}  [options]
-     * @param      {boolean} [options.noZoomIn=false]  Don't zoom in (although zoom out as necessary)
+     * @param      {boolean} [options.zoomIn=false]  Zoom in the map (always zoom out as necessary)
      */
     zoomToFeatures(featureIds, options=null)
     //======================================
     {
         options = utils.setDefaults(options, {
-            noZoomIn: false,
+            zoomIn: false
         });
         if (featureIds.length) {
             this.unselectFeatures();
             let bbox = null;
-            if (options.noZoomIn) {
+            if (!options.zoomIn) {
                 const bounds = this._map.getBounds().toArray();
                 bbox = [...bounds[0], ...bounds[1]];
             }

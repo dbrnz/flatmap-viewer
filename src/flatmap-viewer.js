@@ -1634,7 +1634,7 @@ export class FlatMap
      *
      * @param      {Array.<string>}  featureIds   An array of feature identifiers
      * @param      {Object}  [options]
-     * @param      {boolean} [options.noZoomIn=false]  Don't zoom in (although zoom out as necessary)
+     * @param      {boolean} [options.zoomIn=false]  Zoom in the map (always zoom out as necessary)
      */
     zoomToFeatures(externalIds, options=null)
     //=======================================
@@ -1670,7 +1670,7 @@ export class FlatMap
      * @param {string | Array.<string>}  geojsonIds  A single GeoJSON feature identifiers
      *                                               or an array of identifiers.
      * @param {Object}  [options]
-     * @param {boolean} [options.noZoomIn=false]  Don't zoom in (although zoom out as necessary)
+     * @param {boolean} [options.zoomIn=false]  Zoom in the map (always zoom out as necessary)
      */
     zoomToGeoJSONFeatures(geojsonIds, options=null)
     //=============================================
