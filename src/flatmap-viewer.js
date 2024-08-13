@@ -1635,7 +1635,6 @@ export class FlatMap
      * @param      {Array.<string>}  featureIds   An array of feature identifiers
      * @param      {Object}  [options]
      * @param      {boolean} [options.noZoomIn=false]  Don't zoom in (although zoom out as necessary)
-     * @param      {number}  [options.padding=10]  Padding in pixels around the composite bounding box
      */
     zoomToFeatures(externalIds, options=null)
     //=======================================
@@ -1672,7 +1671,6 @@ export class FlatMap
      *                                               or an array of identifiers.
      * @param {Object}  [options]
      * @param {boolean} [options.noZoomIn=false]  Don't zoom in (although zoom out as necessary)
-     * @param {number}  [options.padding=10]  Padding in pixels around the composite bounding box
      */
     zoomToGeoJSONFeatures(geojsonIds, options=null)
     //=============================================

@@ -85,10 +85,9 @@ function bounds(feature)
 function expandBounds(bbox1, bbox2, padding)
 //==========================================
 {
-    return (bbox1 === null) ? [bbox2[0]-padding.lng, bbox2[1]-padding.lat,
-                               bbox2[2]+padding.lng, bbox2[3]+padding.lat]
-                            : [Math.min(bbox1[0], bbox2[0]-padding.lng), Math.min(bbox1[1], bbox2[1]-padding.lat),
-                               Math.max(bbox1[2], bbox2[2]+padding.lng), Math.max(bbox1[3], bbox2[3]+padding.lat)
+    return (bbox1 === null) ? [...bbox2]
+                            : [Math.min(bbox1[0], bbox2[0]), Math.min(bbox1[1], bbox2[1]),
+                               Math.max(bbox1[2], bbox2[2]), Math.max(bbox1[3], bbox2[3])
                               ];
 }
 
@@ -799,14 +798,12 @@ export class UserInteractions
      * @param      {Array.<string>}  featureIds   An array of feature identifiers
      * @param      {Object}  [options]
      * @param      {boolean} [options.noZoomIn=false]  Don't zoom in (although zoom out as necessary)
-     * @param      {number}  [options.padding=10]  Padding in pixels around the composite bounding box
      */
     zoomToFeatures(featureIds, options=null)
     //======================================
     {
         options = utils.setDefaults(options, {
             noZoomIn: false,
-            padding: 10        // pixels
         });
         if (featureIds.length) {
             this.unselectFeatures();
@@ -815,22 +812,16 @@ export class UserInteractions
                 const bounds = this._map.getBounds().toArray();
                 bbox = [...bounds[0], ...bounds[1]];
             }
-            // Convert pixel padding to LngLat and apply it to a feature's bounds
-            const padding = this._map.unproject({x: options.padding, y: options.padding});
-            if (bbox !== null) {
-                padding.lng -= bbox[0]
-                padding.lat = bbox[3] - padding.lat
-            }
             for (const featureId of featureIds) {
                 const annotation = this._flatmap.annotation(featureId);
                 if (annotation) {
                     if (this.selectFeature(featureId)) {
-                        bbox = expandBounds(bbox, annotation.bounds, padding);
+                        bbox = expandBounds(bbox, annotation.bounds)
                         if ('type' in annotation && annotation.type.startsWith('line')) {
                             for (const pathFeatureId of this.__pathManager.lineFeatureIds([featureId])) {
                                 if (this.selectFeature(pathFeatureId)) {
                                     const pathAnnotation = this._flatmap.annotation(pathFeatureId)
-                                    bbox = expandBounds(bbox, pathAnnotation.bounds, padding);
+                                    bbox = expandBounds(bbox, pathAnnotation.bounds)
                                 }
                             }
                         }
