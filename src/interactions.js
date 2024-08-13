@@ -817,8 +817,10 @@ export class UserInteractions
             }
             // Convert pixel padding to LngLat and apply it to a feature's bounds
             const padding = this._map.unproject({x: options.padding, y: options.padding});
-            padding.lng -= bbox[0];
-            padding.lat = bbox[3] - padding.lat;
+            if (bbox !== null) {
+                padding.lng -= bbox[0]
+                padding.lat = bbox[3] - padding.lat
+            }
             for (const featureId of featureIds) {
                 const annotation = this._flatmap.annotation(featureId);
                 if (annotation) {
@@ -1668,10 +1670,12 @@ export class UserInteractions
             this._flatmap.panZoomEvent(type);
         }
         if (type === 'zoom') {
-            this.#updateActiveFeature([
-                event.originalEvent.layerX,
-                event.originalEvent.layerY
-            ])
+            if ('originalEvent' in event) {
+                this.#updateActiveFeature([
+                    event.originalEvent.layerX,
+                    event.originalEvent.layerY
+                ])
+            }
             this._layerManager.zoomEvent()
         }
     }
