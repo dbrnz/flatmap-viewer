@@ -51,7 +51,7 @@ interface LinkData
 
 export interface NodeLinkGraph
 {
-    graph: Object
+    graph?: Object
     nodes: NodeData[]
     links: LinkData[]
 }
@@ -68,8 +68,10 @@ export class DiGraph extends Graph
     load(graph: NodeLinkGraph)
     //========================
     {
-        for (const [key, value] of Object.entries(graph.graph)) {
-            this.setAttribute(key, value)
+        if ('graph' in graph) {
+            for (const [key, value] of Object.entries(graph.graph)) {
+                this.setAttribute(key, value)
+            }
         }
         for (const node of graph.nodes) {
             this.addNode(node.id)
