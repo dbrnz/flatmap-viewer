@@ -192,10 +192,10 @@ export class FlatMap
 
         mapOptions.hash = (mapDescription.options.debug === true);
 
-        // Set maxBounds if it is set in the map's options
+        // Set bounds if it is set in the map's options
 
         if ('bounds' in mapDescription.options) {
-            mapOptions.maxBounds = mapDescription.options.bounds
+            mapOptions.bounds = mapDescription.options.bounds
         }
 
         // Create the map
@@ -246,6 +246,7 @@ export class FlatMap
                 if (this._userInteractions.minimap) {
                     this._userInteractions.minimap.initialise()
                 }
+
                 this.#startupState = 3
                 this._resolve(this);
             }
@@ -882,20 +883,6 @@ export class FlatMap
         if (this._callback) {
             data.mapUUID = this.__uuid;
             return this._callback(type, data, ...args);
-        }
-    }
-
-    setInitialPosition()
-    //==================
-    {
-        if ('bounds' in this._options) {
-            this._map.fitBounds(this._options['bounds'], {animate: false});
-        }
-        if ('center' in this._options) {
-            this._map.setCenter(this._options['center']);
-        }
-        if ('zoom' in this._options) {
-            this._map.setZoom(this._options['zoom']);
         }
     }
 

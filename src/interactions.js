@@ -159,10 +159,6 @@ export class UserInteractions
         // Where to put labels and popups on a feature
         this.__markerPositions = new Map();
 
-        // Fit the map to its initial position
-
-        flatmap.setInitialPosition();
-
         // Track enabled features
 
         this.__featureEnabledCount = new Map(Array.from(this._flatmap.annotations.keys()).map(k => [+k, 0]));
