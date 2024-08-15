@@ -22,14 +22,14 @@ import {colord} from 'colord'
 
 //==============================================================================
 
-import { reverseMap } from './utils';
 import {FLATMAP_STYLE} from './flatmap-viewer'
+import { reverseMap } from './utils'
 
-export const PATHWAYS_LAYER = 'pathways';
+export const PATHWAYS_LAYER = 'pathways'
 
 //==============================================================================
 
-export const APINATOMY_PATH_PREFIX = 'ilxtr:';
+export const APINATOMY_PATH_PREFIX = 'ilxtr:'
 
 //==============================================================================
 
@@ -48,12 +48,12 @@ const PATH_TYPES = [
     { type: "venous", label: "Venous blood vessel", colour: "#2F6EBA", enabled: false},
     { type: "centreline", label: "Nerve centrelines", colour: "#CCC", enabled: false},
     { type: "error", label: "Paths with errors or warnings", colour: "#FF0", enabled: false}
-];
+]
 
 const PathTypeMap = new Map(PATH_TYPES.map(t => [t.type, t]))
 
 export const PATH_STYLE_RULES =
-    PATH_TYPES.flatMap(pathType => [['==', ['get', 'kind'], pathType.type], pathType.colour]);
+    PATH_TYPES.flatMap(pathType => [['==', ['get', 'kind'], pathType.type], pathType.colour])
 
 export function pathColourArray(pathType, alpha=255)
 //==================================================
@@ -240,7 +240,7 @@ export class PathManager
     }
 
     addPathsToFeatureSet_(pathIds, featureSet)
-    //======================================
+    //========================================
     {
         for (const pathId of pathIds) {
             const path = this.__paths[pathId];
@@ -376,24 +376,24 @@ export class PathManager
     enablePathsBySystem(system, enable, force=false)
     //==============================================
     {
-        let changed = false;
+        let changed = false
         for (const pathId of system.pathIds) {
-            const path = this.__paths[pathId];
+            const path = this.__paths[pathId]
             if (this.__pathtypeEnabled[path.pathType]
               && (force
                || enable && path.systemCount === 0
                || !enable && path.systemCount == 1)) {
                 // and type(pathId) is enabled...
-                const featureIds = new Set();
+                const featureIds = new Set()
                 this.addPathsToFeatureSet_([pathId], featureIds)
                 for (const featureId of featureIds) {
-                    this.__ui.enableFeature(featureId, enable, force);
+                    this.__ui.enableFeature(featureId, enable, force)
                 }
                 changed = true
             }
-            path.systemCount += (enable ? 1 : -1);
+            path.systemCount += (enable ? 1 : -1)
             if (path.systemCount < 0) {
-                path.systemCount = 0;
+                path.systemCount = 0
             }
             // TODO? Show connectors and parent components of these paths??
         }

@@ -20,12 +20,12 @@ limitations under the License.
 
 import maplibregl from 'maplibre-gl';
 
-import {default as turfArea} from '@turf/area';
-import {default as turfBBox} from '@turf/bbox';
-import * as turf from '@turf/helpers';
-import * as turfProjection from '@turf/projection';
+import {default as turfArea} from '@turf/area'
+import {default as turfBBox} from '@turf/bbox'
+import * as turf from '@turf/helpers'
 import * as turfLength from "@turf/length";
 import * as turfNearestPointOnLine from "@turf/nearest-point-on-line"
+import * as turfProjection from '@turf/projection'
 
 import polylabel from 'polylabel';
 
@@ -809,7 +809,7 @@ export class UserInteractions
                 bbox = [...bounds[0], ...bounds[1]];
             }
             for (const featureId of featureIds) {
-                const annotation = this._flatmap.annotation(featureId);
+                const annotation = this._flatmap.annotation(featureId)
                 if (annotation) {
                     if (this.selectFeature(featureId)) {
                         bbox = expandBounds(bbox, annotation.bounds)
@@ -828,7 +828,7 @@ export class UserInteractions
                 this._map.fitBounds(bbox, {
                     padding: 0,
                     animate: false
-                });
+                })
             }
         }
     }

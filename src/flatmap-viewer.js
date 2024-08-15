@@ -185,10 +185,10 @@ export class FlatMap
         };
 
         if ('maxZoom' in mapDescription.options) {
-            mapOptions.maxZoom = mapDescription.options.maxZoom;
+            mapOptions.maxZoom = mapDescription.options.maxZoom
         }
         if ('minZoom' in mapDescription.options) {
-            mapOptions.minZoom = mapDescription.options.minZoom;
+            mapOptions.minZoom = mapDescription.options.minZoom
         }
 
         // Only show location in address bar when debugging
