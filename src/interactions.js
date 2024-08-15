@@ -1741,8 +1741,8 @@ export class UserInteractions
             for (const imageId of this.#imageLayerIds.get(mapImageId)) {
                 this._map.removeSource(`${imageId}-source`)
                 const layerId = `${imageId}-layer`
-                if (map.getLayer(layerId)) {
-                    map.removeLayer(layerId)
+                if (this._map.getLayer(layerId)) {
+                    this._map.removeLayer(layerId)
                 }
             }
             this.#imageLayerIds.delete(mapImageId)
