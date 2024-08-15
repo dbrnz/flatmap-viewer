@@ -24,6 +24,8 @@ import {default as turfArea} from '@turf/area';
 import {default as turfBBox} from '@turf/bbox';
 import * as turf from '@turf/helpers';
 import * as turfProjection from '@turf/projection';
+import * as turfLength from "@turf/length";
+import * as turfNearestPointOnLine from "@turf/nearest-point-on-line"
 
 import polylabel from 'polylabel';
 
@@ -970,17 +972,17 @@ export class UserInteractions
                                       : `<div class='flatmap-feature-label'>${tooltip.join('<hr/>')}</div>`;
     }
 
-    __featureEvent(type, feature)
-    //===========================
+    __featureEvent(type, feature, values={})
+    //======================================
     {
-
+        const properties = Object.assign({}, feature.properties, values)
         if (inAnatomicalClusterLayer(feature)) {
-            return this._flatmap.markerEvent(type, feature.id, feature.properties);
+            return this._flatmap.markerEvent(type, feature.id, properties);
         } else if (feature.sourceLayer === PATHWAYS_LAYER) {  // I suspect this is never true as source layer
                                                               // names are like `neural_routes_pathways`
             return this._flatmap.featureEvent(type, this.__pathManager.pathProperties(feature));
         } else if ('properties' in feature) {
-            return this._flatmap.featureEvent(type, feature.properties);
+            return this._flatmap.featureEvent(type, properties);
         }
         return false;
     }
@@ -1234,14 +1236,14 @@ export class UserInteractions
 
         this.__clearActiveMarker();
 
-        const clickedFeatures = this.#renderedFeatures(event.point)
+        let clickedFeatures = this.#renderedFeatures(event.point)
         if (clickedFeatures.length == 0) {
             this.unselectFeatures();
             return;
         }
         const clickedDrawnFeatures = clickedFeatures.filter((f) => !f.id);
-        const clickedFeature = clickedFeatures.filter((f) => f.id)[0];
-        this.selectionEvent_(event.originalEvent, clickedFeature);
+        clickedFeatures = clickedFeatures.filter((f) => f.id)
+        const clickedFeature = clickedFeatures[0]
         if (this._modal) {
             // Remove tooltip, reset active features, etc
             this.__resetFeatureDisplay();
@@ -1257,13 +1259,36 @@ export class UserInteractions
                     clickedOnColdLayer : clickedFeature ?
                         clickedFeature : clickedOnHotLayer
             );
-        } else if (clickedFeature) {
-            this.__lastClickLngLat = event.lngLat;
-            this.__featureEvent('click', clickedFeature);
-
-            if (this._flatmap.options.standalone
-             && 'properties' in clickedFeature && 'hyperlink' in clickedFeature.properties) {
-                window.open(clickedFeature.properties.hyperlink, '_blank');
+        } else if (clickedFeatures.length) {
+            this.__lastClickLngLat = event.lngLat
+            if (this._flatmap.options.style !== FLATMAP_STYLE.CENTRELINE) {
+                this.selectionEvent_(event.originalEvent, clickedFeature)
+                this.__featureEvent('click', clickedFeature)
+            } else {
+                const seenFeatures = new Set()
+                for (const clickedFeature of clickedFeatures) {
+                    if (!seenFeatures.has(clickedFeature.properties.id)) {
+                        seenFeatures.add(clickedFeature.properties.id)
+                        this.selectionEvent_(event.originalEvent, clickedFeature)
+                        let locationValue = {}
+                        if (clickedFeature.properties.centreline) {
+                            // could do first two when loading...
+                            const lineCoords = JSON.parse(clickedFeature.properties.coordinates)
+                            const line = turf.lineString(lineCoords)
+                            const clickedPoint = turf.point([event.lngLat.lng, event.lngLat.lat])
+                            const linePoint = turfNearestPointOnLine.nearestPointOnLine(line, clickedPoint)
+                            locationValue = {
+                                location: linePoint.properties.location/turfLength.length(line)
+                            }
+                        }
+                        this.__featureEvent('click', clickedFeature, locationValue)
+                    }
+                }
+            }
+            if (this._flatmap.options.standalone) {
+                if ('properties' in clickedFeature && 'hyperlink' in clickedFeature.properties) {
+                    window.open(clickedFeature.properties.hyperlink, '_blank');
+                }
             }
         }
     }

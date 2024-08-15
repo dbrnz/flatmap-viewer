@@ -67,6 +67,7 @@ export const UNCLASSIFIED_TAXON_ID = 'NCBITaxon:2787823';   // unclassified entr
 const EXCLUDED_FEATURE_FILTER_KEYS = [
     'bounds',
     'class',
+    'coordinates',
     'featureId',
     'geometry',
     'geom-type',
@@ -1283,7 +1284,8 @@ export class FlatMap
             'completeness',
             'missing-nodes',
             'alert',
-            'biological-sex'
+            'biological-sex',
+            'location'
         ]
         const encodedProperties = [
             'dataset-ids',
