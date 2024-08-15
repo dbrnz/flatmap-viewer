@@ -473,21 +473,26 @@ export class UserInteractions
         this.__systemsManager.enable(systemId, enable);
     }
 
-    mapFeature(featureId)
-    //===================
+    mapFeatureFromAnnotation(annotation)
+    //==================================
     {
-        const ann = this._flatmap.annotation(featureId);
-        if (ann !== undefined) {
+        if (annotation) {
             return {
-                id: featureId,
+                id: +annotation.featureId,
                 source: VECTOR_TILES_SOURCE,
                 sourceLayer: (this._flatmap.options.separateLayers
-                             ? `${ann['layer']}_${ann['tile-layer']}`
-                             : ann['tile-layer']).replaceAll('/', '_'),
-                children: ann.children || []
-            };
+                             ? `${annotation['layer']}_${annotation['tile-layer']}`
+                             : annotation['tile-layer']).replaceAll('/', '_'),
+                children: annotation.children || []
+            }
         }
-        return undefined;
+        return undefined
+    }
+
+    mapFeature(geojsonId)
+    //===================
+    {
+        return this.mapFeatureFromAnnotation(this._flatmap.annotation(geojsonId))
     }
 
     #markerToFeature(feature)
