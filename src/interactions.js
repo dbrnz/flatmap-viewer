@@ -691,7 +691,6 @@ export class UserInteractions
     //================================
     {
         for (const lineFeature of lineFeatures) {
-            const lineFeatureId = +lineFeature.properties.featureId  // Ensure numeric
             this.activateFeature(lineFeature)
             const lineIds = new Set(lineFeatures.map(f => f.properties.featureId))
             for (const featureId of this.__pathManager.lineFeatureIds(lineIds)) {

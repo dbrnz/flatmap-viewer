@@ -153,7 +153,6 @@ export class PathManager
         for (const [pathType, paths] of Object.entries(flatmap.pathways['type-paths'])) {
             if (pathType in pathTypes) {
                 this.__pathsByType[pathType] = paths;
-                const pathDefn = pathTypes[pathType];
             } else {
                 this.__pathsByType['other'].push(...paths);
                 this.__pathtypeEnabled[pathType] = false;

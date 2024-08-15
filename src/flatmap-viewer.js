@@ -181,7 +181,6 @@ export class FlatMap
         const mapOptions = {
             style: mapDescription.style,
             container: container,
-            attributionControl: false
         };
 
         if ('maxZoom' in mapDescription.options) {
