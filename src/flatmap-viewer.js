@@ -101,6 +101,7 @@ export class FLATMAP_STYLE
 export class FlatMap
 {
     #baseUrl
+    #callbacks = []
     #mapServer
     #mapTermGraph
     #startupState = -1
@@ -118,7 +119,7 @@ export class FlatMap
         this.__taxon = mapDescription.taxon;
         this.__biologicalSex = mapDescription.biologicalSex;
         this._mapNumber = mapDescription.number;
-        this._callback = mapDescription.callback;
+        this.#callbacks.push(mapDescription.callback)
         this._layers = mapDescription.layers;
         this._markers = mapDescription.markers;
         this._options = mapDescription.options;
@@ -877,12 +878,20 @@ export class FlatMap
         }
     }
 
+    addCallback(callback)
+    //===================
+    {
+        this.#callbacks.unshift(callback)
+    }
+
     callback(type, data, ...args)
     //===========================
     {
-        if (this._callback) {
-            data.mapUUID = this.__uuid;
-            return this._callback(type, data, ...args);
+        data.mapUUID = this.__uuid
+        for (const callback of this.#callbacks) {
+            if (callback(type, data, ...args)) {
+                break
+            }
         }
     }
 
