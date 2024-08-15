@@ -1751,10 +1751,10 @@ export class UserInteractions
 
     //==========================================================================
 
-    getNervesIds()
-    //============
+    getNerveDetails()
+    //===============
     {
-        return this.__pathManager.centrelineIds
+        return this.__pathManager.centrelineDetails
     }
 
     enableNeuronPathsByNerve(nerveId, enable=true)

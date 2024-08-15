@@ -631,6 +631,21 @@ export class FlatMap
     }
 
     /**
+     * Get a feature's annotations given its external id.
+     *
+     * @param      {string}  annotationId  The features's external identifier
+     * @return     {Object}                The feature's annotations
+     */
+    annotationById(annotationId)
+    //==========================
+    {
+        if (this.__annIdToFeatureId.has(annotationId)) {
+            const geojsonId = this.__annIdToFeatureId.get(annotationId)
+            return this.__idToAnnotation.get(geojsonId)
+        }
+    }
+
+    /**
      * Flag the feature as having external annotation.
      *
      * @param      {string}  featureId  The feature's external identifier
@@ -1738,20 +1753,7 @@ export class FlatMap
     //===============
     {
         if (this._userInteractions !== null) {
-            return this._userInteractions.getNervesIds().map(id => {
-                const result = {id}
-                const annotation = this.__idToAnnotation.get(
-                                        this.__annIdToFeatureId.get(id))
-                if (annotation) {
-                    if ('label' in annotation) {
-                        result['label'] = annotation.label
-                    }
-                    if ('models' in annotation) {
-                        result['models'] = annotation.models
-                    }
-                }
-                return result
-             })
+            return this._userInteractions.getNerveDetails()
         }
         return []
     }

@@ -68,7 +68,7 @@ export function pathColourArray(pathType, alpha=255)
 
 export class PathManager
 {
-    #centrelineIds = new Set()          // Set<string>
+    #centrelineDetails = []             // Array<Object>
     #pathsByCentreline = new Map()      // Map<string, Set<string>>
 
     constructor(flatmap, ui, enabled=true)
@@ -90,6 +90,7 @@ export class PathManager
         this.__paths = {};                                      // pathId: path
         const pathLines = {};                                   // pathId: [lineIds]
         const pathNerves = {};                                  // pathId: [nerveIds]
+        const centrelineIds = new Set()
         if ('paths' in flatmap.pathways) {
             for (const [pathId, path] of Object.entries(flatmap.pathways.paths)) {
                 pathLines[pathId] = path.lines;
@@ -105,7 +106,7 @@ export class PathManager
                     this.__pathToPathModel[pathId] = modelId;
                 }
                 for (const id of (path.centrelines || [])) {
-                    this.#centrelineIds.add(id)
+                    centrelineIds.add(id)
                     if (!this.#pathsByCentreline.has(id)) {
                         this.#pathsByCentreline.set(id, new Set())
                     }
@@ -113,6 +114,20 @@ export class PathManager
                 }
             }
         }
+        this.#centrelineDetails = [...centrelineIds.values()].map(id => {
+            const result = {id}
+            const annotation = flatmap.annotationById(id)
+            if (annotation) {
+                if ('label' in annotation) {
+                    result['label'] = annotation.label
+                }
+                if ('models' in annotation) {
+                    result['models'] = annotation.models
+                }
+            }
+            return result
+        })
+
         this.__pathsByLine = reverseMap(pathLines);               // lineId: [pathIds]
         this.__pathsByNerve = reverseMap(pathNerves);             // nerveId: [pathIds]
 
@@ -158,10 +173,10 @@ export class PathManager
         }
     }
 
-    get centrelineIds()
-    //=================
+    get centrelineDetails()
+    //=====================
     {
-        return new Array(...this.#centrelineIds.values())
+        return this.#centrelineDetails
     }
 
     get haveCentrelines()
