@@ -114,19 +114,6 @@ export class PathManager
                 }
             }
         }
-        this.#centrelineDetails = [...centrelineIds.values()].map(id => {
-            const result = {id}
-            const annotation = flatmap.annotationById(id)
-            if (annotation) {
-                if ('label' in annotation) {
-                    result['label'] = annotation.label
-                }
-                if ('models' in annotation) {
-                    result['models'] = annotation.models
-                }
-            }
-            return result
-        })
 
         this.__pathsByLine = reverseMap(pathLines);               // lineId: [pathIds]
         this.__pathsByNerve = reverseMap(pathNerves);             // nerveId: [pathIds]
@@ -157,9 +144,36 @@ export class PathManager
                 this.__pathsByType['other'].push(...paths);
                 this.__pathtypeEnabled[pathType] = false;
             }
+            if (flatmap.options.style === FLATMAP_STYLE.CENTRELINE) {
+                if (pathType === 'centreline') {
+                    for (const id of paths) {
+                        centrelineIds.add(id)
+                    }
+                }
+            }
         }
         // Assign types to individual paths
         this.__assignPathTypes();
+
+        // Get details of centrelines
+        this.#centrelineDetails = []
+        for (const id of centrelineIds.values()) {
+            const details = {id}
+            const annotation = flatmap.annotationById(id)
+            if (annotation) {
+                if ('label' in annotation) {
+                    details['label'] = annotation.label
+                }
+                if ('models' in annotation) {
+                    details['models'] = annotation.models
+                }
+                const feature = this.__ui.mapFeatureFromAnnotation(annotation)
+                if (feature) {
+                    this.__flatmap.map.setFeatureState(feature, {'visible': true})
+                }
+            }
+            this.#centrelineDetails.push(details)
+        }
 
         // Nerve centrelines are a special case with their own controls
         if (flatmap.options.style === FLATMAP_STYLE.CENTRELINE) {

@@ -690,6 +690,7 @@ class NerveCentrelineLayer extends VectorStyleLayer
             ],
             'line-opacity': [
                 'case',
+                    ['!', ['boolean', ['feature-state', 'visible'], false]], 0,
                     ['boolean', ['feature-state', 'hidden'], false], 0,
                     ['boolean', ['feature-state', 'selected'], false], 1.0,
                     ['boolean', ['feature-state', 'active'], false], 1.0,
