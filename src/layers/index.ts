@@ -179,8 +179,8 @@ class FlatMapStylingLayer
                 .includes(pathwaysVectorSource)) {
             this.#addVectorStyleLayer(style.AnnotatedPathLayer, PATHWAYS_LAYER, true)
 
-            this.#addVectorStyleLayer(style.CentrelineEdgeLayer, PATHWAYS_LAYER)
-            this.#addVectorStyleLayer(style.CentrelineTrackLayer, PATHWAYS_LAYER)
+            this.#addVectorStyleLayer(style.NerveCentrelineEdgeLayer, PATHWAYS_LAYER)
+            this.#addVectorStyleLayer(style.NerveCentrelineTrackLayer, PATHWAYS_LAYER)
 
             this.#addVectorStyleLayer(style.PathLineLayer, PATHWAYS_LAYER, true)
             this.#addVectorStyleLayer(style.PathDashlineLayer, PATHWAYS_LAYER, true)

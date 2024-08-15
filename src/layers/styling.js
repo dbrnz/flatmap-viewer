@@ -661,11 +661,11 @@ export class PathDashHighlightLayer extends PathLineLayer
 
 //==============================================================================
 
-class CentrelineLayer extends VectorStyleLayer
+class NerveCentrelineLayer extends VectorStyleLayer
 {
     constructor(id, type, sourceLayer)
     {
-        super(id, `centreline-${type}`, sourceLayer);
+        super(id, `nerve-centreline-${type}`, sourceLayer);
         this.__type = type;
     }
 
@@ -724,7 +724,7 @@ class CentrelineLayer extends VectorStyleLayer
 }
 
 
-export class CentrelineEdgeLayer extends CentrelineLayer
+export class NerveCentrelineEdgeLayer extends NerveCentrelineLayer
 {
     constructor(id, sourceLayer)
     {
@@ -733,7 +733,7 @@ export class CentrelineEdgeLayer extends CentrelineLayer
 
 }
 
-export class CentrelineTrackLayer extends CentrelineLayer
+export class NerveCentrelineTrackLayer extends NerveCentrelineLayer
 {
     constructor(id, sourceLayer)
     {
@@ -763,7 +763,7 @@ export class CentrelineNodeFillLayer extends VectorStyleLayer
 
     paintStyle(options={}, changes=false)
     {
-        const showNodes = options.showCentrelines || false;
+        const showNodes = options.showNerveCentrelines || false;
         const paintStyle = {
                 'fill-color': [
                     'case',
@@ -808,7 +808,7 @@ export class CentrelineNodeBorderLayer extends VectorStyleLayer
 
     paintStyle(options={}, changes=false)
     {
-        const showNodes = options.showCentrelines || false;
+        const showNodes = options.showNerveCentrelines || false;
         const paintStyle = {
                 'line-color': '#000',
                 'line-opacity': showNodes ? 0.1 : 0.01,
