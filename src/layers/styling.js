@@ -675,7 +675,6 @@ class NerveCentrelineLayer extends VectorStyleLayer
             'all',
             ['==', ['geometry-type'], 'LineString'],
             ['==', ['get', 'kind'], 'centreline'],
-            ['has', 'label']
         ]
     }
 
