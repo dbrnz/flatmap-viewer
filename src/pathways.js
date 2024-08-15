@@ -23,6 +23,7 @@ import {colord} from 'colord'
 //==============================================================================
 
 import { reverseMap } from './utils';
+import {FLATMAP_STYLE} from './flatmap-viewer'
 
 export const PATHWAYS_LAYER = 'pathways';
 
@@ -72,6 +73,7 @@ export class PathManager
 
     constructor(flatmap, ui, enabled=true)
     {
+        this.__flatmap = flatmap
         this.__ui = ui;
         this.__connectivityModelPaths = {};                          // modelId: [pathIds]
         this.__pathToConnectivityModel = {};
@@ -146,8 +148,14 @@ export class PathManager
         this.__assignPathTypes();
 
         // Nerve centrelines are a special case with their own controls
-        this.__haveCentrelines = false;
-        this.__enabledCentrelines = false;
+        if (flatmap.options.style === FLATMAP_STYLE.CENTRELINE) {
+            // Centrelines are always enabled in a ``centreline`` map
+            this.__haveCentrelines = true
+            this.__enabledCentrelines = true
+        } else {
+            this.__haveCentrelines = (this.#centrelineDetails.length > 0)
+            this.__enabledCentrelines = false
+        }
     }
 
     get centrelineIds()
@@ -201,8 +209,10 @@ export class PathManager
             if (pathTypeDefn.type in this.__pathsByType
             && this.__pathsByType[pathTypeDefn.type].length > 0) {
                 if (pathTypeDefn.type === 'centreline') {
-                    this.__haveCentrelines = true;
-                    this.__enabledCentrelines = this.__pathtypeEnabled[pathTypeDefn.type];
+                    if (this.__flatmap.options.style !== FLATMAP_STYLE.CENTRELINE) {
+                        this.__haveCentrelines = true;
+                        this.__enabledCentrelines = this.__pathtypeEnabled[pathTypeDefn.type]
+                    }
                 } else {
                     pathTypes.push({
                         ...pathTypeDefn,

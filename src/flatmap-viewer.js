@@ -87,9 +87,10 @@ const EXCLUDED_FEATURE_FILTER_KEYS = [
 
 export class FLATMAP_STYLE
 {
-    FUNCTIONAL = 'functional'
-    ANATOMICAL = 'anatomical'
-    GENERIC = 'flatmap'
+    static FUNCTIONAL = 'functional'
+    static ANATOMICAL = 'anatomical'
+    static CENTRELINE = 'centreline'
+    static GENERIC = 'flatmap'
 }
 
 //==============================================================================

@@ -188,9 +188,7 @@ export class UserInteractions
         for (const path of mapPathTypes) {
             this.__pathManager.enablePathsByType(path.type, path.enabled, true);
         }
-        if (this.__pathManager.haveCentrelines) {
-            this.enableCentrelines(this.__pathManager.enabledCentrelines, true);
-        }
+        this.enableCentrelines(this.__pathManager.enabledCentrelines, true)
 
         // Note features that are FC systems
         this.__systemsManager = new SystemsManager(this._flatmap, this, featuresEnabled);
@@ -237,7 +235,7 @@ export class UserInteractions
             this._map.addControl(new LayerControl(flatmap, this._layerManager));
 
             // Add a control for nerve centrelines if they are present
-            if (this.__pathManager.haveCentrelines) {
+            if (flatmap.options.style === FLATMAP_STYLE.ANATOMICAL && this.__pathManager.haveCentrelines) {
                 this._map.addControl(new NerveControl(flatmap, this._layerManager, {showCentrelines: false}));
             }
 
