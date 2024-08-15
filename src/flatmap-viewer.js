@@ -624,10 +624,16 @@ export class FlatMap
         return this.__idToAnnotation;
     }
 
-    annotation(featureId)
+    /**
+     * Get a feature's annotations given its GeoJSON id.
+     *
+     * @param      {string|number}  geojsonId  The features's GeoJSON identifier
+     * @return     {Object}                    The feature's annotations
+     */
+    annotation(geojsonId)
     //===================
     {
-        return this.__idToAnnotation.get(featureId.toString());
+        return this.__idToAnnotation.get(geojsonId.toString());
     }
 
     /**
@@ -1973,7 +1979,7 @@ export class MapManager
                 // Note the kind of map
 
                 if ('style' in mapIndex) {
-                    mapOptions.style = mapIndex.style;          // Currently ``anatomical`` or ``functional``
+                    mapOptions.style = mapIndex.style;          // Currently ``anatomical``, ``functional`` or ``centreline``
                 } else {
                     mapOptions.style = FLATMAP_STYLE.GENERIC    // Default is a generic ``flatmap``
                 }
