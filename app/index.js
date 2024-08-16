@@ -34,13 +34,24 @@ const MAP_ENDPOINTS = {
     staging: 'https://mapcore-demo.org/staging/flatmap/v1/',
 }
 
+const DEFAULT_OPTIONS = {
+    tooltips: true,
+    debug: false,
+    minimap: false,
+    showId: true,
+    showPosition: false,
+    showLngLat: false,
+    standalone: true,
+    flightPaths: false,
+    maxZoom: 9.99
+}
+
 window.onload = standaloneViewer(MAP_ENDPOINTS, {
     debug: DEBUG,
     minimap: MINIMAP
-});
+})
 
 //==============================================================================
-
 
 const keyPrompts = [
     ['id', 'Map Id'],
@@ -210,17 +221,7 @@ export async function standaloneViewer(mapEndpoints={}, options={})
     const mapGenerations = new Map()
 
     let defaultBackground = localStorage.getItem('flatmap-background-colour') || 'black'
-    const mapOptions = Object.assign({
-        tooltips: true,
-        background: defaultBackground,
-        debug: false,
-        minimap: false,
-        showId: true,
-        showPosition: false,
-        standalone: true,
-        flightPaths: false,
-        maxZoom: 9.99
-    }, options)
+    const mapOptions = Object.assign({}, DEFAULT_OPTIONS, {background: defaultBackground}, options)
 
     // Everything setup so start by getting a map manager
 
