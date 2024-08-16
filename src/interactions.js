@@ -1086,8 +1086,10 @@ export class UserInteractions
             const topSourceLayer = feature.sourceLayer
             let labelledFeatures = features.filter(feature => (feature.sourceLayer === topSourceLayer
                                                          && ('hyperlink' in feature.properties
-                                                             || 'label' in feature.properties
-                                                             || 'user_label' in feature.properties)
+                                                          || 'label' in feature.properties
+                                                          || 'user_label' in feature.properties
+                                                          || this._flatmap.options.showId && 'id' in feature.properties
+                                                            )
                                                          && (!('tooltip' in feature.properties)
                                                             || feature.properties.tooltip)))
                                            .sort((a, b) => (a.properties.area - b.properties.area));
