@@ -1743,11 +1743,11 @@ export class UserInteractions
     {
         if (this.#imageLayerIds.has(mapImageId)) {
             for (const imageId of this.#imageLayerIds.get(mapImageId)) {
-                this._map.removeSource(`${imageId}-source`)
                 const layerId = `${imageId}-layer`
                 if (this._map.getLayer(layerId)) {
                     this._map.removeLayer(layerId)
                 }
+                this._map.removeSource(`${imageId}-source`)
             }
             this.#imageLayerIds.delete(mapImageId)
         }
