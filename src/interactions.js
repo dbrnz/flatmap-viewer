@@ -957,7 +957,6 @@ export class UserInteractions
         if ('warning' in properties) {
             tooltip.push(`<div class="feature-error">Warning: ${properties.warning}</div>`)
         }
-        let renderedLabel;
         if (('label' in properties
           || 'hyperlink' in properties
           || 'user_label' in properties)
