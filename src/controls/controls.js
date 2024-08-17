@@ -473,11 +473,11 @@ export class SCKANControl
 
 export class NerveControl
 {
-    constructor(flatmap, options={showCentrelines: false})
+    constructor(flatmap, options={showNerveCentrelines: false})
     {
         this.__flatmap = flatmap;
         this.__map = undefined;
-        this.__visible = options.showCentrelines || false;
+        this.__visible = options.showNerveCentrelines || false;
     }
 
     getDefaultPosition()

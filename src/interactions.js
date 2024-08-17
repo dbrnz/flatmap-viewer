@@ -238,7 +238,7 @@ export class UserInteractions
 
             // Add a control for nerve centrelines if they are present
             if (flatmap.options.style === FLATMAP_STYLE.ANATOMICAL && this.__pathManager.haveCentrelines) {
-                this._map.addControl(new NerveControl(flatmap, this._layerManager, {showCentrelines: false}));
+                this._map.addControl(new NerveControl(flatmap, this._layerManager, {showNerveCentrelines: false}));
             }
 
             if (flatmap.options.style === FLATMAP_STYLE.FUNCTIONAL) {
@@ -1368,7 +1368,7 @@ export class UserInteractions
     //=========================================
     {
         this.__pathManager.enablePathsByType('centreline', enable, force);
-        this.#setPaint({showCentrelines: enable});
+        this.#setPaint({showNerveCentrelines: enable});
     }
 
     enableSckanPaths(sckanState, enable=true)
