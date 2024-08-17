@@ -90,7 +90,6 @@ export class PathManager
         this.__paths = {};                                      // pathId: path
         const pathLines = {};                                   // pathId: [lineIds]
         const pathNerves = {};                                  // pathId: [nerveIds]
-        const centrelineIds = new Set()
         if ('paths' in flatmap.pathways) {
             for (const [pathId, path] of Object.entries(flatmap.pathways.paths)) {
                 pathLines[pathId] = path.lines;
@@ -106,7 +105,6 @@ export class PathManager
                     this.__pathToPathModel[pathId] = modelId;
                 }
                 for (const id of (path.centrelines || [])) {
-                    centrelineIds.add(id)
                     if (!this.#pathsByCentreline.has(id)) {
                         this.#pathsByCentreline.set(id, new Set())
                     }
@@ -144,36 +142,34 @@ export class PathManager
                 this.__pathsByType['other'].push(...paths);
                 this.__pathtypeEnabled[pathType] = false;
             }
-            if (flatmap.options.style === FLATMAP_STYLE.CENTRELINE) {
-                if (pathType === 'centreline') {
-                    for (const id of paths) {
-                        centrelineIds.add(id)
+            if (pathType === 'centreline') {
+                // Set details of centrelines
+                for (const id of paths) {
+                    const annotation = flatmap.annotationById(id)
+                    if (flatmap.options.style === FLATMAP_STYLE.CENTRELINE
+                     || this.#pathsByCentreline.has(id)) {
+                        const details = {id}
+                        if (annotation) {
+                            if ('label' in annotation) {
+                                details['label'] = annotation.label
+                            }
+                            if ('models' in annotation) {
+                                details['models'] = annotation.models
+                            }
+                        }
+                        this.#centrelineDetails.push(details)
+                    } else if (annotation) {
+                        // Hide centrelines with no paths if not a ``centreline`` map
+                        const feature = this.__ui.mapFeatureFromAnnotation(annotation)
+                        if (feature) {
+                            this.__flatmap.map.setFeatureState(feature, {'invisible': true})
+                        }
                     }
                 }
             }
         }
         // Assign types to individual paths
         this.__assignPathTypes();
-
-        // Get details of centrelines
-        this.#centrelineDetails = []
-        for (const id of centrelineIds.values()) {
-            const details = {id}
-            const annotation = flatmap.annotationById(id)
-            if (annotation) {
-                if ('label' in annotation) {
-                    details['label'] = annotation.label
-                }
-                if ('models' in annotation) {
-                    details['models'] = annotation.models
-                }
-                const feature = this.__ui.mapFeatureFromAnnotation(annotation)
-                if (feature) {
-                    this.__flatmap.map.setFeatureState(feature, {'visible': true})
-                }
-            }
-            this.#centrelineDetails.push(details)
-        }
 
         // Nerve centrelines are a special case with their own controls
         if (flatmap.options.style === FLATMAP_STYLE.CENTRELINE) {

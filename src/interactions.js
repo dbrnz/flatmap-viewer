@@ -603,7 +603,8 @@ export class UserInteractions
         if (feature.id) {
             const state = this.#getFeatureState(feature);
             return (state !== undefined
-                && (!('hidden' in state) || !state.hidden));
+                && !(state.hidden || false)
+                && !(state.invisible || false))
         }
         return DRAW_ANNOTATION_LAYERS.includes(feature.layer.id)
     }
