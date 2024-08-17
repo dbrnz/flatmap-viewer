@@ -771,7 +771,7 @@ export class CentrelineNodeFillLayer extends VectorStyleLayer
                     ['boolean', ['feature-state', 'active'], false], CENTRELINE_ACTIVE,
                     CENTRELINE_COLOUR
                 ],
-                'fill-opacity': showNodes ? 0.8 : 0.01
+                'fill-opacity': showNodes ? 0.8 : 0
             }
         return super.changedPaintStyle(paintStyle, changes);
     }
@@ -811,7 +811,7 @@ export class CentrelineNodeBorderLayer extends VectorStyleLayer
         const showNodes = options.showNerveCentrelines || false;
         const paintStyle = {
                 'line-color': '#000',
-                'line-opacity': showNodes ? 0.1 : 0.01,
+                'line-opacity': showNodes ? 0.1 : 0,
                 'line-width': [
                     'let',
                     'width',
