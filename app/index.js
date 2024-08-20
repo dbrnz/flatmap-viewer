@@ -384,6 +384,8 @@ export async function standaloneViewer(mapEndpoints={}, options={})
                     drawControl.handleEvent(...args)
                 } else if (args[0].type === 'marker') {
                     console.log(eventType, ...args)
+                } else if (eventType === 'click') {
+                    console.log(eventType, ...args)
                 }
             }, mapOptions)
         .then(map => {
