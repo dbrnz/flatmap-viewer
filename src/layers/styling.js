@@ -33,7 +33,7 @@ const COLOUR_SELECTED  = '#0F0';
 const COLOUR_HIDDEN    = '#D8D8D8';
 
 const CENTRELINE_ACTIVE = '#888';
-const CENTRELINE_COLOUR = '#CCC';
+const CENTRELINE_COLOUR = '#8FF';
 
 const FEATURE_SELECTED_BORDER = 'black';
 
@@ -699,7 +699,7 @@ class NerveCentrelineLayer extends VectorStyleLayer
             'line-width': [
                 'let',
                 'width',
-                    (this.__type == 'edge') ? 1.6 : 1.2,
+                    (this.__type == 'edge') ? 5 : 4.6,
                     STROKE_INTERPOLATION
             ]
             // Need to vary width based on zoom??
