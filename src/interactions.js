@@ -42,6 +42,7 @@ import {displayedProperties, InfoControl} from './controls/info';
 import {AnnotatorControl, BackgroundControl, LayerControl, NerveControl,
         SCKANControl} from './controls/controls';
 import {AnnotationDrawControl, DRAW_ANNOTATION_LAYERS} from './controls/annotation'
+import {CentrelineControl} from './controls/centreline'
 import {PathControl} from './controls/paths';
 import {FlightPathControl} from './controls/flightpaths'
 import {SearchControl} from './controls/search';
@@ -238,7 +239,7 @@ export class UserInteractions
 
             // Add a control for nerve centrelines if they are present
             if (flatmap.options.style === FLATMAP_STYLE.ANATOMICAL && this.__pathManager.haveCentrelines) {
-                this._map.addControl(new NerveControl(flatmap, this._layerManager, {showNerveCentrelines: false}));
+                this._map.addControl(new CentrelineControl(flatmap, this))
             }
 
             if (flatmap.options.style === FLATMAP_STYLE.FUNCTIONAL) {
