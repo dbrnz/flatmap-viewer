@@ -136,16 +136,16 @@ export function setDefaults(options: Object | null | undefined, defaultOptions: 
 
 //==============================================================================
 
-export function reverseMap(mapping: Object): Object
-//=================================================
+export function reverseMap<K, V>(mapping: Map<K, Array<V>|Set<V>>): Map<V, Set<K>>
+//================================================================================
 {
-    const reverse = {}
-    for (const [key, values] of Object.entries(mapping)) {
+    const reverse: Map<V, Set<K>> = new Map()
+    for (const [key, values] of mapping.entries()) {
         for (const value of values) {
-            if (value in reverse) {
-                reverse[value].add(key)
+            if (reverse.has(value)) {
+                reverse.get(value).add(key)
             } else {
-                reverse[value] = new Set([key])
+                reverse.set(value, new Set([key]))
             }
         }
     }
