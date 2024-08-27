@@ -70,6 +70,7 @@ export class PathManager
 {
     #centrelineDetails = []             // Array<Object>
     #pathsByCentreline = new Map()      // Map<string, Set<string>>
+    #pathLines = new Map()              // Map<string, Array<number>>   pathId: [lineIds]
 
     constructor(flatmap, ui, enabled=true)
     {
@@ -88,11 +89,10 @@ export class PathManager
         this.__pathModelPaths = {};                             // pathModelId: [pathIds]
         this.__pathToPathModel = {};                            // pathId: pathModelId
         this.__paths = {};                                      // pathId: path
-        const pathLines = new Map()                             // pathId: [lineIds]
         const pathNerves = new Map()                            // pathId: [nerveIds]
         if ('paths' in flatmap.pathways) {
             for (const [pathId, path] of Object.entries(flatmap.pathways.paths)) {
-                pathLines.set(pathId, path.lines)
+                this.#pathLines.set(pathId, path.lines)
                 pathNerves.set(pathId, path.nerves)
                 this.__paths[pathId] = path;
                 this.__paths[pathId].systemCount = 0;
@@ -113,7 +113,7 @@ export class PathManager
             }
         }
 
-        this.__pathsByLine = reverseMap(pathLines);               // lineId: [pathIds]
+        this.__pathsByLine = reverseMap(this.#pathLines);            // lineId: [pathIds]
         this.__pathsByNerve = reverseMap(pathNerves);                // nerveId: [pathIds]
 
         const nodePaths = flatmap.pathways['node-paths'];
@@ -373,6 +373,11 @@ export class PathManager
     //========================================================
     {
         if (this.#pathsByCentreline.has(centrelineId)) {
+            if (this.#pathLines.has(centrelineId)) {
+                for (const lineId of this.#pathLines.get(centrelineId)) {
+                    this.__ui.enableFeature(lineId, enable, force)
+                }
+            }
             const featureIds = new Set()
             this.addPathsToFeatureSet_(this.#pathsByCentreline.get(centrelineId), featureIds)
             for (const featureId of featureIds) {
