@@ -22,39 +22,44 @@ limitations under the License.
 const ZERO_PAD_PREFIXES = {
     'ILX':    7,
     'UBERON': 7
-};
+}
 
 //==============================================================================
 
-export class List extends Array {
+export class List<T> extends Array<T> {
     constructor(iterable=null) {
-        super();
+        super()
         if (iterable !== null)
-            this.extend(iterable);
+            this.extend(iterable)
     }
 
-    append(element) {
-        super.push(element);
-        return this;
-    }
-
-    contains(element) {
-        return (super.includes(element));
-    }
-
-    extend(other) {
-        if (this === other) {
-            throw new Error('Cannot extend a list with itself...');
-        } else if (other) {
-            super.push(...other);
-        }
-        return this;
-    }
-
-    slice(start, end)
-    //===============
+    append(element: T)
+    //================
     {
-        return new List(Array(...this).slice(start, end));
+        super.push(element)
+        return this
+    }
+
+    contains(element: T)
+    //==================
+    {
+        return (super.includes(element))
+    }
+
+    extend(other: Array<T>)
+    {
+        if (this === other) {
+            throw new Error('Cannot extend a list with itself...')
+        } else if (other) {
+            super.push(...other)
+        }
+        return this
+    }
+
+    slice(start: number, end: number): List<T>
+    //========================================
+    {
+        return new List(Array(...this).slice(start, end))
     }
 }
 
@@ -64,95 +69,98 @@ export class List extends Array {
 
 export class Mutex
 {
+    #mutex: Promise<void>
+
     constructor()
     {
-        this._mutex = Promise.resolve();
+        this.#mutex = Promise.resolve()
     }
 
-    lock()
-    //====
+    lock(): PromiseLike<() => void>
+    //=============================
     {
-        let begin = unlock => {};
+        let begin = _ => {}
 
-        this._mutex = this._mutex.then(() => {
-            return new Promise(begin);
-        });
+        this.#mutex = this.#mutex.then(() => {
+            return new Promise(begin)
+        })
 
         return new Promise(res => {
-            begin = res;
-        });
+            begin = res
+        })
     }
 
-    async dispatch(fn)
-    //================
+    async dispatch(fn: (() => void) | (() => PromiseLike<void>)): Promise<void>
+    //=========================================================================
     {
-        const unlock = await this.lock();
+        const unlock = await this.lock()
 
         try {
-            return await Promise.resolve(fn());
+            return await Promise.resolve(fn())
         } finally {
-            unlock();
+            unlock()
         }
     }
 }
 
 //==============================================================================
 
-export function normaliseId(id)
+export function normaliseId(id: string): string
 {
     if (!id.includes(':')) {
-        return id;
+        return id
     }
     const parts = id.split(':')
     const lastPart = parts[parts.length - 1]
     if (parts[0].toUpperCase() in ZERO_PAD_PREFIXES && '0123456789'.includes(lastPart[0])) {
-        parts[parts.length - 1] = lastPart.padStart(ZERO_PAD_PREFIXES[parts[0].toUpperCase()], '0');
-        return parts.join(':');
+        parts[parts.length - 1] = lastPart.padStart(ZERO_PAD_PREFIXES[parts[0].toUpperCase()], '0')
+        return parts.join(':')
     }
-    return id;
+    return id
 }
 
 //==============================================================================
 
-export function setDefaults(options, defaultOptions)
+export function setDefaults(options: Object | null | undefined, defaultOptions: Object): Object
 {
     if (options === undefined || options === null) {
-        return defaultOptions;
+        return defaultOptions
     }
     for (const [key, value] of Object.entries(defaultOptions)) {
         if (!(key in options)) {
-            options[key] = value;
+            options[key] = value
         }
     }
-    return options;
+    return options
 }
 
 //==============================================================================
 
-export function reverseMap(mapping)
-//=================================
+export function reverseMap(mapping: Object): Object
+//=================================================
 {
-    const reverse = {};
+    const reverse = {}
     for (const [key, values] of Object.entries(mapping)) {
         for (const value of values) {
             if (value in reverse) {
-                reverse[value].add(key);
+                reverse[value].add(key)
             } else {
-                reverse[value] = new Set([key]);
+                reverse[value] = new Set([key])
             }
         }
     }
-    return reverse;
+    return reverse
 }
 
 //==============================================================================
 
-export function delay(fn, wait = 0) {
-    let timeout;
+export function delay(fn, wait: number = 0)
+{
+    let timeout
     return function(...args) {
-      clearTimeout(timeout);
-      timeout = setTimeout(() => fn.apply(this, args), wait);
-    };
+        clearTimeout(timeout)
+        timeout = setTimeout(() => fn.apply(this, args), wait)
+    }
 }
 
 //==============================================================================
