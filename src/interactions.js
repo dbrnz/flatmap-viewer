@@ -129,19 +129,19 @@ function getRenderedLabel(properties)
 
 export class UserInteractions
 {
+    #activeFeatures = new Map()
     #annotationDrawControl = null
     #imageLayerIds = new Map()
     #lastImageId = 0
     #lastMarkerId = 900000
     #minimap = null
+    #selectedFeatureRefCount = new Map()
 
     constructor(flatmap)
     {
         this._flatmap = flatmap;
         this._map = flatmap.map;
 
-        this._activeFeatures = new Set()
-        this._selectedFeatureIds = new Map();
         this._currentPopup = null;
         this._infoControl = null;
         this._tooltip = null;
@@ -613,7 +613,7 @@ export class UserInteractions
     featureSelected_(featureId)
     //=========================
     {
-        return this._selectedFeatureIds.has(+featureId);
+        return this.#selectedFeatureRefCount.has(+featureId)
     }
 
     selectFeature(featureId, dim=true)
@@ -630,9 +630,9 @@ export class UserInteractions
         }
         featureId = +featureId;   // Ensure numeric
         let result = false;
-        const noSelection = (this._selectedFeatureIds.size === 0);
-        if (this._selectedFeatureIds.has(featureId)) {
-            this._selectedFeatureIds.set(featureId, this._selectedFeatureIds.get(featureId) + 1);
+        const noSelection = (this.#selectedFeatureRefCount.size === 0)
+        if (this.#selectedFeatureRefCount.has(featureId)) {
+            this.#selectedFeatureRefCount.set(featureId, this.#selectedFeatureRefCount.get(featureId) + 1)
             result = true;
         } else {
             const feature = this.mapFeature(featureId);
@@ -640,7 +640,7 @@ export class UserInteractions
                 const state = this.#getFeatureState(feature);
                 if (state !== undefined && (!('hidden' in state) || !state.hidden)) {
                     this.#setFeatureState(feature, { selected: true });
-                    this._selectedFeatureIds.set(featureId, 1);
+                    this.#selectedFeatureRefCount.set(featureId, 1)
                     result = true;
                 }
             }
@@ -655,19 +655,19 @@ export class UserInteractions
     //========================
     {
         featureId = +featureId;   // Ensure numeric
-        if (this._selectedFeatureIds.has(featureId)) {
-            const references = this._selectedFeatureIds.get(featureId);
-            if (references > 1) {
-                this._selectedFeatureIds.set(featureId, references - 1);
+        if (this.#selectedFeatureRefCount.has(featureId)) {
+            const refCount = this.#selectedFeatureRefCount.get(featureId)
+            if (refCount > 1) {
+                this.#selectedFeatureRefCount.set(featureId, refCount - 1)
             } else {
                 const feature = this.mapFeature(featureId);
                 if (feature !== undefined) {
                     this.#removeFeatureState(feature, 'selected');
-                    this._selectedFeatureIds.delete(+featureId);
+                    this.#selectedFeatureRefCount.delete(+featureId)
                 }
             }
         }
-        if (this._selectedFeatureIds.size === 0) {
+        if (this.#selectedFeatureRefCount.size === 0) {
             this.#setPaint({...this.__colourOptions, dimmed: false});
         }
     }
@@ -675,13 +675,13 @@ export class UserInteractions
     unselectFeatures()
     //================
     {
-        for (const featureId of this._selectedFeatureIds.keys()) {
+        for (const featureId of this.#selectedFeatureRefCount.keys()) {
             const feature = this.mapFeature(featureId);
             if (feature !== undefined) {
                 this.#removeFeatureState(feature, 'selected');
             }
         }
-        this._selectedFeatureIds.clear();
+        this.#selectedFeatureRefCount.clear();
         this.#setPaint({...this.__colourOptions, dimmed: false});
     }
 
@@ -690,7 +690,9 @@ export class UserInteractions
     {
         if (feature !== undefined) {
             this.#setFeatureState(feature, { active: true });
-            this._activeFeatures.add(feature);
+            if (!this.#activeFeatures.has(+feature.id)) {
+                this.#activeFeatures.set(+feature.id, feature)
+            }
         }
     }
 
@@ -709,10 +711,10 @@ export class UserInteractions
     resetActiveFeatures_()
     //====================
     {
-        for (const feature of this._activeFeatures) {
-            this.#removeFeatureState(feature, 'active');
+        for (const feature of this.#activeFeatures.values()) {
+            this.#removeFeatureState(feature, 'active')
         }
-        this._activeFeatures.clear()
+        this.#activeFeatures.clear()
     }
 
     smallestAnnotatedPolygonFeature_(features)
@@ -1193,37 +1195,23 @@ export class UserInteractions
         }
     }
 
-    selectionEvent_(event, feature)
-    //=============================
+    #selectActiveFeatures(event)
+    //==========================
     {
-        if (feature !== undefined) {
-            const clickedFeatureId = +feature.id;
+        const singleSelection = !(event.ctrlKey || event.metaKey)
+        if (singleSelection) {
+            this.unselectFeatures()
+        }
+        for (const [featureId, feature] of this.#activeFeatures) {
             const dim = !('properties' in feature
                        && 'kind' in feature.properties
-                       && ['cell-type', 'scaffold', 'tissue'].includes(feature.properties.kind));
-            if (!(event.ctrlKey || event.metaKey)) {
-                let selecting = true;
-                for (const featureId of this._selectedFeatureIds.keys()) {
-                    if (featureId === clickedFeatureId) {
-                        selecting = false;
-                        break;
-                    }
-                }
-                this.unselectFeatures();
-                if (selecting) {
-                    for (const feature of this._activeFeatures) {
-                        this.selectFeature(feature.id, dim);
-                    }
-                }
+                       && ['cell-type', 'scaffold', 'tissue'].includes(feature.properties.kind))
+            if (singleSelection) {
+                this.selectFeature(featureId, dim)
+            } else if (this.featureSelected_(featureId)) {
+                this.unselectFeature(featureId)
             } else {
-                const clickedSelected = this.featureSelected_(clickedFeatureId);
-                for (const feature of this._activeFeatures) {
-                    if (clickedSelected) {
-                        this.unselectFeature(feature.id);
-                    } else {
-                        this.selectFeature(feature.id, dim);
-                    }
-                }
+                this.selectFeature(featureId, dim)
             }
         }
     }
@@ -1269,14 +1257,14 @@ export class UserInteractions
         } else if (clickedFeatures.length) {
             this.__lastClickLngLat = event.lngLat
             if (this._flatmap.options.style !== FLATMAP_STYLE.CENTRELINE) {
-                this.selectionEvent_(event.originalEvent, clickedFeature)
+                this.#selectActiveFeatures(event.originalEvent)
                 this.__featureEvent('click', clickedFeature)
             } else {
                 const seenFeatures = new Set()
+                this.#selectActiveFeatures(event.originalEvent)
                 for (const clickedFeature of clickedFeatures) {
                     if (!seenFeatures.has(clickedFeature.properties.id)) {
                         seenFeatures.add(clickedFeature.properties.id)
-                        this.selectionEvent_(event.originalEvent, clickedFeature)
                         let locationValue = {}
                         if (clickedFeature.properties.centreline) {
                             // could do first two when loading...
@@ -1608,7 +1596,7 @@ export class UserInteractions
                         this.resetActiveFeatures_();
                         this.activateFeature(feature);
                     } else {
-                        this.selectionEvent_(event, feature)
+                        this.#selectActiveFeatures(event)
                     }
                 }
                 // Show tooltip
