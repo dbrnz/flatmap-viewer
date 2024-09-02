@@ -1685,6 +1685,17 @@ export class FlatMap
     }
 
     /**
+     * Unselect all features on the map.
+     */
+    unselectGeoJSONFeatures()
+    //=======================
+    {
+        if (this._userInteractions !== null) {
+            this._userInteractions.unselectFeatures()
+        }
+    }
+
+    /**
      * Select features and zoom the map to them.
      *
      * @param {string | Array.<string>}  geojsonIds  A single GeoJSON feature identifiers
