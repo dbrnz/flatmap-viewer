@@ -1223,8 +1223,8 @@ export class UserInteractions
             return;
         }
 
-        // Reset pitch and bearing with a ``meta-click``
-        if (event.originalEvent.metaKey) {
+        // Reset pitch and bearing with an ``alt-meta-click``
+        if (event.originalEvent.altKey && event.originalEvent.metaKey) {
             this._map.resetNorthPitch({animate: false})
             return
         }
