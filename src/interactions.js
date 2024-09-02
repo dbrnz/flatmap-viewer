@@ -252,7 +252,7 @@ export class UserInteractions
             }
 
             if (flatmap.has_flightpaths) {
-                this._map.addControl(new FlightPathControl(this, flatmap.options.flightPaths));
+                this._map.addControl(new FlightPathControl(flatmap, flatmap.options.flightPaths));
             }
 
             if (flatmap.options.annotator) {
