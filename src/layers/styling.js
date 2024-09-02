@@ -665,7 +665,7 @@ class NerveCentrelineLayer extends VectorStyleLayer
 {
     constructor(id, type, sourceLayer)
     {
-        super(id, `nerve-centreline-${type}`, sourceLayer);
+        super(id, `nerve-centreline-${type}`, sourceLayer)
         this.__type = type;
     }
 
@@ -680,12 +680,17 @@ class NerveCentrelineLayer extends VectorStyleLayer
 
     paintStyle(options, changes=false)
     {
-        const coloured = !('colour' in options) || options.colour;
         const paintStyle = {
-            'line-color': (this.__type == 'edge') ? '#000' : [
+            'line-color': (this.__type == 'edge') ? [
+                'case', ['all',
+                    ['boolean', ['feature-state', 'active'], false],
+                    ['boolean', ['feature-state', 'selected'], false]
+                ], COLOUR_SELECTED,
+                '#000'
+            ] : [
                 'case',
-                ['boolean', ['feature-state', 'selected'], false], COLOUR_SELECTED,
                 ['boolean', ['feature-state', 'active'], false], CENTRELINE_ACTIVE,
+                ['boolean', ['feature-state', 'selected'], false], COLOUR_SELECTED,
                 CENTRELINE_COLOUR
             ],
             'line-opacity': [
@@ -694,17 +699,17 @@ class NerveCentrelineLayer extends VectorStyleLayer
                     ['boolean', ['feature-state', 'hidden'], false], 0,
                     ['boolean', ['feature-state', 'selected'], false], 1.0,
                     ['boolean', ['feature-state', 'active'], false], 1.0,
-                (this.__type == 'edge') ? 0.4 : 0.8
+                (this.__type == 'edge') ? 0.4 : 0.7
             ],
             'line-width': [
                 'let',
                 'width',
-                    (this.__type == 'edge') ? 5 : 4.6,
+                    (this.__type == 'edge') ? 4 : 3,
                     STROKE_INTERPOLATION
             ]
             // Need to vary width based on zoom??
             // Or opacity??
-        };
+        }
         return super.changedPaintStyle(paintStyle, changes);
     }
 
@@ -719,7 +724,7 @@ class NerveCentrelineLayer extends VectorStyleLayer
                 'line-cap': 'round',
                 'line-join': 'bevel'
             }
-        };
+        }
     }
 }
 
