@@ -249,7 +249,6 @@ export class FlatMap
                 if (this._userInteractions.minimap) {
                     this._userInteractions.minimap.initialise()
                 }
-
                 this.#startupState = 3
                 this._resolve(this);
             }
