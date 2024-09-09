@@ -345,10 +345,12 @@ export async function standaloneViewer(mapEndpoints={}, options={})
     {
         const generationList = []
         const mapName = mapIdToName.get(mapId)
-        for (const map of mapGenerations.get(mapName)) {
-            const id = ('uuid' in map) ? map.uuid : map.id
-            const selected = (mapId === id) ? 'selected' : ''
-            generationList.push(`<option value="${id}" ${selected}>${map.created}</option>`)
+        if (mapName) {
+            for (const map of mapGenerations.get(mapName)) {
+                const id = ('uuid' in map) ? map.uuid : map.id
+                const selected = (mapId === id) ? 'selected' : ''
+                generationList.push(`<option value="${id}" ${selected}>${map.created}</option>`)
+            }
         }
         mapGeneration.innerHTML = generationList.join('')
     }
