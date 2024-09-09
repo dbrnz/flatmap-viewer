@@ -45,7 +45,7 @@ limitations under the License.
 
 //==============================================================================
 
-import maplibregl from 'maplibre-gl';
+import maplibregl from 'maplibre-gl'
 
 //==============================================================================
 
@@ -57,7 +57,7 @@ const DEFAULTS = {
     lineWidth: 1,
     position: 'bottom-left',
     width: 320
-};
+}
 
 //==============================================================================
 
@@ -69,7 +69,7 @@ const ZOOMLEVELS = [
     [14, 10, 12],
     [12,  8, 10],
     [10,  6,  8]
-];
+]
 
 //==============================================================================
 
@@ -77,72 +77,72 @@ export class MinimapControl
 {
     constructor(flatmap, options)
     {
-        this._flatmap = flatmap;
-        this._map = undefined;
-        this._container = null;
+        this._flatmap = flatmap
+        this._map = undefined
+        this._container = null
 
         // In case parent map background is changed before minimap loads
 
-        this._background = null;
-        this._opacity = null;
-        this._loaded = false;
+        this._background = null
+        this._opacity = null
+        this._loaded = false
 
         // Check user configurable settings
 
-        this._options = Object.assign({}, DEFAULTS);
+        this._options = Object.assign({}, DEFAULTS)
         if (typeof options === 'object') {
             if ('position' in options) {
-                this._options.position = options.position;
+                this._options.position = options.position
             }
             if ('width' in options) {
-                this._options.width = options.width;
+                this._options.width = options.width
             }
         }
 
-        this._ticking = false;
-        this._lastMouseMoveEvent = null;
-        this._isDragging = false;
-        this._isCursorOverFeature = false;
-        this._previousPoint = [0, 0];
-        this._currentPoint = [0, 0];
-        this._trackingRectCoordinates = [[[], [], [], [], []]];
+        this._ticking = false
+        this._lastMouseMoveEvent = null
+        this._isDragging = false
+        this._isCursorOverFeature = false
+        this._previousPoint = [0, 0]
+        this._currentPoint = [0, 0]
+        this._trackingRectCoordinates = [[[], [], [], [], []]]
     }
 
     getDefaultPosition()
     //==================
     {
-        return this._options.position;
+        return this._options.position
     }
 
     onAdd(map)
     //========
     {
-        this._map = map;
+        this._map = map
 
         // Create the container element
 
-        const container = document.createElement('div');
-        container.className = 'maplibregl-ctrl-minimap maplibregl-ctrl';
-        container.id = 'maplibre-minimap';
-        this._container = container;
+        const container = document.createElement('div')
+        container.className = 'maplibregl-ctrl-minimap maplibregl-ctrl'
+        container.id = 'maplibre-minimap'
+        this._container = container
 
         // Set the size of the container
 
-        const mapCanvasElement = map.getCanvas();
-        let width = DEFAULTS.width;
+        const mapCanvasElement = map.getCanvas()
+        let width = DEFAULTS.width
         if (typeof this._options.width === 'string') {
-            width = parseInt(this._options.width);
+            width = parseInt(this._options.width)
             if (this._options.width.includes('%')) {
-                width = width*mapCanvasElement.width/100;
+                width = width*mapCanvasElement.width/100
             }
         } else if (typeof this._options.width === 'number') {
-            width = this._options.width;
+            width = this._options.width
         }
-        container.setAttribute('style', `width: ${width}px; height: ${width*mapCanvasElement.height/mapCanvasElement.width}px;`);
+        container.setAttribute('style', `width: ${width}px; height: ${width*mapCanvasElement.height/mapCanvasElement.width}px;`)
 
         // Ignore context menu events
 
-        container.addEventListener('contextmenu', this._preventDefault);
+        container.addEventListener('contextmenu', this._preventDefault)
 
         // Create the actual minimap
 
@@ -151,50 +151,50 @@ export class MinimapControl
             container: container,
             style: map.getStyle(),
             bounds: map.getBounds()
-        });
+        })
 
-        return this._container;
+        return this._container
     }
 
     onRemove()
     //========
     {
-        this._container.parentNode.removeChild(this._container);
-        this._map = undefined;
-        this._container = null;
+        this._container.parentNode.removeChild(this._container)
+        this._map = undefined
+        this._container = null
     }
 
     initialise()
     //==========
     {
-        const opts = this._options;
-        const parentMap = this._map;
-        const miniMap = this._miniMap;
+        const opts = this._options
+        const parentMap = this._map
+        const miniMap = this._miniMap
 
         // Disable most user interactions with the minimap
 
         const interactions = [
             'dragPan', 'scrollZoom', 'boxZoom', 'dragRotate',
             'keyboard', 'doubleClickZoom', 'touchZoomRotate'
-        ];
-        interactions.forEach(i => miniMap[i].disable());
+        ]
+        interactions.forEach(i => miniMap[i].disable())
 
         // Set background if specified (default is the parent map's)
 
         if (this._background !== null) {
-            miniMap.setPaintProperty('background', 'background-color', this._background);
+            miniMap.setPaintProperty('background', 'background-color', this._background)
         }
         if (this._opacity !== null) {
-            miniMap.setPaintProperty('background', 'background-opacity', this._opacity);
+            miniMap.setPaintProperty('background', 'background-opacity', this._opacity)
         }
 
         // Fit minimap to its container
 
-        miniMap.resize();
-        miniMap.fitBounds(this._flatmap.bounds);
+        miniMap.resize()
+        miniMap.fitBounds(this._flatmap.bounds)
 
-        const bounds = miniMap.getBounds();
-        this.convertBoundsToPoints_(bounds);
+        const bounds = miniMap.getBounds()
+        this.convertBoundsToPoints_(bounds)
 
         miniMap.addSource('trackingRect', {
             'type': 'geojson',
@@ -208,7 +208,7 @@ export class MinimapControl
                     'coordinates': this._trackingRectCoordinates
                 }
             }
-        });
+        })
 
         miniMap.addLayer({
             'id': 'trackingRectOutline',
@@ -220,7 +220,7 @@ export class MinimapControl
                 'line-width': opts.lineWidth,
                 'line-opacity': opts.lineOpacity
             }
-        });
+        })
 
         // needed for dragging
         miniMap.addLayer({
@@ -232,164 +232,164 @@ export class MinimapControl
                 'fill-color': opts.fillColor,
                 'fill-opacity': opts.fillOpacity
             }
-        });
+        })
 
-        this._trackingRect = this._miniMap.getSource('trackingRect');
+        this._trackingRect = this._miniMap.getSource('trackingRect')
 
-        this.update_();
+        this.update_()
 
-        parentMap.on('move', this.update_.bind(this));
+        parentMap.on('move', this.update_.bind(this))
 
-        miniMap.on('mousemove', this.mouseMove_.bind(this));
-        miniMap.on('mousedown', this.mouseDown_.bind(this));
-        miniMap.on('mouseup', this.mouseUp_.bind(this));
+        miniMap.on('mousemove', this.mouseMove_.bind(this))
+        miniMap.on('mousedown', this.mouseDown_.bind(this))
+        miniMap.on('mouseup', this.mouseUp_.bind(this))
 
-        miniMap.on('touchmove', this.mouseMove_.bind(this));
-        miniMap.on('touchstart', this.mouseDown_.bind(this));
-        miniMap.on('touchend', this.mouseUp_.bind(this));
+        miniMap.on('touchmove', this.mouseMove_.bind(this))
+        miniMap.on('touchstart', this.mouseDown_.bind(this))
+        miniMap.on('touchend', this.mouseUp_.bind(this))
 
-        this._miniMapCanvas = miniMap.getCanvasContainer();
-        this._miniMapCanvas.addEventListener('wheel', this.preventDefault_);
-        this._miniMapCanvas.addEventListener('mousewheel', this.preventDefault_);
+        this._miniMapCanvas = miniMap.getCanvasContainer()
+        this._miniMapCanvas.addEventListener('wheel', this.preventDefault_)
+        this._miniMapCanvas.addEventListener('mousewheel', this.preventDefault_)
     }
 
     mouseDown_(e)
     //===========
     {
         if (this._isCursorOverFeature) {
-            this._isDragging = true;
-            this._previousPoint = this._currentPoint;
-            this._currentPoint = [e.lngLat.lng, e.lngLat.lat];
+            this._isDragging = true
+            this._previousPoint = this._currentPoint
+            this._currentPoint = [e.lngLat.lng, e.lngLat.lat]
         }
     }
 
     mouseMove_(e)
     //===========
     {
-        this._ticking = false;
+        this._ticking = false
 
-        const miniMap = this._miniMap;
+        const miniMap = this._miniMap
         const features = miniMap.queryRenderedFeatures(e.point, {
             layers: ['trackingRectFill']
-        });
+        })
 
         // don't update if we're still hovering the area
         if (!(this._isCursorOverFeature && features.length > 0)) {
-            this._isCursorOverFeature = features.length > 0;
-            this._miniMapCanvas.style.cursor = this._isCursorOverFeature ? 'move' : '';
+            this._isCursorOverFeature = features.length > 0
+            this._miniMapCanvas.style.cursor = this._isCursorOverFeature ? 'move' : ''
         }
 
         if (this._isDragging) {
-            this._previousPoint = this._currentPoint;
-            this._currentPoint = [e.lngLat.lng, e.lngLat.lat];
+            this._previousPoint = this._currentPoint
+            this._currentPoint = [e.lngLat.lng, e.lngLat.lat]
 
             const offset = [
                 this._previousPoint[0] - this._currentPoint[0],
                 this._previousPoint[1] - this._currentPoint[1]
-            ];
+            ]
 
-            const newBounds = this.moveTrackingRect_(offset);
+            const newBounds = this.moveTrackingRect_(offset)
 
             this._map.fitBounds(newBounds, {
                 duration: 80,
                 noMoveStart: true
-            });
+            })
         }
     }
 
     mouseUp_()
     //========
     {
-        this._isDragging = false;
-        this._ticking = false;
+        this._isDragging = false
+        this._ticking = false
     }
 
     moveTrackingRect_(offset)
     //=======================
     {
-        const source = this._trackingRect;
-        const data = source._data;
-        const bounds = data.properties.bounds;
+        const source = this._trackingRect
+        const data = source._data
+        const bounds = data.properties.bounds
 
-        bounds._ne.lat -= offset[1];
-        bounds._ne.lng -= offset[0];
-        bounds._sw.lat -= offset[1];
-        bounds._sw.lng -= offset[0];
+        bounds._ne.lat -= offset[1]
+        bounds._ne.lng -= offset[0]
+        bounds._sw.lat -= offset[1]
+        bounds._sw.lng -= offset[0]
 
-        this.convertBoundsToPoints_(bounds);
-        source.setData(data);
+        this.convertBoundsToPoints_(bounds)
+        source.setData(data)
 
-        return bounds;
+        return bounds
     }
 
     setTrackingRectBounds_(bounds)
     //============================
     {
-        const source = this._trackingRect;
-        const data = source._data;
+        const source = this._trackingRect
+        const data = source._data
 
-        data.properties.bounds = bounds;
-        this.convertBoundsToPoints_(bounds);
-        source.setData(data);
+        data.properties.bounds = bounds
+        this.convertBoundsToPoints_(bounds)
+        source.setData(data)
     }
 
     convertBoundsToPoints_(bounds)
     //============================
     {
-        const ne = bounds._ne;
-        const sw = bounds._sw;
-        const trc = this._trackingRectCoordinates;
+        const ne = bounds._ne
+        const sw = bounds._sw
+        const trc = this._trackingRectCoordinates
 
-        trc[0][0][0] = ne.lng;
-        trc[0][0][1] = ne.lat;
-        trc[0][1][0] = sw.lng;
-        trc[0][1][1] = ne.lat;
-        trc[0][2][0] = sw.lng;
-        trc[0][2][1] = sw.lat;
-        trc[0][3][0] = ne.lng;
-        trc[0][3][1] = sw.lat;
-        trc[0][4][0] = ne.lng;
-        trc[0][4][1] = ne.lat;
+        trc[0][0][0] = ne.lng
+        trc[0][0][1] = ne.lat
+        trc[0][1][0] = sw.lng
+        trc[0][1][1] = ne.lat
+        trc[0][2][0] = sw.lng
+        trc[0][2][1] = sw.lat
+        trc[0][3][0] = ne.lng
+        trc[0][3][1] = sw.lat
+        trc[0][4][0] = ne.lng
+        trc[0][4][1] = ne.lat
     }
 
     update_(e)
     //========
     {
         if (this._isDragging) {
-            return;
+            return
         }
 
-        const parentBounds = this._map.getBounds();
-        this.setTrackingRectBounds_(parentBounds);
+        const parentBounds = this._map.getBounds()
+        this.setTrackingRectBounds_(parentBounds)
 
-        this.zoomAdjust_();
+        this.zoomAdjust_()
     }
 
     zoomAdjust_()
     //===========
     {
-        const miniMap = this._miniMap;
-        const parentMap = this._map;
-        const miniZoom = parseInt(miniMap.getZoom(), 10);
-        const parentZoom = parseInt(parentMap.getZoom(), 10);
-        let found = false;
+        const miniMap = this._miniMap
+        const parentMap = this._map
+        const miniZoom = parseInt(miniMap.getZoom(), 10)
+        const parentZoom = parseInt(parentMap.getZoom(), 10)
+        let found = false
 
         ZOOMLEVELS.forEach(function(zoom) {
             if (!found && parentZoom >= zoom[0]) {
                 if (miniZoom >= zoom[1]) {
-                    miniMap.setZoom(zoom[2]);
+                    miniMap.setZoom(zoom[2])
                 }
 
-                miniMap.setCenter(parentMap.getCenter());
-                found = true;
+                miniMap.setCenter(parentMap.getCenter())
+                found = true
             }
-        });
+        })
     }
 
     preventDefault_(e)
     //================
     {
-        e.preventDefault();
+        e.preventDefault()
     }
 
     /**
@@ -401,9 +401,9 @@ export class MinimapControl
     //=========================
     {
         if (this._loaded) {
-            this._miniMap.setPaintProperty('background', 'background-color', colour);
+            this._miniMap.setPaintProperty('background', 'background-color', colour)
         } else {
-            this._background = colour;
+            this._background = colour
         }
     }
 
@@ -416,9 +416,9 @@ export class MinimapControl
     //===========================
     {
         if (this._loaded) {
-            this._miniMap.setPaintProperty('background', 'background-opacity', opacity);
+            this._miniMap.setPaintProperty('background', 'background-opacity', opacity)
         } else {
-            this._opacity = opacity;
+            this._opacity = opacity
         }
     }
 
@@ -432,10 +432,10 @@ export class MinimapControl
     {
         if (this._container) {
             if (showMinimap) {
-                this._container.style.display = "block";
-                this.update_();
+                this._container.style.display = "block"
+                this.update_()
             } else {
-                this._container.style.display = "none";
+                this._container.style.display = "none"
             }
         }
     }
