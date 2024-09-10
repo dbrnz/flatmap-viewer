@@ -49,7 +49,26 @@ import maplibregl from 'maplibre-gl'
 
 //==============================================================================
 
-const DEFAULTS = {
+import {FlatMap} from './flatmap-viewer'
+
+//==============================================================================
+
+type OPTIONS_TYPE = {
+    fillColor: string
+    fillOpacity: number
+    lineColor: string
+    lineOpacity: number
+    lineWidth: number
+    position: string
+    width: string|number
+}
+
+type USER_OPTIONS = {
+    postion?: string
+    width?: string|number
+}
+
+const DEFAULT_OPTIONS: OPTIONS_TYPE = {
     fillColor: '#DDD',
     fillOpacity: 0.3,
     lineColor: "#08F",
@@ -75,101 +94,95 @@ const ZOOMLEVELS = [
 
 export class MinimapControl
 {
-    constructor(flatmap, options)
+    #container: HTMLElement|null = null
+    #flatmap: FlatMap
+    #map: maplibregl.Map
+    #miniMap: maplibregl.Map
+    #miniMapCanvas: HTMLElement
+    #options: OPTIONS_TYPE
+
+    #background: string|null = null
+    #opacity: number = 1
+    #loaded: boolean = false
+
+    #isDragging: boolean = false
+    #isCursorOverFeature: boolean = false
+    #previousPoint: [number, number] = [0, 0]
+    #currentPoint: [number, number] = [0, 0]
+    #trackingRect: maplibregl.GeoJSONSource
+    #trackingRectCoordinates: [[[number, number], [number, number], [number, number], [number, number], [number, number]]]
+        = [[[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]]
+
+    constructor(flatmap: FlatMap, options: USER_OPTIONS)
     {
-        this._flatmap = flatmap
-        this._map = undefined
-        this._container = null
+        this.#flatmap = flatmap
 
-        // In case parent map background is changed before minimap loads
-
-        this._background = null
-        this._opacity = null
-        this._loaded = false
-
-        // Check user configurable settings
-
-        this._options = Object.assign({}, DEFAULTS)
-        if (typeof options === 'object') {
-            if ('position' in options) {
-                this._options.position = options.position
-            }
-            if ('width' in options) {
-                this._options.width = options.width
-            }
-        }
-
-        this._ticking = false
-        this._lastMouseMoveEvent = null
-        this._isDragging = false
-        this._isCursorOverFeature = false
-        this._previousPoint = [0, 0]
-        this._currentPoint = [0, 0]
-        this._trackingRectCoordinates = [[[], [], [], [], []]]
+        // Should check user configurable settings
+        this.#options = Object.assign({}, DEFAULT_OPTIONS, options)
     }
 
     getDefaultPosition()
     //==================
     {
-        return this._options.position
+        return this.#options.position
     }
 
-    onAdd(map)
-    //========
+    onAdd(map: maplibregl.Map)
+    //========================
     {
-        this._map = map
+        this.#map = map
 
         // Create the container element
 
         const container = document.createElement('div')
         container.className = 'maplibregl-ctrl-minimap maplibregl-ctrl'
         container.id = 'maplibre-minimap'
-        this._container = container
+        this.#container = container
 
         // Set the size of the container
 
         const mapCanvasElement = map.getCanvas()
-        let width = DEFAULTS.width
-        if (typeof this._options.width === 'string') {
-            width = parseInt(this._options.width)
-            if (this._options.width.includes('%')) {
+        let width: number
+        if (typeof this.#options.width === 'string') {
+            width = parseInt(this.#options.width)
+            if (this.#options.width.includes('%')) {
                 width = width*mapCanvasElement.width/100
             }
-        } else if (typeof this._options.width === 'number') {
-            width = this._options.width
+        } else if (typeof this.#options.width === 'number') {
+            width = this.#options.width
         }
         container.setAttribute('style', `width: ${width}px; height: ${width*mapCanvasElement.height/mapCanvasElement.width}px;`)
 
         // Ignore context menu events
 
-        container.addEventListener('contextmenu', this._preventDefault)
+        container.addEventListener('contextmenu', this.#preventDefault)
 
         // Create the actual minimap
 
-        this._miniMap = new maplibregl.Map({
+        this.#miniMap = new maplibregl.Map({
             attributionControl: false,
             container: container,
             style: map.getStyle(),
             bounds: map.getBounds()
         })
 
-        return this._container
+        return this.#container
     }
 
     onRemove()
     //========
     {
-        this._container.parentNode.removeChild(this._container)
-        this._map = undefined
-        this._container = null
+        this.#container.parentNode.removeChild(this.#container)
+        this.#map = undefined
+        this.#container = null
     }
 
     initialise()
     //==========
     {
-        const opts = this._options
-        const parentMap = this._map
-        const miniMap = this._miniMap
+        const opts = this.#options
+        const parentMap = this.#map
+        const miniMap = this.#miniMap
 
         // Disable most user interactions with the minimap
 
@@ -181,20 +194,20 @@ export class MinimapControl
 
         // Set background if specified (default is the parent map's)
 
-        if (this._background !== null) {
-            miniMap.setPaintProperty('background', 'background-color', this._background)
+        if (this.#background !== null) {
+            miniMap.setPaintProperty('background', 'background-color', this.#background)
         }
-        if (this._opacity !== null) {
-            miniMap.setPaintProperty('background', 'background-opacity', this._opacity)
+        if (this.#opacity !== null) {
+            miniMap.setPaintProperty('background', 'background-opacity', this.#opacity)
         }
 
         // Fit minimap to its container
 
         miniMap.resize()
-        miniMap.fitBounds(this._flatmap.bounds)
+        miniMap.fitBounds(this.#flatmap.bounds)
 
         const bounds = miniMap.getBounds()
-        this.convertBoundsToPoints_(bounds)
+        this.#convertBoundsToPoints(bounds)
 
         miniMap.addSource('trackingRect', {
             'type': 'geojson',
@@ -205,7 +218,7 @@ export class MinimapControl
                 },
                 'geometry': {
                     'type': 'Polygon',
-                    'coordinates': this._trackingRectCoordinates
+                    'coordinates': this.#trackingRectCoordinates
                 }
             }
         })
@@ -234,81 +247,77 @@ export class MinimapControl
             }
         })
 
-        this._trackingRect = this._miniMap.getSource('trackingRect')
+        this.#trackingRect = this.#miniMap.getSource('trackingRect')
 
-        this.update_()
+        this.#update()
 
-        parentMap.on('move', this.update_.bind(this))
+        parentMap.on('move', this.#update.bind(this))
 
-        miniMap.on('mousemove', this.mouseMove_.bind(this))
-        miniMap.on('mousedown', this.mouseDown_.bind(this))
-        miniMap.on('mouseup', this.mouseUp_.bind(this))
+        miniMap.on('mousemove', this.#mouseMove.bind(this))
+        miniMap.on('mousedown', this.#mouseDown.bind(this))
+        miniMap.on('mouseup', this.#mouseUp.bind(this))
 
-        miniMap.on('touchmove', this.mouseMove_.bind(this))
-        miniMap.on('touchstart', this.mouseDown_.bind(this))
-        miniMap.on('touchend', this.mouseUp_.bind(this))
+        miniMap.on('touchmove', this.#mouseMove.bind(this))
+        miniMap.on('touchstart', this.#mouseDown.bind(this))
+        miniMap.on('touchend', this.#mouseUp.bind(this))
 
-        this._miniMapCanvas = miniMap.getCanvasContainer()
-        this._miniMapCanvas.addEventListener('wheel', this.preventDefault_)
-        this._miniMapCanvas.addEventListener('mousewheel', this.preventDefault_)
+        this.#miniMapCanvas = miniMap.getCanvasContainer()
+        this.#miniMapCanvas.addEventListener('wheel', this.#preventDefault)
+        this.#miniMapCanvas.addEventListener('mousewheel', this.#preventDefault)
     }
 
-    mouseDown_(e)
-    //===========
+    #mouseDown(e: maplibregl.MapMouseEvent)
+    //=====================================
     {
-        if (this._isCursorOverFeature) {
-            this._isDragging = true
-            this._previousPoint = this._currentPoint
-            this._currentPoint = [e.lngLat.lng, e.lngLat.lat]
+        if (this.#isCursorOverFeature) {
+            this.#isDragging = true
+            this.#previousPoint = this.#currentPoint
+            this.#currentPoint = [e.lngLat.lng, e.lngLat.lat]
         }
     }
 
-    mouseMove_(e)
-    //===========
+    #mouseMove(e: maplibregl.MapMouseEvent)
+    //=====================================
     {
-        this._ticking = false
-
-        const miniMap = this._miniMap
+        const miniMap = this.#miniMap
         const features = miniMap.queryRenderedFeatures(e.point, {
             layers: ['trackingRectFill']
         })
 
         // don't update if we're still hovering the area
-        if (!(this._isCursorOverFeature && features.length > 0)) {
-            this._isCursorOverFeature = features.length > 0
-            this._miniMapCanvas.style.cursor = this._isCursorOverFeature ? 'move' : ''
+        if (!(this.#isCursorOverFeature && features.length > 0)) {
+            this.#isCursorOverFeature = features.length > 0
+            this.#miniMapCanvas.style.cursor = this.#isCursorOverFeature ? 'move' : ''
         }
 
-        if (this._isDragging) {
-            this._previousPoint = this._currentPoint
-            this._currentPoint = [e.lngLat.lng, e.lngLat.lat]
+        if (this.#isDragging) {
+            this.#previousPoint = this.#currentPoint
+            this.#currentPoint = [e.lngLat.lng, e.lngLat.lat]
 
-            const offset = [
-                this._previousPoint[0] - this._currentPoint[0],
-                this._previousPoint[1] - this._currentPoint[1]
+            const offset:[number, number] = [
+                this.#previousPoint[0] - this.#currentPoint[0],
+                this.#previousPoint[1] - this.#currentPoint[1]
             ]
 
-            const newBounds = this.moveTrackingRect_(offset)
+            const newBounds = this.#moveTrackingRect(offset)
 
-            this._map.fitBounds(newBounds, {
-                duration: 80,
-                noMoveStart: true
+            this.#map.fitBounds(newBounds, {
+                duration: 80
             })
         }
     }
 
-    mouseUp_()
+    #mouseUp()
     //========
     {
-        this._isDragging = false
-        this._ticking = false
+        this.#isDragging = false
     }
 
-    moveTrackingRect_(offset)
-    //=======================
+    #moveTrackingRect(offset: [number, number])
+    //=========================================
     {
-        const source = this._trackingRect
-        const data = source._data
+        const source = this.#trackingRect
+        const data = source._data as GeoJSON.Feature
         const bounds = data.properties.bounds
 
         bounds._ne.lat -= offset[1]
@@ -316,29 +325,29 @@ export class MinimapControl
         bounds._sw.lat -= offset[1]
         bounds._sw.lng -= offset[0]
 
-        this.convertBoundsToPoints_(bounds)
+        this.#convertBoundsToPoints(bounds)
         source.setData(data)
 
         return bounds
     }
 
-    setTrackingRectBounds_(bounds)
-    //============================
+    #setTrackingRectBounds(bounds: maplibregl.LngLatBounds)
+    //=====================================================
     {
-        const source = this._trackingRect
-        const data = source._data
+        const source = this.#trackingRect
+        const data = source._data as GeoJSON.Feature
 
         data.properties.bounds = bounds
-        this.convertBoundsToPoints_(bounds)
+        this.#convertBoundsToPoints(bounds)
         source.setData(data)
     }
 
-    convertBoundsToPoints_(bounds)
-    //============================
+    #convertBoundsToPoints(bounds: maplibregl.LngLatBounds)
+    //=====================================================
     {
         const ne = bounds._ne
         const sw = bounds._sw
-        const trc = this._trackingRectCoordinates
+        const trc = this.#trackingRectCoordinates
 
         trc[0][0][0] = ne.lng
         trc[0][0][1] = ne.lat
@@ -352,26 +361,26 @@ export class MinimapControl
         trc[0][4][1] = ne.lat
     }
 
-    update_(e)
-    //========
+    #update()
+    //=======
     {
-        if (this._isDragging) {
+        if (this.#isDragging) {
             return
         }
 
-        const parentBounds = this._map.getBounds()
-        this.setTrackingRectBounds_(parentBounds)
+        const parentBounds = this.#map.getBounds()
+        this.#setTrackingRectBounds(parentBounds)
 
-        this.zoomAdjust_()
+        this.#zoomAdjust()
     }
 
-    zoomAdjust_()
+    #zoomAdjust()
     //===========
     {
-        const miniMap = this._miniMap
-        const parentMap = this._map
-        const miniZoom = parseInt(miniMap.getZoom(), 10)
-        const parentZoom = parseInt(parentMap.getZoom(), 10)
+        const miniMap = this.#miniMap
+        const parentMap = this.#map
+        const miniZoom = miniMap.getZoom()
+        const parentZoom = parentMap.getZoom()
         let found = false
 
         ZOOMLEVELS.forEach(function(zoom) {
@@ -386,7 +395,7 @@ export class MinimapControl
         })
     }
 
-    preventDefault_(e)
+    #preventDefault(e)
     //================
     {
         e.preventDefault()
@@ -397,13 +406,13 @@ export class MinimapControl
      *
      * @param      {string}  colour  The colour
      */
-    setBackgroundColour(colour)
-    //=========================
+    setBackgroundColour(colour: string)
+    //=================================
     {
-        if (this._loaded) {
-            this._miniMap.setPaintProperty('background', 'background-color', colour)
+        if (this.#loaded) {
+            this.#miniMap.setPaintProperty('background', 'background-color', colour)
         } else {
-            this._background = colour
+            this.#background = colour
         }
     }
 
@@ -412,13 +421,13 @@ export class MinimapControl
      *
      * @param      {number}  opacity  The opacity
      */
-    setBackgroundOpacity(opacity)
-    //===========================
+    setBackgroundOpacity(opacity: number)
+    //===================================
     {
-        if (this._loaded) {
-            this._miniMap.setPaintProperty('background', 'background-opacity', opacity)
+        if (this.#loaded) {
+            this.#miniMap.setPaintProperty('background', 'background-opacity', opacity)
         } else {
-            this._opacity = opacity
+            this.#opacity = opacity
         }
     }
 
@@ -430,12 +439,12 @@ export class MinimapControl
     show(showMinimap)
     //===============
     {
-        if (this._container) {
+        if (this.#container) {
             if (showMinimap) {
-                this._container.style.display = "block"
-                this.update_()
+                this.#container.style.display = "block"
+                this.#update()
             } else {
-                this._container.style.display = "none"
+                this.#container.style.display = "none"
             }
         }
     }
