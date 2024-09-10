@@ -201,8 +201,9 @@ export class UserInteractions
 
         // Add a minimap if option set
         if (flatmap.options.minimap) {
-            this.#minimap = new MinimapControl(flatmap, flatmap.options.minimap);
-            this._map.addControl(this.#minimap);
+            this.#minimap = new MinimapControl(flatmap, flatmap.options.minimap,
+                this._layerManager.minimapStyleSpecification)
+            this._map.addControl(this.#minimap)
         }
 
         // Do we want a fullscreen control?

@@ -68,6 +68,7 @@ class FlatMapStylingLayer
     #layer: FlatMapLayer
     #layerOptions
     #map: MapLibreMap
+    #minimapStylingLayers = []
     #pathStyleLayers: VectorStyleLayer[] = []
     #rasterStyleLayers: RasterStyleLayer[] = []
     #separateLayers: boolean
@@ -89,7 +90,7 @@ class FlatMapStylingLayer
         if (this.#map.getSource(style.VECTOR_TILES_SOURCE).vectorLayerIds.indexOf(source) >= 0) {
             const bodyLayer = new BodyStyleLayer(layerId, source)
             // @ts-ignore
-            this.#map.addLayer(bodyLayer.style(layer, this.#layerOptions))
+            this.#addStylingLayer(bodyLayer.style(layer, this.#layerOptions), true)
             this.#vectorStyleLayers.push(bodyLayer)
         }
 
@@ -99,7 +100,7 @@ class FlatMapStylingLayer
             for (const layer_id of layer['image-layers']) {
                 const rasterLayer = new RasterStyleLayer(layer_id)
                 // @ts-ignore
-                this.#map.addLayer(rasterLayer.style(layer, this.#layerOptions))
+                this.#addStylingLayer(rasterLayer.style(layer, this.#layerOptions), true)
                 this.#rasterStyleLayers.push(rasterLayer)
             }
         } else {
@@ -114,17 +115,17 @@ class FlatMapStylingLayer
             const featuresVectorSource = this.#vectorSourceId(FEATURES_LAYER)
             const vectorFeatures = vectorTileSource.vectorLayerIds.includes(featuresVectorSource)
             if (vectorFeatures) {
-                this.#addVectorStyleLayer(style.FeatureFillLayer)
-                this.#addVectorStyleLayer(style.FeatureDashLineLayer)
-                this.#addVectorStyleLayer(style.FeatureLineLayer)
-                this.#addVectorStyleLayer(style.FeatureBorderLayer)
-                this.#addVectorStyleLayer(style.CentrelineNodeFillLayer)
+                this.#addVectorStyleLayer(style.FeatureFillLayer, FEATURES_LAYER, false, true)
+                this.#addVectorStyleLayer(style.FeatureDashLineLayer, FEATURES_LAYER, false, true)
+                this.#addVectorStyleLayer(style.FeatureLineLayer, FEATURES_LAYER, false, true)
+                this.#addVectorStyleLayer(style.FeatureBorderLayer, FEATURES_LAYER, false, true)
+                this.#addVectorStyleLayer(style.CentrelineNodeFillLayer, FEATURES_LAYER)
             }
             this.#addPathwayStyleLayers()
             if (vectorFeatures) {
-                this.#addVectorStyleLayer(style.FeatureLargeSymbolLayer)
+                this.#addVectorStyleLayer(style.FeatureLargeSymbolLayer, FEATURES_LAYER)
                 if (!flatmap.options.tooltips) {
-                    this.#addVectorStyleLayer(style.FeatureSmallSymbolLayer)
+                    this.#addVectorStyleLayer(style.FeatureSmallSymbolLayer, FEATURES_LAYER)
                 }
             }
         }
@@ -151,6 +152,12 @@ class FlatMapStylingLayer
         return this.#id
     }
 
+    get minimapStylingLayers()
+    //========================
+    {
+        return this.#minimapStylingLayers
+    }
+
     activate(enable=true)
     //===================
     {
@@ -162,6 +169,16 @@ class FlatMapStylingLayer
         }
         this.#active = enable
         this.#setPaintRasterLayers(this.#layerOptions)
+    }
+
+    #addStylingLayer(style, minimap=false)
+    //====================================
+    {
+        // @ts-ignore
+        this.#map.addLayer(style)
+        if (minimap) {
+            this.#minimapStylingLayers.push(style)
+        }
     }
 
     #showStyleLayer(styleLayerId: string, visible=true)
@@ -177,13 +194,13 @@ class FlatMapStylingLayer
         if (this.#map.getSource('vector-tiles')
                 .vectorLayerIds
                 .includes(pathwaysVectorSource)) {
-            this.#addVectorStyleLayer(style.AnnotatedPathLayer, PATHWAYS_LAYER, true)
+            this.#addVectorStyleLayer(style.AnnotatedPathLayer, PATHWAYS_LAYER, true, true)
 
             this.#addVectorStyleLayer(style.NerveCentrelineEdgeLayer, PATHWAYS_LAYER)
             this.#addVectorStyleLayer(style.NerveCentrelineTrackLayer, PATHWAYS_LAYER)
 
-            this.#addVectorStyleLayer(style.PathLineLayer, PATHWAYS_LAYER, true)
-            this.#addVectorStyleLayer(style.PathDashlineLayer, PATHWAYS_LAYER, true)
+            this.#addVectorStyleLayer(style.PathLineLayer, PATHWAYS_LAYER, true, true)
+            this.#addVectorStyleLayer(style.PathDashlineLayer, PATHWAYS_LAYER, true, true)
 
             this.#addVectorStyleLayer(style.NervePolygonBorder, PATHWAYS_LAYER, true)
             this.#addVectorStyleLayer(style.NervePolygonFill, PATHWAYS_LAYER, true)
@@ -201,13 +218,13 @@ class FlatMapStylingLayer
                                       : sourceLayer).replaceAll('/', '_')
     }
 
-    #addVectorStyleLayer(vectorStyleClass, sourceLayer=FEATURES_LAYER, pathLayer=false)
+    #addVectorStyleLayer(vectorStyleClass, sourceLayer, pathLayer=false, minimap=false)
     //=================================================================================
     {
         const vectorStyleLayer = new vectorStyleClass(`${this.#id}_${sourceLayer}`,
                                                       this.#vectorSourceId(sourceLayer))
         // @ts-ignore
-        this.#map.addLayer(vectorStyleLayer.style(this.#layer, this.#layerOptions))
+        this.#addStylingLayer(vectorStyleLayer.style(this.#layer, this.#layerOptions), minimap)
         this.#vectorStyleLayers.push(vectorStyleLayer)
         if (pathLayer) {
             this.#pathStyleLayers.push(vectorStyleLayer)
@@ -304,6 +321,7 @@ export class LayerManager
     #map: MapLibreMap
     #mapStyleLayers: Map<string, FlatMapStylingLayer> = new Map()
     #markerLayer: ClusteredAnatomicalMarkerLayer
+    #minimapStyleSpecification: maplibregl.StyleSpecification
 //    #modelLayer
     #rasterLayer = null
 
@@ -316,20 +334,21 @@ export class LayerManager
             outline: true,
             sckan: 'valid'
         })
+        this.#minimapStyleSpecification = this.#map.getStyle()
+
         const backgroundLayer = new BackgroundStyleLayer()
-        if ('background' in flatmap.options) {
-            // @ts-ignore
-            this.#map.addLayer(backgroundLayer.style(flatmap.options.background))
-        } else {
-            // @ts-ignore
-            this.#map.addLayer(backgroundLayer.style('white'));
-        }
+        const backgroundLayerStyle = backgroundLayer.style(flatmap.options.background || 'white') as maplibregl.LayerSpecification
+        // @ts-ignore
+        this.#map.addLayer(backgroundLayerStyle)
+        this.#minimapStyleSpecification.layers.push(backgroundLayerStyle)
 
         // Add the map's layers
         for (const layer of flatmap.layers) {
-            this.#mapStyleLayers.set(layer.id, new FlatMapStylingLayer(this.#flatmap,
-                                                                       layer,
-                                                                       this.#layerOptions))
+            const flatmapStylingLayer = new FlatMapStylingLayer(this.#flatmap,
+                                                                layer,
+                                                                this.#layerOptions)
+            this.#mapStyleLayers.set(layer.id, flatmapStylingLayer)
+            this.#minimapStyleSpecification.layers.push(...flatmapStylingLayer.minimapStylingLayers)
         }
 
         // Show anatomical clustered markers in a layer
@@ -357,6 +376,12 @@ export class LayerManager
             });
         }
         return layers;
+    }
+
+    get minimapStyleSpecification()
+    //=============================
+    {
+        return this.#minimapStyleSpecification
     }
 
     get sckanState()

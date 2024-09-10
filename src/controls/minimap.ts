@@ -49,6 +49,7 @@ import maplibregl from 'maplibre-gl'
 
 //==============================================================================
 
+// @ts-ignore
 import {FlatMap} from './flatmap-viewer'
 
 //==============================================================================
@@ -100,6 +101,7 @@ export class MinimapControl
     #miniMap: maplibregl.Map
     #miniMapCanvas: HTMLElement
     #options: OPTIONS_TYPE
+    #styleSpecification: maplibregl.StyleSpecification
 
     #background: string|null = null
     #opacity: number = 1
@@ -113,9 +115,10 @@ export class MinimapControl
     #trackingRectCoordinates: [[[number, number], [number, number], [number, number], [number, number], [number, number]]]
         = [[[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]]
 
-    constructor(flatmap: FlatMap, options: USER_OPTIONS)
+    constructor(flatmap: FlatMap, options: USER_OPTIONS, styleSpecification: maplibregl.StyleSpecification)
     {
         this.#flatmap = flatmap
+        this.#styleSpecification = styleSpecification
 
         // Should check user configurable settings
         this.#options = Object.assign({}, DEFAULT_OPTIONS, options)
@@ -162,10 +165,9 @@ export class MinimapControl
         this.#miniMap = new maplibregl.Map({
             attributionControl: false,
             container: container,
-            style: map.getStyle(),
+            style: this.#styleSpecification,
             bounds: map.getBounds()
         })
-
         return this.#container
     }
 
