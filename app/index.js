@@ -23,7 +23,7 @@ import { MapManager } from '../src/flatmap-viewer';
 //==============================================================================
 
 const DEBUG = false;
-const MINIMAP = false; // { width: '10%', background: '#FCC' };
+const MINIMAP = true; // { width: '10%', background: '#FCC' };
 
 const MAP_ENDPOINTS = {
     local: 'http://localhost:8000',
