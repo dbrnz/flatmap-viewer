@@ -80,8 +80,7 @@ export type PropertiesFilterExpression = AndCondition
                                        | NotCondition
                                        | OrCondition
                                        | PropertyValueTest
-
-export type PropertiesFilterSpecification = PropertiesFilterExpression | boolean
+                                       | boolean
 
 //==============================================================================
 
@@ -93,10 +92,10 @@ export type StyleFilterType = [string, ...StyleFilterValue[]]
 
 export class PropertiesFilter
 {
-    #filter: PropertiesFilterSpecification
+    #filter: PropertiesFilterExpression
 
-    constructor(filter: PropertiesFilterSpecification=true)
-    //=====================================================
+    constructor(filter: PropertiesFilterExpression=true)
+    //==================================================
     {
         if (filter.constructor !== Object) {    // We allow boolean values
             this.#filter = filter
@@ -113,8 +112,8 @@ export class PropertiesFilter
         }
     }
 
-    expand(filter: PropertiesFilterSpecification)
-    //===========================================
+    expand(filter: PropertiesFilterExpression)
+    //========================================
     {
         if (this.#filter === false) {
             this.#filter = filter
@@ -149,8 +148,8 @@ export class PropertiesFilter
         return this.#match(properties, this.#filter)
     }
 
-    narrow(filter: PropertiesFilterSpecification)
-    //===========================================
+    narrow(filter: PropertiesFilterExpression)
+    //========================================
     {
         if (this.#filter === true) {
             this.#filter = filter
@@ -160,8 +159,8 @@ export class PropertiesFilter
         }
     }
 
-    setFilter(filter: PropertiesFilterSpecification)
-    //==============================================
+    setFilter(filter: PropertiesFilterExpression)
+    //===========================================
     {
         if (filter.constructor !== Object) {
             this.#filter = filter
@@ -170,8 +169,8 @@ export class PropertiesFilter
         }
     }
 
-    #makeStyleFilter(filter: PropertiesFilterSpecification): StyleFilterType
-    //======================================================================
+    #makeStyleFilter(filter: PropertiesFilterExpression): StyleFilterType
+    //===================================================================
     {
         if (filter.constructor !== Object) {
             return ['boolean', !!filter]
@@ -215,8 +214,8 @@ export class PropertiesFilter
         return styleFilter as StyleFilterType
     }
 
-    #match(properties: PropertiesType, filter: PropertiesFilterSpecification): boolean
-    //================================================================================
+    #match(properties: PropertiesType, filter: PropertiesFilterExpression): boolean
+    //=============================================================================
     {
         if (filter.constructor !== Object) {
             return !!filter
@@ -269,8 +268,8 @@ const testProperties = {
     a: [1, 3, 5]
 }
 
-function testFilter(filter: PropertiesFilterSpecification)
-//========================================================
+function testFilter(filter: PropertiesFilterExpression)
+//=====================================================
 {
     const featureFilter = new PropertiesFilter(filter)
     console.log(filter, '--->', featureFilter.getStyleFilter(), featureFilter.match(testProperties))

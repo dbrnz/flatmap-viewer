@@ -340,13 +340,13 @@ export class FlatMap
     /**
      * Sets a visibility filter for features and paths
      *
-     * @param {PropertiesFilterSpecification}  [filterSpecification=true]  The filter specification
+     * @param {PropertiesFilterExpression}  [filterExpression=true]  The filter specification
      */
-    setVisibilityFilter(filterSpecification=true)
-    //===========================================
+    setVisibilityFilter(filterExpression=true)
+    //========================================
     {
         if (this._userInteractions !== null) {
-            this._userInteractions.setVisibilityFilter(filterSpecification)
+            this._userInteractions.setVisibilityFilter(filterExpression)
         }
     }
 
