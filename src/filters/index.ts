@@ -41,6 +41,13 @@ export type HasCondition = {
 }
 
 /**
+ * `True` iff the `PropertyKey` is in the given `properties` record
+ */
+export type InCondition = {
+    IN: [PropertyValue, PropertyKey]
+}
+
+/**
  * `True` iff the `PropertiesFilterExpression` is `false`
  */
 export type NotCondition = {
@@ -69,6 +76,7 @@ export type PropertyValueTest = { [key: PropertyKey]: PropertyValue }
 
 export type PropertiesFilterExpression = AndCondition
                                        | HasCondition
+                                       | InCondition
                                        | NotCondition
                                        | OrCondition
                                        | PropertyValueTest
@@ -179,6 +187,8 @@ export class PropertiesFilter
                 }
             } else if (key === 'HAS') {
                 styleFilter.push('has', expr)
+            } else if (key === 'IN') {
+                styleFilter.push('in', expr[0], ['get', expr[1]])
             } else if (key === 'NOT') {
                 const filterExpr = this.#makeStyleFilter(expr)
                 if (Array.isArray(filterExpr)) {
@@ -223,6 +233,9 @@ export class PropertiesFilter
                 }
             } else if (key === 'HAS') {
                 matched = (expr in properties)
+            } else if (key === 'IN') {
+                const values = properties[expr[1]]
+                matched = Array.isArray(values) && values.includes(expr[0])
             } else if (key === 'NOT') {
                 matched = !this.#match(properties, expr)
             } else if (key in properties) {
@@ -253,6 +266,7 @@ const testProperties = {
     prop: 1,
     prop1: 5,
     prop2: 11,
+    a: [1, 3, 5]
 }
 
 function testFilter(filter: PropertiesFilterSpecification)
@@ -301,6 +315,10 @@ function testFilters()
 
     testFilter({
         "prop": [1, 2]
+    })
+
+    testFilter({
+        "IN": [5, "a"]
     })
 
     testFilter({
