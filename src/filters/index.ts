@@ -179,7 +179,7 @@ export class PropertiesFilter
         const styleFilter = []
         for (const [key, expr] of Object.entries(filter)) {
             if (key === 'AND' || key === 'OR') {
-                if (Array.isArray(expr) && expr.length >= 2) {
+                if (Array.isArray(expr) && expr.length >= 1) {
                     styleFilter.push((key === 'AND') ? 'all' : 'any',
                                       ...expr.map(e => this.#makeStyleFilter(e)))
                 } else {
@@ -224,7 +224,7 @@ export class PropertiesFilter
         for (const [key, expr] of Object.entries(filter)) {
             let matched = true
             if (key === 'AND' || key === 'OR') {
-                if (Array.isArray(expr) && expr.length >= 2) {
+                if (Array.isArray(expr) && expr.length >= 1) {
                     const matches = expr.map(e => this.#match(properties, e))
                     matched = (key === 'AND') ? matches.reduce((result, match) => result && match, true)
                                               : matches.reduce((result, match) => result || match, false)
