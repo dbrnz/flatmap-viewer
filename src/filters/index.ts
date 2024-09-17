@@ -104,6 +104,12 @@ export class PropertiesFilter
         }
     }
 
+    get filter()
+    //==========
+    {
+        return this.#filter
+    }
+
     clear()
     //=====
     {
@@ -367,6 +373,24 @@ function testFilters()
             ]
         }
     })
+
+    const f1 = new PropertiesFilter({
+        "AND": [
+            { "NOT": {"prop1": 10}},
+            {"prop2": 11}
+        ]
+    })
+    const f2 = new PropertiesFilter({
+        "AND": [
+            {"prop3": 10},
+            {"prop4": 11}
+        ]
+    })
+    testFilter({
+        "OR": [ f1.filter, f2.filter ]
+    })
+
+
 }
 
 //==============================================================================
