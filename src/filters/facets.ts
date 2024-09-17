@@ -18,8 +18,9 @@ limitations under the License.
 
 ==============================================================================*/
 
-import {StyleFilterValue} from '.'
 import {PropertiesType} from '../types'
+
+import {PropertiesFilter} from '.'
 
 //==============================================================================
 
@@ -35,8 +36,9 @@ export interface FacetState
 
 export interface FilteredFacet
 {
+    id: string
     enable: (ids: string[], enable: boolean) => void
-    getFilter: () => Record<string, StyleFilterValue>
+    makeFilter: () => PropertiesFilter
 }
 
 //==============================================================================
@@ -109,6 +111,12 @@ export class Facet
     //======
     {
         return this.#id
+    }
+
+    get size()
+    //========
+    {
+        return this.#states.size
     }
 
     get enabledStates(): string[]

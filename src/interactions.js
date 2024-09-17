@@ -198,12 +198,14 @@ export class UserInteractions
         this.enableCentrelines(this.__pathManager.enabledCentrelines, true)
 
         this.#pathTypeFacet = new PathTypeFacet(mapPathTypes)
+        this._layerManager.addFilteredFacet(this.#pathTypeFacet)
 
         // Note features that are FC systems
         this.__systemsManager = new SystemsManager(this._flatmap, this, featuresEnabled);
 
         // All taxons of connectivity paths are enabled by default
         this.#taxonFacet = new TaxonFacet(this._flatmap.taxonIdentifiers)
+        this._layerManager.addFilteredFacet(this.#taxonFacet)
 
         // Add a minimap if option set
         if (flatmap.options.minimap) {
@@ -1336,7 +1338,7 @@ export class UserInteractions
     //======================================
     {
         this.#pathTypeFacet.enable([pathType], enable)
-        this._layerManager.setFilter(this.#pathTypeFacet.getFilter())
+        this._layerManager.refresh()
     }
 
     pathFeatureIds(externalIds)
@@ -1377,7 +1379,7 @@ export class UserInteractions
     //=================================================
     {
         this.#taxonFacet.enable(taxonIds, enable)
-        this._layerManager.setFilter(this.#taxonFacet.getFilter())
+        this._layerManager.refresh()
     }
 
     excludeAnnotated(exclude=false)

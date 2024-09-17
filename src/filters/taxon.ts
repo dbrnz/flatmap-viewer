@@ -20,7 +20,7 @@ limitations under the License.
 
 import {UNCLASSIFIED_TAXON_ID} from '../flatmap-viewer'
 
-import {StyleFilterValue} from '.'
+import {PropertiesFilter} from '.'
 import {Facet, FilteredFacet} from './facets'
 
 //==============================================================================
@@ -34,37 +34,31 @@ export class TaxonFacet implements FilteredFacet
         this.#facet = new Facet('taxons', taxonIds.map(id => { return { id }}))
     }
 
+    get id()
+    //======
+    {
+        return this.#facet.id
+    }
+
     enable(enabledIds: string[], enable: boolean=true)
     //================================================
     {
         enabledIds.forEach(id => this.#facet.enable(id, enable))
     }
 
-    getFilter(): Record<string, StyleFilterValue>
-    //===========================================
-    {
-        const result = {}
-        result[this.#facet.id] = [this.#makeFilter()]
-        return result
-    }
-
-    #makeFilter(): StyleFilterValue
-    //=============================
+    makeFilter(): PropertiesFilter
+    //============================
     {
         const enabledIds = this.#facet.enabledStates
-        if (enabledIds.length) {
-            const filter: StyleFilterValue = ['any']
-            for (const taxon of enabledIds) {
-                if (taxon !== UNCLASSIFIED_TAXON_ID) {
-                    filter.push(['in', taxon, ['get', 'taxons']])
-                } else {
-                    filter.push(['case', ['has', 'taxons'], false, true])
-                }
+        return new PropertiesFilter(enabledIds.length
+          ? { OR: enabledIds.map(taxon => {
+                    return (taxon !== UNCLASSIFIED_TAXON_ID)
+                        ? { 'IN': [taxon, 'taxons'] }
+                        : { 'HAS': 'taxons' }
+                    }
+                )
             }
-            return filter
-        } else {
-            return false
-        }
+          : (this.#facet.size === 0))
     }
 }
 

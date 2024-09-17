@@ -20,7 +20,7 @@ limitations under the License.
 
 import {PathType} from '../pathways'
 
-import {StyleFilterValue} from '.'
+import {PropertiesFilter} from '.'
 import {Facet, FilteredFacet} from './facets'
 
 //==============================================================================
@@ -44,33 +44,27 @@ export class PathTypeFacet implements FilteredFacet
         }))
     }
 
+    get id()
+    //======
+    {
+        return this.#facet.id
+    }
+
     enable(pathTypes: string[], enable: boolean=true)
     //===============================================
     {
         pathTypes.forEach(pt => this.#facet.enable(pt, enable))
     }
 
-    getFilter(): Record<string, StyleFilterValue>
-    //===========================================
-    {
-        const result = {}
-        result[this.#facet.id] = [this.#makeFilter()]
-        return result
-    }
-
-    #makeFilter(): StyleFilterValue
-    //=============================
+    makeFilter(): PropertiesFilter
+    //============================
     {
         const enabledTypes = this.#facet.enabledStates
-        if (enabledTypes.length) {
-            const filter: StyleFilterValue = ['any']
-            for (const pathType of enabledTypes) {
-                filter.push(['==', ['get', 'kind'], pathType])
+        return new PropertiesFilter(enabledTypes.length
+          ? {
+                OR: enabledTypes.map(pathType => { return {kind: pathType}})
             }
-            return filter
-        } else {
-            return false
-        }
+          : (this.#facet.size === 0))
     }
 }
 

@@ -516,28 +516,10 @@ export class PathLineLayer extends VectorStyleLayer
     makeFilter(options={})
     {
         const sckan_filter = sckanFilter(options);
-        let taxonFilter = [];
-        if ('taxons' in options) {
-            if (options.taxons.length) {
-                taxonFilter.push('any');
-                for (const taxon of options.taxons) {
-                    if (taxon !== UNCLASSIFIED_TAXON_ID) {
-                        taxonFilter.push(['in', taxon, ['get', 'taxons']]);
-                    } else {
-                        taxonFilter.push(['case', ['has', 'taxons'], false, true]);
-                    }
-                }
-                taxonFilter = [taxonFilter];
-            } else {
-                taxonFilter.push(false);
-            }
-        }
-
         return this.__dashed ? [
             'all',
             ['==', ['get', 'type'], 'line-dash'],
-            ...sckan_filter,
-            ...taxonFilter
+            ...sckan_filter
         ] : [
             'all',
             [
@@ -546,8 +528,7 @@ export class PathLineLayer extends VectorStyleLayer
                 [
                     'all',
                     ['==', ['get', 'type'], 'line'],
-                    ...sckan_filter,
-                    ...taxonFilter
+                    ...sckan_filter
                 ]
             ]
         ];

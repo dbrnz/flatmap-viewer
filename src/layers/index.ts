@@ -22,7 +22,8 @@ import {Map as MapLibreMap} from 'maplibre-gl'
 
 //==============================================================================
 
-import {PropertiesFilter} from '../filters'
+import {PropertiesFilter, StyleFilterType} from '../filters'
+import {FilteredFacet} from '../filters/facets'
 import {FlatMap} from '../flatmap-viewer'
 import {PATHWAYS_LAYER} from '../pathways.js';
 import {UserInteractions} from '../interactions'
@@ -315,6 +316,8 @@ class FlatMapStylingLayer
 export class LayerManager
 {
     #deckGlOverlay: DeckGlOverlay
+    #facetMap: Map<string, FilteredFacet> = new Map()
+    #filterMap: Map<string, PropertiesFilter> = new Map()
     #flatmap: FlatMap
     #flightPathLayer: FlightPathLayer
     #layerOptions
@@ -490,23 +493,45 @@ export class LayerManager
         }
     }
 
+    addFilteredFacet(facet: FilteredFacet)
+    //====================================
+    {
+        this.#facetMap.set(facet.id, facet)
+        this.#filterMap.set(facet.id, facet.makeFilter())
+        this.#updatedFilters()
+    }
+
+    removeFilteredFacet(id: string)
+    //=============================
+    {
+        if (this.#facetMap.has(id)) {
+            this.#facetMap.delete(id)
+            this.#filterMap.delete(id)
+            this.#updatedFilters()
+        }
+    }
+
+    refresh()
+    //=======
+    {
+        for (const facet of this.#facetMap.values()) {
+            this.#filterMap.set(facet.id, facet.makeFilter())
+        }
+        this.#updatedFilters()
+    }
+
     clearVisibilityFilter()
     //=====================
     {
-        for (const mapLayer of this.#mapStyleLayers.values()) {
-            mapLayer.clearVisibilityFilter()
-        }
-        this.#flightPathLayer.clearVisibilityFilter()
+        this.#filterMap.delete('')
+        this.#updatedFilters()
     }
 
-    setVisibilityFilter(propertiesFilter)
-    //===================================
+    setVisibilityFilter(propertiesFilter: PropertiesFilter)
+    //=====================================================
     {
-        const styleFilter = propertiesFilter.getStyleFilter()
-        for (const mapLayer of this.#mapStyleLayers.values()) {
-            mapLayer.setVisibilityFilter(styleFilter)
-        }
-        this.#flightPathLayer.setVisibilityFilter(propertiesFilter)
+        this.#filterMap.set('', propertiesFilter)
+        this.#updatedFilters()
     }
 
     setFlightPathMode(enable=true)
@@ -515,6 +540,26 @@ export class LayerManager
         this.#flightPathLayer.enable(enable)
         for (const mapLayer of this.#mapStyleLayers.values()) {
             mapLayer.setFlatPathMode(!enable)
+        }
+    }
+
+    #updatedFilters()
+    //===============
+    {
+        if (this.#filterMap.size > 0) {
+            const propertiesFilter = new PropertiesFilter({
+                'AND': [...this.#filterMap.values()].map(f => f.filter)
+            })
+            const styleFilter = propertiesFilter.getStyleFilter()
+            for (const mapLayer of this.#mapStyleLayers.values()) {
+                mapLayer.setVisibilityFilter(styleFilter)
+            }
+            this.#flightPathLayer.setVisibilityFilter(propertiesFilter)
+        } else {
+            for (const mapLayer of this.#mapStyleLayers.values()) {
+                mapLayer.clearVisibilityFilter()
+            }
+            this.#flightPathLayer.clearVisibilityFilter()
         }
     }
 
