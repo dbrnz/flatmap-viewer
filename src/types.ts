@@ -31,3 +31,6 @@ export type PropertiesType = Record<PropertyKey, PropertyValue>
 
 //==============================================================================
 
+export type Callback = (_: Object) => void
+
+//==============================================================================
