@@ -22,6 +22,7 @@ import {Map as MapLibreMap} from 'maplibre-gl'
 
 //==============================================================================
 
+import {PropertiesFilter} from '../filters'
 import {FlatMap} from '../flatmap-viewer'
 import {PATHWAYS_LAYER} from '../pathways.js';
 import {UserInteractions} from '../interactions'
@@ -34,7 +35,6 @@ import {BackgroundStyleLayer, BodyStyleLayer, RasterStyleLayer, VectorStyleLayer
 
 import {DeckGlOverlay} from './deckgl'
 import {FlightPathLayer} from './flightpaths'
-import {PropertiesFilter} from './filter'
 //import {SvgLayer} from './svglayer'
 
 const FEATURES_LAYER = 'features';

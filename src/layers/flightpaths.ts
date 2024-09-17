@@ -29,7 +29,7 @@ import {pathColourArray, PathManager} from '../pathways'
 import {UserInteractions} from '../interactions'
 
 import {DeckGlOverlay} from './deckgl'
-import {PropertiesFilter} from './filter'
+import {PropertiesFilter} from '../filters'
 
 //==============================================================================
 
