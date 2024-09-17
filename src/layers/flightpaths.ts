@@ -25,7 +25,7 @@ import {Model, Geometry} from '@luma.gl/engine'
 //==============================================================================
 
 import {FlatMap} from '../flatmap-viewer'
-import {pathColourArray, PathManager} from '../pathways'
+import {pathColourArray, PathManager, PathStyle} from '../pathways'
 import {UserInteractions} from '../interactions'
 
 import {DeckGlOverlay} from './deckgl'
@@ -39,11 +39,6 @@ interface PathProperties extends PropertiesType {
     featureId: string,
     pathEndPosition: number[],
     pathStartPosition: number[]
-}
-
-interface PathStyle extends PropertiesType {
-    dashed: boolean
-    type: string
 }
 
 interface LayerOptions extends PropertiesType {
@@ -308,7 +303,7 @@ export class FlightPathLayer
         if (properties.hidden) {
             return [0, 0, 0, 0]
         }
-        return pathColourArray(properties.kind,
+        return pathColourArray(properties.kind as string,
                                properties.active || properties.selected ? 255
                                                                         : this.#dimmed ? 20 : 160)
     }

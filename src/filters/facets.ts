@@ -19,6 +19,7 @@ limitations under the License.
 ==============================================================================*/
 
 import {StyleFilterValue} from '.'
+import {PropertiesType} from '../types'
 
 //==============================================================================
 
@@ -27,7 +28,7 @@ export interface FacetState
     id: string
     label?: string
     enabled?: boolean
-    properties?: Record<string, string|number>
+    properties?: PropertiesType
 }
 
 //==============================================================================
@@ -45,7 +46,7 @@ class InternalState
     #id: string
     #label: string
     #enabled: boolean
-    #properties: Record<string, string|number>
+    #properties: PropertiesType
 
     constructor(state: FacetState)
     {

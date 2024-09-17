@@ -282,8 +282,8 @@ class FlatMapStylingLayer
         }
     }
 
-    setVisibilityFilter(filter)
-    //=========================
+    setVisibilityFilter(filter: StyleFilterType)
+    //==========================================
     {
         for (const layer of this.#vectorStyleLayers) {
             const styleFilter = layer.defaultFilter()
