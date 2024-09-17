@@ -18,7 +18,7 @@ limitations under the License.
 
 ==============================================================================*/
 
-import {StyleFilterValue} from '../filters'
+import {StyleFilterValue} from '.'
 
 //==============================================================================
 

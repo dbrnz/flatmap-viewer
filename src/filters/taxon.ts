@@ -18,9 +18,10 @@ limitations under the License.
 
 ==============================================================================*/
 
-import {StyleFilterValue} from '../filters'
 import {UNCLASSIFIED_TAXON_ID} from '../flatmap-viewer'
-import {Facet, FilteredFacet} from '../layers/facets'
+
+import {StyleFilterValue} from '.'
+import {Facet, FilteredFacet} from './facets'
 
 //==============================================================================
 
