@@ -206,9 +206,9 @@ export class PropertiesFilter
                 }
             } else {
                 if (Array.isArray(expr)) {
-                    styleFilter.push('any', ...expr.map(e => ['==', key, e]))
+                    styleFilter.push('any', ...expr.map(e => ['==', ['get', key], e]))
                 } else {
-                    styleFilter.push('==', key, expr)
+                    styleFilter.push('==', ['get', key], expr)
                 }
             }
         }
