@@ -35,7 +35,20 @@ export const APINATOMY_PATH_PREFIX = 'ilxtr:'
 
 //==============================================================================
 
-const PATH_TYPES = [
+export type PathStyle = {
+    type: string
+    label: string
+    colour: string
+    dashed?: boolean
+}
+
+export type PathType = PathStyle & {
+    enabled?: boolean
+}
+
+//==============================================================================
+
+const PATH_TYPES: PathType[] = [
     { type: "cns", label: "CNS", colour: "#9B1FC1"},
     { type: "intracardiac", label: "Local circuit neuron", colour: "#F19E38"},
     { type: "para-pre", label: "Parasympathetic pre-ganglionic", colour: "#3F8F4A"},
@@ -52,13 +65,13 @@ const PATH_TYPES = [
     { type: "error", label: "Paths with errors or warnings", colour: "#FF0", enabled: false}
 ]
 
-const PathTypeMap = new Map(PATH_TYPES.map(t => [t.type, t]))
+const PathTypeMap: Map<string, PathType> = new Map(PATH_TYPES.map(t => [t.type, t]))
 
 export const PATH_STYLE_RULES =
     PATH_TYPES.flatMap(pathType => [['==', ['get', 'kind'], pathType.type], pathType.colour])
 
-export function pathColourArray(pathType, alpha=255)
-//==================================================
+export function pathColourArray(pathType: string, alpha: number=255): [number, number, number, number]
+//====================================================================================================
 {
     const rgb = colord(PathTypeMap.has(pathType)
                         ? PathTypeMap.get(pathType).colour
@@ -79,6 +92,27 @@ interface FeatureInterface
 interface FlatmapInterface extends FlatMap
 {
     pathways: PathwaysInterface
+}
+
+//==============================================================================
+
+/* To go into systems.ts */
+
+interface SystemComponent
+{
+    label: string
+    models: string
+    ftus?: SystemComponent[]
+}
+
+interface SystemsType
+{
+    name: string
+    colour: string
+    featureIds: string[]
+    enabled: boolean
+    pathIds: string[]
+    organs: SystemComponent[]
 }
 
 //==============================================================================
@@ -250,20 +284,20 @@ export class PathManager
         }
     }
 
-    get centrelineDetails()
-    //=====================
+    get centrelineDetails(): CentrelineDetails[]
+    //==========================================
     {
         return this.#centrelineDetails
     }
 
-    get haveCentrelines()
-    //===================
+    get haveCentrelines(): boolean
+    //============================
     {
         return this.#haveCentrelines
     }
 
-    get enabledCentrelines()
-    //======================
+    get enabledCentrelines(): boolean
+    //===============================
     {
         return this.#enabledCentrelines
     }
@@ -278,8 +312,8 @@ export class PathManager
         }
     }
 
-    pathStyles()
-    //==========
+    pathStyles(): PathStyle[]
+    //=======================
     {
         const styles = []
         for (const mapType of this.pathTypes()) {
@@ -293,10 +327,10 @@ export class PathManager
         return styles
     }
 
-    pathTypes()
-    //=========
+    pathTypes(): PathType[]
+    //=====================
     {
-        const pathTypes = []
+        const pathTypes: PathType[] = []
         for (const pathTypeDefn of PATH_TYPES) {
             if (pathTypeDefn.type in this.#pathsByType
             && this.#pathsByType[pathTypeDefn.type].length > 0) {
@@ -327,14 +361,14 @@ export class PathManager
         }
     }
 
-    allFeatureIds()
-    //=============
+    allFeatureIds(): Set<number>
+    //==========================
     {
         return this.#allFeatureIds
     }
 
-    lineFeatureIds(lineIds: number[])
-    //===============================
+    lineFeatureIds(lineIds: number[]): Set<number>
+    //============================================
     {
         const featureIds: Set<number> = new Set()
         for (const lineId of lineIds) {
@@ -345,8 +379,8 @@ export class PathManager
         return featureIds
     }
 
-    nerveFeatureIds(nerveId: string)
-    //==============================
+    nerveFeatureIds(nerveId: string): Set<number>
+    //===========================================
     {
         const featureIds: Set<number> = new Set()
         if (this.#pathsByNerve.has(nerveId)) {
@@ -355,10 +389,10 @@ export class PathManager
         return featureIds
     }
 
-    pathProperties(feature: FeatureInterface)
-    //=======================================
+    pathProperties(feature: FeatureInterface): PropertiesType
+    //=======================================================
     {
-        const properties = Object.assign({}, feature.properties)
+        const properties: PropertiesType = Object.assign({}, feature.properties)
         if (this.#pathsByLine.has(feature.id)) {
             for (const pathId of this.#pathsByLine.get(feature.id)) {
                 // There should only be a single path for a line
@@ -383,8 +417,8 @@ export class PathManager
         return properties
     }
 
-    connectivityModelFeatureIds(modelId: string)
-    //==========================================
+    connectivityModelFeatureIds(modelId: string): Set<number>
+    //=======================================================
     {
         const featureIds: Set<number> = new Set()
         if (modelId in this.#connectivityModelPaths) {
@@ -393,8 +427,8 @@ export class PathManager
         return featureIds
     }
 
-    pathModelFeatureIds(modelId: string)
-    //==================================
+    pathModelFeatureIds(modelId: string): Set<number>
+    //===============================================
     {
         const featureIds: Set<number> = new Set()
         if (modelId in this.#pathModelPaths) {
@@ -403,14 +437,14 @@ export class PathManager
         return featureIds
     }
 
-    isNode(id: number)
-    //================
+    isNode(id: number): boolean
+    //=========================
     {
         return id in this.#nodePaths
     }
 
-    pathFeatureIds(nodeId: number)
-    //============================
+    pathFeatureIds(nodeId: number): Set<number>
+    //=========================================
     {
         const featureIds: Set<number> = new Set()
         if (nodeId in this.#nodePaths) {
@@ -419,8 +453,8 @@ export class PathManager
         return featureIds
     }
 
-    #typeFeatureIds(pathType: string)
-    //===============================
+    #typeFeatureIds(pathType: string): Set<number>
+    //============================================
     {
         const featureIds: Set<number> = new Set()
         if (pathType in this.#pathsByType) {
@@ -455,8 +489,8 @@ export class PathManager
         }
     }
 
-    enablePathsBySystem(system: string, enable: boolean, force: boolean=false)
-    //========================================================================
+    enablePathsBySystem(system: SystemsType, enable: boolean, force: boolean=false)
+    //=============================================================================
     {
         let changed = false
         for (const pathId of system.pathIds) {
@@ -498,16 +532,16 @@ export class PathManager
         }
     }
 
-    pathTypeEnabled(pathType: string)
-    //===============================
+    pathTypeEnabled(pathType: string): boolean
+    //========================================
     {
         return this.#pathtypeEnabled[pathType] || false
     }
 
-    nodePathModels(nodeId: number)
-    //============================
+    nodePathModels(nodeId: number): Set<string>
+    //=========================================
     {
-        const modelIds = new Set()
+        const modelIds: Set<string> = new Set()
         if (nodeId in this.#nodePaths) {
             for (const pathId of this.#nodePaths[nodeId]) {
                 if (pathId in this.#pathToPathModel) {
@@ -518,10 +552,10 @@ export class PathManager
         return modelIds
     }
 
-    pathModelNodes(modelId: string)
-    //=============================
+    pathModelNodes(modelId: string): Set<number>
+    //==========================================
     {
-        const nodeIds = new Set()
+        const nodeIds: Set<number> = new Set()
         if (modelId in this.#pathModelPaths) {
             for (const pathId of this.#pathModelPaths[modelId]) {
                 for (const nodeId of this.#paths[pathId].nodes) {
