@@ -34,6 +34,7 @@ import polylabel from 'polylabel';
 import {PropertiesFilter} from './filters'
 import {inAnatomicalClusterLayer, LayerManager} from './layers';
 import {PATHWAYS_LAYER, PathManager} from './pathways';
+import {PathTypeFacet} from './filters/pathtype'
 import {TaxonFacet} from './filters/taxon'
 import {VECTOR_TILES_SOURCE} from './layers/styling';
 import {SystemsManager} from './systems';
@@ -136,6 +137,7 @@ export class UserInteractions
     #lastImageId = 0
     #lastMarkerId = 900000
     #minimap = null
+    #pathTypeFacet
     #selectedFeatureRefCount = new Map()
     #taxonFacet
 
@@ -194,6 +196,8 @@ export class UserInteractions
             this.__pathManager.enablePathsByType(path.type, path.enabled, true);
         }
         this.enableCentrelines(this.__pathManager.enabledCentrelines, true)
+
+        this.#pathTypeFacet = new PathTypeFacet(mapPathTypes)
 
         // Note features that are FC systems
         this.__systemsManager = new SystemsManager(this._flatmap, this, featuresEnabled);
@@ -1331,7 +1335,8 @@ export class UserInteractions
     enablePathsByType(pathType, enable=true)
     //======================================
     {
-        this.__pathManager.enablePathsByType(pathType, enable);
+        this.#pathTypeFacet.enable([pathType], enable)
+        this._layerManager.setFilter(this.#pathTypeFacet.getFilter())
     }
 
     pathFeatureIds(externalIds)
