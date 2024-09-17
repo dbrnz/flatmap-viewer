@@ -34,6 +34,7 @@ import polylabel from 'polylabel';
 import {PropertiesFilter} from './filters'
 import {inAnatomicalClusterLayer, LayerManager} from './layers';
 import {PATHWAYS_LAYER, PathManager} from './pathways';
+import {TaxonFacet} from './filters/taxon'
 import {VECTOR_TILES_SOURCE} from './layers/styling';
 import {SystemsManager} from './systems';
 import {FLATMAP_STYLE} from './flatmap-viewer'
@@ -136,6 +137,7 @@ export class UserInteractions
     #lastMarkerId = 900000
     #minimap = null
     #selectedFeatureRefCount = new Map()
+    #taxonFacet
 
     constructor(flatmap)
     {
@@ -197,7 +199,7 @@ export class UserInteractions
         this.__systemsManager = new SystemsManager(this._flatmap, this, featuresEnabled);
 
         // All taxons of connectivity paths are enabled by default
-        this.__enabledConnectivityTaxons = new Set(this._flatmap.taxonIdentifiers);
+        this.#taxonFacet = new TaxonFacet(this._flatmap.taxonIdentifiers)
 
         // Add a minimap if option set
         if (flatmap.options.minimap) {
@@ -1369,16 +1371,8 @@ export class UserInteractions
     enableConnectivityByTaxonIds(taxonIds, enable=true)
     //=================================================
     {
-        if (enable) {
-            for (const taxonId of taxonIds) {
-               this.__enabledConnectivityTaxons.add(taxonId);
-            }
-        } else {
-            for (const taxonId of taxonIds) {
-               this.__enabledConnectivityTaxons.delete(taxonId);
-            }
-        }
-        this._layerManager.setFilter({taxons: [...this.__enabledConnectivityTaxons.values()]});
+        this.#taxonFacet.enable(taxonIds, enable)
+        this._layerManager.setFilter(this.#taxonFacet.getFilter())
     }
 
     excludeAnnotated(exclude=false)
