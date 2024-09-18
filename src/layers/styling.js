@@ -92,11 +92,6 @@ export class VectorStyleLayer extends StyleLayer
         this.__lastPaintStyle = {};
     }
 
-    makeFilter(options)
-    {
-        return null;
-    }
-
     defaultFilter()
     {
         return null
@@ -403,10 +398,11 @@ export class FeatureDashLineLayer extends FeatureLineLayer
 
 //==============================================================================
 
-function sckanFilter(options)
+function sckanFilter(options={})
 {
-    const sckanState = !'sckan' in options ? 'all'
-                     : options.sckan.toLowerCase();
+    const sckanState = ('sckan' in options)
+                     ? options.sckan.toLowerCase()
+                     : 'all'
     const sckanFilter =
         sckanState == 'none' ? [
             ['!', ['has', 'sckan']]
@@ -442,7 +438,7 @@ export class AnnotatedPathLayer extends VectorStyleLayer
         super(id, 'annotated-path', sourceLayer);
     }
 
-    makeFilter(options={})
+    defaultFilter(options={})
     {
         return [
             'all',
@@ -490,7 +486,7 @@ export class AnnotatedPathLayer extends VectorStyleLayer
         return {
             ...super.style(layer),
             'type': 'line',
-            'filter': this.makeFilter(options),
+            'filter': this.defaultFilter(options),
             'paint': this.paintStyle(options),
             'layout': {
                 'line-cap': 'square'
@@ -512,7 +508,7 @@ export class PathLineLayer extends VectorStyleLayer
         this.__highlight = highlight;
     }
 
-    makeFilter(options={})
+    defaultFilter(options={})
     {
         const sckan_filter = sckanFilter(options);
         return this.__dashed ? [
@@ -602,7 +598,7 @@ export class PathLineLayer extends VectorStyleLayer
         return {
             ...super.style(layer),
             'type': 'line',
-            'filter': this.makeFilter(options),
+            'filter': this.defaultFilter(options),
             'layout': {
                 'line-cap': 'butt'
             },

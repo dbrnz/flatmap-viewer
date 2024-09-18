@@ -264,17 +264,6 @@ class FlatMapStylingLayer
         }
     }
 
-    setFilter(options)
-    //================
-    {
-        for (const layer of this.#vectorStyleLayers) {
-            const filter = layer.makeFilter(options)
-            if (filter !== null) {
-                this.#map.setFilter(layer.id, filter, {validate: true})
-            }
-        }
-    }
-
     clearVisibilityFilter()
     //=====================
     {
@@ -471,26 +460,6 @@ export class LayerManager
         }
         // @ts-ignore
         this.#flightPathLayer.setPaint(options)
-    }
-
-    setFilter(options={})
-    //===================
-    {
-        this.#layerOptions = utils.setDefaults(options, this.#layerOptions);
-        for (const mapLayer of this.#mapStyleLayers.values()) {
-            mapLayer.setFilter(this.#layerOptions);
-        }
-        // @ts-ignore
-        const sckanState = options.sckan || 'valid'
-        const sckanFilter = (sckanState == 'none') ? {NOT: {HAS: 'sckan'}} :
-                            (sckanState == 'valid') ? {sckan: true} :
-                            (sckanState == 'invalid') ? {NOT: {sckan: true}} :
-                            true
-        const featureFilter = new PropertiesFilter(sckanFilter)
-        if ('taxons' in options) {
-            // @ts-ignore
-            featureFilter.narrow({taxons: options.taxons})
-        }
     }
 
     addFilteredFacet(facet: FilteredFacet)
