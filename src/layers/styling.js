@@ -22,7 +22,6 @@ export const VECTOR_TILES_SOURCE = 'vector-tiles';
 
 //==============================================================================
 
-import {UNCLASSIFIED_TAXON_ID} from '../flatmap-viewer';
 import {PATH_STYLE_RULES} from '../pathways';
 
 //==============================================================================

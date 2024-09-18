@@ -393,8 +393,8 @@ export class LayerManager
         return this.#layerOptions.sckan;
     }
 
-    activate(layerId, enable=true)
-    //============================
+    activate(layerId: string, enable=true)
+    //====================================
     {
         const layer = this.#mapStyleLayers.get(layerId)
         if (layer) {
