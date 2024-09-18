@@ -117,7 +117,7 @@ interface SystemsType
 
 //==============================================================================
 
-interface CentrelineDetails
+export interface CentrelineDetails
 {
     id: string
     label?: string
