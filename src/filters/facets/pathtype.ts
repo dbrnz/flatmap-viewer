@@ -58,11 +58,11 @@ export class PathTypeFacet implements FilteredFacet
     makeFilter(): PropertiesFilter
     //============================
     {
-        const enabledTypes = this.#facet.enabledStates
-        return new PropertiesFilter(enabledTypes.length
-          ? {
-                OR: enabledTypes.map(pathType => { return {kind: pathType}})
-            }
+         const pathCondition = this.#facet.enabledStates.map(
+            pathType => { return {kind: pathType} }
+        )
+        return new PropertiesFilter(pathCondition.length
+          ? { OR: pathCondition }
           : (this.#facet.size === 0))
     }
 }

@@ -48,15 +48,14 @@ export class TaxonFacet implements FilteredFacet
     makeFilter(): PropertiesFilter
     //============================
     {
-        const enabledIds = this.#facet.enabledStates
-        return new PropertiesFilter(enabledIds.length
-          ? { OR: enabledIds.map(taxon => {
-                    return (taxon !== UNCLASSIFIED_TAXON_ID)
-                        ? { 'IN': [taxon, 'taxons'] }
-                        : { 'HAS': 'taxons' }
-                    }
-                )
+        const taxonCondition = this.#facet.enabledStates.map(taxon => {
+            return (taxon !== UNCLASSIFIED_TAXON_ID)
+                ? { 'IN': [taxon, 'taxons'] }
+                : { 'HAS': 'taxons' }
             }
+        )
+        return new PropertiesFilter(taxonCondition.length
+          ? { OR: [{'NOT': {'HAS': 'taxons'}}, ...taxonCondition] }
           : (this.#facet.size === 0))
     }
 }
