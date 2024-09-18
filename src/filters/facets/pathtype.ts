@@ -18,10 +18,9 @@ limitations under the License.
 
 ==============================================================================*/
 
-import {PathType} from '../pathways'
-
-import {PropertiesFilter} from '.'
-import {Facet, FilteredFacet} from './facets'
+import {PathType} from '../../pathways'
+import {PropertiesFilter} from '..'
+import {Facet, FilteredFacet} from '.'
 
 //==============================================================================
 

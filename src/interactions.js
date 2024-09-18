@@ -34,8 +34,8 @@ import polylabel from 'polylabel';
 import {PropertiesFilter} from './filters'
 import {inAnatomicalClusterLayer, LayerManager} from './layers';
 import {PATHWAYS_LAYER, PathManager} from './pathways';
-import {PathTypeFacet} from './filters/pathtype'
-import {TaxonFacet} from './filters/taxon'
+import {PathTypeFacet} from './filters/facets/pathtype'
+import {TaxonFacet} from './filters/facets/taxon'
 import {VECTOR_TILES_SOURCE} from './layers/styling';
 import {SystemsManager} from './systems';
 import {FLATMAP_STYLE} from './flatmap-viewer'

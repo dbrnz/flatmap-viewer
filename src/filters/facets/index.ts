@@ -18,9 +18,9 @@ limitations under the License.
 
 ==============================================================================*/
 
-import {PropertiesType} from '../types'
+import {PropertiesType} from '../../types'
 
-import {PropertiesFilter} from '.'
+import {PropertiesFilter} from '..'
 
 //==============================================================================
 
