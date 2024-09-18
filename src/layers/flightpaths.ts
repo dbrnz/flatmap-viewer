@@ -25,7 +25,7 @@ import {Model, Geometry} from '@luma.gl/engine'
 //==============================================================================
 
 import {FlatMap} from '../flatmap-viewer'
-import {pathColourArray, PathManager, PathStyle} from '../pathways'
+import {pathColourArray, PathStyle} from '../pathways'
 import {UserInteractions} from '../interactions'
 
 import {DeckGlOverlay} from './deckgl'
@@ -126,15 +126,12 @@ export class FlightPathLayer
     #layerProperties: Map<string, ArcLayerProps> = new Map()
     #pathFeatures: Map<number, PathProperties>
     #pathFilters: Map<string, PropertiesFilter>
-    #pathManager: PathManager
     #pathStyles: Map<string, PathStyle>
     #pathTypes: string[]
 
     constructor(deckOverlay: DeckGlOverlay, flatmap: FlatMap, ui: UserInteractions)
     {
         this.#deckOverlay = deckOverlay
-        this.#pathManager = ui.pathManager
-        this.#pathManager.addWatcher(this.#pathStateChanged.bind(this))
         this.#pathFeatures = new Map([...flatmap.annotations.values()]
                                     .filter(ann => ann['tile-layer'] === 'pathways'
                                                 && ('geometry' in ann && ann['geometry'] === 'LineString'
@@ -144,7 +141,7 @@ export class FlightPathLayer
                                                 && 'pathStartPosition' in ann
                                                 && 'pathEndPosition' in ann)
                                     .map(ann => [ann.featureId, ann]))
-        this.#pathStyles = new Map(this.#pathManager.pathStyles().map(pathStyle => [pathStyle.type, pathStyle]))
+        this.#pathStyles = new Map(ui.pathManager.pathStyles().map(pathStyle => [pathStyle.type, pathStyle]))
         this.#pathTypes = [...this.#pathStyles.keys()]
         const knownTypes = this.#pathTypes.filter(pathType => pathType !== 'other')
         this.#pathFilters = new Map(
@@ -179,8 +176,9 @@ export class FlightPathLayer
     //==========================
     {
         if (enable !== this.#enabled) {
+            this.#layerProperties = new Map(this.#pathTypes.map(pathType => [pathType, this.#newLayerProperties(pathType)]))
             for (const [pathType, properties] of this.#layerProperties.entries()) {
-                properties.visible = enable && this.#pathManager.pathTypeEnabled(pathType)
+                properties.visible = enable
             }
         this.#enabled = enable
         this.#redraw()
@@ -267,7 +265,7 @@ export class FlightPathLayer
             getTargetColor: this.#pathColour.bind(this),
             opacity: 1.0,
             getWidth: 3,
-            visible: this.#enabled && this.#pathManager.pathTypeEnabled(pathType)
+            visible: this.#enabled
         }
     }
 
@@ -318,20 +316,6 @@ export class FlightPathLayer
                         .filter(ann => this.#featureFilter.match(ann))
         }
         return []
-    }
-
-    #pathStateChanged(changes: PathStateChanges)
-    //==========================================
-    {
-        if (this.#enabled) {
-            if ('pathType' in changes) {
-                const pathType = changes.pathType
-                const enabled = this.#pathManager.pathTypeEnabled(pathType)
-                const properties = this.#layerProperties.get(pathType)
-                properties.visible = enabled
-            }
-            this.#redraw()
-        }
     }
 
     #redraw()
