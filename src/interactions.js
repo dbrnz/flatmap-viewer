@@ -34,6 +34,7 @@ import polylabel from 'polylabel';
 import {PropertiesFilter} from './filters'
 import {inAnatomicalClusterLayer, LayerManager} from './layers';
 import {PATHWAYS_LAYER, PathManager} from './pathways';
+import {NerveCentreFacet} from './filters/facets/nerve'
 import {PathTypeFacet} from './filters/facets/pathtype'
 import {TaxonFacet} from './filters/facets/taxon'
 import {VECTOR_TILES_SOURCE} from './layers/styling';
@@ -137,6 +138,7 @@ export class UserInteractions
     #lastImageId = 0
     #lastMarkerId = 900000
     #minimap = null
+    #nerveCentrelineFacet
     #pathTypeFacet
     #selectedFeatureRefCount = new Map()
     #taxonFacet
@@ -199,6 +201,9 @@ export class UserInteractions
 
         this.#pathTypeFacet = new PathTypeFacet(mapPathTypes)
         this._layerManager.addFilteredFacet(this.#pathTypeFacet)
+
+        this.#nerveCentrelineFacet = new NerveCentreFacet(this.__pathManager.centrelineDetails)
+        this._layerManager.addFilteredFacet(this.#nerveCentrelineFacet)
 
         // Note features that are FC systems
         this.__systemsManager = new SystemsManager(this._flatmap, this, featuresEnabled);
@@ -1757,7 +1762,8 @@ export class UserInteractions
     enableNeuronPathsByNerve(nerveId, enable=true)
     //============================================
     {
-        this.__pathManager.enablePathsByCentreline(nerveId, enable)
+        this.#nerveCentrelineFacet.enable([nerveId], enable)
+        this._layerManager.refresh()
     }
 }
 
