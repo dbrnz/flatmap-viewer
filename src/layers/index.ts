@@ -538,9 +538,10 @@ export class LayerManager
 //        this.#modelLayer.zoomEvent()
     }
 
-    enableSckanPaths(sckanState, enable=true)
+    enableSckanPaths(_sckanState, _enable=true)
     //=======================================
     {
+/** WIP
         const currentState = this.#layerOptions.sckan;
         const validEnabled = ['valid', 'all'].includes(currentState);
         const invalidEnabled = ['invalid', 'all'].includes(currentState);
@@ -561,6 +562,46 @@ export class LayerManager
         if (newState !== this.#layerOptions.sckan) {
             this.setFilter({sckan: newState});
         }
+
+        // @ts-ignore
+        const sckanState = options.sckan || 'valid'
+        const sckanFilter = (sckanState == 'none') ? {NOT: {HAS: 'sckan'}} :
+                            (sckanState == 'valid') ? {sckan: true} :
+                            (sckanState == 'invalid') ? {NOT: {sckan: true}} :
+                            true
+        const featureFilter = new PropertiesFilter(sckanFilter)
+        if ('taxons' in options) {
+            // @ts-ignore
+            featureFilter.narrow({taxons: options.taxons})
+        }
+
+    const sckanState = !'sckan' in options ? 'all'
+                     : options.sckan.toLowerCase();
+    const sckanFilter =
+        sckanState == 'none' ? [
+            ['!', ['has', 'sckan']]
+        ] :
+        sckanState == 'valid' ? [[
+            'any',
+            ['!', ['has', 'sckan']],
+            [
+                'all',
+                ['has', 'sckan'],
+                ['==', ['get', 'sckan'], true]
+            ]
+        ]] :
+        sckanState == 'invalid' ? [[
+            'any',
+            ['!', ['has', 'sckan']],
+            [
+                'all',
+                ['has', 'sckan'],
+                ['!=', ['get', 'sckan'], true]
+            ]
+        ]] :
+        [ ];
+**/
+
     }
 }
 
