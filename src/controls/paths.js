@@ -66,10 +66,10 @@ export class PathControl
         this._button.id = 'nerve-key-button';
         this._button.className = 'control-button text-button';
         this._button.setAttribute('type', 'button');
-        this._button.setAttribute('aria-label', 'Nerve paths legend');
+        this._button.setAttribute('aria-label', "Neuron path type's legend");
         this._button.setAttribute('control-visible', 'false');
         this._button.textContent = 'PATHS';
-        this._button.title = 'Show/hide neuron paths';
+        this._button.title = 'Show/hide neuron paths by type';
         this._container.appendChild(this._button);
 
         this._container.addEventListener('click', this.onClick_.bind(this));
