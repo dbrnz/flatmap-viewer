@@ -18,8 +18,8 @@ limitations under the License.
 
 ==============================================================================*/
 
-import {PropertiesFilter} from '..'
 import {NerveCentrelineDetails} from '../../pathways'
+import {PropertiesFilter, PropertiesFilterExpression} from '..'
 import {Facet, FilteredFacet} from '.'
 
 //==============================================================================
@@ -39,12 +39,20 @@ export class NerveCentreFacet extends FilteredFacet
     makeFilter(): PropertiesFilter
     //============================
     {
-        const nerveCondition = this.#facet.enabledStates.map(
-            nerve => { return {'IN': [nerve, 'nerves']} }
+        const nerveCondition: PropertiesFilterExpression[] =
+            this.facet.enabledStates.map(
+                nerve => {
+                    return (nerve === 'NO-NERVES')
+                         ? {'EMPTY': 'nerves'}
+                         : {'IN': [nerve, 'nerves']}
+                }
+            )
+        if (nerveCondition.length === 0) {
+            nerveCondition.push(this.facet.size === 0)
+        }
+        return new PropertiesFilter(
+           { OR: [{'NOT': {'HAS': 'nerves'}}, ...nerveCondition] }
         )
-        return new PropertiesFilter(nerveCondition.length
-          ? { OR: [{'NOT': {'HAS': 'nerves'}}, ...nerveCondition] }
-          : (this.#facet.size === 0))
     }
 }
 

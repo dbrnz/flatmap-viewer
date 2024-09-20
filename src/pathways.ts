@@ -81,6 +81,10 @@ export function pathColourArray(pathType: string, alpha: number=255): [number, n
 
 //==============================================================================
 
+const NO_NERVES = ['NO-NERVES', 'No associated nerves']
+
+//==============================================================================
+
 /* To go into flatmap-viewer.ts */
 
 interface FeatureInterface
@@ -281,7 +285,7 @@ export class PathManager
     get nerveCentrelineDetails(): NerveCentrelineDetails[]
     //====================================================
     {
-        return [...this.#nerveCentrelineDetails.entries()].map((entry) => {
+        return [NO_NERVES, ...this.#nerveCentrelineDetails.entries()].map((entry) => {
             const label = entry[1]
             return {
                 models: entry[0],
