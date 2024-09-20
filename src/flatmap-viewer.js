@@ -1140,8 +1140,6 @@ export class FlatMap
      *                                to place the marker.
      * @arg {Object} options          Configurable options for the marker.
      * @arg {string} options.className Space-separated CSS class names to add to marker element.
-     * @arg {boolean} options.cluster  The marker will be clustered together with other geographically
-     *                                close markers. Defaults to ``true``.
      * @arg {string} options.colour   Colour of the marker. Defaults to ``'#005974'``
      *                                (dark cyan).
      * @arg {string} options.element  The DOM element to use as a marker. The default is
@@ -1154,7 +1152,6 @@ export class FlatMap
     addMarker(anatomicalId,  options={})
     //==================================
     {
-        options = Object.assign({cluster: true}, options)
         if (this._userInteractions !== null) {
             return this._userInteractions.addMarker(anatomicalId, options);
         }
