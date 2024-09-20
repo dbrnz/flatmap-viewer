@@ -202,7 +202,7 @@ export class UserInteractions
         this.#pathTypeFacet = new PathTypeFacet(mapPathTypes)
         this._layerManager.addFilteredFacet(this.#pathTypeFacet)
 
-        this.#nerveCentrelineFacet = new NerveCentreFacet(this.__pathManager.centrelineDetails)
+        this.#nerveCentrelineFacet = new NerveCentreFacet(this.__pathManager.nerveCentrelineDetails)
         this._layerManager.addFilteredFacet(this.#nerveCentrelineFacet)
 
         // Note features that are FC systems
@@ -1783,7 +1783,7 @@ export class UserInteractions
     getNerveDetails()
     //===============
     {
-        return this.__pathManager.centrelineDetails
+        return this.__pathManager.nerveCentrelineDetails
     }
 
     enableNeuronPathsByNerve(nerveId, enable=true)

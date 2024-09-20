@@ -18,23 +18,20 @@ limitations under the License.
 
 ==============================================================================*/
 
-import {CentrelineDetails} from '../../pathways'
 import {PropertiesFilter} from '..'
+import {NerveCentrelineDetails} from '../../pathways'
 import {Facet, FilteredFacet} from '.'
 
 //==============================================================================
 
 export class NerveCentreFacet extends FilteredFacet
 {
-    constructor(centrelines: CentrelineDetails[])
+    constructor(nerveDetails: NerveCentrelineDetails[])
     {
         super(new Facet('nerves', nerveDetails.map(n => {
             return {
-                id: cl.id,
-                label: cl.label || cl.id,
-                properties: {
-                    models: cl.models
-                }
+                id: n.models,
+                label: n.label
             }
         })))
     }

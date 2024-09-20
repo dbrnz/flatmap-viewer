@@ -117,12 +117,13 @@ interface SystemsType
 
 //==============================================================================
 
-export interface CentrelineDetails
+export interface NerveCentrelineDetails
 {
-    id: string
-    label?: string
-    models?: string
+    models: string
+    label: string
 }
+
+//==============================================================================
 
 interface ModelsInterface
 {
@@ -154,7 +155,7 @@ interface PathwaysInterface
 export class PathManager
 {
     #allFeatureIds: Set<number>
-    #centrelineDetails: CentrelineDetails[] = []        // Array<Object>
+    #nerveCentrelineDetails: Map<string, string> = new Map() // models --> label
     #connectivityModelPaths: Record<string, string[]>   // modelId: [pathIds]
     #enabledCentrelines: boolean = false
     #flatmap: FlatmapInterface
@@ -252,16 +253,9 @@ export class PathManager
                     const annotation = flatmap.annotationById(id)
                     if (flatmap.options.style === FLATMAP_STYLE.CENTRELINE
                      || this.#pathsByCentreline.has(id)) {
-                        const details: CentrelineDetails = {id}
-                        if (annotation) {
-                            if ('label' in annotation) {
-                                details['label'] = annotation.label
-                            }
-                            if ('models' in annotation) {
-                                details['models'] = annotation.models
-                            }
+                        if (annotation && 'models' in annotation) {
+                            this.#nerveCentrelineDetails.set(annotation.models, annotation.label || annotation.models)
                         }
-                        this.#centrelineDetails.push(details)
                     } else if (annotation) {
                         // Hide centrelines with no paths if not a ``centreline`` map
                         const feature = this.#ui.mapFeatureFromAnnotation(annotation)
@@ -280,14 +274,20 @@ export class PathManager
             // Centrelines are always enabled in a ``centreline`` map
             this.#enabledCentrelines = true
         } else {
-            this.#haveCentrelines = (this.#centrelineDetails.length > 0)
+            this.#haveCentrelines = (this.#nerveCentrelineDetails.size > 0)
         }
     }
 
-    get centrelineDetails(): CentrelineDetails[]
-    //==========================================
+    get nerveCentrelineDetails(): NerveCentrelineDetails[]
+    //====================================================
     {
-        return this.#centrelineDetails
+        return [...this.#nerveCentrelineDetails.entries()].map((entry) => {
+            const label = entry[1]
+            return {
+                models: entry[0],
+                label: label.charAt(0).toUpperCase() + label.slice(1)
+            }
+        })
     }
 
     get haveCentrelines(): boolean
