@@ -23,7 +23,6 @@ import maplibregl from 'maplibre-gl';
 import {default as turfArea} from '@turf/area'
 import {default as turfBBox} from '@turf/bbox'
 import * as turf from '@turf/helpers'
-import * as turfLength from "@turf/length";
 import * as turfNearestPointOnLine from "@turf/nearest-point-on-line"
 import * as turfProjection from '@turf/projection'
 
@@ -1018,11 +1017,11 @@ export class UserInteractions
     mouseMoveEvent_(event)
     //====================
     {
-        this.#updateActiveFeature(event.point)
+        this.#updateActiveFeature(event.point, event.lngLat)
     }
 
-    #updateActiveFeature(eventPoint)
-    //==============================
+    #updateActiveFeature(eventPoint, lngLat)
+    //======================================
     {
         // No tooltip when context menu is open
         if (this._modal) {
@@ -1057,12 +1056,21 @@ export class UserInteractions
         if (this._lastFeatureMouseEntered !== featureId
          && (this._lastFeatureModelsMouse === null
           || this._lastFeatureModelsMouse !== featureModels)) {
-            if (this.__featureEvent('mouseenter', feature)) {
+            if (this.__featureEvent('mouseenter', feature,
+                                    this.#locationOnLine(featureId, lngLat))) {
                 this._lastFeatureMouseEntered = featureId
                 this._lastFeatureModelsMouse = featureModels
             } else {
                 this._lastFeatureMouseEntered = null
                 this._lastFeatureModelsMouse = null
+            }
+        } else if (this._flatmap.options.style === FLATMAP_STYLE.CENTRELINE
+                && feature.properties.centreline) {
+            if (this._lastFeatureMouseEntered === featureId) {
+                const location = this.#locationOnLine(featureId, lngLat)
+                if ('location' in location) {
+                    this.__featureEvent('mousemove', feature, location)
+                }
             }
         }
 
@@ -1266,18 +1274,8 @@ export class UserInteractions
                 for (const clickedFeature of clickedFeatures) {
                     if (!seenFeatures.has(clickedFeature.properties.id)) {
                         seenFeatures.add(clickedFeature.properties.id)
-                        let locationValue = {}
-                        if (clickedFeature.properties.centreline) {
-                            // could do first two when loading...
-                            const lineCoords = JSON.parse(clickedFeature.properties.coordinates)
-                            const line = turf.lineString(lineCoords)
-                            const clickedPoint = turf.point([event.lngLat.lng, event.lngLat.lat])
-                            const linePoint = turfNearestPointOnLine.nearestPointOnLine(line, clickedPoint)
-                            locationValue = {
-                                location: linePoint.properties.location/turfLength.length(line)
-                            }
-                        }
-                        this.__featureEvent('click', clickedFeature, locationValue)
+                        this.__featureEvent('click', clickedFeature,
+                                            this.#locationOnLine(clickedFeature.id, event.lngLat))
                     }
                 }
             }
@@ -1287,6 +1285,23 @@ export class UserInteractions
                 }
             }
         }
+    }
+
+    #locationOnLine(featureId, lngLat)
+    //================================
+    {
+        if (lngLat && this._flatmap.options.style === FLATMAP_STYLE.CENTRELINE) {
+            const annotation = this._flatmap.annotation(featureId)
+            if (annotation.centreline && 'lineString' in annotation) {
+                const line = annotation.lineString
+                const clickedPoint = turf.point([lngLat.lng, lngLat.lat])
+                const linePoint = turfNearestPointOnLine.nearestPointOnLine(line, clickedPoint)
+                return {
+                    location: linePoint.properties.location/annotation.lineLength
+                }
+            }
+        }
+        return {}
     }
 
     __activateRelatedFeatures(feature)

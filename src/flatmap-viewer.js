@@ -22,6 +22,9 @@ import Set from 'core-js/actual/set'
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
+import * as turf from '@turf/helpers'
+import * as turfLength from "@turf/length";
+
 //==============================================================================
 
 // Load our stylesheet last so we can overide styling rules
@@ -721,6 +724,12 @@ export class FlatMap
             }
         }
         this.__annIdToFeatureId.set(ann.id, featureId);
+
+        // Pre-compute LineStrings of centrelines in centreline maps
+        if (this.options.style === FLATMAP_STYLE.CENTRELINE && ann.centreline) {
+            ann['lineString'] = turf.lineString(ann.coordinates)
+            ann['lineLength'] = turfLength.length(ann.lineString)
+        }
     }
 
     modelFeatureIds(anatomicalId)
