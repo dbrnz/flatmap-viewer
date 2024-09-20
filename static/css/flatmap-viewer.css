@@ -174,8 +174,11 @@ li.flatmap-contextmenu-item:hover {
     margin-top: 20px;
 }
 
-/* Nerve key */
+#flatmap-taxon-button {
+    margin-bottom: 20px;
+}
 
+/* Path type key */
 #centreline-nerve-ctrl,
 #flatmap-nerve-key {
     text-align: right;

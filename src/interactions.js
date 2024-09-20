@@ -248,9 +248,6 @@ export class UserInteractions
             // Add a control to manage our paths
             this._map.addControl(new PathControl(flatmap, mapPathTypes));
 
-            // Add a control to manage our layers
-            this._map.addControl(new LayerControl(flatmap, this._layerManager));
-
             // Add a control for nerve centrelines if they are present
             if (flatmap.options.style === FLATMAP_STYLE.ANATOMICAL && this.__pathManager.haveCentrelines) {
                 this._map.addControl(new NerveCentrelineControl(flatmap, this))
@@ -272,6 +269,9 @@ export class UserInteractions
             if (flatmap.options.annotator) {
                 this._map.addControl(new AnnotatorControl(flatmap));
             }
+
+            // Add a control to control layer visibility
+            this._map.addControl(new LayerControl(flatmap, this._layerManager));
         }
 
         // Initialise map annotation
