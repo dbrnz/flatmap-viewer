@@ -1721,8 +1721,8 @@ export class UserInteractions
 
     //==========================================================================
 
-    addImage(anatomicalId, imageUrl)
-    //==============================
+    addImage(anatomicalId, imageUrl, options={})
+    //==========================================
     {
         const featureIds = this._flatmap.modelFeatureIds(anatomicalId)
         const imageIds = []

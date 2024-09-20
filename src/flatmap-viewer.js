@@ -1734,11 +1734,11 @@ export class FlatMap
      *                                      being placed on each feature. ``null`` is returned if
      *                                      there are no features with the given ``anatomicalId``.
      */
-    addImage(anatomicalId, imageUrl) // : string[]
-    //==============================
+    addImage(anatomicalId, imageUrl, options={}) // : string[]
+    //==========================================
     {
         if (this._userInteractions !== null) {
-            return this._userInteractions.addImage(anatomicalId, imageUrl)
+            return this._userInteractions.addImage(anatomicalId, imageUrl, options)
         }
         return null
     }
