@@ -18,7 +18,7 @@ limitations under the License.
 
 ==============================================================================*/
 
-export class CentrelineControl
+export class NerveCentrelineControl
 {
     #button
     #checkedCount
@@ -54,27 +54,29 @@ export class CentrelineControl
         this.#legend = document.createElement('div')
         this.#legend.id = 'centreline-key-text'
         this.#legend.className = 'flatmap-nerve-grid centreline-nerve-grid'
-        this.#nerves = this.#ui.getNerveDetails().map(nerve => {
-            return Object.assign({}, nerve, {label: nerve.label || nerve.id})
-        }).sort((a, b) => a.label.localeCompare(b.label))
+        this.#nerves = this.#ui.getNerveDetails()
+                               .sort((a, b) => a.label.localeCompare(b.label))
 
         const innerHTML = []
-        innerHTML.push(`<label for="centreline-all-centrelines">ALL NERVES:</label></div><input id="centreline-all-centrelines" type="checkbox"/>`)
-        for (const centreline of this.#nerves) {
-            innerHTML.push(`<label for="centreline-${centreline.id}">${centreline.label}</label></div><input id="centreline-${centreline.id}" type="checkbox"/>`)
+        innerHTML.push(`<label class="heading" for="nerve-all-nerves">PATH NERVES:</label></div><input id="nerve-all-nerves" type="checkbox" checked/>`)
+        innerHTML.push(`<label for="nerve-NO-NERVES">No associated nerves</label></div><input id="nerve-NO-NERVES" type="checkbox" checked/>`)
+        for (const nerve of this.#nerves) {
+            if (nerve != 'NO-NERVES') {
+                innerHTML.push(`<label for="nerve-${nerve.models}">${nerve.label}</label></div><input id="nerve-${nerve.models}" type="checkbox" checked/>`)
+            }
         }
         this.#legend.innerHTML = innerHTML.join('\n')
-        this.#checkedCount = 0
+        this.#checkedCount = this.#nerves.length
         this.#halfCount = Math.trunc(this.#nerves.length/2)
 
         this.#button = document.createElement('button')
         this.#button.id = 'centreline-key-button'
         this.#button.className = 'control-button text-button'
         this.#button.setAttribute('type', 'button')
-        this.#button.setAttribute('aria-label', 'Nerve centrelines legend')
+        this.#button.setAttribute('aria-label', 'Neuron paths associated with nerves')
         this.#button.setAttribute('control-visible', 'false')
         this.#button.textContent = 'NERVES'
-        this.#button.title = 'Show/hide nerve centrelines'
+        this.#button.title = 'Show/hide neuron paths associated with nerves'
         this.#container.appendChild(this.#button)
 
         this.#container.addEventListener('click', this.onClick_.bind(this))
@@ -95,16 +97,16 @@ export class CentrelineControl
             if (this.#button.getAttribute('control-visible') === 'false') {
                 this.#container.appendChild(this.#legend)
                 this.#button.setAttribute('control-visible', 'true')
-                const allCentrelinesCheckbox = document.getElementById('centreline-all-centrelines')
-                allCentrelinesCheckbox.indeterminate = this.#checkedCount < this.#nerves.length
-                                                    && this.#checkedCount > 0
+                const allNervesCheckbox = document.getElementById('nerve-all-nerves')
+                allNervesCheckbox.indeterminate = this.#checkedCount < this.#nerves.length
+                                                && this.#checkedCount > 0
                 this.#legend.focus()
             } else {
                 this.#legend = this.#container.removeChild(this.#legend)
                 this.#button.setAttribute('control-visible', 'false')
             }
         } else if (event.target.tagName === 'INPUT') {
-            if (event.target.id === 'centreline-all-centrelines') {
+            if (event.target.id === 'nerve-all-nerves') {
                 if (event.target.indeterminate) {
                     event.target.checked = (this.#checkedCount >= this.#halfCount)
                     event.target.indeterminate = false
@@ -114,30 +116,30 @@ export class CentrelineControl
                 } else {
                     this.#checkedCount = 0
                 }
-                for (const centreline of this.#nerves) {
-                    const centrelineCheckbox = document.getElementById(`centreline-${centreline.id}`)
-                    if (centrelineCheckbox) {
-                        centrelineCheckbox.checked = event.target.checked
-                        this.#flatmap.enableNeuronPathsByNerve(centreline.id, event.target.checked)
+                for (const nerve of this.#nerves) {
+                    const nerveCheckbox = document.getElementById(`nerve-${nerve.models}`)
+                    if (nerveCheckbox) {
+                        nerveCheckbox.checked = event.target.checked
                     }
                 }
-            } else if (event.target.id.startsWith('centreline-')) {
-                const centrelineId = event.target.id.substring(11)
-                this.#flatmap.enableNeuronPathsByNerve(centrelineId, event.target.checked)
+                this.#flatmap.enableNeuronPathsByNerve(this.#nerves.map(n => n.models), event.target.checked)  // Option to turn centrelines on
+            } else if (event.target.id.startsWith('nerve-')) {
+                const nerveModels = event.target.id.substring(6)
+                this.#flatmap.enableNeuronPathsByNerve(nerveModels, event.target.checked)
                 if (event.target.checked) {
                     this.#checkedCount += 1
                 } else {
                     this.#checkedCount -= 1
                 }
-                const allCentrelinesCheckbox = document.getElementById('centreline-all-centrelines')
+                const allNervesCheckbox = document.getElementById('nerve-all-nerves')
                 if (this.#checkedCount === 0) {
-                    allCentrelinesCheckbox.checked = false
-                    allCentrelinesCheckbox.indeterminate = false
+                    allNervesCheckbox.checked = false
+                    allNervesCheckbox.indeterminate = false
                 } else if (this.#checkedCount === this.#nerves.length) {
-                    allCentrelinesCheckbox.checked = true
-                    allCentrelinesCheckbox.indeterminate = false
+                    allNervesCheckbox.checked = true
+                    allNervesCheckbox.indeterminate = false
                 } else {
-                    allCentrelinesCheckbox.indeterminate = true
+                    allNervesCheckbox.indeterminate = true
                 }
             }
         }
