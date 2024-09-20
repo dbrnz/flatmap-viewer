@@ -77,10 +77,13 @@ export class Control
         }
     }
 
-    _addControlLine(id, name, style=null)
-    //===================================
+    _addControlLine(id, name, style=null, clas=null)
+    //==============================================
     {
         const label = document.createElement('label');
+        if (clas) {
+            label.setAttribute('class', clas)
+        }
         label.setAttribute('for', id);
         if (style !== null) {
             label.setAttribute('style', style);
@@ -103,7 +106,7 @@ export class Control
         this.__control = document.createElement('div');
         this.__control.className = 'flatmap-control-grid';
 
-        this.__allCheckbox = this._addControlLine(`control-all-${this.__id}`, `ALL ${this.__name.toUpperCase()}:`);
+        this.__allCheckbox = this._addControlLine(`control-all-${this.__id}`, `ALL ${this.__name.toUpperCase()}:`, null, 'heading')
         const controlDetails = this._addControlDetails();
         this.__totalCount = controlDetails.total;
         this.__halfCount = Math.trunc(this.__totalCount/2);

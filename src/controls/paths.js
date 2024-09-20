@@ -46,7 +46,7 @@ export class PathControl
         this._legend.className = 'flatmap-nerve-grid';
 
         const innerHTML = [];
-        innerHTML.push(`<label for="path-all-paths">ALL PATHS:</label><div class="nerve-line"></div><input id="path-all-paths" type="checkbox" checked/>`);
+        innerHTML.push(`<label class="heading" for="path-all-paths">PATH TYPES:</label><div class="nerve-line"></div><input id="path-all-paths" type="checkbox" checked/>`);
         this.__checkedCount = 0;
         for (const path of this.__pathTypes) {
             const checked =  !('enabled' in path) || path.enabled ? 'checked' : '';
