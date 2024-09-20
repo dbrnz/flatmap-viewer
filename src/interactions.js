@@ -21,6 +21,7 @@ limitations under the License.
 import maplibregl from 'maplibre-gl';
 
 import {default as turfArea} from '@turf/area'
+import {default as turfAlong} from '@turf/along'
 import {default as turfBBox} from '@turf/bbox'
 import * as turf from '@turf/helpers'
 import * as turfNearestPointOnLine from "@turf/nearest-point-on-line"
@@ -882,7 +883,7 @@ export class UserInteractions
                 location = options.annotationFeatureGeometry;
             } else {
                 // Position popup at the feature's 'centre'
-                location = this.markerPosition(featureId, ann);
+                location = this.markerPosition(featureId, ann, options);
             }
 
             // Make sure the feature is on screen
@@ -1406,11 +1407,22 @@ export class UserInteractions
 
     // Marker handling
 
-    markerPosition(featureId, annotation)
-    //===================================
+    markerPosition(featureId, annotation, options={})
+    //===============================================
     {
         if (this.__markerPositions.has(featureId)) {
             return this.__markerPositions.get(featureId);
+        }
+        if (annotation.centreline && 'location' in options) {
+            if ('lineString' in annotation) {
+                const line = annotation.lineString
+                const point = turfAlong(line, options.location*annotation.lineLength)
+                return point.geometry.coordinates
+            }
+            return null
+        }
+        if (!('markerPosition' in annotation) && !annotation.geometry.includes('Polygon')) {
+            return null
         }
         let position = annotation.markerPosition || annotation.centroid;
         if (position === null || position == undefined) {
@@ -1429,7 +1441,7 @@ export class UserInteractions
                 position = labelPosition(features[0]);
             }
         }
-        this.__markerPositions.set(featureId, position);
+        this.__markerPositions.set(featureId, position, options);
         return position;
     }
 
@@ -1448,8 +1460,9 @@ export class UserInteractions
 
         for (const featureId of featureIds) {
             const annotation = this._flatmap.annotation(featureId);
-            if (!('markerPosition' in annotation) && !annotation.geometry.includes('Polygon')) {
-                continue;
+            const markerPosition = this.markerPosition(featureId, annotation, options)
+            if (markerPosition === null) {
+                continue
             }
             if (!('marker' in annotation)) {
                 if (markerId === -1) {
@@ -1472,7 +1485,6 @@ export class UserInteractions
                 if ('className' in options) {
                     markerOptions.className = options.className;
                 }
-                const markerPosition = this.markerPosition(featureId, annotation);
                 if (options.cluster && this._layerManager) {
                     this._layerManager.addMarker(markerId, markerPosition, annotation)
                 } else {

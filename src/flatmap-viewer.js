@@ -1150,6 +1150,8 @@ export class FlatMap
      *                                (dark cyan).
      * @arg {string} options.element  The DOM element to use as a marker. The default is
      *                                a dark blue droplet-shaped SVG marker.
+     * @arg {string} options.location The relative location (0.0 to 1.0) of the marker along a centreline
+     *                                in a centreline map.
      * @return     {integer}          The identifier for the resulting marker. -1 is returned if the
      *                                map doesn't contain a feature with the given anatomical identifier
      */
