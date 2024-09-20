@@ -219,8 +219,8 @@ class FlatMapStylingLayer
                                       : sourceLayer).replaceAll('/', '_')
     }
 
-    #addVectorStyleLayer(vectorStyleClass, sourceLayer, pathLayer=false, minimap=false)
-    //=================================================================================
+    #addVectorStyleLayer(vectorStyleClass, sourceLayer, pathLayer=false, minimap=false): VectorStyleLayer
+    //===================================================================================================
     {
         const vectorStyleLayer = new vectorStyleClass(`${this.#id}_${sourceLayer}`,
                                                       this.#vectorSourceId(sourceLayer))
@@ -230,6 +230,7 @@ class FlatMapStylingLayer
         if (pathLayer) {
             this.#pathStyleLayers.push(vectorStyleLayer)
         }
+        return vectorStyleLayer
     }
 
     setFlatPathMode(visible: boolean)
