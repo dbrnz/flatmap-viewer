@@ -19,7 +19,7 @@ limitations under the License.
 ==============================================================================*/
 
 import {PathType} from '../../pathways'
-import {PropertiesFilter} from '..'
+import {PropertiesFilter, PropertiesFilterExpression} from '..'
 import {Facet, FilteredFacet} from '.'
 
 //==============================================================================
@@ -44,12 +44,16 @@ export class PathTypeFacet extends FilteredFacet
     makeFilter(): PropertiesFilter
     //============================
     {
-         const pathCondition = this.#facet.enabledStates.map(
-            pathType => { return {kind: pathType} }
+         const pathCondition: PropertiesFilterExpression[] =
+            this.facet.enabledStates.map(
+                pathType => { return {kind: pathType} }
+            )
+        if (pathCondition.length === 0) {
+            pathCondition.push(this.facet.size === 0)
+        }
+        return new PropertiesFilter(
+           { OR: [{'NOT': {'HAS': 'kind'}}, ...pathCondition] }
         )
-        return new PropertiesFilter(pathCondition.length
-          ? { OR: pathCondition }
-          : (this.#facet.size === 0))
     }
 }
 

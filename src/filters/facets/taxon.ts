@@ -19,7 +19,7 @@ limitations under the License.
 ==============================================================================*/
 
 import {UNCLASSIFIED_TAXON_ID} from '../../flatmap-viewer'
-import {PropertiesFilter} from '..'
+import {PropertiesFilter, PropertiesFilterExpression} from '..'
 import {Facet, FilteredFacet} from '.'
 
 //==============================================================================
@@ -34,15 +34,19 @@ export class TaxonFacet extends FilteredFacet
     makeFilter(): PropertiesFilter
     //============================
     {
-        const taxonCondition = this.#facet.enabledStates.map(taxon => {
-            return (taxon !== UNCLASSIFIED_TAXON_ID)
-                ? { 'IN': [taxon, 'taxons'] }
-                : { 'HAS': 'taxons' }
-            }
+        const taxonCondition: PropertiesFilterExpression[] =
+            this.facet.enabledStates.map(taxon => {
+                return (taxon !== UNCLASSIFIED_TAXON_ID)
+                    ? { 'IN': [taxon, 'taxons'] }
+                    : { 'HAS': 'taxons' }
+                }
+            )
+        if (taxonCondition.length === 0) {
+            taxonCondition.push(this.facet.size === 0)
+        }
+        return new PropertiesFilter(
+           { OR: [{'NOT': {'HAS': 'taxons'}}, ...taxonCondition] }
         )
-        return new PropertiesFilter(taxonCondition.length
-          ? { OR: [{'NOT': {'HAS': 'taxons'}}, ...taxonCondition] }
-          : (this.#facet.size === 0))
     }
 }
 
