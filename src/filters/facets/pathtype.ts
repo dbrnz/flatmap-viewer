@@ -24,13 +24,11 @@ import {Facet, FilteredFacet} from '.'
 
 //==============================================================================
 
-export class PathTypeFacet implements FilteredFacet
+export class PathTypeFacet extends FilteredFacet
 {
-    #facet: Facet
-
     constructor(pathTypes: PathType[])
     {
-        this.#facet = new Facet('pathtypes', pathTypes.map(pt => {
+        super(new Facet('pathtypes', pathTypes.map(pt => {
             return {
                 id: pt.type,
                 label: pt.label,
@@ -40,19 +38,7 @@ export class PathTypeFacet implements FilteredFacet
                     dashed: pt.dashed || false
                 }
             }
-        }))
-    }
-
-    get id()
-    //======
-    {
-        return this.#facet.id
-    }
-
-    enable(pathTypes: string[], enable: boolean=true)
-    //===============================================
-    {
-        pathTypes.forEach(pt => this.#facet.enable(pt, enable))
+        })))
     }
 
     makeFilter(): PropertiesFilter

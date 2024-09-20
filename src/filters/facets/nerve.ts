@@ -24,13 +24,11 @@ import {Facet, FilteredFacet} from '.'
 
 //==============================================================================
 
-export class NerveCentreFacet implements FilteredFacet
+export class NerveCentreFacet extends FilteredFacet
 {
-    #facet: Facet
-
     constructor(centrelines: CentrelineDetails[])
     {
-        this.#facet = new Facet('nerves', centrelines.map(cl => {
+        super(new Facet('nerves', nerveDetails.map(n => {
             return {
                 id: cl.id,
                 label: cl.label || cl.id,
@@ -38,19 +36,7 @@ export class NerveCentreFacet implements FilteredFacet
                     models: cl.models
                 }
             }
-        }))
-    }
-
-    get id()
-    //======
-    {
-        return this.#facet.id
-    }
-
-    enable(nerveIds: string[], enable: boolean=true)
-    //===============================================
-    {
-        nerveIds.forEach(pt => this.#facet.enable(pt, enable))
+        })))
     }
 
     makeFilter(): PropertiesFilter

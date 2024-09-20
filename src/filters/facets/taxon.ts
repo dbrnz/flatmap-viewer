@@ -24,25 +24,11 @@ import {Facet, FilteredFacet} from '.'
 
 //==============================================================================
 
-export class TaxonFacet implements FilteredFacet
+export class TaxonFacet extends FilteredFacet
 {
-    #facet: Facet
-
     constructor(taxonIds: string[])
     {
-        this.#facet = new Facet('taxons', taxonIds.map(id => { return { id }}))
-    }
-
-    get id()
-    //======
-    {
-        return this.#facet.id
-    }
-
-    enable(enabledIds: string[], enable: boolean=true)
-    //================================================
-    {
-        enabledIds.forEach(id => this.#facet.enable(id, enable))
+        super(new Facet('taxons', taxonIds.map(id => { return { id }})))
     }
 
     makeFilter(): PropertiesFilter

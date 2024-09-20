@@ -34,15 +34,6 @@ export interface FacetState
 
 //==============================================================================
 
-export interface FilteredFacet
-{
-    id: string
-    enable: (ids: string[], enable: boolean) => void
-    makeFilter: () => PropertiesFilter
-}
-
-//==============================================================================
-
 class InternalState
 {
     #id: string
@@ -136,6 +127,42 @@ export class Facet
     //=============================
     {
         return this.#states.has(state) && this.#states.get(state).enabled
+    }
+}
+
+//==============================================================================
+
+export class FilteredFacet
+{
+    #facet: Facet
+
+    constructor(facet: Facet)
+    {
+        this.#facet = facet
+    }
+
+    get facet()
+    //=========
+    {
+        return this.#facet
+    }
+
+    get id()
+    //======
+    {
+        return this.#facet.id
+    }
+
+    enable(idList: string[], enable: boolean=true)
+    //============================================
+    {
+        idList.forEach(id => this.#facet.enable(id, enable))
+    }
+
+    makeFilter(): PropertiesFilter
+    //============================
+    {
+        return new PropertiesFilter(true)
     }
 }
 
