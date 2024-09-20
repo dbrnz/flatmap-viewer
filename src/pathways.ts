@@ -138,20 +138,20 @@ interface ModelsInterface
 interface PathInterface
 {
     centrelines: string[]
-    lines: number[]
+    lines: number[]                                 // line GeoJSON ids
     models?: string
-    nerves?: number[]
-    nodes?: number[]
+    nerves?: number[]                               // nerve cuff GeoJSON ids
+    nodes?: number[]                                // node GeoJSON ids
     pathType: string
     systemCount: number
 }
 
 interface PathwaysInterface
 {
-    models?: ModelsInterface[]
-    'node-paths': Record<number, string[]>
-    paths: Record<string, PathInterface>
-    'type-paths': Record<string, string[]>
+    models?: ModelsInterface[]                      // model --> paths with model
+    'node-paths': Record<number, string[]>          // node --> associated paths
+    paths: Record<string, PathInterface>            // path --> path details
+    'type-paths': Record<string, string[]>          // type --> paths with type
 }
 
 //==============================================================================
@@ -479,11 +479,13 @@ export class PathManager
     //==================================================================================
     {
         if (this.#pathsByCentreline.has(centrelineId)) {
+            // Enable the lines that make up a centreline
             if (this.#pathLines.has(centrelineId)) {
                 for (const lineId of this.#pathLines.get(centrelineId)) {
                     this.#ui.enableFeature(lineId, enable, force)
                 }
             }
+            // Enable the paths that are associated with a centreline
             const featureIds: Set<number> = new Set()
             this.#addPathsToFeatureSet(this.#pathsByCentreline.get(centrelineId), featureIds)
             for (const featureId of featureIds) {
