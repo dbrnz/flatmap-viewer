@@ -34,6 +34,14 @@ export type AndCondition = {
 }
 
 /**
+ * `True` iff either the PropertyKey identifies an empty array in the `properties`
+ * record or the item is not an array
+ */
+export type EmptyCondition = {
+    EMPTY: PropertyKey
+}
+
+/**
  * `True` iff the `PropertyKey` is in the given `properties` record
  */
 export type HasCondition = {
@@ -41,7 +49,8 @@ export type HasCondition = {
 }
 
 /**
- * `True` iff the `PropertyKey` is in the given `properties` record
+ * `True` iff either the PropertyKey identifies an array in the `properties` record and
+ * the `PropertyValue` is included in the array or the item is not an array
  */
 export type InCondition = {
     IN: [PropertyValue, PropertyKey]
@@ -75,6 +84,7 @@ export type PropertyValueTest = { [key: PropertyKey]: PropertyValue }
 
 
 export type PropertiesFilterExpression = AndCondition
+                                       | EmptyCondition
                                        | HasCondition
                                        | InCondition
                                        | NotCondition
@@ -190,6 +200,8 @@ export class PropertiesFilter
                 } else {
                     console.warn(`makeFilter: Invalid ${key} operands: ${expr}`)
                 }
+            } else if (key === 'EMPTY') {
+                styleFilter.push('==', ['get', expr], '[]')
             } else if (key === 'HAS') {
                 styleFilter.push('has', expr)
             } else if (key === 'IN') {
@@ -236,11 +248,14 @@ export class PropertiesFilter
                 } else {
                     console.warn(`makeFilter: Invalid ${key} operands: ${expr}`)
                 }
+            } else if (key === 'EMPTY') {
+                const values = properties[expr] || undefined
+                matched = !Array.isArray(values) || (values.length === 0)
             } else if (key === 'HAS') {
                 matched = (expr in properties)
             } else if (key === 'IN') {
-                const values = properties[expr[1]]
-                matched = Array.isArray(values) && values.includes(expr[0])
+                const values = properties[expr[1]] || undefined
+                matched = !Array.isArray(values) || values.includes(expr[0])
             } else if (key === 'NOT') {
                 matched = !this.#match(properties, expr)
             } else if (key in properties) {
@@ -271,7 +286,8 @@ const testProperties = {
     prop: 1,
     prop1: 5,
     prop2: 11,
-    a: [1, 3, 5]
+    a: [1, 3, 5],
+    b: [],
 }
 
 function testFilter(filter: PropertiesFilterExpression)
@@ -324,6 +340,16 @@ function testFilters()
 
     testFilter({
         "IN": [5, "a"]
+    })
+
+    testFilter({
+        "EMPTY": "a"
+    })
+    testFilter({
+        "EMPTY": "b"
+    })
+    testFilter({
+        "EMPTY": "c"
     })
 
     testFilter({
