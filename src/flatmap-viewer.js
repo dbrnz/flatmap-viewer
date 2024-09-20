@@ -403,7 +403,7 @@ export class FlatMap
     /**
      * Hide or show paths of a given type.
      *
-     * @param {string}   pathType The path type
+     * @param {Array<string>|string}   pathType(s) The path type(s) to hide or show
      * @param {boolean}  enable  Show or hide paths of that type. Defaults to
      *                           ``true`` (show)
      */
@@ -442,11 +442,7 @@ export class FlatMap
     //=================================================
     {
         if (this._userInteractions !== null) {
-            if (Array.isArray(taxonIds)) {
-                this._userInteractions.enableConnectivityByTaxonIds(taxonIds, enable);
-            } else {
-                this._userInteractions.enableConnectivityByTaxonIds([taxonIds], enable);
-            }
+            this._userInteractions.enableConnectivityByTaxonIds(taxonIds, enable);
         }
     }
 
@@ -1788,14 +1784,14 @@ export class FlatMap
     /**
      * Enable/disable the neuron paths associated with a nerve centreline.
      *
-     * @param   {<string>}   nerveId      The identifier of a nerve centreline
+     * @param   {Array<string>|string}   nerveModels   Anatomical identifiers of nerve centrelines
      * @param   {boolean}  [enable=true]
      */
-    enableNeuronPathsByNerve(nerveId, enable=true)
-    //============================================
+    enableNeuronPathsByNerve(nerveModels, enable=true)
+    //================================================
     {
         if (this._userInteractions !== null) {
-            this._userInteractions.enableNeuronPathsByNerve(nerveId, enable)
+            this._userInteractions.enableNeuronPathsByNerve(nerveModels, enable)
         }
     }
 

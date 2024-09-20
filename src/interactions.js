@@ -1358,7 +1358,7 @@ export class UserInteractions
     enablePathsByType(pathType, enable=true)
     //======================================
     {
-        this.#pathTypeFacet.enable([pathType], enable)
+        this.#pathTypeFacet.enable(Array.isArray(pathType) ? pathType : [pathType], enable)
         this._layerManager.refresh()
     }
 
@@ -1399,7 +1399,7 @@ export class UserInteractions
     enableConnectivityByTaxonIds(taxonIds, enable=true)
     //=================================================
     {
-        this.#taxonFacet.enable(taxonIds, enable)
+        this.#taxonFacet.enable(Array.isArray(taxonIds) ? taxonIds : [taxonIds], enable)
         this._layerManager.refresh()
     }
 
@@ -1786,10 +1786,10 @@ export class UserInteractions
         return this.__pathManager.nerveCentrelineDetails
     }
 
-    enableNeuronPathsByNerve(nerveId, enable=true)
-    //============================================
+    enableNeuronPathsByNerve(nerveModels, enable=true)
+    //================================================
     {
-        this.#nerveCentrelineFacet.enable([nerveId], enable)
+        this.#nerveCentrelineFacet.enable(Array.isArray(nerveModels) ? nerveModels : [nerveModels], enable)
         this._layerManager.refresh()
     }
 }

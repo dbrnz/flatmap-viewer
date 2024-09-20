@@ -113,9 +113,9 @@ export class PathControl
                     const pathCheckbox = document.getElementById(`path-${path.type}`);
                     if (pathCheckbox) {
                         pathCheckbox.checked = event.target.checked;
-                        this._flatmap.enablePath(path.type, event.target.checked);
                     }
                 }
+                this._flatmap.enablePath(this.__pathTypes.map(pt => pt.type), event.target.checked)
             } else if (event.target.id.startsWith('path-')) {
                 const pathType = event.target.id.substring(5);
                 this._flatmap.enablePath(pathType, event.target.checked);

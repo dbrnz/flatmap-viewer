@@ -61,9 +61,9 @@ export class TaxonsControl extends Control
             const checkbox = document.getElementById(`${this.__prefix}${taxonId}`)
             if (checkbox) {
                 checkbox.checked = enable;
-                this.__flatmap.enableConnectivityByTaxonIds(taxonId, enable)
             }
         }
+        this.__flatmap.enableConnectivityByTaxonIds([...this.#taxons.keys()], enable)
     }
 
     __enableControl(id, enable)
