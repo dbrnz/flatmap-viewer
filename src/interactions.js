@@ -1485,9 +1485,9 @@ export class UserInteractions
                 if ('className' in options) {
                     markerOptions.className = options.className;
                 }
-                if (options.cluster && this._layerManager) {
-                    this._layerManager.addMarker(markerId, markerPosition, annotation)
-                } else {
+//                if (options.cluster && this._layerManager) {
+//                    this._layerManager.addMarker(markerId, markerPosition, annotation)
+//                } else {
                     const marker = new maplibregl.Marker(markerOptions)
                                                  .setLngLat(markerPosition)
                                                  .addTo(this._map);
@@ -1506,7 +1506,7 @@ export class UserInteractions
                     if (!this.__featureEnabled(this.mapFeature(+featureId))) {
                         markerElement.style.visibility = 'hidden';
                     }
-                }
+//                }
             }
         }
         if (markerId === -1) {
