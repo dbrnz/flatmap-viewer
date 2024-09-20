@@ -142,7 +142,7 @@ export class FlatMap
         this.#mapTermGraph = new MapTermGraph(mapDescription.sparcTermGraph)
 
         for (const [featureId, annotation] of Object.entries(mapDescription.annotations)) {
-            this.__addAnnotation(featureId, annotation);
+            this.__saveAnnotation(featureId, annotation);
             this.__searchIndex.indexMetadata(featureId, annotation);
         }
 
@@ -697,8 +697,8 @@ export class FlatMap
         }
     }
 
-    __addAnnotation(featureId, ann)
-    //=============================
+    __saveAnnotation(featureId, ann)
+    //==============================
     {
         ann.featureId = featureId;
         this.__idToAnnotation.set(featureId, ann);
