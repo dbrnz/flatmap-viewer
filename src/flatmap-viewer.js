@@ -1765,17 +1765,16 @@ export class FlatMap
     }
 
     //==========================================================================
+    /**
+     * @typedef {Object} CentrelineDetails
+     * @property {string} models
+     * @property {string} label
+     */
 
     /**
      * Get a details of the nerve centrelines in the map.
      *
-     * @return  {Array}
-     *                   {
-     *                       id
-     *                       label
-     *                       models
-     *                   }
-     *
+     * @return  {CentrelineDetails[]}
      */
     getNerveDetails()
     //===============
@@ -1789,7 +1788,7 @@ export class FlatMap
     /**
      * Enable/disable the neuron paths associated with a nerve centreline.
      *
-     * @param   {Array<string>|string}   nerveModels   Anatomical identifiers of nerve centrelines
+     * @param   {string[]|string}   nerveModels   Anatomical identifiers of nerve centrelines
      * @param   {boolean}  [enable=true]
      */
     enableNeuronPathsByNerve(nerveModels, enable=true)
