@@ -33,7 +33,7 @@ import '../static/css/flatmap-viewer.css';
 
 //==============================================================================
 
-import {MapServer} from './mapserver'
+import {KNOWLEDGE_SOURCE_SCHEMA, MapServer} from './mapserver'
 import {SearchIndex} from './search'
 import {UserInteractions} from './interactions'
 import {MapTermGraph, SparcTermGraph} from './knowledge'
@@ -107,6 +107,7 @@ export class FlatMap
 {
     #baseUrl
     #callbacks = []
+    #knowledgeSource = ''
     #mapServer
     #mapTermGraph
     #startupState = -1
@@ -140,6 +141,13 @@ export class FlatMap
         this.__taxonToFeatureIds = new Map();
         this.__featurePropertyValues = new Map()
         this.#mapTermGraph = new MapTermGraph(mapDescription.sparcTermGraph)
+
+        const sckanProvenance = mapDescription.details.connectivity
+        if ('knowledge-source' in sckanProvenance) {
+            this.#knowledgeSource = sckanProvenance['knowledge-source']
+        } else if ('npo' in sckanProvenance) {
+            this.#knowledgeSource = `${sckanProvenance.npo.release}-npo`
+        }
 
         for (const [featureId, annotation] of Object.entries(mapDescription.annotations)) {
             this.__saveAnnotation(featureId, annotation);
@@ -819,9 +827,9 @@ export class FlatMap
     //==========================
     {
         if (!this.#taxonNames.has(taxonId)) {
-            const result = await this.#mapServer.loadJSON(`knowledge/label/${taxonId}`)
-            if ('label' in result) {
-                return this.#taxonNames.set(taxonId, result['label'])
+            const result = await this.queryLabels(taxonId)
+            if (result.length && 'label' in result[0]) {
+                return this.#taxonNames.set(taxonId, result[0]['label'])
             }
         }
     }
@@ -1793,6 +1801,76 @@ export class FlatMap
     }
 
     //==========================================================================
+    /**
+     * @typedef {Object} EntityLabel
+     * @property {string} entity
+     * @property {string} label
+     */
+
+    /**
+     * Get labels for entities from the flatmap's server's knowledge store.
+     *
+     * @param   {string[]|string}  entities  Anatomical identifiers of entities.
+     * @return  {EntityLabel[]}              An ``EntityLabel`` array.
+     */
+    async queryLabels(entities)
+    //=========================
+    {
+        const entityArray = Array.isArray(entities) ? entities : [entities]
+        if (entityArray.length > 0) {
+            const entityLabels = await this.#mapServer.queryKnowledge(
+                                            `select entity, label from labels
+                                                where entity in (?${', ?'.repeat(entityArray.length-1)})`,
+                                            entityArray)
+            return entityLabels.map(entityLabel => {
+                return {
+                    entity: entityLabel[0],
+                    label: entityLabel[1]
+                }
+            })
+        }
+        return []
+    }
+
+    /**
+     * Get knowledge about an entity from the flatmap's server's knowledge store.
+     *
+     * @param   {string}  entity  The URI of an entity.
+     * @return  {Object}          JSON describing the entity.
+     */
+    async queryKnowledge(entity)
+    //==========================
+    {
+        const knowledge = (this.#mapServer.knowledgeSchema >= KNOWLEDGE_SOURCE_SCHEMA)
+                        ? await this.#mapServer.queryKnowledge(
+                                     'select knowledge from knowledge where source=? and entity=?',
+                                     [this.#knowledgeSource, entity])
+                        : await this.#mapServer.queryKnowledge(
+                                     'select knowledge from knowledge where entity=?',
+                                     [entity])
+        return JSON.parse(knowledge)
+    }
+
+    /**
+     * Get publications about an entity from the flatmap's server's knowledge store.
+     *
+     * @param   {string}  entity  The URI of an entity.
+     * @return  {atring[]}        A list of publication URIs.
+     */
+    async queryPublications(entity)
+    //=============================
+    {
+        const publications = (this.#mapServer.knowledgeSchema >= KNOWLEDGE_SOURCE_SCHEMA)
+                           ? await this.#mapServer.queryKnowledge(
+                                        'select distinct publication from publications where source=? and entity=?',
+                                        [this.#knowledgeSource, entity])
+                           : await this.#mapServer.queryKnowledge(
+                                        'select distinct publication from publications where entity=?',
+                                        [entity])
+        return publications.map(result => result[0])
+    }
+
+    //==========================================================================
 
 }   // End of FlatMap class
 
@@ -1830,6 +1908,7 @@ export class MapManager
     {
         return await this._initialisingMutex.dispatch(async () => {
             if (!this._initialised) {
+                await this._mapServer.initialise()
                 this._mapList = [];
                 const maps = await this._mapServer.loadJSON('');
                 // Check map schema version (set by mapmaker) and

@@ -41,7 +41,10 @@ export class MapServer
     async initialise()
     //================
     {
-        this.#knowledgeSchema = await this.loadJSON<number>('schema-version')
+        const schemaVersion = await this.loadJSON<Object>('knowledge/schema-version')
+        if ('version' in schemaVersion) {
+            this.#knowledgeSchema = +schemaVersion.version
+        }
     }
 
     url(relativePath: string='')
@@ -91,6 +94,9 @@ export class MapServer
                 throw new Error(`Cannot access ${url}`)
             }
             const data = await response.json()
+            if ('error' in data) {
+                throw new TypeError(data.error)
+            }
             return data.values
         } catch (e) {
             throw e
