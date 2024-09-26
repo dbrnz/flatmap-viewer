@@ -1854,7 +1854,7 @@ export class FlatMap
      * Get publications about an entity from the flatmap's server's knowledge store.
      *
      * @param   {string}  entity  The URI of an entity.
-     * @return  {atring[]}        A list of publication URIs.
+     * @return  {string[]}        A list of publication URIs.
      */
     async queryPublications(entity)
     //=============================
