@@ -25,14 +25,14 @@ import {Map as MapLibreMap} from 'maplibre-gl'
 import {PropertiesFilter, StyleFilterType} from '../filters'
 import {FilteredFacet} from '../filters/facets'
 import {FlatMap} from '../flatmap-viewer'
-import {PATHWAYS_LAYER} from '../pathways.js';
+import {PATHWAYS_LAYER} from '../pathways'
 import {UserInteractions} from '../interactions'
-import * as utils from '../utils.js';
+import * as utils from '../utils'
 
 import {ANATOMICAL_MARKERS_LAYER, ClusteredAnatomicalMarkerLayer, Dataset} from './acluster'
 
-import * as style from './styling.js';
-import {BackgroundStyleLayer, BodyStyleLayer, RasterStyleLayer, VectorStyleLayer} from './styling.js';
+import * as style from './styling'
+import {BackgroundStyleLayer, BodyStyleLayer, RasterStyleLayer, VectorStyleLayer} from './styling'
 
 import {DeckGlOverlay} from './deckgl'
 import {FlightPathLayer} from './flightpaths'

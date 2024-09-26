@@ -18,7 +18,7 @@ limitations under the License.
 
 ==============================================================================*/
 
-import { indexedProperties } from '../search.js';
+import { indexedProperties } from '../search'
 
 //==============================================================================
 
