@@ -61,7 +61,7 @@ export class NerveCentrelineControl
         innerHTML.push(`<label class="heading" for="nerve-all-nerves">PATH NERVES:</label></div><input id="nerve-all-nerves" type="checkbox" checked/>`)
         innerHTML.push(`<label for="nerve-NO-NERVES">No associated nerves</label></div><input id="nerve-NO-NERVES" type="checkbox" checked/>`)
         for (const nerve of this.#nerves) {
-            if (nerve != 'NO-NERVES') {
+            if (nerve.models !== 'NO-NERVES') {
                 innerHTML.push(`<label for="nerve-${nerve.models}">${nerve.label}</label></div><input id="nerve-${nerve.models}" type="checkbox" checked/>`)
             }
         }
