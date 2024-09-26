@@ -89,7 +89,7 @@ export class SparcTermGraph
     async load(mapServer: MapServer)
     //==============================
     {
-        const sparcGraph = await mapServer.loadJSON('knowledge/sparcterms')
+        const sparcGraph = await mapServer.loadJSON<NodeLinkGraph>('knowledge/sparcterms')
         this.#graph.load(sparcGraph)
     }
 
