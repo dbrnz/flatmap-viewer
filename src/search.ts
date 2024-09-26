@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019  David Brooks
+Copyright (c) 2019 - 2024  David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ limitations under the License.
 
 ==============================================================================*/
 
-import MiniSearch from 'minisearch';
+import MiniSearch, {Suggestion} from 'minisearch'
 
 //==============================================================================
 
@@ -29,26 +29,28 @@ export const indexedProperties = [
     'label',
     'models',
     'source'
-];
+]
 
 //==============================================================================
 
 export class SearchIndex
 {
+    #featureIds: string[] = []
+    #searchEngine: MiniSearch
+
     constructor()
     {
-        this._searchEngine =  new MiniSearch({
+        this.#searchEngine =  new MiniSearch({
             fields: ['text'],
             storeFields: ['text'],
             tokenize: (string, _fieldName) => string.split(' ')
-        });
-        this._featureIds = [];
+        })
     }
 
-    indexMetadata(featureId, metadata)
-    //================================
+    indexMetadata(featureId: string, metadata: Record<string, string>)
+    //================================================================
     {
-        const textSeen = [];
+        const textSeen: string[] = []
         for (const prop of indexedProperties) {
             if (prop in metadata) {
                 const text = metadata[prop];
@@ -60,74 +62,78 @@ export class SearchIndex
         }
     }
 
-    indexText(featureId, text)
-    //========================
+    indexText(featureId: string, text: string)
+    //========================================
     {
         text = text.replace(new RegExp('<br/>', 'g'), ' ')
                    .replace(new RegExp('\n', 'g'), ' ')
-                   ;
         if (text) {
-            this._searchEngine.add({
-                id: this._featureIds.length,
+            this.#searchEngine.add({
+                id: this.#featureIds.length,
                 text: text
-            });
-            this._featureIds.push(featureId);
+            })
+            this.#featureIds.push(featureId)
         }
     }
 
-    clearResults()
-    //============
+    auto_suggest(text: string): Suggestion[]
+    //======================================
     {
-        this._;
+        return this.#searchEngine.autoSuggest(text, {prefix: true})
     }
 
-    auto_suggest(text)
-    //================
+    search(text: string): SearchResults
+    //=================================
     {
-        return this._searchEngine.autoSuggest(text, {prefix: true});
-    }
-
-    search(text)
-    //==========
-    {
-        const options = {};
-        let results = [];
+        let results = []
         text = text.trim()
         if (text.length > 2 && ["'", '"'].includes(text.slice(0, 1))) {
-            text = text.replaceAll(text.slice(0, 1), '');
-            results = this._searchEngine.search(text, {prefix: true, combineWith: 'AND'});
+            text = text.replaceAll(text.slice(0, 1), '')
+            results = this.#searchEngine.search(text, {prefix: true, combineWith: 'AND'})
         } else if (text.length > 1) {
-            results = this._searchEngine.search(text, {prefix: true});
+            results = this.#searchEngine.search(text, {prefix: true})
         }
         const featureResults = results.map(r => {
             return {
-                featureId: this._featureIds[r.id],
+                featureId: this.#featureIds[r.id],
                 score: r.score,
                 terms: r.terms,
                 text: r.text
-            }});
-        return new SearchResults(featureResults);
+            }})
+        return new SearchResults(featureResults)
     }
+}
+
+//==============================================================================
+
+export type SearchResult = {
+    featureId: string
+    score: number
+    terms: string[]
+    text: string
 }
 
 //==============================================================================
 
 export class SearchResults
 {
-    constructor(results)
+    #featureIds: string[]
+    #results: SearchResult[]
+
+    constructor(results: SearchResult[])
     {
-        this.__results = results.sort((a, b) => (b.score - a.score));
-        this.__featureIds = results.map(r => r.featureId);
+        this.#results = results.sort((a, b) => (b.score - a.score))
+        this.#featureIds = results.map(r => r.featureId)
     }
 
-    get featureIds()
+    get featureIds(): string[]
     {
-        return this.__featureIds;
+        return this.#featureIds
     }
 
-    get results()
+    get results(): SearchResult[]
     {
-        return this.__results;
+        return this.#results
     }
 }
 
