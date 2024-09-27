@@ -26,6 +26,8 @@ import {Facet, FilteredFacet} from '.'
 
 export class PathTypeFacet extends FilteredFacet
 {
+    #centrelinesEnabled: boolean = false
+
     constructor(pathTypes: PathType[])
     {
         super(new Facet('pathtypes', pathTypes.map(pt => {
@@ -41,18 +43,24 @@ export class PathTypeFacet extends FilteredFacet
         })))
     }
 
+    enableCentrelines(enable=true)
+    //============================
+    {
+        this.#centrelinesEnabled = enable
+    }
+
     makeFilter(): PropertiesFilter
     //============================
     {
-         const pathCondition: PropertiesFilterExpression[] =
-            this.facet.enabledStates.map(
-                pathType => { return {kind: pathType} }
-            )
-        if (pathCondition.length === 0) {
-            pathCondition.push(this.facet.size === 0)
+        const enabledPathTypes = this.facet.enabledStates
+        if (this.#centrelinesEnabled) {
+            enabledPathTypes.push('centreline')
         }
+        const pathCondition: PropertiesFilterExpression =
+            (enabledPathTypes.length === 0) ? (this.facet.size === 0)
+                                            : {'kind': enabledPathTypes}
         return new PropertiesFilter(
-           { OR: [{'NOT': {'HAS': 'kind'}}, ...pathCondition] }
+           { OR: [{'NOT': {'HAS': 'kind'}}, pathCondition] }
         )
     }
 }
