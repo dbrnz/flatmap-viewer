@@ -147,6 +147,8 @@ export class FlatMap
             this.#knowledgeSource = sckanProvenance['knowledge-source']
         } else if ('npo' in sckanProvenance) {
             this.#knowledgeSource = `${sckanProvenance.npo.release}-npo`
+        } else {
+            this.#knowledgeSource = this.#mapServer.latestSource
         }
 
         for (const [featureId, annotation] of Object.entries(mapDescription.annotations)) {

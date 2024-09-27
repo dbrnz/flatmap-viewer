@@ -22,14 +22,32 @@ export const KNOWLEDGE_SOURCE_SCHEMA = 1.3
 
 //==============================================================================
 
+type SchemaRecord = {
+    version: number
+}
+
+type SourcesRecord = {
+    sources: string[]
+}
+
+//==============================================================================
+
 export class MapServer
 {
     #url: string
+    #latestSource: string = ''
     #knowledgeSchema: number = 0
+    #knowledgeSources: string[] = []
 
     constructor(url: string)
     {
         this.#url = url
+    }
+
+    get latestSource()
+    //================
+    {
+        return this.#latestSource
     }
 
     get knowledgeSchema()
@@ -41,10 +59,19 @@ export class MapServer
     async initialise()
     //================
     {
-        const schemaVersion = await this.loadJSON<Object>('knowledge/schema-version')
-        if ('version' in schemaVersion) {
-            this.#knowledgeSchema = +schemaVersion.version
-        }
+        try {
+            const schemaVersion = await this.loadJSON<SchemaRecord>('knowledge/schema-version')
+            if ('version' in schemaVersion) {
+                this.#knowledgeSchema = +schemaVersion.version
+            }
+            const knowledgeSources = await this.loadJSON<SourcesRecord>('knowledge/sources')
+            if ('sources' in knowledgeSources) {
+                this.#knowledgeSources = knowledgeSources.sources
+                if (this.#knowledgeSources.length) {
+                    this.#latestSource = this.#knowledgeSources[0]
+                }
+            }
+        } catch {}
     }
 
     url(relativePath: string='')
