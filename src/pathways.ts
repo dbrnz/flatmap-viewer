@@ -524,20 +524,6 @@ export class PathManager
         }
     }
 
-    enablePathsByType(pathType: string, enable: boolean, force: boolean=false)
-    //========================================================================
-    {
-        if (force
-         || enable && !this.#pathtypeEnabled[pathType]
-         || !enable && this.#pathtypeEnabled[pathType]) {
-            for (const featureId of this.#typeFeatureIds(pathType)) {
-                this.#ui.enableFeature(featureId, enable, force)
-            }
-            this.#pathtypeEnabled[pathType] = enable
-            this.#notifyWatchers({pathType})
-        }
-    }
-
     pathTypeEnabled(pathType: string): boolean
     //========================================
     {

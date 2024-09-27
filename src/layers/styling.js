@@ -537,7 +537,6 @@ export class PathLineLayer extends VectorStyleLayer
             'line-color': [
                 'let', 'active', ['to-number', ['feature-state', 'active'], 0],
                 [ 'case',
-                    ['boolean', ['feature-state', 'hidden'], false], COLOUR_HIDDEN,
                     ['==', ['get', 'type'], 'bezier'], 'red',
                     ...PATH_STYLE_RULES,
                     '#888'
@@ -545,17 +544,13 @@ export class PathLineLayer extends VectorStyleLayer
             ],
             'line-opacity': this.__highlight ? [
                 'case',
-                    ['boolean', ['feature-state', 'hidden'], false], 0.0,
-                    ['boolean', ['get', 'invisible'], false], 0.0,
                     ['boolean', ['feature-state', 'selected'], false], 1.0,
                     ['boolean', ['feature-state', 'active'], false], 1.0,
                 0.0
             ] : [
                 'case',
-                    ['boolean', ['feature-state', 'hidden'], false], 0.01,
                     ['==', ['get', 'type'], 'bezier'], 1.0,
                     ['==', ['get', 'kind'], 'error'], 1.0,
-                    ['boolean', ['get', 'invisible'], false], 0.001,
                     ['boolean', ['feature-state', 'selected'], false], 0.0,
                     ['boolean', ['feature-state', 'active'], false], 0.0,
                 dimmed ? 0.1 : 0.8
@@ -565,7 +560,6 @@ export class PathLineLayer extends VectorStyleLayer
                 'width', [
                     "*",
                     this.__highlight ? ['case',
-                        ['boolean', ['get', 'invisible'], false], 0.1,
                         ['boolean', ['feature-state', 'selected'], false], [
                             'case', ['boolean', ['feature-state', 'active'], false], 2.0,
                                 0.9],
@@ -671,8 +665,6 @@ class NerveCentrelineLayer extends VectorStyleLayer
             ],
             'line-opacity': [
                 'case',
-                    ['boolean', ['feature-state', 'invisible'], false], 0,
-                    ['boolean', ['feature-state', 'hidden'], false], 0,
                     ['boolean', ['feature-state', 'selected'], false], 1.0,
                     ['boolean', ['feature-state', 'active'], false], 1.0,
                 (this.__type == 'edge') ? 0.4 : 0.7

@@ -190,12 +190,7 @@ export class UserInteractions
         this._layerManager = new LayerManager(flatmap, this);
 
         // Set initial enabled state of paths
-
         this.__pathManager.enablePathLines(true, true)
-
-        for (const path of mapPathTypes) {
-            this.__pathManager.enablePathsByType(path.type, path.enabled, true);
-        }
 
         this.#pathTypeFacet = new PathTypeFacet(mapPathTypes)
         this._layerManager.addFilteredFacet(this.#pathTypeFacet)

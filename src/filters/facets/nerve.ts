@@ -39,8 +39,9 @@ export class NerveCentreFacet extends FilteredFacet
     makeFilter(): PropertiesFilter
     //============================
     {
+        const nerveModelsIds = this.facet.enabledStates
         const nerveCondition: PropertiesFilterExpression[] =
-            this.facet.enabledStates.map(
+            nerveModelsIds.map(
                 nerve => {
                     return (nerve === 'NO-NERVES')
                          ? {'EMPTY': 'nerves'}
@@ -50,9 +51,17 @@ export class NerveCentreFacet extends FilteredFacet
         if (nerveCondition.length === 0) {
             nerveCondition.push(this.facet.size === 0)
         }
-        return new PropertiesFilter(
-           { OR: [{'NOT': {'HAS': 'nerves'}}, ...nerveCondition] }
-        )
+        const centrelineCondition: PropertiesFilterExpression[] =
+            [{'models': nerveModelsIds}]
+        if (nerveModelsIds.includes('NO-NERVES')) {
+            centrelineCondition.push({'NOT': {'HAS': 'models'}})
+        }
+        return new PropertiesFilter({
+            AND: [
+                { OR: [{'NOT': {'kind': 'centreline'}}, ...centrelineCondition] },
+                { OR: [{'NOT': {'HAS': 'nerves'}}, ...nerveCondition] }
+            ]
+        })
     }
 }
 
