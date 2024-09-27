@@ -474,61 +474,6 @@ export class SCKANControl
 
 //==============================================================================
 
-export class NerveControl
-{
-    constructor(flatmap, options={showNerveCentrelines: false})
-    {
-        this.__flatmap = flatmap;
-        this.__map = undefined;
-        this.__visible = options.showNerveCentrelines || false;
-    }
-
-    getDefaultPosition()
-    //==================
-    {
-        return 'top-right';
-    }
-
-    onAdd(map)
-    //========
-    {
-        this.__map = map;
-        this.__container = document.createElement('div');
-        this.__container.className = 'maplibregl-ctrl';
-
-        this.__button = document.createElement('button');
-        this.__button.id = 'map-nerve-button';
-        this.__button.className = 'control-button text-button';
-        this.__button.setAttribute('type', 'button');
-        this.__button.setAttribute('aria-label', 'Show/hide nerve centrelines');
-        this.__button.textContent = 'NERVES';
-        this.__button.title = 'Show/hide nerve centrelines';
-        this.__container.appendChild(this.__button);
-
-        this.__container.addEventListener('click', this.onClick_.bind(this));
-        return this.__container;
-    }
-
-    onRemove()
-    //========
-    {
-        this.__container.parentNode.removeChild(this.__container);
-        this.__map = undefined;
-    }
-
-    onClick_(event)
-    //=============
-    {
-        if (event.target.id === 'map-nerve-button') {
-            this.__visible = !this.__visible;
-            this.__flatmap.enableCentrelines(this.__visible);
-        }
-        event.stopPropagation();
-    }
-}
-
-//==============================================================================
-
 export class AnnotatorControl
 {
     #enabled = false

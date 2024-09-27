@@ -455,20 +455,6 @@ export class FlatMap
     }
 
     /**
-     * Hide or show centrelines and nodes.
-     *
-     * @param {boolean}  enable  Show or centrelines and associated nodes.
-     *                           Defaults to ``true`` (show)
-     */
-    enableCentrelines(enable=true)
-    //============================
-    {
-        if (this._userInteractions !== null) {
-            this._userInteractions.enableCentrelines(enable);
-        }
-    }
-
-    /**
      * Load images and patterns/textures referenced in style rules.
      *
      * @private

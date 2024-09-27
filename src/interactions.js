@@ -42,8 +42,7 @@ import {SystemsManager} from './systems';
 import {FLATMAP_STYLE} from './flatmap-viewer'
 
 import {displayedProperties, InfoControl} from './controls/info';
-import {AnnotatorControl, BackgroundControl, LayerControl, NerveControl,
-        SCKANControl} from './controls/controls';
+import {AnnotatorControl, BackgroundControl, LayerControl, SCKANControl} from './controls/controls';
 import {AnnotationDrawControl, DRAW_ANNOTATION_LAYERS} from './controls/annotation'
 import {NerveCentrelineControl} from './controls/nerves'
 import {PathControl} from './controls/paths';
@@ -197,7 +196,6 @@ export class UserInteractions
         for (const path of mapPathTypes) {
             this.__pathManager.enablePathsByType(path.type, path.enabled, true);
         }
-        this.enableCentrelines(this.__pathManager.enabledCentrelines, true)
 
         this.#pathTypeFacet = new PathTypeFacet(mapPathTypes)
         this._layerManager.addFilteredFacet(this.#pathTypeFacet)
@@ -1381,13 +1379,6 @@ export class UserInteractions
     //====================
     {
         return this.__pathManager.nodePathModels(nodeId);
-    }
-
-    enableCentrelines(enable=true, force=false)
-    //=========================================
-    {
-        this.__pathManager.enablePathsByType('centreline', enable, force);
-        this.#setPaint({showNerveCentrelines: enable});
     }
 
     enableSckanPaths(sckanState, enable=true)
