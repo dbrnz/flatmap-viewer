@@ -260,12 +260,6 @@ export class PathManager
                         if (annotation && 'models' in annotation) {
                             this.#nerveCentrelineDetails.set(annotation.models, annotation.label || annotation.models)
                         }
-                    } else if (annotation) {
-                        // Hide centrelines with no paths if not a ``centreline`` map
-                        const feature = this.#ui.mapFeatureFromAnnotation(annotation)
-                        if (feature) {
-                            this.#flatmap.map.setFeatureState(feature, {'invisible': true})
-                        }
                     }
                 }
             }
