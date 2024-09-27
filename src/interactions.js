@@ -1772,10 +1772,11 @@ export class UserInteractions
         return this.__pathManager.nerveCentrelineDetails
     }
 
-    enableNeuronPathsByNerve(nerveModels, enable=true)
-    //================================================
+    enableNeuronPathsByNerve(nerveModels, enable=true, showCentreline=false)
+    //======================================================================
     {
         this.#nerveCentrelineFacet.enable(Array.isArray(nerveModels) ? nerveModels : [nerveModels], enable)
+        this.#pathTypeFacet.enableCentrelines(showCentreline)
         this._layerManager.refresh()
     }
 }

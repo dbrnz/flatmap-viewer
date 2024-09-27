@@ -208,6 +208,11 @@ li.flatmap-contextmenu-item:hover {
 label.heading {
     font-weight: bold;
 }
+label[for=show-centrelines] {
+    color: red;
+    margin-left: 20px;
+}
+
 .centreline-nerve-grid {
     grid-template-columns: 3fr 0.2fr;
     width: 300px;

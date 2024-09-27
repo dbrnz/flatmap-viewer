@@ -28,6 +28,8 @@ export class NerveCentrelineControl
     #legend
     #map
     #nerves
+    #showCentrelines = false
+    #checkedNerves
     #ui
 
     constructor(flatmap, ui)
@@ -59,12 +61,14 @@ export class NerveCentrelineControl
 
         const innerHTML = []
         innerHTML.push(`<label class="heading" for="nerve-all-nerves">PATH NERVES:</label></div><input id="nerve-all-nerves" type="checkbox" checked/>`)
+        innerHTML.push(`<label for="show-centrelines">Show centrelines?</label></div><input id="show-centrelines" type="checkbox"/>`)
         innerHTML.push(`<label for="nerve-NO-NERVES">No associated nerves</label></div><input id="nerve-NO-NERVES" type="checkbox" checked/>`)
         for (const nerve of this.#nerves) {
             if (nerve.models !== 'NO-NERVES') {
                 innerHTML.push(`<label for="nerve-${nerve.models}">${nerve.label}</label></div><input id="nerve-${nerve.models}" type="checkbox" checked/>`)
             }
         }
+        this.#checkedNerves = new Map(this.#nerves.map(nerve => [nerve.models, true]))
         this.#legend.innerHTML = innerHTML.join('\n')
         this.#checkedCount = this.#nerves.length
         this.#halfCount = Math.trunc(this.#nerves.length/2)
@@ -122,10 +126,12 @@ export class NerveCentrelineControl
                         nerveCheckbox.checked = event.target.checked
                     }
                 }
-                this.#flatmap.enableNeuronPathsByNerve(this.#nerves.map(n => n.models), event.target.checked)  // Option to turn centrelines on
+                this.#ui.enableNeuronPathsByNerve(this.#nerves.map(n => n.models), event.target.checked, this.#showCentrelines)
+                this.#checkedNerves = new Map(this.#nerves.map(nerve => [nerve.models, event.target.checked]))
             } else if (event.target.id.startsWith('nerve-')) {
                 const nerveModels = event.target.id.substring(6)
-                this.#flatmap.enableNeuronPathsByNerve(nerveModels, event.target.checked)
+                this.#ui.enableNeuronPathsByNerve(nerveModels, event.target.checked, this.#showCentrelines)
+                this.#checkedNerves.set(nerveModels, event.target.checked)
                 if (event.target.checked) {
                     this.#checkedCount += 1
                 } else {
@@ -141,6 +147,10 @@ export class NerveCentrelineControl
                 } else {
                     allNervesCheckbox.indeterminate = true
                 }
+            } else if (event.target.id === 'show-centrelines') {
+                this.#showCentrelines = event.target.checked
+                const checkedNerves = [...this.#checkedNerves.entries()].filter(e => e[1]).map(e => e[0])
+                this.#ui.enableNeuronPathsByNerve(checkedNerves, true, this.#showCentrelines)
             }
         }
         event.stopPropagation()
