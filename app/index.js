@@ -390,11 +390,15 @@ export async function standaloneViewer(mapEndpoints={}, options={})
                     console.log(eventType, ...args)
                 }
             }, mapOptions)
-        .then(map => {
+        .then(async map => {
             currentMap = map
             mapProvenance.innerHTML = objectAsHtml(Object.assign({server: mapEndpoints[currentServer]},
                                                                  map.provenance))
             drawControl = new DrawControl(map)
+
+            const vagus = await map.queryKnowledge('UBERON:0001759')
+
+            console.log(vagus)
         })
         .catch(error => {
             console.log(error)
