@@ -1266,9 +1266,9 @@ export class UserInteractions
             // Layer of currently drawing feature
             const clickedOnHotLayer = clickedDrawnFeatures.filter((f) => f.source === 'mapbox-gl-draw-hot')[0];
             this.__featureEvent('click',
-                clickedOnColdLayer ?
-                    clickedOnColdLayer : clickedFeature ?
-                        clickedFeature : clickedOnHotLayer
+                clickedOnColdLayer ? clickedOnColdLayer
+              : clickedFeature ? clickedFeature
+              : clickedOnHotLayer
             );
         } else if (clickedFeatures.length) {
             this.__lastClickLngLat = event.lngLat
