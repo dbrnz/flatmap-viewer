@@ -413,9 +413,9 @@ export class FlatMap
     /**
      * Hide or show paths of a given type.
      *
-     * @param {Array<string>|string}   pathType(s) The path type(s) to hide or show
-     * @param {boolean}  enable  Show or hide paths of that type. Defaults to
-     *                           ``true`` (show)
+     * @param {string[]|string}  pathType The path type(s) to hide or show
+     * @param {boolean}          enable   Show or hide paths of that type. Defaults to
+     *                                    ``true`` (show)
      */
     enablePath(pathType, enable=true)
     //===============================
