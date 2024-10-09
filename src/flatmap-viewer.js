@@ -1835,7 +1835,7 @@ export class FlatMap
                         : await this.#mapServer.queryKnowledge(
                                      'select knowledge from knowledge where entity=?',
                                      [entity])
-        return JSON.parse(knowledge)
+        return knowledge.length ? JSON.parse(knowledge) : {}
     }
 
     /**
