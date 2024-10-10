@@ -1898,8 +1898,14 @@ export class MapManager
         return await this._initialisingMutex.dispatch(async () => {
             if (!this._initialised) {
                 await this._mapServer.initialise()
-                this._mapList = [];
-                const maps = await this._mapServer.loadJSON('');
+                this._mapList = []
+                let maps
+                try {
+                    maps = await this._mapServer.loadJSON('')
+                } catch {
+                    window.alert(`Cannot connect to flatmap server at ${this._mapServer.url()}`)
+                    return
+                }
                 // Check map schema version (set by mapmaker) and
                 // remove maps we can't view (giving a console warning...)
                 for (const map of maps) {
@@ -1910,7 +1916,7 @@ export class MapManager
                 await this.#sparcTermGraph.load(this._mapServer)
                 this._initialised = true
             }
-        });
+        })
     }
 
     allMaps()
