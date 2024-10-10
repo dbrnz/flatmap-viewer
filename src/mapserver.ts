@@ -61,11 +61,14 @@ export class MapServer
     {
         try {
             const schemaVersion = await this.loadJSON<SchemaRecord>('knowledge/schema-version')
+            if (schemaVersion === undefined) {
+                return
+            }
             if ('version' in schemaVersion) {
                 this.#knowledgeSchema = +schemaVersion.version
             }
             const knowledgeSources = await this.loadJSON<SourcesRecord>('knowledge/sources')
-            if ('sources' in knowledgeSources) {
+            if (knowledgeSources && 'sources' in knowledgeSources) {
                 this.#knowledgeSources = knowledgeSources.sources
                 if (this.#knowledgeSources.length) {
                     this.#latestSource = this.#knowledgeSources[0]

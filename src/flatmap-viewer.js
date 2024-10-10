@@ -143,7 +143,9 @@ export class FlatMap
         this.#mapTermGraph = new MapTermGraph(mapDescription.sparcTermGraph)
 
         const sckanProvenance = mapDescription.details.connectivity
-        if ('knowledge-source' in sckanProvenance) {
+        if (sckanProvenance === undefined) {
+            this.#knowledgeSource = this.#mapServer.latestSource
+        } else if ('knowledge-source' in sckanProvenance) {
             this.#knowledgeSource = sckanProvenance['knowledge-source']
         } else if ('npo' in sckanProvenance) {
             this.#knowledgeSource = `${sckanProvenance.npo.release}-npo`
