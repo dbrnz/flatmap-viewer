@@ -1805,20 +1805,40 @@ export class FlatMap
     async queryLabels(entities)
     //=========================
     {
+        const entityLabels = []
         const entityArray = Array.isArray(entities) ? entities : [entities]
         if (entityArray.length > 0) {
-            const entityLabels = await this.#mapServer.queryKnowledge(
-                                            `select entity, label from labels
-                                                where entity in (?${', ?'.repeat(entityArray.length-1)})`,
-                                            entityArray)
-            return entityLabels.map(entityLabel => {
-                return {
-                    entity: entityLabel[0],
-                    label: entityLabel[1]
+            if (this.#mapServer.knowledgeSchema >= KNOWLEDGE_SOURCE_SCHEMA) {
+                const rows= await this.#mapServer.queryKnowledge(
+                                    `select source, entity, knowledge from knowledge
+                                        where (source=? or source is null)
+                                           and entity in (?${', ?'.repeat(entityArray.length-1)})`,
+                                    [this.#knowledgeSource, ...entityArray])
+                let last_entity = null
+                for (const row of rows) {
+                    if (row[1] !== last_entity) {
+                        const knowledge = JSON.parse(row[2])
+                        entityLabels.push({
+                            entity: row[1],
+                            label: knowledge['label'] || row[1]
+                        })
+                        last_entity = row[1]
+                    }
                 }
-            })
+            } else {
+                const rows = await this.#mapServer.queryKnowledge(
+                                    `select entity, label from labels
+                                        where entity in (?${', ?'.repeat(entityArray.length-1)})`,
+                                    entityArray)
+                return rows.map(entityLabel => {
+                    return {
+                        entity: entityLabel[0],
+                        label: entityLabel[1]
+                    }
+                })
+            }
         }
-        return []
+        return entityLabels
     }
 
     /**
@@ -1838,25 +1858,6 @@ export class FlatMap
                                      'select knowledge from knowledge where entity=?',
                                      [entity])
         return knowledge.length ? JSON.parse(knowledge) : {}
-    }
-
-    /**
-     * Get publications about an entity from the flatmap's server's knowledge store.
-     *
-     * @param   {string}  entity  The URI of an entity.
-     * @return  {string[]}        A list of publication URIs.
-     */
-    async queryPublications(entity)
-    //=============================
-    {
-        const publications = (this.#mapServer.knowledgeSchema >= KNOWLEDGE_SOURCE_SCHEMA)
-                           ? await this.#mapServer.queryKnowledge(
-                                        'select distinct publication from publications where source=? and entity=?',
-                                        [this.#knowledgeSource, entity])
-                           : await this.#mapServer.queryKnowledge(
-                                        'select distinct publication from publications where entity=?',
-                                        [entity])
-        return publications.map(result => result[0])
     }
 
     //==========================================================================
