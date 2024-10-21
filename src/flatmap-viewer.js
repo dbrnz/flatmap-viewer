@@ -1850,14 +1850,14 @@ export class FlatMap
     async queryKnowledge(entity)
     //==========================
     {
-        const knowledge = (this.#mapServer.knowledgeSchema >= KNOWLEDGE_SOURCE_SCHEMA)
-                        ? await this.#mapServer.queryKnowledge(
-                                     'select knowledge from knowledge where source=? and entity=?',
-                                     [this.#knowledgeSource, entity])
-                        : await this.#mapServer.queryKnowledge(
-                                     'select knowledge from knowledge where entity=?',
-                                     [entity])
-        return knowledge.length ? JSON.parse(knowledge) : {}
+        const rows = (this.#mapServer.knowledgeSchema >= KNOWLEDGE_SOURCE_SCHEMA)
+                   ? await this.#mapServer.queryKnowledge(
+                             'select knowledge from knowledge where (source=? or source is null) and entity=? order by source desc',
+                             [this.#knowledgeSource, entity])
+                   : await this.#mapServer.queryKnowledge(
+                             'select knowledge from knowledge where entity=?',
+                             [entity])
+        return rows.length ? JSON.parse(rows[0]) : {}
     }
 
     //==========================================================================
