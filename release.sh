@@ -8,7 +8,7 @@ fi
 
 git push upstream
 git push upstream v$1
-gh release create upstream v$1 --verify-tag --title "Release $1" --notes ""
+gh release create v$1 --verify-tag --title "Release $1" --notes ""
 
 npm publish
 
