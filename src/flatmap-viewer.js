@@ -1802,10 +1802,11 @@ export class FlatMap
         const entityArray = Array.isArray(entities) ? entities : [entities]
         if (entityArray.length > 0) {
             if (this.#mapServer.knowledgeSchema >= KNOWLEDGE_SOURCE_SCHEMA) {
-                const rows= await this.#mapServer.queryKnowledge(
+                const rows = await this.#mapServer.queryKnowledge(
                                     `select source, entity, knowledge from knowledge
                                         where (source=? or source is null)
-                                           and entity in (?${', ?'.repeat(entityArray.length-1)})`,
+                                           and entity in (?${', ?'.repeat(entityArray.length-1)})
+                                        order by source desc`,
                                     [this.#knowledgeSource, ...entityArray])
                 let last_entity = null
                 for (const row of rows) {
