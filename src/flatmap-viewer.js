@@ -1783,6 +1783,13 @@ export class FlatMap
     }
 
     //==========================================================================
+
+    get knowledgeSource()
+    //===================
+    {
+        return this.#knowledgeSource
+    }
+
     /**
      * @typedef {Object} EntityLabel
      * @property {string} entity
