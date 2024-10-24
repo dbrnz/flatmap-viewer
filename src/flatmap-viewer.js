@@ -127,7 +127,6 @@ export class FlatMap
         this._mapNumber = mapDescription.number;
         this.#callbacks.push(mapDescription.callback)
         this._layers = mapDescription.layers;
-        this._markers = mapDescription.markers;
         this._options = mapDescription.options;
         this._pathways = mapDescription.pathways;
         this._resolve = resolve;
@@ -834,12 +833,6 @@ export class FlatMap
     //=======
     {
         return this._map;
-    }
-
-    get markers()
-    //===========
-    {
-        return this._markers;
     }
 
     /**
@@ -2121,10 +2114,6 @@ export class MapManager
 
                 const provenance = await this._mapServer.loadJSON(`flatmap/${mapId}/metadata`);
 
-                // Get additional marker details for the map
-
-                const mapMarkers = await this._mapServer.loadJSON(`flatmap/${mapId}/markers`);
-
                 // Set zoom range if not specified as an option
 
                 if ('vector-tiles' in mapStyle.sources) {
@@ -2170,7 +2159,6 @@ export class MapManager
                         style: mapStyle,
                         options: mapOptions,
                         layers: mapLayers,
-                        markers: mapMarkers,
                         annotations: annotations,
                         number: this._mapNumber,
                         pathways: pathways,
