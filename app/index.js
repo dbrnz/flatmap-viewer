@@ -84,17 +84,24 @@ function fieldAsHtml(dict, level, sckan=false)
     return html.join('\n')
 }
 
-function objectAsHtml(dict)
-//=========================
+function provenanceAsHtml(dict)
+//=============================
 {
+    const mapServer = dict.server || null
+    const mapID = dict.uuid || dict.id || null
+
     const html = []
     for (const [key, prompt] of keyPrompts) {
         if (key in dict) {
             let value = dict[key]
             if (value instanceof Object && value.constructor === Object) {
                 value = fieldAsHtml(value, 1, (key==='connectivity'))
+            } else if (key == 'created') {
+                if (mapServer && mapID) {
+                    value = `${value}&nbsp;&nbsp;<a target="blank" href="${mapServer}/flatmap/${mapID}/log">Log file</a>`
+                }
             }
-            html.push(`<div class='info outermost'><span class="prompt">${prompt}:</span> ${value}</div>`)
+            html.push(`<div class='info outermost'><span class="prompt">${prompt}:</span>&nbsp;${value}</div>`)
         }
     }
     return html.join('\n')
@@ -392,7 +399,7 @@ export async function standaloneViewer(mapEndpoints={}, options={})
             }, mapOptions)
         .then(async map => {
             currentMap = map
-            mapProvenance.innerHTML = objectAsHtml(Object.assign({server: mapEndpoints[currentServer]},
+            mapProvenance.innerHTML = provenanceAsHtml(Object.assign({server: mapEndpoints[currentServer]},
                                                                  map.provenance))
             drawControl = new DrawControl(map)
 
