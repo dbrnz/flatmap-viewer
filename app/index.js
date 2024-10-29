@@ -98,7 +98,7 @@ function provenanceAsHtml(dict)
                 value = fieldAsHtml(value, 1, (key==='connectivity'))
             } else if (key == 'created') {
                 if (mapServer && mapID) {
-                    value = `${value}&nbsp;&nbsp;<a target="blank" href="${mapServer}/flatmap/${mapID}/log">Log file</a>`
+                    value = `${value}&nbsp;&nbsp;<a target="_blank" href="${mapServer}/flatmap/${mapID}/log">Log file</a>`
                 }
             }
             html.push(`<div class='info outermost'><span class="prompt">${prompt}:</span>&nbsp;${value}</div>`)
