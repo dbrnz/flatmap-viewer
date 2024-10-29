@@ -815,7 +815,7 @@ export class FlatMap
     async #setTaxonName(taxonId)
     //==========================
     {
-        if (!this.#taxonNames.has(taxonId)) {
+        if (taxonId && !this.#taxonNames.has(taxonId)) {
             const result = await this.queryLabels(taxonId)
             if (result.length && 'label' in result[0]) {
                 return this.#taxonNames.set(taxonId, result[0]['label'])
@@ -1806,7 +1806,9 @@ export class FlatMap
     //=========================
     {
         const entityLabels = []
-        const entityArray = Array.isArray(entities) ? entities : [entities]
+        const entityArray = Array.isArray(entities) ? entities
+                          : entities ? [entities]
+                          : []
         if (entityArray.length > 0) {
             if (this.#mapServer.knowledgeSchema >= KNOWLEDGE_SOURCE_SCHEMA) {
                 const rows = await this.#mapServer.queryKnowledge(
