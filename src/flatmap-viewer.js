@@ -1815,10 +1815,11 @@ export class FlatMap
                                     `select source, entity, knowledge from knowledge
                                         where (source=? or source is null)
                                            and entity in (?${', ?'.repeat(entityArray.length-1)})
-                                        order by source desc`,
+                                        order by entity, source desc`,
                                     [this.#knowledgeSource, ...entityArray])
                 let last_entity = null
                 for (const row of rows) {
+                    // In entity, source[desc] order; we use the most recent label
                     if (row[1] !== last_entity) {
                         const knowledge = JSON.parse(row[2])
                         entityLabels.push({
