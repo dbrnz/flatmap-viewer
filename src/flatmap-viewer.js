@@ -1861,6 +1861,7 @@ export class FlatMap
                    : await this.#mapServer.queryKnowledge(
                              'select knowledge from knowledge where entity=?',
                              [entity])
+        // Rows are in source[desc] order; we use the most recent
         return rows.length ? JSON.parse(rows[0]) : {}
     }
 
