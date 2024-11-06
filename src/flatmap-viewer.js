@@ -1865,6 +1865,63 @@ export class FlatMap
         return rows.length ? JSON.parse(rows[0]) : {}
     }
 
+    /**
+     * Get all paths associated with a set of features.
+     *
+     * @param      {string|string[]}    entities  Anatomical terms of features
+     * @return     {Promise<string[]>}  A Promise resolving to an array of path identifiers
+     */
+    async queryPathsForFeatures(entities)
+    //===================================
+    {
+        const featureEntities = Array.isArray(entities) ? entities
+                              : entities ? [entities]
+                              : []
+        const featureIds = []
+        for (const anatomicalId of featureEntities) {
+            featureIds.push(...this.modelFeatureIds(anatomicalId))
+        }
+        const featurePaths = await this.queryPathsForGeoJsonFeatures(featureIds)
+        return featurePaths
+    }
+
+    /**
+     * Get all paths associated with a set of features.
+     *
+     * @param      {number|number[]}    geojsonIds  GeoJSON ids of features
+     * @return     {Promise<string[]>}  A Promise resolving to an array of path identifiers
+     */
+    async queryPathsForGeoJsonFeatures(geojsonIds)
+    //============================================
+    {
+        if (this.#mapServer.knowledgeSchema < KNOWLEDGE_SOURCE_SCHEMA) {
+            return []
+        }
+        const featureIds = Array.isArray(geojsonIds) ? geojsonIds
+                              : geojsonIds ? [geojsonIds]
+                              : []
+        const uniqueIds = new Set(featureIds.map(id => `${id}`))
+        const connectivityNodes = new Set()
+        for (const featureId of uniqueIds) {
+            const annotation = this.__idToAnnotation.get(featureId)
+            if ('anatomical-nodes' in annotation) {
+                for (const node of annotation['anatomical-nodes']) {
+                    connectivityNodes.add(node)
+                }
+            }
+        }
+        if (connectivityNodes.size > 0) {
+            const rows = await this.#mapServer.queryKnowledge(
+                                `select path from connectivity_nodes
+                                    where source=? and node in (?${', ?'.repeat(connectivityNodes.size-1)})
+                                    order by node, path, source desc`,
+                                [this.#knowledgeSource, ...connectivityNodes.values()])
+            const featurePaths = new Set(rows.map(row => row[0]))
+            return [...featurePaths.values()]
+        }
+        return []
+    }
+
     //==========================================================================
 
 }   // End of FlatMap class
