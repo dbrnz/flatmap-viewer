@@ -247,9 +247,7 @@ export class FlatMap
                 this.setupUserInteractions_();
             } else if (this.#startupState === 1) {
                 this.#startupState = 2
-                this._map.setMinZoom(3.0);
-                this._map.setMaxBounds(null);
-                this._map.setRenderWorldCopies(true);
+                this._map.setRenderWorldCopies(true)
                 this._bounds = this._map.getBounds();
                 const bounds = this._bounds.toArray();
                 const sw = maplibregl.MercatorCoordinate.fromLngLat(bounds[0]);
@@ -263,6 +261,8 @@ export class FlatMap
                 if (this._userInteractions.minimap) {
                     this._userInteractions.minimap.initialise()
                 }
+                this._map.setMaxBounds(bounds)
+                this._map.fitBounds(bounds, {animate: false})
                 this.#startupState = 3
                 this._resolve(this);
             }
