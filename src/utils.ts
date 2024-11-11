@@ -47,6 +47,7 @@ export class List<T> extends Array<T> {
     }
 
     extend(other: Array<T>)
+    //=====================
     {
         if (this === other) {
             throw new Error('Cannot extend a list with itself...')
