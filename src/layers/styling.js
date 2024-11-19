@@ -22,7 +22,8 @@ export const VECTOR_TILES_SOURCE = 'vector-tiles';
 
 //==============================================================================
 
-import {PATH_STYLE_RULES} from '../pathways';
+import {FLATMAP_STYLE} from '../flatmap-viewer'
+import {PATH_STYLE_RULES} from '../pathways'
 
 //==============================================================================
 
@@ -189,16 +190,17 @@ export class FeatureFillLayer extends VectorStyleLayer
     {
         const coloured = !('colour' in options) || options.colour;
         const dimmed = 'dimmed' in options && options.dimmed;
+        const functional = (options.flatmapStyle === FLATMAP_STYLE.FUNCTIONAL)
         const paintStyle = {
             'fill-color': [
                 'case',
-                ['boolean', ['feature-state', 'selected'], false], COLOUR_SELECTED,
+                ['boolean', ['feature-state', 'selected'], false], functional ? '#CCC' : COLOUR_SELECTED,
                 ['boolean', ['feature-state', 'hidden'], false], COLOUR_HIDDEN,
                 ['has', 'colour'], ['get', 'colour'],
                 ['all',
                     ['==', ['case', ['has', 'shape-type'], ['get', 'shape-type'], 'component'], 'component'],
                     ['boolean', ['feature-state', 'active'], false]
-                ], coloured ? '#D88' : '#CCC',
+                ], (coloured && !functional) ? '#D88' : '#DDD',
                 'white'    // background colour? body colour ??
             ],
             'fill-opacity': [
@@ -210,7 +212,7 @@ export class FeatureFillLayer extends VectorStyleLayer
                 ['all',
                     ['==', ['case', ['has', 'shape-type'], ['get', 'shape-type'], 'component'], 'component'],
                     ['boolean', ['feature-state', 'active'], false]
-                ], 0.7,
+                ], functional ? 0.1 : 0.7,
                 (coloured && !dimmed) ? 0.01 : 0.1
             ]
         };
@@ -255,9 +257,11 @@ export class FeatureBorderLayer extends VectorStyleLayer
         const outlined = !('outline' in options) || options.outline;
         const dimmed = 'dimmed' in options && options.dimmed;
         const activeRasterLayer = 'activeRasterLayer' in options && options.activeRasterLayer;
+        const functional = (options.flatmapStyle === FLATMAP_STYLE.FUNCTIONAL)
+
         const lineColour = ['case'];
         lineColour.push(['boolean', ['feature-state', 'hidden'], false], COLOUR_HIDDEN);
-        lineColour.push(['boolean', ['feature-state', 'selected'], false], FEATURE_SELECTED_BORDER);
+        lineColour.push(['boolean', ['feature-state', 'selected'], false], functional ? '#F80' : FEATURE_SELECTED_BORDER);
         if (coloured && outlined) {
             lineColour.push(['boolean', ['feature-state', 'active'], false], COLOUR_ACTIVE);
         }
@@ -280,13 +284,13 @@ export class FeatureBorderLayer extends VectorStyleLayer
 
         const lineWidth = ['case'];
         lineWidth.push(['boolean', ['get', 'invisible'], false], 0.2);
-        lineWidth.push(['boolean', ['feature-state', 'selected'], false], 1.5);
+        lineWidth.push(['boolean', ['feature-state', 'selected'], false], functional ? 3 : 1.5);
         if (coloured && outlined) {
-            lineWidth.push(['boolean', ['feature-state', 'active'], false], 1.5);
+            lineWidth.push(['boolean', ['feature-state', 'active'], false], functional ? 2.5 : 1.5);
         }
         lineWidth.push(['boolean', ['feature-state', 'annotated'], false], 3.5);
         lineWidth.push(['has', 'colour'], 0.7);
-        lineWidth.push((coloured && outlined) ? 0.5 : 0.1);
+        lineWidth.push(functional ? 1 : (coloured && outlined) ? 0.5 : 0.1);
 
         return super.changedPaintStyle({
             'line-color': lineColour,
