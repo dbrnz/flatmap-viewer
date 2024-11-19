@@ -45,9 +45,9 @@ const STROKE_INTERPOLATION = [
     'interpolate',
     ['exponential', 2],
     ['zoom'],
-     2, ["*", ['var', 'width'], ["^", 2, -0.5]],
-     7, ["*", ['var', 'width'], ["^", 2,  2.5]],
-     9, ["*", ['var', 'width'], ["^", 2,  5.0]]
+     2, ["*", ['var', 'width'], ["^", 2,  0.5]],
+     7, ["*", ['var', 'width'], ["^", 2,  1.5]],
+     9, ["*", ['var', 'width'], ["^", 2,  2.0]]
 ];
 
 //==============================================================================
@@ -359,8 +359,8 @@ export class FeatureLineLayer extends VectorStyleLayer
                             1.0
                         ],
                         ['case',
-                            ['boolean', ['feature-state', 'selected'], false], 1.2,
-                            ['boolean', ['feature-state', 'active'], false], 1.2,
+                            ['boolean', ['feature-state', 'selected'], false], 1,
+                            ['boolean', ['feature-state', 'active'], false], 1,
                             options.authoring ? 0.7 : 0.5
                         ]
                     ],
