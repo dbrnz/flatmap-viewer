@@ -2209,7 +2209,8 @@ export class MapManager
                         outline: true
                     };
                 }
-                mapOptions.layerOptions.authoring = ('authoring' in mapIndex) ? mapIndex.authoring : false;
+                mapOptions.layerOptions.authoring = ('authoring' in mapIndex) ? mapIndex.authoring : false
+                mapOptions.layerOptions.flatmapStyle = mapOptions.style
 
                 // Are features in separate vector tile source layers?
 
