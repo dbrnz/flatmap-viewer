@@ -205,7 +205,7 @@ export class FeatureFillLayer extends VectorStyleLayer
             ],
             'fill-opacity': [
                 'case',
-                ['boolean', ['feature-state', 'hidden'], false], 0.1,
+                ['boolean', ['feature-state', 'hidden'], false], 0.01,
                 ['boolean', ['feature-state', 'selected'], false], 0.2,
                 ['has', 'opacity'], ['get', 'opacity'],
                 ['has', 'colour'], 1.0,
