@@ -112,6 +112,7 @@ export class FlatMap
     #mapTermGraph
     #startupState = -1
     #taxonNames = new Map()
+    #proxies
 
     constructor(container, mapServer, mapDescription, resolve)
     {
@@ -140,6 +141,7 @@ export class FlatMap
         this.__taxonToFeatureIds = new Map();
         this.__featurePropertyValues = new Map()
         this.#mapTermGraph = new MapTermGraph(mapDescription.sparcTermGraph)
+        this.#proxies = mapDescription.proxies;
 
         const sckanProvenance = mapDescription.details.connectivity
         if (sckanProvenance === undefined) {
@@ -728,8 +730,18 @@ export class FlatMap
     modelFeatureIds(anatomicalId)
     //===========================
     {
-        const featureIds = this.__modelToFeatureIds.get(utils.normaliseId(anatomicalId));
-        return featureIds ? featureIds : [];
+        const normalisedId = utils.normaliseId(anatomicalId);
+        let featureIds = this.__modelToFeatureIds.get(normalisedId);
+        if (!featureIds) {
+            featureIds = [];
+            if (this.#proxies.hasOwnProperty(normalisedId)) {
+                const proxies = this.#proxies[normalisedId];
+                for (const proxy of proxies) {
+                    featureIds.push(...this.modelFeatureIds(proxy));
+                }
+            }
+        }
+        return featureIds
     }
 
     modelFeatureIdList(anatomicalIds)
