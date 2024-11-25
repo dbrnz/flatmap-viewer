@@ -110,9 +110,9 @@ export class FlatMap
     #knowledgeSource = ''
     #mapServer
     #mapTermGraph
+    #proxies
     #startupState = -1
     #taxonNames = new Map()
-    #proxies
 
     constructor(container, mapServer, mapDescription, resolve)
     {
@@ -730,14 +730,14 @@ export class FlatMap
     modelFeatureIds(anatomicalId)
     //===========================
     {
-        const normalisedId = utils.normaliseId(anatomicalId);
-        let featureIds = this.__modelToFeatureIds.get(normalisedId);
+        const normalisedId = utils.normaliseId(anatomicalId)
+        let featureIds = this.__modelToFeatureIds.get(normalisedId)
         if (!featureIds) {
-            featureIds = [];
+            featureIds = []
             if (this.#proxies.hasOwnProperty(normalisedId)) {
-                const proxies = this.#proxies[normalisedId];
+                const proxies = this.#proxies[normalisedId]
                 for (const proxy of proxies) {
-                    featureIds.push(...this.modelFeatureIds(proxy));
+                    featureIds.push(...this.modelFeatureIds(proxy))
                 }
             }
         }
@@ -2197,13 +2197,13 @@ export class MapManager
 
                 // Get the map's proxy features
 
-                const proxyFeatures = await this._mapServer.loadJSON(`flatmap/${mapId}/proxies`);
+                const proxyFeatures = await this._mapServer.loadJSON(`flatmap/${mapId}/proxies`)
                 const proxies = Array.isArray(proxyFeatures)
                     ? proxyFeatures.reduce((acc, item) => {
-                        acc[item.feature] = item.proxies;
-                        return acc;
+                        acc[item.feature] = item.proxies
+                        return acc
                     }, {})
-                    : {};
+                    : {}
 
                 // Set zoom range if not specified as an option
 
