@@ -2183,6 +2183,16 @@ export class MapManager
 
                 const provenance = await this._mapServer.loadJSON(`flatmap/${mapId}/metadata`);
 
+                // Get the map's proxy features
+
+                const proxyFeatures = await this._mapServer.loadJSON(`flatmap/${mapId}/proxies`);
+                const proxies = Array.isArray(proxyFeatures)
+                    ? proxyFeatures.reduce((acc, item) => {
+                        acc[item.feature] = item.proxies;
+                        return acc;
+                    }, {})
+                    : {};
+
                 // Set zoom range if not specified as an option
 
                 if ('vector-tiles' in mapStyle.sources) {
@@ -2234,7 +2244,8 @@ export class MapManager
                         pathways: pathways,
                         provenance, provenance,
                         callback: callback,
-                        sparcTermGraph: this.#sparcTermGraph
+                        sparcTermGraph: this.#sparcTermGraph,
+                        proxies: proxies
                     },
                     resolve);
 
