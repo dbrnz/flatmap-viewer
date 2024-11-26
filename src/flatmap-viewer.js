@@ -734,11 +734,9 @@ export class FlatMap
         let featureIds = this.__modelToFeatureIds.get(normalisedId)
         if (!featureIds) {
             featureIds = []
-            if (this.#proxies.hasOwnProperty(normalisedId)) {
-                const proxies = this.#proxies[normalisedId]
-                for (const proxy of proxies) {
-                    featureIds.push(...this.modelFeatureIds(proxy))
-                }
+            const proxies = this.proxiesForTerm(normalisedId)
+            for (const proxy of proxies) {
+                featureIds.push(...this.modelFeatureIds(proxy))
             }
         }
         return featureIds
@@ -800,6 +798,22 @@ export class FlatMap
         if (this._userInteractions !== null) {
             return [...this._userInteractions.pathModelNodes(modelId)]
         }
+    }
+
+    /**
+     * Get a list of proxy anatomaical identifiers for an anatomical term
+     *
+     * @param      {string}  anatomicalId  An antomical term identifier
+     * @return     {Array<string>}   Antomical identifiers of proxy features for the term
+     */
+    proxiesForTerm(anatomicalId)
+    //===========================
+    {
+        const normalisedId = utils.normaliseId(anatomicalId)
+        if (this.#proxies.hasOwnProperty(normalisedId)) {
+            return this.#proxies[normalisedId]
+        }
+        return []
     }
 
     /**

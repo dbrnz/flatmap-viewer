@@ -18,6 +18,7 @@ limitations under the License.
 
 ==============================================================================*/
 
+import {FlatMap} from '../flatmap-viewer'
 import {ANATOMICAL_ROOT, MapTermGraph} from '../knowledge'
 import {DiGraph} from '../knowledge/graphs'
 
@@ -47,15 +48,18 @@ export class DatasetMarkerSet
     #markers: Map<string, DatasetMarker>
     #maxDepth: number
 
-    constructor(dataset: Dataset, mapTermGraph: MapTermGraph)
+    constructor(dataset: Dataset, mapTermGraph: MapTermGraph, flatmap: FlatMap)
     {
         this.#datasetId = dataset.id
         this.#mapTermGraph = mapTermGraph
         this.#maxDepth = mapTermGraph.maxDepth
 
-        const mapTerms = new Set(this.#validatedTerms(dataset.terms))
+        const datasetTerms = new Array(...dataset.terms)
+        for (const term of dataset.terms) {
+            datasetTerms.push(...flatmap.proxiesForTerm(term))
+        }
+        const mapTerms = new Set(this.#validatedTerms(datasetTerms))
         this.#connectedTermGraph = mapTermGraph.connectedTermGraph([...mapTerms.values()])
-
         this.#markers = new Map(this.#connectedTermGraph.nodes().map(term => {
             const d = mapTermGraph.depth(term)
             const zoomRange = this.#depthToZoomRange(d)
