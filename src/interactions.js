@@ -1696,10 +1696,12 @@ export class UserInteractions
         }
         if (type === 'zoom') {
             if ('originalEvent' in event) {
-                this.#updateActiveFeature([
-                    event.originalEvent.layerX,
-                    event.originalEvent.layerY
-                ])
+                if ('layerX' in event.originalEvent && 'layerY' in event.originalEvent) {
+                    this.#updateActiveFeature([
+                        event.originalEvent.layerX,
+                        event.originalEvent.layerY
+                    ])
+                }
             }
             this._layerManager.zoomEvent()
         }
