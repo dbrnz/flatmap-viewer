@@ -84,8 +84,8 @@ export class MapServer
         return url.href
     }
 
-    async loadJSON<T>(relativePath: string): Promise<T|null>
-    //======================================================
+    async loadJSON<T>(relativePath: string, missingOK: boolean=false): Promise<T|null>
+    //================================================================================
     {
         const url = this.url(relativePath)
         try {
@@ -97,6 +97,9 @@ export class MapServer
                 }
             })
             if (!response.ok) {
+                if (missingOK) {
+                    return null
+                }
                 throw new Error(`Cannot access ${url}`)
             }
             return await response.json()
