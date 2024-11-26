@@ -2197,7 +2197,7 @@ export class MapManager
 
                 // Get the map's proxy features
 
-                const proxyFeatures = await this._mapServer.loadJSON(`flatmap/${mapId}/proxies`)
+                const proxyFeatures = await this._mapServer.loadJSON(`flatmap/${mapId}/proxies`, true)
                 const proxies = Array.isArray(proxyFeatures)
                     ? proxyFeatures.reduce((acc, item) => {
                         acc[item.feature] = item.proxies
