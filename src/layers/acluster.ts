@@ -121,7 +121,7 @@ export class ClusteredAnatomicalMarkerLayer
         this.#ui = ui
         this.#flatmap = flatmap
         this.#map = flatmap.map
-        this.#maxZoom = this.#map.getMaxZoom()
+        this.#maxZoom = Math.ceil(this.#map.getMaxZoom())
         this.#mapTermGraph = flatmap.mapTermGraph
 
         this.#map.addSource(ANATOMICAL_MARKERS_SOURCE, {
