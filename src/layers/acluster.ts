@@ -173,7 +173,8 @@ export class ClusteredAnatomicalMarkerLayer
                     const markerPoints: MarkerPoint[] = []
                     for (const featureId of this.#flatmap.modelFeatureIds(datasetMarker.term)) {
                         const annotation = this.#flatmap.annotation(featureId)
-                        if (!('markerPosition' in annotation) && !annotation.geometry.includes('Polygon')) {
+                        if (annotation.centreline
+                         || !('markerPosition' in annotation) && !annotation.geometry.includes('Polygon')) {
                             continue;
                         }
                         const markerId = this.#ui.nextMarkerId()
