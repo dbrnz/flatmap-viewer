@@ -201,7 +201,7 @@ export class FlatMap
         };
 
         if ('maxZoom' in mapDescription.options) {
-            mapOptions.maxZoom = mapDescription.options.maxZoom
+            mapOptions.maxZoom = mapDescription.options.maxZoom - 0.001
         }
         if ('minZoom' in mapDescription.options) {
             mapOptions.minZoom = mapDescription.options.minZoom

@@ -43,7 +43,7 @@ const DEFAULT_OPTIONS = {
     showLngLat: false,
     standalone: true,
     flightPaths: false,
-    maxZoom: 9.99
+    maxZoom: 10
 }
 
 window.onload = standaloneViewer(MAP_ENDPOINTS, {
