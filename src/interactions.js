@@ -283,6 +283,20 @@ export class UserInteractions
 
         const handleMouseMoveEvent = this.mouseMoveEvent_.bind(this);
         this._map.on('click', this.clickEvent_.bind(this));
+        this._map.on('dblclick', event => {
+            const clickedFeatures = this._layerManager.featuresAtPoint(event.point)
+            for (const feature of clickedFeatures) {
+                if (feature.properties.kind === 'expandable'
+                 && this._map.getZoom() > (feature.properties.maxzoom - 2)) {
+                    event.preventDefault()
+                    this._map.fitBounds(bounds(feature), {
+                        padding: 0,
+                        animate: false
+                    })
+                    break
+                }
+            }
+        })
         this._map.on('touchend', this.clickEvent_.bind(this));
         this._map.on('mousemove', utils.delay(handleMouseMoveEvent, this.tooltipDelay));
         this._lastFeatureMouseEntered = null;
