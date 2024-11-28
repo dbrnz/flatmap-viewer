@@ -149,7 +149,8 @@ export class BodyStyleLayer extends VectorStyleLayer
             'filter': [
                 'all',
                 ['==', ['geometry-type'], 'Polygon'],
-                ['==', ['get', 'models'], 'UBERON:0013702']
+                ['any', ['==', ['get', 'models'], 'UBERON:0013702'],
+                        ['==', ['get', 'kind'], 'background']],
             ],
             'paint': {
                 'fill-color': [
@@ -182,6 +183,7 @@ export class FeatureFillLayer extends VectorStyleLayer
             'all',
             ['==', ['geometry-type'], 'Polygon'],
             ['!=', ['get', 'models'], 'UBERON:0013702'],
+            ['!=', ['get', 'kind'], 'background'],
             ['!', ['has', 'node']]
         ]
     }

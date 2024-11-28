@@ -98,8 +98,7 @@ class FlatMapStylingLayer
         const layerId = `${layer.id}_${FEATURES_LAYER}`
         const source = flatmap.options.separateLayers ? layerId : FEATURES_LAYER
 
-        if (flatmap.options.style === FLATMAP_STYLE.ANATOMICAL
-         && this.#map.getSource(style.VECTOR_TILES_SOURCE).vectorLayerIds.indexOf(source) >= 0) {
+        if (this.#map.getSource(style.VECTOR_TILES_SOURCE).vectorLayerIds.indexOf(source) >= 0) {
             const bodyLayer = new BodyStyleLayer(layerId, source)
             // @ts-ignore
             this.#addStylingLayer(bodyLayer.style(layer, this.#layerOptions), true)
