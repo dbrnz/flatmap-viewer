@@ -1110,20 +1110,38 @@ export class BackgroundStyleLayer extends StyleLayer
 
 export class RasterStyleLayer extends StyleLayer
 {
-    constructor(id)
+    #options
+
+    constructor(id, options={})
     {
         super(id)
+        this.#options = options
     }
 
     style(layer, options)
     {
-        const coloured = !('colour' in options) || options.colour;
-        return {
+        const coloured = !('colour' in options) || options.colour
+        const style = {
             ...super.style(layer),
             'source': this.id,
             'type': 'raster',
-            'visibility': coloured ? 'visible' : 'none'
-        };
+            'visibility': coloured ? 'visible' : 'none',
+        }
+        if ('detail-layer' in this.#options && this.#options['detail-layer']) {
+            style['minzoom'] = this.#options['min-zoom']
+            style['maxzoom'] = this.#options['max-zoom']
+            const fullOpacity = this.#options['min-zoom'] + 4
+            style['paint'] = {
+                'raster-opacity': [
+                    'interpolate',
+                    ['linear'],
+                    ['zoom'],
+                    this.#options['min-zoom'], 0,
+                    fullOpacity, 1
+                ]
+            }
+        }
+        return style
     }
 }
 

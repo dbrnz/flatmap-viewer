@@ -44,11 +44,20 @@ const RASTER_LAYERS_ID = 'background-image-layer';
 
 //==============================================================================
 
+type ImageLayer = {
+    id: string
+    options: {
+        'max-zoom': number
+        'min-zoom': number
+        'detail-layer': boolean
+    }
+}
+
 interface FlatMapLayer      // To go into flatmap-viewer when converted to Typescript
 {
     id: string
     description: string
-    'image-layers'?: string[]
+    'image-layers'?: string[]|ImageLayer[]
 }
 
 //==============================================================================
@@ -100,8 +109,16 @@ class FlatMapStylingLayer
         // Image layers are below all feature layers
         if (flatmap.details['image-layers']) {
             this.#layerOptions.activeRasterLayer = true;
-            for (const layer_id of layer['image-layers']) {
-                const rasterLayer = new RasterStyleLayer(layer_id)
+            for (const imageLayer of layer['image-layers']) {
+                let layer_id: string
+                let options = {}
+                if (imageLayer instanceof Object) {
+                    layer_id = imageLayer.id
+                    options = {...imageLayer.options, 'detail-layer': layer['detail-layer'] || false}
+                } else {
+                    layer_id = imageLayer
+                }
+                const rasterLayer = new RasterStyleLayer(layer_id, options)
                 // @ts-ignore
                 this.#addStylingLayer(rasterLayer.style(layer, this.#layerOptions), true)
                 this.#rasterStyleLayers.push(rasterLayer)
