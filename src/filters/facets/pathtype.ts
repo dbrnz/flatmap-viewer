@@ -60,7 +60,9 @@ export class PathTypeFacet extends FilteredFacet
             (enabledPathTypes.length === 0) ? (this.facet.size === 0)
                                             : {'kind': enabledPathTypes}
         return new PropertiesFilter(
-           { OR: [{'NOT': {'layer': PATHWAYS_LAYER}}, {'NOT': {'HAS': 'kind'}}, pathCondition] }
+           { OR: [
+                {AND: [{NOT: {'layer': PATHWAYS_LAYER}}, {NOT: {'kind': 'centreline'}}]},
+                {NOT: {HAS: 'kind'}}, pathCondition] }
         )
     }
 }
