@@ -18,7 +18,7 @@ limitations under the License.
 
 ==============================================================================*/
 
-import {PathType} from '../../pathways'
+import {PathType, PATHWAYS_LAYER} from '../../pathways'
 import {PropertiesFilter, PropertiesFilterExpression} from '..'
 import {Facet, FilteredFacet} from '.'
 
@@ -60,7 +60,7 @@ export class PathTypeFacet extends FilteredFacet
             (enabledPathTypes.length === 0) ? (this.facet.size === 0)
                                             : {'kind': enabledPathTypes}
         return new PropertiesFilter(
-           { OR: [{'NOT': {'HAS': 'kind'}}, pathCondition] }
+           { OR: [{'NOT': {'layer': PATHWAYS_LAYER}}, {'NOT': {'HAS': 'kind'}}, pathCondition] }
         )
     }
 }
