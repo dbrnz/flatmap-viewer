@@ -674,6 +674,10 @@ export class FlatMap
     __updateFeatureIdMap(property, featureIdMap, annotation, missingId=null)
     //======================================================================
     {
+        // Exclude centrelines from our set of annotated features
+        if (annotation.centreline) {
+            return
+        }
         if (property in annotation && annotation[property].length) {
             const propertyId = annotation[property];
             if (Array.isArray(propertyId)) {
