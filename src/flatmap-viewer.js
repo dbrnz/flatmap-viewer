@@ -110,7 +110,6 @@ export class FlatMap
     #knowledgeSource = ''
     #mapServer
     #mapTermGraph
-    #proxies
     #startupState = -1
     #taxonNames = new Map()
 
@@ -141,7 +140,6 @@ export class FlatMap
         this.__taxonToFeatureIds = new Map();
         this.__featurePropertyValues = new Map()
         this.#mapTermGraph = new MapTermGraph(mapDescription.sparcTermGraph)
-        this.#proxies = mapDescription.proxies;
 
         const sckanProvenance = mapDescription.details.connectivity
         if (sckanProvenance === undefined) {
@@ -731,15 +729,7 @@ export class FlatMap
     //===========================
     {
         const normalisedId = utils.normaliseId(anatomicalId)
-        let featureIds = this.__modelToFeatureIds.get(normalisedId)
-        if (!featureIds) {
-            featureIds = []
-            const proxies = this.proxiesForTerm(normalisedId)
-            for (const proxy of proxies) {
-                featureIds.push(...this.modelFeatureIds(proxy))
-            }
-        }
-        return featureIds
+        return this.__modelToFeatureIds.get(normalisedId) || []
     }
 
     modelFeatureIdList(anatomicalIds)
@@ -798,22 +788,6 @@ export class FlatMap
         if (this._userInteractions !== null) {
             return [...this._userInteractions.pathModelNodes(modelId)]
         }
-    }
-
-    /**
-     * Get a list of proxy anatomaical identifiers for an anatomical term
-     *
-     * @param      {string}  anatomicalId  An antomical term identifier
-     * @return     {Array<string>}   Antomical identifiers of proxy features for the term
-     */
-    proxiesForTerm(anatomicalId)
-    //===========================
-    {
-        const normalisedId = utils.normaliseId(anatomicalId)
-        if (this.#proxies.hasOwnProperty(normalisedId)) {
-            return this.#proxies[normalisedId]
-        }
-        return []
     }
 
     /**
@@ -2209,16 +2183,6 @@ export class MapManager
 
                 const provenance = await this._mapServer.loadJSON(`flatmap/${mapId}/metadata`);
 
-                // Get the map's proxy features
-
-                const proxyFeatures = await this._mapServer.loadJSON(`flatmap/${mapId}/proxies`, true)
-                const proxies = Array.isArray(proxyFeatures)
-                    ? proxyFeatures.reduce((acc, item) => {
-                        acc[item.feature] = item.proxies
-                        return acc
-                    }, {})
-                    : {}
-
                 // Set zoom range if not specified as an option
 
                 if ('vector-tiles' in mapStyle.sources) {
@@ -2270,8 +2234,7 @@ export class MapManager
                         pathways: pathways,
                         provenance, provenance,
                         callback: callback,
-                        sparcTermGraph: this.#sparcTermGraph,
-                        proxies: proxies
+                        sparcTermGraph: this.#sparcTermGraph
                     },
                     resolve);
 

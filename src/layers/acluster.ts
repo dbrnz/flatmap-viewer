@@ -232,7 +232,7 @@ export class ClusteredAnatomicalMarkerLayer
     {
         for (const dataset of datasets) {
             if (dataset.terms.length) {
-                this.#markersByDataset.set(dataset.id, new DatasetMarkerSet(dataset, this.#mapTermGraph, this.#flatmap))
+                this.#markersByDataset.set(dataset.id, new DatasetMarkerSet(dataset, this.#mapTermGraph))
             }
         }
         this.#update()

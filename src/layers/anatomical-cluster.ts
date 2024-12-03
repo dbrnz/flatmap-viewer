@@ -48,16 +48,13 @@ export class DatasetMarkerSet
     #markers: Map<string, DatasetMarker>
     #maxDepth: number
 
-    constructor(dataset: Dataset, mapTermGraph: MapTermGraph, flatmap: FlatMap)
+    constructor(dataset: Dataset, mapTermGraph: MapTermGraph)
     {
         this.#datasetId = dataset.id
         this.#mapTermGraph = mapTermGraph
         this.#maxDepth = mapTermGraph.maxDepth
 
         const datasetTerms = new Array(...dataset.terms)
-        for (const term of dataset.terms) {
-            datasetTerms.push(...flatmap.proxiesForTerm(term))
-        }
         const mapTerms = new Set(this.#validatedTerms(datasetTerms))
         this.#connectedTermGraph = mapTermGraph.connectedTermGraph([...mapTerms.values()])
         this.#markers = new Map(this.#connectedTermGraph.nodes().map(term => {
