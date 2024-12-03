@@ -199,6 +199,7 @@ export class FeatureFillLayer extends VectorStyleLayer
                 ['boolean', ['feature-state', 'selected'], false], functional ? '#CCC' : COLOUR_SELECTED,
                 ['boolean', ['feature-state', 'hidden'], false], COLOUR_HIDDEN,
                 ['has', 'colour'], ['get', 'colour'],
+                ['==', ['get', 'kind'], 'proxy'], '#F88',
                 ['all',
                     ['==', ['case', ['has', 'shape-type'], ['get', 'shape-type'], 'component'], 'component'],
                     ['boolean', ['feature-state', 'active'], false]
@@ -211,6 +212,7 @@ export class FeatureFillLayer extends VectorStyleLayer
                 ['boolean', ['feature-state', 'selected'], false], 0.2,
                 ['has', 'opacity'], ['get', 'opacity'],
                 ['has', 'colour'], 1.0,
+                ['==', ['get', 'kind'], 'proxy'], 1.0,
                 ['all',
                     ['==', ['case', ['has', 'shape-type'], ['get', 'shape-type'], 'component'], 'component'],
                     ['boolean', ['feature-state', 'active'], false]
