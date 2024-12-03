@@ -32,7 +32,7 @@ import * as utils from '../utils'
 import {ANATOMICAL_MARKERS_LAYER, ClusteredAnatomicalMarkerLayer, Dataset} from './acluster'
 
 import * as style from './styling'
-import {BackgroundStyleLayer, BodyStyleLayer, RasterStyleLayer, VectorStyleLayer} from './styling'
+import {BackgroundStyleLayer, BodyStyleLayer, RasterStyleLayer, VectorStyleLayer, VECTOR_TILES_SOURCE} from './styling'
 
 import {DeckGlOverlay} from './deckgl'
 import {FlightPathLayer} from './flightpaths'
@@ -126,7 +126,7 @@ class FlatMapStylingLayer
             this.#layerOptions.activeRasterLayer = false;
         }
 
-        const vectorTileSource = this.#map.getSource('vector-tiles')
+        const vectorTileSource = this.#map.getSource(VECTOR_TILES_SOURCE)
         const haveVectorLayers = (typeof vectorTileSource !== 'undefined')
 
         // if no image layers then make feature borders (and lines?) more visible...??
