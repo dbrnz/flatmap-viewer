@@ -59,11 +59,12 @@ export class PathTypeFacet extends FilteredFacet
         const pathCondition: PropertiesFilterExpression =
             (enabledPathTypes.length === 0) ? (this.facet.size === 0)
                                             : {'kind': enabledPathTypes}
-        return new PropertiesFilter(
-           { OR: [
-                {AND: [{NOT: {'layer': PATHWAYS_LAYER}}, {NOT: {'kind': 'centreline'}}]},
-                {NOT: {HAS: 'kind'}}, pathCondition] }
-        )
+        return new PropertiesFilter({
+            OR: [
+                {AND: [{NOT: {'tile-layer': PATHWAYS_LAYER}}, {NOT: {'kind': 'centreline'}}]},
+                {NOT: {HAS: 'kind'}}, pathCondition
+            ]
+        })
     }
 }
 
