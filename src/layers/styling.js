@@ -141,17 +141,22 @@ export class BodyStyleLayer extends VectorStyleLayer
         super(id, 'body', sourceLayer);
     }
 
+    defaultFilter()
+    {
+        return [
+            'all',
+            ['==', ['geometry-type'], 'Polygon'],
+            ['any', ['==', ['get', 'models'], 'UBERON:0013702'],
+                    ['==', ['get', 'kind'], 'background']],
+        ]
+    }
+
     style(layer, options)
     {
         return {
             ...super.style(layer),
             'type': 'fill',
-            'filter': [
-                'all',
-                ['==', ['geometry-type'], 'Polygon'],
-                ['any', ['==', ['get', 'models'], 'UBERON:0013702'],
-                        ['==', ['get', 'kind'], 'background']],
-            ],
+            'filter': this.defaultFilter(),
             'paint': {
                 'fill-color': [
                     'case',
