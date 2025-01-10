@@ -275,6 +275,7 @@ export class FeatureBorderLayer extends VectorStyleLayer
             lineColour.push(['boolean', ['feature-state', 'active'], false], COLOUR_ACTIVE);
         }
         lineColour.push(['boolean', ['feature-state', 'annotated'], false], COLOUR_ANNOTATED);
+        lineColour.push(['has', 'stroke'], ['get', 'stroke']);
         lineColour.push(['has', 'colour'], ['get', 'colour']);
         lineColour.push('#444');
 
@@ -291,15 +292,23 @@ export class FeatureBorderLayer extends VectorStyleLayer
             lineOpacity.push(0.5);
         }
 
-        const lineWidth = ['case'];
-        lineWidth.push(['boolean', ['get', 'invisible'], false], 0.2);
-        lineWidth.push(['boolean', ['feature-state', 'selected'], false], functional ? 3 : 1.5);
+        const width = ['case'];
+        width.push(['boolean', ['get', 'invisible'], false], 0.2);
+        width.push(['boolean', ['feature-state', 'selected'], false], functional ? 3 : 1.5);
         if (coloured && outlined) {
-            lineWidth.push(['boolean', ['feature-state', 'active'], false], functional ? 2.5 : 1.5);
+            width.push(['boolean', ['feature-state', 'active'], false], functional ? 2.5 : 1.5);
         }
-        lineWidth.push(['boolean', ['feature-state', 'annotated'], false], 3.5);
-        lineWidth.push(['has', 'colour'], 0.7);
-        lineWidth.push(functional ? 1 : (coloured && outlined) ? 0.5 : 0.1);
+        width.push(['boolean', ['feature-state', 'annotated'], false], 3.5);
+        width.push(['has', 'colour'], 0.7);
+        width.push(functional ? 1 : (coloured && outlined) ? 0.5 : 0.1);
+        const lineWidth = [
+            '*',
+            ['case',
+                ['has', 'stroke-width'], ['get', 'stroke-width'],
+                1.0
+            ],
+            width
+        ]
 
         return super.changedPaintStyle({
             'line-color': lineColour,
