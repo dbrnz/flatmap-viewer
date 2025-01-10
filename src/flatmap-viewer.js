@@ -675,7 +675,7 @@ export class FlatMap
     //======================================================================
     {
         // Exclude centrelines from our set of annotated features
-        if (annotation.centreline) {
+        if (this.options.style !== FLATMAP_STYLE.CENTRELINE && annotation.centreline) {
             return
         }
         if (property in annotation && annotation[property].length) {
