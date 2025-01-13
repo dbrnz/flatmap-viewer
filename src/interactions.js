@@ -947,6 +947,15 @@ export class UserInteractions
         }
     }
 
+    removePopup()
+    //===========
+    {
+        if (this._currentPopup) {
+            this._currentPopup.remove();
+            this._currentPopup = null;
+        }
+    }
+
     lineTooltip_(lineFeatures)
     //========================
     {
