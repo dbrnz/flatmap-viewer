@@ -947,6 +947,9 @@ export class UserInteractions
         }
     }
 
+    /**
+     * Remove the currently active popup from the map.
+     */
     removePopup()
     //===========
     {
