@@ -105,7 +105,11 @@ class FlatMapStylingLayer
             this.#vectorStyleLayers.push(bodyLayer)
         }
 
-        // Image layers are below all feature layers
+        // A FUNCTIONAL map has connections underneath features
+        if (options.flatmapStyle === FLATMAP_STYLE.FUNCTIONAL) {
+            this.#addPathwayStyleLayers()
+        }
+        // Image feature layers are generally below feature vector layers
         if (flatmap.details['image-layers']) {
             this.#layerOptions.activeRasterLayer = true;
             for (const imageLayer of layer['image-layers']) {
@@ -140,7 +144,9 @@ class FlatMapStylingLayer
                 this.#addVectorStyleLayer(style.FeatureBorderLayer, FEATURES_LAYER, false, true)
                 this.#addVectorStyleLayer(style.CentrelineNodeFillLayer, FEATURES_LAYER)
             }
-            this.#addPathwayStyleLayers()
+            if (options.flatmapStyle !== FLATMAP_STYLE.FUNCTIONAL) {
+                this.#addPathwayStyleLayers()
+            }
             if (vectorFeatures) {
                 this.#addVectorStyleLayer(style.FeatureLargeSymbolLayer, FEATURES_LAYER)
                 if (!flatmap.options.tooltips) {
