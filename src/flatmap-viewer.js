@@ -2154,6 +2154,13 @@ export class MapManager
                 // there are raster layers
                 if (!('image-layers' in mapIndex) && ('image_layer' in mapIndex)) {
                     mapIndex['image-layers'] = mapIndex['image_layer'];
+                // Use the map's zoom range set when it was built
+
+                if ('max-zoom' in mapIndex) {
+                    mapOptions.maxZoom = mapIndex['max-zoom'];
+                }
+                if ('min-zoom' in mapIndex) {
+                    mapOptions.minZoom = mapIndex['min-zoom'];
                 }
 
                 // Get details about the map's layers
