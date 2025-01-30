@@ -2152,8 +2152,10 @@ export class MapManager
 
                 // Mapmaker has changed the name of the field to indicate that indicates if
                 // there are raster layers
-                if (!('image-layers' in mapIndex) && ('image_layer' in mapIndex)) {
-                    mapIndex['image-layers'] = mapIndex['image_layer'];
+                if (!('image-layers' in mapOptions) && ('image_layer' in mapIndex)) {
+                    mapOptions['image-layers'] = mapIndex['image_layer'];
+                }
+
                 // Use the map's zoom range set when it was built
 
                 if ('max-zoom' in mapIndex) {
