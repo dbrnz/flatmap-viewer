@@ -120,29 +120,30 @@ class FlatMapStylingLayer
             this.#vectorStyleLayers.push(bodyLayer)
         }
 
-        // A FUNCTIONAL map has connections underneath features
-        if (options.flatmapStyle === FLATMAP_STYLE.FUNCTIONAL) {
-            this.#addPathwayStyleLayers()
-        }
         // Image feature layers are generally below feature vector layers
         if (flatmap.details['image-layers']) {
-            this.#layerOptions.activeRasterLayer = true;
-            for (const imageLayer of layer['image-layers']) {
-                let layer_id: string
-                let options = {}
-                if (imageLayer instanceof Object) {
-                    layer_id = imageLayer.id
-                    options = {...imageLayer.options, 'detail-layer': layer['detail-layer'] || false}
-                } else {
-                    layer_id = imageLayer
+            this.#layerOptions.activeRasterLayer = true
+            // Except for a FUNCTIONAL map, which has connections underneath feature images
+            // with possibly a background raster underneath the connections
+            for (const imageLayer of imageLayers) {
+                if (imageLayer.options.background || false) {
+                    this.#addRasterLayer(imageLayer)
+                    break
                 }
-                const rasterLayer = new RasterStyleLayer(layer_id, options)
-                // @ts-ignore
-                this.#addStylingLayer(rasterLayer.style(layer, this.#layerOptions), true)
-                this.#rasterStyleLayers.push(rasterLayer)
+            }
+            if (options.flatmapStyle === FLATMAP_STYLE.FUNCTIONAL) {
+                this.#addPathwayStyleLayers()
+            }
+            for (const imageLayer of imageLayers) {
+                if (!(imageLayer.options.background || false)) {
+                    this.#addRasterLayer(imageLayer)
+                }
             }
         } else {
-            this.#layerOptions.activeRasterLayer = false;
+            this.#layerOptions.activeRasterLayer = false
+            if (options.flatmapStyle === FLATMAP_STYLE.FUNCTIONAL) {
+                this.#addPathwayStyleLayers()
+            }
         }
 
         const vectorTileSource = this.#map.getSource(VECTOR_TILES_SOURCE)
@@ -219,6 +220,15 @@ class FlatMapStylingLayer
         if (minimap) {
             this.#minimapStylingLayers.push(style)
         }
+    }
+
+    #addRasterLayer(layer: ImageLayer)
+    //================================
+    {
+        const rasterLayer = new RasterStyleLayer(layer.id, layer.options)
+        // @ts-ignore
+        this.#addStylingLayer(rasterLayer.style(layer, this.#layerOptions), true)
+        this.#rasterStyleLayers.push(rasterLayer)
     }
 
     #showStyleLayer(styleLayerId: string, visible=true)
