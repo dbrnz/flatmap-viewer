@@ -53,6 +53,11 @@ const STROKE_INTERPOLATION = [
 
 //==============================================================================
 
+// Raster layers of detailed maps gradually show
+const DETAIL_ZOOM_OFFSET = 3
+
+//==============================================================================
+
 export class StyleLayer
 {
     #id
@@ -1148,7 +1153,8 @@ export class RasterStyleLayer extends StyleLayer
         if ('detail-layer' in this.#options && this.#options['detail-layer']) {
             style['minzoom'] = this.#options['min-zoom']
             style['maxzoom'] = this.#options['max-zoom']
-            const fullOpacity = this.#options['min-zoom'] + 4
+            const fullOpacity = Math.min(this.#options['max-zoom'],
+                                         this.#options['min-zoom'] + DETAIL_ZOOM_OFFSET)
             style['paint'] = {
                 'raster-opacity': [
                     'interpolate',
