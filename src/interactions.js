@@ -1304,11 +1304,14 @@ export class UserInteractions
             } else {
                 const seenFeatures = new Set()
                 this.#selectActiveFeatures(event.originalEvent)
-                for (const clickedFeature of clickedFeatures) {
-                    if (!seenFeatures.has(clickedFeature.properties.id)) {
-                        seenFeatures.add(clickedFeature.properties.id)
-                        this.__featureEvent('click', clickedFeature,
-                                            this.#locationOnLine(clickedFeature.id, event.lngLat))
+                const centreline_click = (clickedFeature.properties.kind === 'centreline')
+                for (const feature of clickedFeatures) {
+                    if (!seenFeatures.has(feature.properties.id)) {
+                        seenFeatures.add(feature.properties.id)
+                        if (!centreline_click || centreline_click && (feature.properties.kind === 'centreline')) {
+                            this.__featureEvent('click', feature,
+                                                this.#locationOnLine(feature.id, event.lngLat))
+                        }
                     }
                 }
             }
