@@ -44,20 +44,23 @@ const RASTER_LAYERS_ID = 'background-image-layer';
 
 //==============================================================================
 
+interface ImageOptions {
+    'max-zoom'?: number
+    'min-zoom'?: number
+    background?: boolean
+    'detail-layer'?: boolean
+}
+
 type ImageLayer = {
     id: string
-    options: {
-        'max-zoom': number
-        'min-zoom': number
-        'detail-layer': boolean
-    }
+    options: ImageOptions
 }
 
 interface FlatMapLayer      // To go into flatmap-viewer when converted to Typescript
 {
     id: string
     description: string
-    'image-layers'?: string[]|ImageLayer[]
+    'image-layers'?: ImageLayer[]
 }
 
 //==============================================================================
@@ -92,6 +95,18 @@ class FlatMapStylingLayer
         this.#description = layer.description
         this.#layerOptions = options
         this.#separateLayers = flatmap.options.separateLayers
+
+        // Make sure image layer information is in its expected format
+        const imageLayers = flatmap.details['image-layers'] && (layer['image-layers'] || false)
+            ? layer['image-layers'].map(imageLayer => {
+                return (imageLayer instanceof Object)
+                  ? imageLayer
+                  : {
+                        id: imageLayer,
+                        options: {}
+                    }
+                })
+            : []
 
         // Originally only for body layer on AC maps but now also used
         // for detail background (FC and AC)
