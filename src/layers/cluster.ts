@@ -18,7 +18,13 @@ limitations under the License.
 
 ==============================================================================*/
 
+import maplibregl from 'maplibre-gl';
+
+//==============================================================================
+
+import {FlatMap} from '../flatmap-viewer'
 import {SvgManager, SvgTemplateManager} from '../../thirdParty/maplibre-gl-svg/src'
+import {UserInteractions} from '../interactions'
 
 //==============================================================================
 
@@ -41,7 +47,7 @@ const markerSmallCircle = `<svg xmlns="http://www.w3.org/2000/svg" width="calc(2
 
 //==============================================================================
 
-export async function loadClusterIcons(map)
+export async function loadClusterIcons(map: maplibregl.Map)
 {
     SvgTemplateManager.addTemplate('marker-large-circle', markerLargeCircle, false)
     SvgTemplateManager.addTemplate('marker-small-circle', markerSmallCircle, false)
@@ -53,21 +59,28 @@ export async function loadClusterIcons(map)
 
 //==============================================================================
 
+type GeometricObject = GeoJSON.Point
+                     | GeoJSON.MultiPoint
+                     | GeoJSON.LineString
+                     | GeoJSON.MultiLineString
+                     | GeoJSON.Polygon
+                     | GeoJSON.MultiPolygon
+
+//==============================================================================
+
 // Geographical clustering
 
 export class ClusteredMarkerLayer
 {
-    #flatmap
-    #map
-    #points = {
+    #map: maplibregl.Map
+    #points: GeoJSON.FeatureCollection = {
        type: 'FeatureCollection',
        features: []
     }
-    #ui
+    #ui: UserInteractions
 
-    constructor(flatmap, ui)
+    constructor(flatmap: FlatMap, ui: UserInteractions)
     {
-        this.#flatmap = flatmap
         this.#ui = ui
         this.#map = flatmap.map
 
@@ -116,9 +129,9 @@ export class ClusteredMarkerLayer
                 layers: ['clustered-markers']
             })
             const clusterId = features[0].properties.cluster_id
-            const zoom = await this.#map.getSource('markers').getClusterExpansionZoom(clusterId)
+            const zoom = await (this.#map.getSource('markers') as maplibregl.GeoJSONSource).getClusterExpansionZoom(clusterId)
             this.#map.easeTo({
-                center: features[0].geometry.coordinates,
+                center: (features[0].geometry as GeometricObject).coordinates as [number, number],
                 zoom
             })
         })
@@ -145,13 +158,13 @@ export class ClusteredMarkerLayer
         for (const feature of features) {
             const properties = feature.properties
             const position = properties.markerPosition.slice(1, -1).split(',').map(p => +p)
-            this.#ui.markerEvent_(event, feature.id, position, properties.models, properties)
+            this.#ui.markerEvent(event, feature.id, position, properties)
         }
         event.originalEvent.stopPropagation()
     }
 
-    addMarker(id, position, properties={})
-    //====================================
+    addMarker(id: string, position: [number, number], properties={})
+    //===================================================================
     {
 // TODO: Don't add the marker if there already is one at the exact position
         this.#points.features.push({
@@ -162,17 +175,17 @@ export class ClusteredMarkerLayer
                 type: 'Point',
                 coordinates: position
             }
-        })
-        this.#map.getSource('markers')
-                 .setData(this.#points)
+        });                             // neccesary semicolon
+        (this.#map.getSource('markers') as maplibregl.GeoJSONSource)
+                  .setData(this.#points)
     }
 
     clearMarkers()
     //============
     {
-        this.#points.features = []
-        this.#map.getSource('markers')
-                 .setData(this.#points)
+        this.#points.features = [];     // neccesary semicolon
+        (this.#map.getSource('markers') as maplibregl.GeoJSONSource)
+                  .setData(this.#points)
     }
 }
 

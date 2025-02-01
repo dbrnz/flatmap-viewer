@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019 - 2024 David Brooks
+Copyright (c) 2019 - 2025 David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -78,9 +78,13 @@ export async function loadClusterIcons(map: MapLibreMap)
 
 //==============================================================================
 
+type Term = string | number | Term[]
+
+//==============================================================================
+
 function zoomCountText(maxZoom: number)
 {
-    const expr: any[] = ['step', ['zoom']]
+    const expr: Term[] = ['step', ['zoom']]
     for (let z = 0; z <= maxZoom; z += 1) {
         if (z > 0) {
             expr.push(z)

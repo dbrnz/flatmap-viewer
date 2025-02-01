@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019 - 2024 David Brooks
+Copyright (c) 2019 - 2025 David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,15 +18,22 @@ limitations under the License.
 
 ==============================================================================*/
 
+import maplibregl from 'maplibre-gl'
+
+//==============================================================================
+
+import {FlatMap} from '../flatmap-viewer'
+
+//==============================================================================
+
 export class FlightPathControl
 {
-    #button
-    #container
-    #enabled = false
-    #map = null
-    #flatmap
+    #button: HTMLButtonElement|null = null
+    #container: HTMLDivElement|null = null
+    #enabled: boolean = false
+    #flatmap: FlatMap
 
-    constructor(flatmap, enabled)
+    constructor(flatmap: FlatMap, enabled: boolean)
     {
         this.#flatmap = flatmap
         this.#enabled = !!enabled
@@ -38,10 +45,9 @@ export class FlightPathControl
         return 'top-right'
     }
 
-    onAdd(map)
-    //========
+    onAdd(_map: maplibregl.Map)
+    //=========================
     {
-        this.#map = map
         this.#container = document.createElement('div')
         this.#container.className = 'maplibregl-ctrl'
         this.#button = document.createElement('button')
@@ -51,10 +57,10 @@ export class FlightPathControl
         this.#button.textContent = '3D'
         this.#button.title = 'Show/hide flight paths'
         this.#container.appendChild(this.#button)
-        this.#container.addEventListener('click', this.onClick.bind(this))
+        this.#container.addEventListener('click', this.#onClick.bind(this))
         if (this.#enabled) {
             this.#button.classList.add('control-active')
-            this.__setBackground()
+            this.#setBackground()
         }
         return this.#container
     }
@@ -63,21 +69,20 @@ export class FlightPathControl
     //========
     {
         this.#container.parentNode.removeChild(this.#container)
-        this.#map = undefined
     }
 
-    __setBackground()
-    //===============
+    #setBackground()
+    //==============
     {
         if (this.#enabled) {
-            this.#button.setAttribute('style', 'background: red');
+            this.#button.setAttribute('style', 'background: red')
         } else {
-            this.#button.removeAttribute('style');
+            this.#button.removeAttribute('style')
         }
     }
 
-    onClick(_event)
-    //=============
+    #onClick(_event)
+    //==============
     {
         if (this.#button.classList.contains('control-active')) {
             this.#flatmap.enableFlightPaths(false)
@@ -88,7 +93,7 @@ export class FlightPathControl
             this.#button.classList.add('control-active')
             this.#enabled = true
         }
-        this.__setBackground()
+        this.#setBackground()
     }
 }
 

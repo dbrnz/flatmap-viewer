@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019 - 2024 David Brooks
+Copyright (c) 2019 - 2025 David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -42,11 +42,7 @@ interface PathProperties extends PropertiesType {
 }
 
 interface LayerOptions extends PropertiesType {
-    dimmed: boolean
-}
-
-interface PathStateChanges {
-    pathType?: string
+    dimmed?: boolean
 }
 
 //==============================================================================
@@ -177,7 +173,7 @@ export class FlightPathLayer
     {
         if (enable !== this.#enabled) {
             this.#layerProperties = new Map(this.#pathTypes.map(pathType => [pathType, this.#newLayerProperties(pathType)]))
-            for (const [pathType, properties] of this.#layerProperties.entries()) {
+            for (const [_, properties] of this.#layerProperties.entries()) {
                 properties.visible = enable
             }
         this.#enabled = enable

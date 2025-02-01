@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019 - 2023  David Brooks
+Copyright (c) 2019 - 2025  David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,57 +18,60 @@ limitations under the License.
 
 ==============================================================================*/
 
-import { Control } from './controls';
+import {Control} from './controls'
+import {FlatMap} from '../flatmap-viewer'
+import type {System} from '../systems'
 
 //==============================================================================
 
 export class SystemsControl extends Control
 {
-    constructor(flatmap, systems)
+    #systems: System[]
+
+    constructor(flatmap: FlatMap, systems: System[])
     {
-        super(flatmap, 'system', 'systems');
-        this.__systems = systems;
+        super(flatmap, 'system', 'systems')
+        this.#systems = systems
     }
 
-    _addControlDetails()
-    //==================
+    addControlDetails()
+    //=================
     {
-        let lines = 0;
-        let enabled = 0;
-        for (const system of this.__systems) {
-            const input = this._addControlLine(`${this.__prefix}${system.id}`, system.name, `background: ${system.colour};`);
+        let lines = 0
+        let enabled = 0
+        for (const system of this.#systems) {
+            const input = this.addControlLine(`${this.prefix}${system.id}`, system.name, `background: ${system.colour};`)
             if (system.enabled) {
-                input.checked = true;
-                enabled += 1;
+                input.checked = true
+                enabled += 1
             }
-            lines += 1;
+            lines += 1
         }
         return {
             enabled: enabled,
             total: lines
-        };
+        }
     }
 
-    _enableAll(enable)
-    //================
+    enableAll(enable: boolean)
+    //========================
     {
-        for (const system of this.__systems) {
-            const checkbox = document.getElementById(`${this.__prefix}${system.id}`);
+        for (const system of this.#systems) {
+            const checkbox = this.getControlInput(`${this.prefix}${system.id}`)
             if (checkbox) {
-                checkbox.checked = enable;
-                this.__flatmap.enableSystem(system.id, enable);
+                checkbox.checked = enable
+                this.flatmap.enableSystem(system.id, enable)
             }
         }
     }
 
-    __enableControl(id, enable)
-    //=========================
+    enableControl(id: string, enable: boolean)
+    //========================================
     {
-        for (const system of this.__systems) {
+        for (const system of this.#systems) {
             if (id === system.id) {
-                this.__flatmap.enableSystem(system.id, enable);
+                this.flatmap.enableSystem(system.id, enable)
             }
         }
     }
-
 }

@@ -66,7 +66,7 @@ function imageBounds(bounds: Bounds): [number, number, number, number]
 export class SvgLayer
 {
     #deckOverlay: DeckGlOverlay
-    #layerProps: [BitmapLayerProps, GeoJsonLayerProps]
+//    #layerProps: [BitmapLayerProps, GeoJsonLayerProps]
     #map: MapLibreMap
     #visible: boolean
 
@@ -93,7 +93,8 @@ export class SvgLayer
     #makeLayerProps()
     //===============
     {
-        this.#layerProps = [    // @ts-ignore
+        /*
+        this.#layerProps = [
             {
                 id: 'bitmap',
                 image: 'http://localhost:8000/image/CardiomyocyteV1.png',
@@ -114,6 +115,7 @@ export class SvgLayer
                 visible: this.#visible
             }
         ]
+        */
     }
 
     #redraw()

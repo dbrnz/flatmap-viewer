@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019 - 2023 David Brooks
+Copyright (c) 2019 - 2025 David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -49,8 +49,7 @@ import maplibregl from 'maplibre-gl'
 
 //==============================================================================
 
-// @ts-ignore
-import {FlatMap} from './flatmap-viewer'
+import {FlatMap} from '../flatmap-viewer'
 
 //==============================================================================
 
@@ -97,8 +96,8 @@ export class MinimapControl
 {
     #container: HTMLElement|null = null
     #flatmap: FlatMap
-    #map: maplibregl.Map
-    #miniMap: maplibregl.Map
+    #map: maplibregl.Map|null = null
+    #miniMap: maplibregl.Map|null = null
     #miniMapCanvas: HTMLElement
     #options: OPTIONS_TYPE
     #styleSpecification: maplibregl.StyleSpecification
@@ -175,7 +174,7 @@ export class MinimapControl
     //========
     {
         this.#container.parentNode.removeChild(this.#container)
-        this.#map = undefined
+        this.#map = null
         this.#container = null
     }
 
@@ -438,8 +437,8 @@ export class MinimapControl
      *
      * @param {boolean}  showMinimap  Set false to hide minimap
      */
-    show(showMinimap)
-    //===============
+    show(showMinimap: boolean)
+    //========================
     {
         if (this.#container) {
             if (showMinimap) {

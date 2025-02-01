@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019  David Brooks
+Copyright (c) 2019 - 2025  David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,30 +18,41 @@ limitations under the License.
 
 ==============================================================================*/
 
-import maplibregl from 'maplibre-gl';
+import maplibregl from 'maplibre-gl'
 
 //==============================================================================
 
-function domContextMenu(items, title)
+import {FlatMap} from './flatmap-viewer'
+
+//==============================================================================
+
+type MenuItem = {
+    action: () => void
+    id: string
+    prompt: string
+} | string
+
+//==============================================================================
+
+function domContextMenu(items: MenuItem[], _title: string): HTMLElement
 {
-    const menuElement = document.createElement('ul');
-    menuElement.className = 'flatmap-contextmenu';
-    menuElement.setAttribute('type', 'context');
+    const menuElement = document.createElement('ul')
+    menuElement.className = 'flatmap-contextmenu'
+    menuElement.setAttribute('type', 'context')
 
     for (const item of items) {
         if (item === '-') {
-            menuElement.appendChild(document.createElement('hr'));
-        } else {
-            const menuItem = document.createElement('li');
-            menuItem.className = 'flatmap-contextmenu-item';
-            menuItem.setAttribute('id', item.id);
-            menuItem.onclick = item.action;
-            menuItem.textContent = item.prompt;
-            menuElement.appendChild(menuItem);
+            menuElement.appendChild(document.createElement('hr'))
+        } else if (typeof item === 'object') {
+            const menuItem = document.createElement('li')
+            menuItem.className = 'flatmap-contextmenu-item'
+            menuItem.setAttribute('id', item.id)
+            menuItem.onclick = item.action
+            menuItem.textContent = item.prompt
+            menuElement.appendChild(menuItem)
         }
     }
-
-    return menuElement;
+    return menuElement
 }
 
 /*
@@ -55,38 +66,41 @@ function domContextMenu(items, title)
 
 export class ContextMenu
 {
-    constructor(flatmap, closeCallback)
+    #closeCallback
+    #map: maplibregl.Map
+    #popup: maplibregl.Popup
+
+    constructor(flatmap: FlatMap, closeCallback)
     {
-        this._flatmap = flatmap;
-        this._map = flatmap.map;
-        this._closeCallback = closeCallback;
-        this._popup = new maplibregl.Popup({
+        this.#map = flatmap.map
+        this.#closeCallback = closeCallback
+        this.#popup = new maplibregl.Popup({
             closeButton: true,
             closeOnClick: true,
             className: 'flatmap-contextmenu-popup',
             maxWidth: 'none'
-        });
-        this._popup.on('close', this.popupClose_.bind(this));
+        })
+        this.#popup.on('close', this.popupClose_.bind(this))
     }
 
     hide()
     //====
     {
-        this._popup.remove();
+        this.#popup.remove()
     }
 
-    popupClose_(e)
-    //============
+    popupClose_(_e)
+    //=============
     {
-        this._closeCallback();
+        this.#closeCallback()
     }
 
-    show(position, menuItems, title)
-    //==============================
+    show(position: maplibregl.LngLatLike, menuItems: MenuItem[], title: string)
+    //=========================================================================
     {
-        this._popup.setLngLat(position);
-        this._popup.setDOMContent(domContextMenu(menuItems, title));
-        this._popup.addTo(this._map);
+        this.#popup.setLngLat(position)
+        this.#popup.setDOMContent(domContextMenu(menuItems, title))
+        this.#popup.addTo(this.#map)
     }
 }
 

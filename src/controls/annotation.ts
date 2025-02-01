@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019 - 2023  David Brooks
+Copyright (c) 2019 - 2025  David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -41,13 +41,22 @@ limitations under the License.
 
 //==============================================================================
 
+import maplibregl from 'maplibre-gl'
 import MapboxDraw from "@mapbox/mapbox-gl-draw"
 import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
 
+//==============================================================================
+
+import {Feature, FlatMap} from '../flatmap-viewer'
 
 //==============================================================================
 
-const drawStyleIds = MapboxDraw.lib.theme.map(s => s.id)
+interface IdObject
+{
+    id: string
+}
+
+const drawStyleIds: string[] = MapboxDraw.lib.theme.map((s: IdObject) => s.id)
 
 export const DRAW_ANNOTATION_LAYERS = [...drawStyleIds.map(id => `${id}.cold`),
                                        ...drawStyleIds.map(id => `${id}.hot`)]
@@ -56,17 +65,23 @@ export const DRAW_ANNOTATION_LAYERS = [...drawStyleIds.map(id => `${id}.cold`),
 
 export class AnnotationDrawControl
 {
-    constructor(flatmap, visible=false)
+    #committedFeatures: Map<string, Feature> = new Map()
+    #container: HTMLElement|null = null
+    #draw: MapboxDraw
+    #flatmap: FlatMap
+    #map: maplibregl.Map|null = null
+    #uncommittedFeatureIds: Set<number> = new Set()
+    #visible: boolean
+
+    constructor(flatmap: FlatMap, visible=false)
     {
         MapboxDraw.constants.classes.CONTROL_BASE  = 'maplibregl-ctrl'
         MapboxDraw.constants.classes.CONTROL_PREFIX = 'maplibregl-ctrl-'
         MapboxDraw.constants.classes.CONTROL_GROUP = 'maplibregl-ctrl-group'
 
-        this.__flatmap = flatmap
-        this.__committedFeatures = new Map()
-        this.__uncommittedFeatureIds = new Set()
-        this.__visible = visible
-        this.__draw = new MapboxDraw({
+        this.#flatmap = flatmap
+        this.#visible = visible
+        this.#draw = new MapboxDraw({
             displayControlsDefault: false,
             controls: {
                 point: true,
@@ -77,23 +92,22 @@ export class AnnotationDrawControl
             userProperties: true,
             keybindings: true
         })
-        this.__map = null
     }
 
-    onAdd(map)
-    //========
+    onAdd(map: maplibregl.Map)
+    //========================
     {
-        this.__map = map
-        this.__container = this.__draw.onAdd(map)
+        this.#map = map
+        this.#container = this.#draw.onAdd(map)
 
         // Fix to allow deletion with Del Key when default trash icon is not shown.
         // See https://github.com/mapbox/mapbox-gl-draw/issues/989
-        this.__draw.options.controls.trash = true
+        this.#draw.options.controls.trash = true
 
         // Prevent firefox menu from appearing on Alt key up
         window.addEventListener('keyup', function (e) {
             if (e.key === "Alt") {
-                e.preventDefault();
+                e.preventDefault()
             }
         }, false)
         map.on('draw.modechange', this.modeChangedEvent.bind(this))
@@ -101,34 +115,36 @@ export class AnnotationDrawControl
         map.on('draw.delete', this.deletedFeature.bind(this))
         map.on('draw.update', this.updatedFeature.bind(this))
         map.on('draw.selectionchange', this.selectionChangedEvent.bind(this))
-        this.show(this.__visible)
-        return this.__container
+        this.show(this.#visible)
+        return this.#container
     }
 
     onRemove()
     //========
     {
-        this.__container.parentNode.removeChild(this.__container)
-        this.__container = null
-        this.__map = null
+        if (this.#container && this.#container.parentNode) {
+            this.#container.parentNode.removeChild(this.#container)
+        }
+        this.#container = null
+        this.#map = null
     }
 
     show(visible=true)
     //================
     {
-        if (this.__container) {
-            this.__container.style.display = visible ? 'block' : 'none'
-            if (visible && !this.__visible) {
+        if (this.#map && this.#container) {
+            this.#container.style.display = visible ? 'block' : 'none'
+            if (visible && !this.#visible) {
                 for (const layerId of DRAW_ANNOTATION_LAYERS) {
-                    this.__map.setLayoutProperty(layerId, 'visibility', 'visible')
+                    this.#map.setLayoutProperty(layerId, 'visibility', 'visible')
                 }
-            } else if (!visible && this.__visible) {
+            } else if (!visible && this.#visible) {
                 for (const layerId of DRAW_ANNOTATION_LAYERS) {
-                    this.__map.setLayoutProperty(layerId, 'visibility', 'none')
+                    this.#map.setLayoutProperty(layerId, 'visibility', 'none')
                 }
             }
         }
-        this.__visible = visible
+        this.#visible = visible
     }
 
     #cleanFeature(event)
@@ -145,14 +161,14 @@ export class AnnotationDrawControl
         return features.length ? features[0] : null
     }
 
-    #sendEvent(type, feature)
-    //=======================
+    #sendEvent(type, feature: Feature)
+    //================================
     {
         if (feature.id) {
             // Add when the event is 'created', 'updated' or 'deleted'
-            this.__uncommittedFeatureIds.add(feature.id)
+            this.#uncommittedFeatureIds.add(feature.id)
         }
-        this.__flatmap.annotationEvent(type, feature)
+        this.#flatmap.annotationEvent(type, feature)
     }
 
     createdFeature(event)
@@ -161,8 +177,8 @@ export class AnnotationDrawControl
         const feature = this.#cleanFeature(event)
         if (feature) {
             // Set properties to indicate that this is a drawn annotation
-            this.__draw.setFeatureProperty(feature.id, 'drawn', true)
-            this.__draw.setFeatureProperty(feature.id, 'label', 'Drawn annotation')
+            this.#draw.setFeatureProperty(feature.id, 'drawn', true)
+            this.#draw.setFeatureProperty(feature.id, 'label', 'Drawn annotation')
             // They need to be on the feature passed to the annotator for storage
             feature.properties = {
                 user_drawn: true,
@@ -177,7 +193,7 @@ export class AnnotationDrawControl
     {
         const feature = this.#cleanFeature(event)
         if (feature) {
-            if (this.__uncommittedFeatureIds.has(feature.id)) {
+            if (this.#uncommittedFeatureIds.has(feature.id)) {
                 // Ignore delete on an uncommitted create or update
             } else {
                 this.#sendEvent('deleted', feature)
@@ -192,7 +208,7 @@ export class AnnotationDrawControl
         if (feature) {
             // specify updated callback type, either `move` or `change_coordinates`
             feature.action = event.action
-            if (this.__uncommittedFeatureIds.has(feature.id)) {
+            if (this.#uncommittedFeatureIds.has(feature.id)) {
                 // Ignore updates on an uncommitted create or update
             } else {
                 this.#sendEvent('updated', feature)
@@ -219,11 +235,11 @@ export class AnnotationDrawControl
     {
         const feature = event.feature
         if (event.type === 'deleted') {
-            this.__committedFeatures.delete(feature.id)
+            this.#committedFeatures.delete(feature.id)
         } else {
-            this.__committedFeatures.set(feature.id, feature)
+            this.#committedFeatures.set(feature.id, feature)
         }
-        this.__uncommittedFeatureIds.delete(feature.id)
+        this.#uncommittedFeatureIds.delete(feature.id)
     }
 
     abortEvent(event)
@@ -239,19 +255,19 @@ export class AnnotationDrawControl
     {
         const feature = event.feature
         if (event.type === 'created') {
-            this.__draw.delete(feature.id)
-            this.__committedFeatures.delete(feature.id)
-            this.__uncommittedFeatureIds.delete(feature.id)
+            this.#draw.delete(feature.id)
+            this.#committedFeatures.delete(feature.id)
+            this.#uncommittedFeatureIds.delete(feature.id)
         } else if (event.type === 'deleted') {
-            this.__draw.add(feature)
-            this.__committedFeatures.set(feature.id, feature)
-            this.__uncommittedFeatureIds.delete(feature.id)
+            this.#draw.add(feature)
+            this.#committedFeatures.set(feature.id, feature)
+            this.#uncommittedFeatureIds.delete(feature.id)
         } else if (event.type === 'updated') {
-            const savedFeature = this.__committedFeatures.get(feature.id)
+            const savedFeature = this.#committedFeatures.get(feature.id)
             if (savedFeature) {
-                this.__draw.delete(feature.id)
-                this.__draw.add(savedFeature)
-                this.__uncommittedFeatureIds.delete(feature.id)
+                this.#draw.delete(feature.id)
+                this.#draw.add(savedFeature)
+                this.#uncommittedFeatureIds.delete(feature.id)
             }
         }
     }
@@ -259,35 +275,35 @@ export class AnnotationDrawControl
     clearFeatures()
     //=============
     {
-        this.__draw.deleteAll()
+        this.#draw.deleteAll()
     }
 
     removeFeature()
     //=============
     {
-        this.__draw.trash()
+        this.#draw.trash()
     }
 
-    addFeature(feature)
-    //=================
+    addFeature(feature: Feature)
+    //==========================
     {
         feature = Object.assign({}, feature, {type: 'Feature'})
-        const ids = this.__draw.add(feature)
-        this.__committedFeatures.set(ids[0], feature)
-        this.__uncommittedFeatureIds.delete(ids[0])
+        const ids = this.#draw.add(feature)
+        this.#committedFeatures.set(ids[0], feature)
+        this.#uncommittedFeatureIds.delete(ids[0])
     }
 
-    refreshGeometry(feature)
-    //======================
+    refreshGeometry(feature: Feature)
+    //===============================
     {
-        return this.__draw.get(feature.id) || null
+        return this.#draw.get(feature.id) || null
     }
 
     changeMode(type)
     //==============
     {
         // Change the mode directly without listening to modes callback
-        this.__draw.changeMode(type.mode, type.options)
+        this.#draw.changeMode(type.mode, type.options)
     }
 }
 

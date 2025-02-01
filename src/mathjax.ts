@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019-2025  David Brooks
+Copyright (c) 2019 - 2025  David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License")
 you may not use this file except in compliance with the License.
@@ -92,7 +92,7 @@ export function latex2Svg(latex: string): string
       em: 2*EM_SIZE,
       ex: 2*EX_SIZE,
     })
-    let result = adaptor.innerHTML(node)
+    const result = adaptor.innerHTML(node)
     return result.replace(/<defs>/, `<defs><style>${LatexStyleRules}</style>`)
 }
 

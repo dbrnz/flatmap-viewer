@@ -249,12 +249,12 @@ export class PropertiesFilter
                     console.warn(`makeFilter: Invalid ${key} operands: ${expr}`)
                 }
             } else if (key === 'EMPTY') {
-                const values = properties[expr] || undefined
+                const values = properties[expr] || null
                 matched = !Array.isArray(values) || (values.length === 0)
             } else if (key === 'HAS') {
                 matched = (expr in properties)
             } else if (key === 'IN') {
-                const values = properties[expr[1]] || undefined
+                const values = properties[expr[1]] || null
                 matched = !Array.isArray(values) || values.includes(expr[0])
             } else if (key === 'NOT') {
                 matched = !this.#match(properties, expr)
@@ -297,8 +297,8 @@ function testFilter(filter: PropertiesFilterExpression)
     console.log(filter, '--->', featureFilter.getStyleFilter(), featureFilter.match(testProperties))
 }
 
-function testFilters()
-//====================
+function _testFilters()
+//=====================
 {
     /*
         { HAS: 'prop' } ---> [ 'has', 'prop' ]
@@ -421,6 +421,6 @@ function testFilters()
 
 //==============================================================================
 
-//testFilters()
+//_testFilters()
 
 //==============================================================================

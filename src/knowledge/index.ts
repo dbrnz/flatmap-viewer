@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019 - 2024  David Brooks
+Copyright (c) 2019 - 2025  David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ import {DiGraph, NodeLinkGraph} from './graphs'
 //==============================================================================
 
 const BODY_PROPER = 'UBERON:0013702'
-const MULTICELLULAR_ORGANISM = 'UBERON:0000468'
+//const MULTICELLULAR_ORGANISM = 'UBERON:0000468'
 
 export const ANATOMICAL_ROOT = BODY_PROPER
 
@@ -90,7 +90,9 @@ export class SparcTermGraph
     //==============================
     {
         const sparcGraph = await mapServer.loadJSON<NodeLinkGraph>('knowledge/sparcterms')
-        this.#graph.load(sparcGraph)
+        if (sparcGraph) {
+            this.#graph.load(sparcGraph)
+        }
     }
 
     parents(term: string): string[]

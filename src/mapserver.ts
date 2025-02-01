@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019 - 2024 David Brooks
+Copyright (c) 2019 - 2025 David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -61,7 +61,7 @@ export class MapServer
     {
         try {
             const schemaVersion = await this.loadJSON<SchemaRecord>('knowledge/schema-version')
-            if (schemaVersion === undefined) {
+            if (!schemaVersion) {
                 return
             }
             if ('version' in schemaVersion) {
@@ -74,7 +74,9 @@ export class MapServer
                     this.#latestSource = this.#knowledgeSources[0]
                 }
             }
-        } catch {}
+        } catch {
+            return
+        }
     }
 
     url(relativePath: string='')
@@ -88,52 +90,44 @@ export class MapServer
     //================================================================================
     {
         const url = this.url(relativePath)
-        try {
-            const response = await fetch(url, {
-                method: 'GET',
-                headers: {
-                    "Accept": "application/json; charset=utf-8",
-                    "Cache-Control": "no-store"
-                }
-            })
-            if (!response.ok) {
-                if (missingOK) {
-                    return null
-                }
-                throw new Error(`Cannot access ${url}`)
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                "Accept": "application/json; charset=utf-8",
+                "Cache-Control": "no-store"
             }
-            return await response.json()
-        } catch (e) {
-            throw e
+        })
+        if (!response.ok) {
+            if (missingOK) {
+                return null
+            }
+            throw new Error(`Cannot access ${url}`)
         }
+        return await response.json()
     }
 
-    async queryKnowledge(sql: string, params: string[]=[]): Promise<any[]>
-    //====================================================================
+    async queryKnowledge(sql: string, params: string[]=[]): Promise<unknown[]>
+    //========================================================================
     {
         const url = this.url('knowledge/query/')
         const query = { sql, params }
-        try {
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    "Accept": "application/json; charset=utf-8",
-                    "Cache-Control": "no-store",
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(query)
-            })
-            if (!response.ok) {
-                throw new Error(`Cannot access ${url}`)
-            }
-            const data = await response.json()
-            if ('error' in data) {
-                throw new TypeError(data.error)
-            }
-            return data.values
-        } catch (e) {
-            throw e
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                "Accept": "application/json; charset=utf-8",
+                "Cache-Control": "no-store",
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(query)
+        })
+        if (!response.ok) {
+            throw new Error(`Cannot access ${url}`)
         }
+        const data = await response.json()
+        if ('error' in data) {
+            throw new TypeError(data.error)
+        }
+        return data.values
     }
 }
 

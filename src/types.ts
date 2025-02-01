@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019 - 2024  David Brooks
+Copyright (c) 2019 - 2025  David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ limitations under the License.
 
 ==============================================================================*/
 
-export type Constructor<T> = new(...args: any[]) => T
+export type Constructor<T> = new(...args: unknown[]) => T
 
 //==============================================================================
 
@@ -31,6 +31,10 @@ export type PropertiesType = Record<PropertyKey, PropertyValue>
 
 //==============================================================================
 
-export type Callback = (_: Object) => void
+export type Callback = (_: object) => void
+
+//==============================================================================
+
+export type Pair<T> = [T, T]
 
 //==============================================================================

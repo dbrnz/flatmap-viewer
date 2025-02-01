@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019 - 2024  David Brooks
+Copyright (c) 2019 - 2025  David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -59,6 +59,6 @@ export const LABEL_BACKGROUNDS = [
             stretchY: [[7, 9]]
         }
     }
-];
+]
 
 //==============================================================================

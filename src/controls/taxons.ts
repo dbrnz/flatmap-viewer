@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019 - 2023  David Brooks
+Copyright (c) 2019 - 2025  David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,7 +18,8 @@ limitations under the License.
 
 ==============================================================================*/
 
-import { Control } from './controls'
+import {Control} from './controls'
+import {FlatMap} from '../flatmap-viewer'
 
 //==============================================================================
 
@@ -26,16 +27,16 @@ export class TaxonsControl extends Control
 {
     #taxons = new Map()
 
-    constructor(flatmap)
+    constructor(flatmap: FlatMap)
     {
         super(flatmap, 'taxon', 'taxons')
         for (const taxonId of flatmap.taxonIdentifiers) {
-            this.#taxons.set(taxonId, this.__flatmap.taxonName(taxonId))
+            this.#taxons.set(taxonId, this.flatmap.taxonName(taxonId))
         }
     }
 
-    _addControlDetails()
-    //==================
+    addControlDetails()
+    //=================
     {
         let lines = 0
         let enabled = 0
@@ -43,7 +44,7 @@ export class TaxonsControl extends Control
         const nameOrder = new Map([...this.#taxons]
                             .sort((a, b) => Intl.Collator().compare(a[1], b[1])))
         for (const [id, name] of nameOrder) {
-            const input = this._addControlLine(`${this.__prefix}${id}`, `${name}`);
+            const input = this.addControlLine(`${this.prefix}${id}`, `${name}`)
             input.checked = true
             enabled += 1
             lines += 1
@@ -54,24 +55,24 @@ export class TaxonsControl extends Control
         }
     }
 
-    _enableAll(enable)
-    //================
+    enableAll(enable: boolean)
+    //========================
     {
         for (const taxonId of this.#taxons.keys()) {
-            const checkbox = document.getElementById(`${this.__prefix}${taxonId}`)
+            const checkbox = this.getControlInput(`${this.prefix}${taxonId}`)
             if (checkbox) {
-                checkbox.checked = enable;
+                checkbox.checked = enable
             }
         }
-        this.__flatmap.enableConnectivityByTaxonIds([...this.#taxons.keys()], enable)
+        this.flatmap.enableConnectivityByTaxonIds([...this.#taxons.keys()], enable)
     }
 
-    __enableControl(id, enable)
-    //=========================
+    enableControl(id: string, enable: boolean)
+    //========================================
     {
         for (const taxonId of this.#taxons.keys()) {
             if (id === taxonId) {
-                this.__flatmap.enableConnectivityByTaxonIds(taxonId, enable)
+                this.flatmap.enableConnectivityByTaxonIds(taxonId, enable)
             }
         }
     }

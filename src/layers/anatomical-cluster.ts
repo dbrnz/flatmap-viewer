@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019 - 2024  David Brooks
+Copyright (c) 2019 - 2025  David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ limitations under the License.
 
 ==============================================================================*/
 
-import {FlatMap} from '../flatmap-viewer'
 import {ANATOMICAL_ROOT, MapTermGraph} from '../knowledge'
 import {DiGraph} from '../knowledge/graphs'
 
@@ -121,16 +120,16 @@ export class DatasetMarkerSet
          || parents[0] === ANATOMICAL_ROOT) {
             return null
         }
-        let max_depth = -1
-        let furthest_parent = null
+        const maxDepth = -1
+        let furthestParent = null
         for (const parent of parents) {
             const depth = this.#mapTermGraph.depth(parent)
-            if (depth > max_depth) {
-                furthest_parent = parent
+            if (depth > maxDepth) {
+                furthestParent = parent
             }
         }
-        return furthest_parent
-                ? furthest_parent
+        return furthestParent
+                ? furthestParent
                 : this.#substituteTerm(parents[0])
     }
 

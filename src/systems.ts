@@ -2,9 +2,9 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019 - 2023  David Brooks
+Copyright (c) 2019 - 2025  David Brooks
 
-Licensed under the Apache License, Version 2.0 (the "License");
+Licensed under the Apache License, Version 2.0 (the "License")
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
@@ -18,128 +18,165 @@ limitations under the License.
 
 ==============================================================================*/
 
-const FC_KIND = {
+import {FlatMap} from './flatmap-viewer'
+import {UserInteractions} from './interactions'
+
+//==============================================================================
+
+type FC_CLASS_LIST = string[]
+
+const FC_KIND: Record<string, FC_CLASS_LIST> = {
     SYSTEM: ['fc:System', 'fc-class:System'],
     ORGAN:  ['fc:Organ', 'fc-class:Organ'],
     FTU:    ['fc:Ftu', 'fc-class:Ftu']
-};
+}
+
+//==============================================================================
+
+type SystemFeature = {
+    label: string
+    models: string
+    ftus?: SystemFeature[]
+}
+
+type SystemDetail = {
+    colour: string
+    enabled: boolean
+    featureIds: string[]
+    name: string
+    organs: SystemFeature[]
+    pathIds: string[]
+}
+
+//==============================================================================
+
+export type System = {
+    colour: string
+    enabled: boolean
+    id: string
+    name: string
+    organs: string[]
+}
 
 //==============================================================================
 
 export class SystemsManager
 {
-    constructor(flatmap, ui, enabled=false)
+    #enabledChildren: Map<string, number> = new Map()
+    #flatmap: FlatMap
+    #systems: Map<string, SystemDetail> = new Map()
+    #ui: UserInteractions
+
+    constructor(flatmap: FlatMap, ui: UserInteractions, enabled: boolean=false)
     {
-        this.__flatmap = flatmap;
-        this.__ui = ui;
-        this.__systems = new Map();
-        this.__enabledChildren = new Map();
+        this.#flatmap = flatmap
+        this.#ui = ui
         for (const [_, ann] of flatmap.annotations) {
             if (FC_KIND.SYSTEM.includes(ann['fc-class'])) {
-                const systemId = ann.name.replaceAll(' ', '_');
-                if (this.__systems.has(systemId)) {
-                    this.__systems.get(systemId).featureIds.push(ann.featureId)
+                const systemId = ann.name.replaceAll(' ', '_')
+                if (this.#systems.has(systemId)) {
+                    this.#systems.get(systemId).featureIds.push(ann.featureId)
                 } else {
-                    this.__systems.set(systemId, {
+                    this.#systems.set(systemId, {
                         name: ann.name,
                         colour: ann.colour,
                         featureIds: [ ann.featureId ],
                         enabled: false,
                         pathIds: ('path-ids' in ann) ? ann['path-ids'] : [],
-                        organs: this.__children(ann.children, FC_KIND.ORGAN)
-                    });
-                this.__ui.enableFeature(ann.featureId, false, true);
+                        organs: this.#children(ann.children, FC_KIND.ORGAN)
+                    })
+                this.#ui.enableFeature(ann.featureId, false, true)
                 }
                 for (const childId of ann['children']) {
-                    this.__enabledChildren.set(childId, 0);
-                    this.__ui.enableFeatureWithChildren(childId, false, true);
+                    this.#enabledChildren.set(childId, 0)
+                    this.#ui.enableFeatureWithChildren(childId, false, true)
                 }
             }
         }
-        for (const system of this.__systems.values()) {
+        for (const system of this.#systems.values()) {
             if (enabled) {
-                this.__enableSystem(system, true);
+                this.#enableSystem(system, true)
             } else {
                 // Disable all paths associated with the disabled system
-                this.__ui.enablePathsBySystem(system, false, true);
+                this.#ui.enablePathsBySystem(system, false, true)
             }
         }
     }
 
-    __children(childFeatureIds, childClass)
-    //=====================================
+    #children(childFeatureIds: string[], childClass: FC_CLASS_LIST): SystemFeature[]
+    //==============================================================================
     {
-        const children = [];
+        const children = []
         for (const childFeatureId of childFeatureIds || []) {
-            const childAnnotation = this.__flatmap.annotation(childFeatureId);
-            if (childAnnotation !== undefined && childClass.includes(childAnnotation['fc-class'])) {
-                const child = {
+            const childAnnotation = this.#flatmap.annotation(childFeatureId)
+            if (childAnnotation && childClass.includes(childAnnotation['fc-class'])) {
+                const child: SystemFeature = {
                     label: childAnnotation.label,
                     models: childAnnotation.models
-                };
+                }
                 if (childClass === FC_KIND.ORGAN) {
-                    child.ftus = this.__children(childAnnotation.children, FC_KIND.FTU)
-                };
-                children.push(child);
+                    child.ftus = this.#children(childAnnotation.children, FC_KIND.FTU)
+                }
+                children.push(child)
             }
         }
-        return children;
+        return children
     }
 
-    get systems()
-    //===========
+    get systems(): System[]
+    //=====================
     {
-        const systems = [];
-        for (const [systemId, system] of this.__systems.entries()) {
+        const systems = []
+        for (const [systemId, system] of this.#systems.entries()) {
             systems.push({
                 id: systemId,
                 name: system.name,
                 colour: system.colour,
                 enabled: system.enabled,
                 organs: system.organs
-            });
+            })
         }
-        return systems;
+        return systems
     }
 
-    enable(systemId, enable=true)
-    //===========================
+    enable(systemId: string, enable: boolean=true)
+    //============================================
     {
-        const system = this.__systems.get(systemId);
-        if (system !== undefined && enable !== system.enabled) {
-            this.__enableSystem(system, enable);
+        const system = this.#systems.get(systemId)
+        if (system && enable !== system.enabled) {
+            this.#enableSystem(system, enable)
         }
     }
 
-    __enableSystem(system, enable=true)
-    //=================================
+    #enableSystem(system: SystemDetail, enable: boolean=true)
+    //=======================================================
     {
         for (const featureId of system.featureIds) {
-            const feature = this.__ui.mapFeature(featureId);
-            if (feature !== undefined) {
-                this.__ui.enableMapFeature(feature, enable);
+            const feature = this.#ui.mapFeature(featureId)
+            if (feature) {
+                this.#ui.enableMapFeature(feature, enable)
                 for (const childFeatureId of feature.children) {
-                    const enabledCount = this.__enabledChildren.get(childFeatureId);
+                    const enabledCount = this.#enabledChildren.get(childFeatureId)
                     if (enable && enabledCount === 0 || !enable && enabledCount == 1) {
-                        this.__ui.enableFeatureWithChildren(childFeatureId, enable);
+                        this.#ui.enableFeatureWithChildren(childFeatureId, enable)
                     }
-                    this.__enabledChildren.set(childFeatureId, enabledCount + (enable ? 1 : -1));
+                    this.#enabledChildren.set(childFeatureId, enabledCount + (enable ? 1 : -1))
                 }
             }
         }
 
         // Enable/disable all paths associated with the system
-        this.__ui.enablePathsBySystem(system, enable);
+        this.#ui.enablePathsBySystem(system, enable)
 
         // Save system state
-        system.enabled = enable;
+        system.enabled = enable
     }
 
-    systemEnabled(systemId)
-    //=====================
+    systemEnabled(systemId: string)
+    //=============================
     {
-        const system = this.__systems.get(systemId);
-        return (system !== undefined && system.enabled);
+        const system = this.#systems.get(systemId)
+        return (system && system.enabled)
     }
 }
 

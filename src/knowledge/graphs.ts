@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019 - 2024  David Brooks
+Copyright (c) 2019 - 2025  David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -24,17 +24,7 @@ import {subgraph} from 'graphology-operators'
 
 //==============================================================================
 
-// From https://stackoverflow.com/a/65064026
-
-export function pairwise<T>(a: T[]): [T, T]
-{
-    // @ts-ignore
-    return a.flatMap( (x) => {
-        return a.flatMap( (y) => {
-            return (x !== y) ? [[x, y]] : []
-        })
-    })
-}
+import {pairwise} from '../utils'
 
 //==============================================================================
 
@@ -51,7 +41,7 @@ interface LinkData
 
 export interface NodeLinkGraph
 {
-    graph?: Object
+    graph: object
     nodes: NodeData[]
     links: LinkData[]
 }
@@ -91,7 +81,7 @@ export class DiGraph extends Graph
         }
     }
 
-    static fromGraph(data: Object): DiGraph
+    static fromGraph(data: object): DiGraph
     //=====================================
     {
         const instance = new DiGraph()

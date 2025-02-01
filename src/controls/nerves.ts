@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019 - 2024 David Brooks
+Copyright (c) 2019 - 2025 David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,24 +18,30 @@ limitations under the License.
 
 ==============================================================================*/
 
+import maplibregl from 'maplibre-gl'
+
+//==============================================================================
+
+import {FlatMap} from '../flatmap-viewer'
+import {UserInteractions} from '../interactions'
+import {NerveCentrelineDetails} from '../pathways'
+
+//==============================================================================
+
 export class NerveCentrelineControl
 {
-    #button
-    #checkedCount
-    #container
-    #flatmap
-    #halfCount
-    #legend
-    #map
-    #nerves
+    #button: HTMLButtonElement|null = null
+    #checkedCount: number = 0
+    #container: HTMLDivElement|null = null
+    #halfCount: number = 0
+    #legend: HTMLDivElement|null = null
+    #nerves: NerveCentrelineDetails[] = []
     #showCentrelines = false
-    #checkedNerves
-    #ui
+    #checkedNerves: Map<string, boolean> = new Map()
+    #ui: UserInteractions
 
-    constructor(flatmap, ui)
+    constructor(_flatmap: FlatMap, ui: UserInteractions)
     {
-        this.#flatmap = flatmap
-        this.#map = undefined
         this.#ui = ui
     }
 
@@ -45,10 +51,9 @@ export class NerveCentrelineControl
         return 'top-right'
     }
 
-    onAdd(map)
-    //========
+    onAdd(_map: maplibregl.Map)
+    //=========================
     {
-        this.#map = map
         this.#container = document.createElement('div')
         this.#container.id = 'centreline-nerve-ctrl'
         this.#container.className = 'maplibregl-ctrl'
@@ -91,7 +96,6 @@ export class NerveCentrelineControl
     //========
     {
         this.#container.parentNode.removeChild(this.#container)
-        this.#map = undefined
     }
 
     onClick_(event)
@@ -101,7 +105,7 @@ export class NerveCentrelineControl
             if (this.#button.getAttribute('control-visible') === 'false') {
                 this.#container.appendChild(this.#legend)
                 this.#button.setAttribute('control-visible', 'true')
-                const allNervesCheckbox = document.getElementById('nerve-all-nerves')
+                const allNervesCheckbox = <HTMLInputElement>document.getElementById('nerve-all-nerves')
                 allNervesCheckbox.indeterminate = this.#checkedCount < this.#nerves.length
                                                 && this.#checkedCount > 0
                 this.#legend.focus()
@@ -121,7 +125,7 @@ export class NerveCentrelineControl
                     this.#checkedCount = 0
                 }
                 for (const nerve of this.#nerves) {
-                    const nerveCheckbox = document.getElementById(`nerve-${nerve.models}`)
+                    const nerveCheckbox = <HTMLInputElement>document.getElementById(`nerve-${nerve.models}`)
                     if (nerveCheckbox) {
                         nerveCheckbox.checked = event.target.checked
                     }
@@ -137,7 +141,7 @@ export class NerveCentrelineControl
                 } else {
                     this.#checkedCount -= 1
                 }
-                const allNervesCheckbox = document.getElementById('nerve-all-nerves')
+                const allNervesCheckbox = <HTMLInputElement>document.getElementById('nerve-all-nerves')
                 if (this.#checkedCount === 0) {
                     allNervesCheckbox.checked = false
                     allNervesCheckbox.indeterminate = false
