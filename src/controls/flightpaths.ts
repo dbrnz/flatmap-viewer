@@ -39,8 +39,8 @@ export class FlightPathControl
         this.#enabled = !!enabled
     }
 
-    getDefaultPosition()
-    //==================
+    getDefaultPosition(): maplibregl.ControlPosition
+    //==============================================
     {
         return 'top-right'
     }

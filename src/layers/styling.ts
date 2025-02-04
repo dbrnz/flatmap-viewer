@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019  David Brooks
+Copyright (c) 2019 - 2025 David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,38 +18,57 @@ limitations under the License.
 
 ==============================================================================*/
 
-export const VECTOR_TILES_SOURCE = 'vector-tiles';
+import type {
+    BackgroundLayerSpecification,
+    ColorSpecification,
+    DataDrivenPropertyValueSpecification,
+    ExpressionFilterSpecification,
+    ExpressionSpecification,
+    FillLayerSpecification,
+    LineLayerSpecification,
+    PropertyValueSpecification,
+    RasterLayerSpecification,
+    ResolvedImageSpecification,
+    SymbolLayerSpecification
+} from 'maplibre-gl'
+
+//==============================================================================
+
+export const VECTOR_TILES_SOURCE = 'vector-tiles'
 
 //==============================================================================
 
 import {FLATMAP_STYLE} from '../flatmap-viewer'
 import {PATH_STYLE_RULES} from '../pathways'
+import {PropertiesType} from '../types'
+
+import {FlatMapLayer} from '../flatmap'
 
 //==============================================================================
 
-const COLOUR_ACTIVE    = 'blue';
-const COLOUR_ANNOTATED = '#C8F';
-const COLOUR_SELECTED  = '#0F0';
-const COLOUR_HIDDEN    = '#D8D8D8';
+const COLOUR_ACTIVE    = 'blue'
+const COLOUR_ANNOTATED = '#C8F'
+const COLOUR_SELECTED  = '#0F0'
+const COLOUR_HIDDEN    = '#D8D8D8'
 
-const CENTRELINE_ACTIVE = '#888';
-const CENTRELINE_COLOUR = '#8FF';
+const CENTRELINE_ACTIVE = '#888'
+const CENTRELINE_COLOUR = '#8FF'
 
-const FEATURE_SELECTED_BORDER = 'black';
+const FEATURE_SELECTED_BORDER = 'black'
 
-const NERVE_ACTIVE = '#222';
-const NERVE_SELECTED = 'red';
+const NERVE_ACTIVE = '#222'
+const NERVE_SELECTED = 'red'
 
 //==============================================================================
 
-const STROKE_INTERPOLATION = [
+const STROKE_INTERPOLATION: ExpressionSpecification = [
     'interpolate',
     ['exponential', 2],
     ['zoom'],
      2, ["*", ['var', 'width'], ["^", 2,  0.5]],
      7, ["*", ['var', 'width'], ["^", 2,  1.5]],
      9, ["*", ['var', 'width'], ["^", 2,  2.0]]
-];
+]
 
 //==============================================================================
 
@@ -58,30 +77,100 @@ const DETAIL_ZOOM_OFFSET = 3
 
 //==============================================================================
 
+// MapLibre implied types
+
+type FillPaintSpecification = {
+    "fill-antialias"?: PropertyValueSpecification<boolean>
+    "fill-opacity"?: DataDrivenPropertyValueSpecification<number>
+    "fill-color"?: DataDrivenPropertyValueSpecification<ColorSpecification>
+    "fill-outline-color"?: DataDrivenPropertyValueSpecification<ColorSpecification>
+    "fill-translate"?: PropertyValueSpecification<[
+        number,
+        number
+    ]>
+    "fill-translate-anchor"?: PropertyValueSpecification<"map" | "viewport">
+    "fill-pattern"?: DataDrivenPropertyValueSpecification<ResolvedImageSpecification>
+}
+
+type LinePaintSpecification = {
+    "line-opacity"?: DataDrivenPropertyValueSpecification<number>
+    "line-color"?: DataDrivenPropertyValueSpecification<ColorSpecification>
+    "line-translate"?: PropertyValueSpecification<[
+        number,
+        number
+    ]>;
+    "line-translate-anchor"?: PropertyValueSpecification<"map" | "viewport">
+    "line-width"?: DataDrivenPropertyValueSpecification<number>
+    "line-gap-width"?: DataDrivenPropertyValueSpecification<number>
+    "line-offset"?: DataDrivenPropertyValueSpecification<number>
+    "line-blur"?: DataDrivenPropertyValueSpecification<number>
+    "line-dasharray"?: PropertyValueSpecification<Array<number>>
+    "line-pattern"?: DataDrivenPropertyValueSpecification<ResolvedImageSpecification>
+    "line-gradient"?: ExpressionSpecification
+}
+
+type CaseSpecification = (string|number|(boolean|string|string[])[])[]
+
+type PaintSpecification = FillPaintSpecification | LinePaintSpecification
+
+//==============================================================================
+
+export interface StyleLayerOptions
+{
+    dashed?: boolean
+    'detail-layer'?: boolean
+    'max-zoom'?: number
+    'min-zoom'?: number
+}
+
+export interface StylingOptions
+{
+    colour?: string
+    opacity?: number
+    showNerveCentrelines?: boolean
+}
+
+interface BaseLayerStyle
+{
+    id: string
+    maxzoom?: number
+    minzoom?: number
+}
+
+interface VectorLayerStyle extends BaseLayerStyle
+{
+    source: string
+    'source-layer'?: string
+}
+
+//==============================================================================
+
 export class StyleLayer
 {
-    #id
+    #id: string
 
-    constructor(id)
+    constructor(id: string)
     {
         this.#id = id
     }
 
-    get id()
+    get id(): string
     {
         return this.#id
     }
 
-    style(layer, _options)
+    style(layer: FlatMapLayer|null, _options: StylingOptions={}): BaseLayerStyle
     {
         const style = {
             'id': this.#id
         }
-        if ('min-zoom' in layer) {
-            style['minzoom'] = layer['min-zoom']
-        }
-        if ('max-zoom' in layer) {
-            style['maxzoom'] = layer['max-zoom']
+        if (layer) {
+            if ('min-zoom' in layer) {
+                style['minzoom'] = layer['min-zoom']
+            }
+            if ('max-zoom' in layer) {
+                style['maxzoom'] = layer['max-zoom']
+            }
         }
         return style
     }
@@ -91,49 +180,52 @@ export class StyleLayer
 
 export class VectorStyleLayer extends StyleLayer
 {
-    constructor(id, suffix, sourceLayer)
+    #lastPaintStyle: PaintSpecification
+    #sourceLayer: string
+
+    constructor(id: string, suffix: string, sourceLayer: string)
     {
         super(`${id}_${suffix}`)
-        this.__sourceLayer = sourceLayer;
-        this.__lastPaintStyle = {};
+        this.#sourceLayer = sourceLayer
+        this.#lastPaintStyle = {}
     }
 
-    defaultFilter()
+    defaultFilter(): ExpressionFilterSpecification
     {
         return null
     }
 
-    paintStyle(options, changes=false)
+    paintStyle(_options: PropertiesType, _changes: boolean=false): PaintSpecification
     {
-        return {};
+        return {}
     }
 
-    __paintChanges(newPaintStyle)
+    #paintChanges(newPaintStyle: PaintSpecification): PaintSpecification
     {
-        const paintChanges = {};
+        const paintChanges: PaintSpecification = {}
         for (const [property, value] of Object.entries(newPaintStyle)) {
-            if (!(property in this.__lastPaintStyle)
-             || JSON.stringify(value) !== JSON.stringify(this.__lastPaintStyle[property])) {
-                paintChanges[property] = value;
+            if (!(property in this.#lastPaintStyle)
+             || JSON.stringify(value) !== JSON.stringify(this.#lastPaintStyle[property])) {
+                paintChanges[property] = value
             }
         }
-        return paintChanges;
+        return paintChanges
     }
 
-    changedPaintStyle(newPaintStyle, changes=false)
+    changedPaintStyle(newPaintStyle: PaintSpecification, changes: boolean=false): PaintSpecification
     {
-        const paintStyle = changes ? this.__paintChanges(newPaintStyle) : newPaintStyle;
-        this.__lastPaintStyle = newPaintStyle;
-        return paintStyle;
+        const paintStyle = changes ? this.#paintChanges(newPaintStyle) : newPaintStyle
+        this.#lastPaintStyle = newPaintStyle
+        return paintStyle
     }
 
-    style(layer)
+    style(layer: FlatMapLayer, options?: StylingOptions): VectorLayerStyle
     {
         return {
-            ...super.style(layer),
+            ...super.style(layer, options),
             'source': VECTOR_TILES_SOURCE,
-            'source-layer': this.__sourceLayer
-        };
+            'source-layer': this.#sourceLayer
+        }
     }
 }
 
@@ -141,12 +233,12 @@ export class VectorStyleLayer extends StyleLayer
 
 export class BodyStyleLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'body', sourceLayer);
+        super(id, 'body', sourceLayer)
     }
 
-    defaultFilter()
+    defaultFilter(): ExpressionFilterSpecification
     {
         return [
             'all',
@@ -156,10 +248,10 @@ export class BodyStyleLayer extends VectorStyleLayer
         ]
     }
 
-    style(layer, options)
+    style(layer: FlatMapLayer, options: PropertiesType): FillLayerSpecification
     {
         return {
-            ...super.style(layer),
+            ...super.style(layer, options),
             'type': 'fill',
             'filter': this.defaultFilter(),
             'paint': {
@@ -174,7 +266,7 @@ export class BodyStyleLayer extends VectorStyleLayer
                     0.1
                 ]
             }
-        };
+        }
     }
 }
 
@@ -182,12 +274,12 @@ export class BodyStyleLayer extends VectorStyleLayer
 
 export class FeatureFillLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'fill', sourceLayer);
+        super(id, 'fill', sourceLayer)
     }
 
-    defaultFilter()
+    defaultFilter(): ExpressionFilterSpecification
     {
         return [
             'all',
@@ -200,10 +292,10 @@ export class FeatureFillLayer extends VectorStyleLayer
 
     paintStyle(options, changes=false)
     {
-        const coloured = !('colour' in options) || options.colour;
-        const dimmed = 'dimmed' in options && options.dimmed;
+        const coloured = !('colour' in options) || options.colour
+        const dimmed = 'dimmed' in options && options.dimmed
         const functional = (options.flatmapStyle === FLATMAP_STYLE.FUNCTIONAL)
-        const paintStyle = {
+        const paintStyle: PaintSpecification = {
             'fill-color': [
                 'case',
                 ['boolean', ['feature-state', 'selected'], false], functional ? '#CCC' : COLOUR_SELECTED,
@@ -229,21 +321,21 @@ export class FeatureFillLayer extends VectorStyleLayer
                 ], functional ? 0.1 : 0.7,
                 (coloured && !dimmed) ? 0.01 : 0.1
             ]
-        };
-        return super.changedPaintStyle(paintStyle, changes);
+        }
+        return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(layer, options)
+    style(layer: FlatMapLayer, options): FillLayerSpecification
     {
         return {
-            ...super.style(layer),
+            ...super.style(layer, options),
             'type': 'fill',
             'filter': this.defaultFilter(),
             'layout': {
                 'fill-sort-key': ['get', 'scale']
             },
-            'paint': this.paintStyle(options)
-        };
+            'paint': this.paintStyle(options) as FillPaintSpecification
+        }
     }
 }
 
@@ -251,12 +343,12 @@ export class FeatureFillLayer extends VectorStyleLayer
 
 export class FeatureBorderLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'border', sourceLayer);
+        super(id, 'border', sourceLayer)
     }
 
-    defaultFilter()
+    defaultFilter(): ExpressionFilterSpecification
     {
         return [
             'all',
@@ -267,45 +359,45 @@ export class FeatureBorderLayer extends VectorStyleLayer
 
     paintStyle(options, changes=false)
     {
-        const coloured = !('colour' in options) || options.colour;
-        const outlined = !('outline' in options) || options.outline;
-        const dimmed = 'dimmed' in options && options.dimmed;
-        const activeRasterLayer = 'activeRasterLayer' in options && options.activeRasterLayer;
+        const coloured = !('colour' in options) || options.colour
+        const outlined = !('outline' in options) || options.outline
+        const dimmed = 'dimmed' in options && options.dimmed
+        const activeRasterLayer = 'activeRasterLayer' in options && options.activeRasterLayer
         const functional = (options.flatmapStyle === FLATMAP_STYLE.FUNCTIONAL)
 
-        const lineColour = ['case'];
-        lineColour.push(['boolean', ['feature-state', 'hidden'], false], COLOUR_HIDDEN);
-        lineColour.push(['boolean', ['feature-state', 'selected'], false], functional ? '#F80' : FEATURE_SELECTED_BORDER);
+        const lineColour: CaseSpecification = ['case']
+        lineColour.push(['boolean', ['feature-state', 'hidden'], false], COLOUR_HIDDEN)
+        lineColour.push(['boolean', ['feature-state', 'selected'], false], functional ? '#F80' : FEATURE_SELECTED_BORDER)
         if (coloured && outlined) {
-            lineColour.push(['boolean', ['feature-state', 'active'], false], COLOUR_ACTIVE);
+            lineColour.push(['boolean', ['feature-state', 'active'], false], COLOUR_ACTIVE)
         }
-        lineColour.push(['boolean', ['feature-state', 'annotated'], false], COLOUR_ANNOTATED);
-        lineColour.push(['has', 'stroke'], ['get', 'stroke']);
-        lineColour.push(['has', 'colour'], ['get', 'colour']);
-        lineColour.push('#444');
+        lineColour.push(['boolean', ['feature-state', 'annotated'], false], COLOUR_ANNOTATED)
+        lineColour.push(['has', 'stroke'], ['get', 'stroke'])
+        lineColour.push(['has', 'colour'], ['get', 'colour'])
+        lineColour.push('#444')
 
-        const lineOpacity = ['case'];
-        lineOpacity.push(['boolean', ['feature-state', 'hidden'], false], 0.05);
+        const lineOpacity: CaseSpecification = ['case']
+        lineOpacity.push(['boolean', ['feature-state', 'hidden'], false], 0.05)
         if (coloured && outlined) {
-            lineOpacity.push(['boolean', ['feature-state', 'active'], false], 0.9);
+            lineOpacity.push(['boolean', ['feature-state', 'active'], false], 0.9)
         }
-        lineOpacity.push(['boolean', ['feature-state', 'selected'], false], 0.9);
-        lineOpacity.push(['boolean', ['feature-state', 'annotated'], false], 0.9);
+        lineOpacity.push(['boolean', ['feature-state', 'selected'], false], 0.9)
+        lineOpacity.push(['boolean', ['feature-state', 'annotated'], false], 0.9)
         if (activeRasterLayer) {
-            lineOpacity.push((outlined && !dimmed) ? 0.3 : 0.1);
+            lineOpacity.push((outlined && !dimmed) ? 0.3 : 0.1)
         } else {
-            lineOpacity.push(0.5);
+            lineOpacity.push(0.5)
         }
 
-        const width = ['case'];
-        width.push(['boolean', ['get', 'invisible'], false], 0.2);
-        width.push(['boolean', ['feature-state', 'selected'], false], functional ? 3 : 1.5);
+        const width: CaseSpecification = ['case']
+        width.push(['boolean', ['get', 'invisible'], false], 0.2)
+        width.push(['boolean', ['feature-state', 'selected'], false], functional ? 3 : 1.5)
         if (coloured && outlined) {
-            width.push(['boolean', ['feature-state', 'active'], false], functional ? 2.5 : 1.5);
+            width.push(['boolean', ['feature-state', 'active'], false], functional ? 2.5 : 1.5)
         }
-        width.push(['boolean', ['feature-state', 'annotated'], false], 3.5);
-        width.push(['has', 'colour'], 0.7);
-        width.push(functional ? 1 : (coloured && outlined) ? 0.5 : 0.1);
+        width.push(['boolean', ['feature-state', 'annotated'], false], 3.5)
+        width.push(['has', 'colour'], 0.7)
+        width.push(functional ? 1 : (coloured && outlined) ? 0.5 : 0.1)
         const lineWidth = [
             '*',
             ['case',
@@ -315,21 +407,21 @@ export class FeatureBorderLayer extends VectorStyleLayer
             width
         ]
 
-        return super.changedPaintStyle({
+        return super.changedPaintStyle(<PaintSpecification>{
             'line-color': lineColour,
             'line-opacity': lineOpacity,
             'line-width': lineWidth
-        }, changes);
+        }, changes)
     }
 
-    style(layer, options)
+    style(layer: FlatMapLayer, options): LineLayerSpecification
     {
         return {
             ...super.style(layer),
             'type': 'line',
             'filter': this.defaultFilter(),
-            'paint': this.paintStyle(options)
-        };
+            'paint': this.paintStyle(options) as LinePaintSpecification
+        }
     }
 }
 
@@ -337,19 +429,21 @@ export class FeatureBorderLayer extends VectorStyleLayer
 
 export class FeatureLineLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer, options={})
+    #dashed: boolean
+
+    constructor(id: string, sourceLayer: string, options: StyleLayerOptions={})
     {
-        const dashed = ('dashed' in options && options.dashed);
-        super(id, `feature-${dashed ? 'line-dash' : 'line'}`, sourceLayer);
-        this.__dashed = dashed;
+        const dashed = !!options.dashed
+        super(id, `feature-${dashed ? 'line-dash' : 'line'}`, sourceLayer)
+        this.#dashed = dashed
     }
 
-    defaultFilter()
+    defaultFilter(): ExpressionFilterSpecification
     {
         return [
             'all',
             ['==', ['geometry-type'], 'LineString'],
-            this.__dashed ? ['==', ['get', 'type'], 'line-dash']
+            this.#dashed ? ['==', ['get', 'type'], 'line-dash']
                           : [ 'any',
                               ['==', ['get', 'type'], 'bezier'],
                               ['==', ['get', 'type'], 'line']]
@@ -358,8 +452,8 @@ export class FeatureLineLayer extends VectorStyleLayer
 
     paintStyle(options, changes=false)
     {
-        const coloured = !('colour' in options) || options.colour;
-        const paintStyle = {
+        const coloured = !('colour' in options) || options.colour
+        const paintStyle: PaintSpecification = {
             'line-color': [
                 'case',
                 ['boolean', ['feature-state', 'hidden'], false], COLOUR_HIDDEN,
@@ -395,21 +489,21 @@ export class FeatureLineLayer extends VectorStyleLayer
             ]
             // Need to vary width based on zoom??
             // Or opacity??
-        };
-        if (this.__dashed) {
-            paintStyle['line-dasharray'] = [3, 2];
         }
-        return super.changedPaintStyle(paintStyle, changes);
+        if (this.#dashed) {
+            paintStyle['line-dasharray'] = [3, 2]
+        }
+        return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(layer, options)
+    style(layer: FlatMapLayer, options): LineLayerSpecification
     {
         return {
-            ...super.style(layer),
+            ...super.style(layer, options),
             'type': 'line',
             'filter': this.defaultFilter(),
-            'paint': this.paintStyle(options)
-        };
+            'paint': this.paintStyle(options) as LinePaintSpecification
+        }
     }
 }
 
@@ -417,24 +511,21 @@ export class FeatureLineLayer extends VectorStyleLayer
 
 export class FeatureDashLineLayer extends FeatureLineLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, sourceLayer, {dashed: true});
+        super(id, sourceLayer, {dashed: true})
     }
 }
 
 //==============================================================================
 
-function sckanFilter(options={})
+function sckanFilter(options: FilterProperties={}): ExpressionFilterSpecification
 {
-    const sckanState = ('sckan' in options)
-                     ? options.sckan.toLowerCase()
-                     : 'all'
-    const sckanFilter =
-        sckanState == 'none' ? [
-            ['!', ['has', 'sckan']]
-        ] :
-        sckanState == 'valid' ? [[
+    const sckanState = (options.sckan || 'all').toLowerCase()
+    if        (sckanState === 'none') {
+        return ['!', ['has', 'sckan']]
+    } else if (sckanState === 'valid') {
+        return [
             'any',
             ['!', ['has', 'sckan']],
             [
@@ -442,8 +533,9 @@ function sckanFilter(options={})
                 ['has', 'sckan'],
                 ['==', ['get', 'sckan'], true]
             ]
-        ]] :
-        sckanState == 'invalid' ? [[
+        ]
+    } else if (sckanState === 'invalid') {
+        return [
             'any',
             ['!', ['has', 'sckan']],
             [
@@ -451,33 +543,39 @@ function sckanFilter(options={})
                 ['has', 'sckan'],
                 ['!=', ['get', 'sckan'], true]
             ]
-        ]] :
-        [ ];
-    return sckanFilter;
+        ]
+    } else {
+        return true
+    }
 }
 
 //==============================================================================
 
+interface FilterProperties
+{
+    sckan?: string
+}
+
 export class AnnotatedPathLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'annotated-path', sourceLayer);
+        super(id, 'annotated-path', sourceLayer)
     }
 
-    defaultFilter(options={})
+    defaultFilter(options: FilterProperties={}): ExpressionFilterSpecification
     {
         return [
             'all',
-            ...sckanFilter(options)
-        ];
+            ...[sckanFilter(options)]
+        ]
     }
 
     paintStyle(options={}, changes=false)
     {
-        const dimmed = 'dimmed' in options && options.dimmed;
-        const exclude = 'excludeAnnotated' in options && options.excludeAnnotated;
-        const paintStyle = {
+        const dimmed = 'dimmed' in options && options.dimmed
+        const exclude = 'excludeAnnotated' in options && options.excludeAnnotated
+        const paintStyle: PaintSpecification = {
             'line-color': COLOUR_ANNOTATED,
             'line-dasharray': [5, 0.5, 3, 0.5],
             'line-opacity': [
@@ -504,21 +602,21 @@ export class AnnotatedPathLayer extends VectorStyleLayer
                     ],
                 STROKE_INTERPOLATION
             ]
-        };
-        return super.changedPaintStyle(paintStyle, changes);
+        }
+        return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(layer, options)
+    style(layer: FlatMapLayer, options): LineLayerSpecification
     {
         return {
-            ...super.style(layer),
+            ...super.style(layer, options),
             'type': 'line',
             'filter': this.defaultFilter(options),
-            'paint': this.paintStyle(options),
+            'paint': this.paintStyle(options) as LinePaintSpecification,
             'layout': {
                 'line-cap': 'square'
             }
-        };
+        }
     }
 }
 
@@ -526,22 +624,25 @@ export class AnnotatedPathLayer extends VectorStyleLayer
 
 export class PathLineLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer, options={})
+    #dashed: boolean
+    #highlight: boolean
+
+    constructor(id: string, sourceLayer: string, options: PropertiesType={})
     {
-        const dashed = ('dashed' in options && options.dashed);
-        const highlight = ('highlight' in options && options.highlight);
-        super(id, `path${highlight ? '-highlight' : ''}-${dashed ? 'line-dash' : 'line'}`, sourceLayer);
-        this.__dashed = dashed;
-        this.__highlight = highlight;
+        const dashed = !!(options.dashed || false)
+        const highlight = !!('highlight' in options && options.highlight)
+        super(id, `path${highlight ? '-highlight' : ''}-${dashed ? 'line-dash' : 'line'}`, sourceLayer)
+        this.#dashed = dashed
+        this.#highlight = highlight
     }
 
-    defaultFilter(options={})
+    defaultFilter(options: PropertiesType={}): ExpressionFilterSpecification
     {
-        const sckan_filter = sckanFilter(options);
-        return this.__dashed ? [
+        const sckan_filter = sckanFilter(options)
+        return this.#dashed ? [
             'all',
             ['==', ['get', 'type'], 'line-dash'],
-            ...sckan_filter
+            ...[sckan_filter]
         ] : [
             'all',
             [
@@ -550,26 +651,26 @@ export class PathLineLayer extends VectorStyleLayer
                 [
                     'all',
                     ['==', ['get', 'type'], 'line'],
-                    ...sckan_filter
+                    ...[sckan_filter]
                 ]
             ]
-        ];
+        ]
     }
 
     paintStyle(options={}, changes=false)
     {
-        const dimmed = 'dimmed' in options && options.dimmed;
-        const exclude = 'excludeAnnotated' in options && options.excludeAnnotated;
-        const paintStyle = {
+        const dimmed = 'dimmed' in options && options.dimmed
+        const exclude = 'excludeAnnotated' in options && options.excludeAnnotated
+        const paintStyle: PaintSpecification = {
             'line-color': [
                 'let', 'active', ['to-number', ['feature-state', 'active'], 0],
                 [ 'case',
                     ['==', ['get', 'type'], 'bezier'], 'red',
-                    ...PATH_STYLE_RULES,
-                    '#888'
+                    // @ts-expect-error 2322
+                    ...PATH_STYLE_RULES, '#888'
                 ]
             ],
-            'line-opacity': this.__highlight ? [
+            'line-opacity': this.#highlight ? [
                 'case',
                     ['boolean', ['feature-state', 'selected'], false], 1.0,
                     ['boolean', ['feature-state', 'active'], false], 1.0,
@@ -586,7 +687,7 @@ export class PathLineLayer extends VectorStyleLayer
                 'let',
                 'width', [
                     "*",
-                    this.__highlight ? ['case',
+                    this.#highlight ? ['case',
                         ['boolean', ['feature-state', 'selected'], false], [
                             'case', ['boolean', ['feature-state', 'active'], false], 2.0,
                                 0.9],
@@ -607,24 +708,24 @@ export class PathLineLayer extends VectorStyleLayer
                 ],
                 STROKE_INTERPOLATION
             ]
-        };
-        if (this.__dashed) {
-            paintStyle['line-dasharray'] = [1, 1];
         }
-        return super.changedPaintStyle(paintStyle, changes);
+        if (this.#dashed) {
+            paintStyle['line-dasharray'] = [1, 1]
+        }
+        return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(layer, options={})
+    style(layer: FlatMapLayer, options={}): LineLayerSpecification
     {
         return {
-            ...super.style(layer),
+            ...super.style(layer, options),
             'type': 'line',
             'filter': this.defaultFilter(options),
             'layout': {
                 'line-cap': 'butt'
             },
-            'paint': this.paintStyle(options)
-        };
+            'paint': this.paintStyle(options) as LinePaintSpecification
+        }
     }
 }
 
@@ -632,9 +733,9 @@ export class PathLineLayer extends VectorStyleLayer
 
 export class PathDashlineLayer extends PathLineLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, sourceLayer, {dashed: true});
+        super(id, sourceLayer, {dashed: true})
     }
 }
 
@@ -642,17 +743,17 @@ export class PathDashlineLayer extends PathLineLayer
 
 export class PathHighlightLayer extends PathLineLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, sourceLayer, {highlight: true});
+        super(id, sourceLayer, {highlight: true})
     }
 }
 
 export class PathDashHighlightLayer extends PathLineLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, sourceLayer, {dashed: true, highlight: true});
+        super(id, sourceLayer, {dashed: true, highlight: true})
     }
 }
 
@@ -660,13 +761,15 @@ export class PathDashHighlightLayer extends PathLineLayer
 
 class NerveCentrelineLayer extends VectorStyleLayer
 {
-    constructor(id, type, sourceLayer)
+    #type: string
+
+    constructor(id: string, type: string, sourceLayer: string)
     {
         super(id, `nerve-centreline-${type}`, sourceLayer)
-        this.__type = type;
+        this.#type = type
     }
 
-    defaultFilter()
+    defaultFilter(): ExpressionFilterSpecification
     {
         return [
             'all',
@@ -675,10 +778,10 @@ class NerveCentrelineLayer extends VectorStyleLayer
         ]
     }
 
-    paintStyle(options, changes=false)
+    paintStyle(_options, changes=false)
     {
-        const paintStyle = {
-            'line-color': (this.__type == 'edge') ? [
+        const paintStyle: PaintSpecification = {
+            'line-color': (this.#type == 'edge') ? [
                 'case', ['all',
                     ['boolean', ['feature-state', 'active'], false],
                     ['boolean', ['feature-state', 'selected'], false]
@@ -694,27 +797,27 @@ class NerveCentrelineLayer extends VectorStyleLayer
                 'case',
                     ['boolean', ['feature-state', 'selected'], false], 1.0,
                     ['boolean', ['feature-state', 'active'], false], 1.0,
-                (this.__type == 'edge') ? 0.4 : 0.7
+                (this.#type == 'edge') ? 0.4 : 0.7
             ],
             'line-width': [
                 'let',
                 'width',
-                    (this.__type == 'edge') ? 4 : 3,
+                    (this.#type == 'edge') ? 4 : 3,
                     STROKE_INTERPOLATION
             ]
             // Need to vary width based on zoom??
             // Or opacity??
         }
-        return super.changedPaintStyle(paintStyle, changes);
+        return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(layer, options)
+    style(layer: FlatMapLayer, options): LineLayerSpecification
     {
         return {
-            ...super.style(layer),
+            ...super.style(layer, options),
             'type': 'line',
             'filter': this.defaultFilter(),
-            'paint': this.paintStyle(options),
+            'paint': this.paintStyle(options) as LinePaintSpecification,
             'layout': {
                 'line-cap': 'round',
                 'line-join': 'bevel'
@@ -728,31 +831,28 @@ export class NerveCentrelineEdgeLayer extends NerveCentrelineLayer
 {
     constructor(id, sourceLayer)
     {
-        super(id, 'edge', sourceLayer);
+        super(id, 'edge', sourceLayer)
     }
-
 }
 
 export class NerveCentrelineTrackLayer extends NerveCentrelineLayer
 {
     constructor(id, sourceLayer)
     {
-        super(id, 'track', sourceLayer);
+        super(id, 'track', sourceLayer)
     }
-
-
 }
 
 //==============================================================================
 
 export class CentrelineNodeFillLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'node-fill', sourceLayer);
+        super(id, 'node-fill', sourceLayer)
     }
 
-    defaultFilter()
+    defaultFilter(): ExpressionFilterSpecification
     {
         return [
             'all',
@@ -761,10 +861,10 @@ export class CentrelineNodeFillLayer extends VectorStyleLayer
         ]
     }
 
-    paintStyle(options={}, changes=false)
+    paintStyle(options: StylingOptions={}, changes=false)
     {
-        const showNodes = options.showNerveCentrelines || false;
-        const paintStyle = {
+        const showNodes = options.showNerveCentrelines || false
+        const paintStyle: PaintSpecification = {
                 'fill-color': [
                     'case',
                     ['boolean', ['feature-state', 'selected'], false], COLOUR_SELECTED,
@@ -773,31 +873,31 @@ export class CentrelineNodeFillLayer extends VectorStyleLayer
                 ],
                 'fill-opacity': showNodes ? 0.8 : 0
             }
-        return super.changedPaintStyle(paintStyle, changes);
+        return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(layer, options)
+    style(layer: FlatMapLayer, options): FillLayerSpecification
     {
         return {
-            ...super.style(layer),
+            ...super.style(layer, options),
             'type': 'fill',
             'filter': this.defaultFilter(),
             'layout': {
                 'fill-sort-key': ['get', 'scale']
             },
-            'paint': this.paintStyle(options)
-        };
+            'paint': this.paintStyle(options) as FillPaintSpecification
+        }
     }
 }
 
 export class CentrelineNodeBorderLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'node-border', sourceLayer);
+        super(id, 'node-border', sourceLayer)
     }
 
-    defaultFilter()
+    defaultFilter(): ExpressionFilterSpecification
     {
         return [
             'all',
@@ -806,10 +906,10 @@ export class CentrelineNodeBorderLayer extends VectorStyleLayer
         ]
     }
 
-    paintStyle(options={}, changes=false)
+    paintStyle(options: StylingOptions={}, changes=false)
     {
-        const showNodes = options.showNerveCentrelines || false;
-        const paintStyle = {
+        const showNodes = options.showNerveCentrelines || false
+        const paintStyle: PaintSpecification = {
                 'line-color': '#000',
                 'line-opacity': showNodes ? 0.1 : 0,
                 'line-width': [
@@ -819,17 +919,17 @@ export class CentrelineNodeBorderLayer extends VectorStyleLayer
                         STROKE_INTERPOLATION
                 ]
             }
-        return super.changedPaintStyle(paintStyle, changes);
+        return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(layer, options)
+    style(layer: FlatMapLayer, options)
     {
         return {
-            ...super.style(layer),
+            ...super.style(layer, options),
             'type': 'line',
             'filter': this.defaultFilter(),
-            'paint':  this.paintStyle(options)
-        };
+            'paint':  this.paintStyle(options) as LinePaintSpecification
+        }
     }
 }
 
@@ -837,12 +937,12 @@ export class CentrelineNodeBorderLayer extends VectorStyleLayer
 
 export class FeatureNerveLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'nerve-path', sourceLayer);
+        super(id, 'nerve-path', sourceLayer)
     }
 
-    defaultFilter()
+    defaultFilter(): ExpressionFilterSpecification
     {
         return [
             'all',
@@ -852,10 +952,10 @@ export class FeatureNerveLayer extends VectorStyleLayer
         ]
     }
 
-    style(layer, options)
+    style(layer: FlatMapLayer, options): LineLayerSpecification
     {
         return {
-            ...super.style(layer),
+            ...super.style(layer, options),
             'type': 'line',
             'filter': this.defaultFilter(),
             'paint': {
@@ -888,7 +988,7 @@ export class FeatureNerveLayer extends VectorStyleLayer
                     ]
                 ]
             }
-        };
+        }
     }
 }
 
@@ -896,12 +996,12 @@ export class FeatureNerveLayer extends VectorStyleLayer
 
 export class NervePolygonBorder extends VectorStyleLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'nerve-border', sourceLayer);
+        super(id, 'nerve-border', sourceLayer)
     }
 
-    defaultFilter()
+    defaultFilter(): ExpressionFilterSpecification
     {
         return [
             'all',
@@ -910,10 +1010,10 @@ export class NervePolygonBorder extends VectorStyleLayer
         ]
     }
 
-    style(layer, options)
+    style(layer: FlatMapLayer, options): LineLayerSpecification
     {
         return {
-            ...super.style(layer),
+            ...super.style(layer, options),
             'type': 'line',
             'filter': this.defaultFilter(),
             'paint': {
@@ -937,7 +1037,7 @@ export class NervePolygonBorder extends VectorStyleLayer
                     2
                 ]
             }
-        };
+        }
     }
 }
 
@@ -945,12 +1045,12 @@ export class NervePolygonBorder extends VectorStyleLayer
 
 export class NervePolygonFill extends VectorStyleLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'nerve-fill', sourceLayer);
+        super(id, 'nerve-fill', sourceLayer)
     }
 
-    defaultFilter()
+    defaultFilter(): ExpressionFilterSpecification
     {
         return [
             'all',
@@ -967,8 +1067,8 @@ export class NervePolygonFill extends VectorStyleLayer
 
     paintStyle(options={}, changes=false)
     {
-        const dimmed = 'dimmed' in options && options.dimmed;
-        const paintStyle = {
+        const dimmed = 'dimmed' in options && options.dimmed
+        const paintStyle: PaintSpecification = {
             'fill-color': [
                 'let', 'active', ['to-number', ['feature-state', 'active'], 0],
                 [ 'case',
@@ -979,8 +1079,8 @@ export class NervePolygonFill extends VectorStyleLayer
                     ], COLOUR_SELECTED,
                     ['==', ['get', 'kind'], 'bezier-end'], 'red',
                     ['==', ['get', 'kind'], 'bezier-control'], 'green',
-                    ...PATH_STYLE_RULES,
-                    'white'
+                    // @ts-expect-error 2322
+                    ...PATH_STYLE_RULES, 'white'
                 ]
             ],
             'fill-opacity': [
@@ -995,18 +1095,18 @@ export class NervePolygonFill extends VectorStyleLayer
                 ], dimmed ? 0.1 : 0.5,
                 0.01
             ]
-        };
-        return super.changedPaintStyle(paintStyle, changes);
+        }
+        return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(layer, options={})
+    style(layer: FlatMapLayer, options={}): FillLayerSpecification
     {
         return {
-            ...super.style(layer),
+            ...super.style(layer, options),
             'filter': this.defaultFilter(),
             'type': 'fill',
-            'paint': this.paintStyle(options)
-        };
+            'paint': this.paintStyle(options) as FillPaintSpecification
+        }
     }
 }
 
@@ -1014,12 +1114,12 @@ export class NervePolygonFill extends VectorStyleLayer
 
 export class FeatureLargeSymbolLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'large-symbol', sourceLayer);
+        super(id, 'large-symbol', sourceLayer)
     }
 
-    defaultFilter()
+    defaultFilter(): ExpressionFilterSpecification
     {
         return [
             'all',
@@ -1028,10 +1128,10 @@ export class FeatureLargeSymbolLayer extends VectorStyleLayer
         ]
     }
 
-    style(layer, options)
+    style(layer: FlatMapLayer, options: StylingOptions): SymbolLayerSpecification
     {
         return {
-            ...super.style(layer),
+            ...super.style(layer, options),
             'type': 'symbol',
             'minzoom': 3,
             //'maxzoom': 7,
@@ -1055,7 +1155,7 @@ export class FeatureLargeSymbolLayer extends VectorStyleLayer
                     '#000'
                 ]
             }
-        };
+        }
     }
 }
 
@@ -1063,12 +1163,12 @@ export class FeatureLargeSymbolLayer extends VectorStyleLayer
 
 export class FeatureSmallSymbolLayer extends VectorStyleLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
-        super(id, 'small-symbol', sourceLayer);
+        super(id, 'small-symbol', sourceLayer)
     }
 
-    defaultFilter()
+    defaultFilter(): ExpressionFilterSpecification
     {
         return [
             'all',
@@ -1077,10 +1177,10 @@ export class FeatureSmallSymbolLayer extends VectorStyleLayer
         ]
     }
 
-    style(layer, options)
+    style(layer: FlatMapLayer, options): SymbolLayerSpecification
     {
         return {
-            ...super.style(layer),
+            ...super.style(layer, options),
             'type': 'symbol',
             'minzoom': 6,
             'filter': this.defaultFilter(),
@@ -1093,7 +1193,7 @@ export class FeatureSmallSymbolLayer extends VectorStyleLayer
                 'text-font': ['Open Sans Regular'],
                 'text-line-height': 1,
                 'text-max-width': 5,
-                'text-size': {'stops': [[5, 8], [7, 12], [9, 20]]},
+                'text-size': ['step', ['zoom'], 5,8, 7,12, 9,20],
                 'icon-text-fit': 'both'
             },
             'paint': {
@@ -1103,11 +1203,15 @@ export class FeatureSmallSymbolLayer extends VectorStyleLayer
                     '#000'
                 ]
             }
-        };
+        }
     }
 }
 
 //==============================================================================
+
+export type BackgroundStylingOptions = StylingOptions & {
+    colour: string
+}
 
 export class BackgroundStyleLayer extends StyleLayer
 {
@@ -1116,16 +1220,16 @@ export class BackgroundStyleLayer extends StyleLayer
         super('background')
     }
 
-    style(backgroundColour, opacity=1.0)
+    style(_, options: BackgroundStylingOptions): BackgroundLayerSpecification
     {
         return {
-            ...super.style({}),
+            ...super.style(null, {}),
             'type': 'background',
             'paint': {
-                'background-color': backgroundColour,
-                'background-opacity': opacity
+                'background-color': options.colour,
+                'background-opacity': options.opacity || 1.0
             }
-        };
+        }
     }
 }
 
@@ -1133,22 +1237,24 @@ export class BackgroundStyleLayer extends StyleLayer
 
 export class RasterStyleLayer extends StyleLayer
 {
-    #options
+    #options: StyleLayerOptions
 
-    constructor(id, options={})
+    constructor(id: string, options: StyleLayerOptions={})
     {
         super(id)
         this.#options = options
     }
 
-    style(layer, options)
+    style(layer: FlatMapLayer, options: StylingOptions): RasterLayerSpecification
     {
         const coloured = !('colour' in options) || options.colour
-        const style = {
+        const style: RasterLayerSpecification = {
             ...super.style(layer),
-            'source': this.id,
-            'type': 'raster',
-            'visibility': coloured ? 'visible' : 'none',
+            source: this.id,
+            type: 'raster',
+            layout: {
+                'visibility': coloured ? 'visible' : 'none'
+            }
         }
         if ('detail-layer' in this.#options && this.#options['detail-layer']) {
             style['minzoom'] = this.#options['min-zoom']

@@ -24,9 +24,12 @@ import {Map as MapLibreMap} from 'maplibre-gl'
 
 import {PropertiesFilter, StyleFilterType} from '../filters'
 import {FilteredFacet} from '../filters/facets'
+import {FlatMapImageLayer, FlatMapLayer} from '../flatmap'
+import type {MapFeature, MapRenderedFeature} from '../flatmap'
 import {FlatMap, FLATMAP_STYLE} from '../flatmap-viewer'
 import {PATHWAYS_LAYER} from '../pathways'
 import {UserInteractions} from '../interactions'
+import type {PropertiesType} from '../types'
 import * as utils from '../utils'
 
 import {ANATOMICAL_MARKERS_LAYER, ClusteredAnatomicalMarkerLayer, Dataset} from './acluster'
@@ -38,34 +41,11 @@ import {DeckGlOverlay} from './deckgl'
 import {FlightPathLayer} from './flightpaths'
 //import {SvgLayer} from './svglayer'
 
-const FEATURES_LAYER = 'features';
-const RASTER_LAYERS_NAME = 'Background image layer';
-const RASTER_LAYERS_ID = 'background-image-layer';
+const FEATURES_LAYER = 'features'
 
 //==============================================================================
 
-interface ImageOptions {
-    'max-zoom'?: number
-    'min-zoom'?: number
-    background?: boolean
-    'detail-layer'?: boolean
-}
-
-type ImageLayer = {
-    id: string
-    options: ImageOptions
-}
-
-interface FlatMapLayer      // To go into flatmap-viewer when converted to Typescript
-{
-    id: string
-    description: string
-    'image-layers'?: ImageLayer[]
-}
-
-//==============================================================================
-
-export function inAnatomicalClusterLayer(feature)
+export function inAnatomicalClusterLayer(feature: MapFeature|MapRenderedFeature): boolean
 {
     return ('layer' in feature
          && feature.layer.id === ANATOMICAL_MARKERS_LAYER)
@@ -87,7 +67,7 @@ class FlatMapStylingLayer
     #separateLayers: boolean
     #vectorStyleLayers: VectorStyleLayer[] = []
 
-    constructor(flatmap: FlatMap, layer: FlatMapLayer, options)
+    constructor(flatmap: FlatMap, layer: FlatMapLayer, options: PropertiesType)
     {
         this.#id = layer.id
         this.#layer = layer
@@ -115,7 +95,6 @@ class FlatMapStylingLayer
 
         if (this.#map.getSource(style.VECTOR_TILES_SOURCE).vectorLayerIds.indexOf(source) >= 0) {
             const bodyLayer = new BodyStyleLayer(layerId, source)
-            // @ts-ignore
             this.#addStylingLayer(bodyLayer.style(layer, this.#layerOptions), true)
             this.#vectorStyleLayers.push(bodyLayer)
         }
@@ -147,7 +126,7 @@ class FlatMapStylingLayer
         }
 
         const vectorTileSource = this.#map.getSource(VECTOR_TILES_SOURCE)
-        const haveVectorLayers = (typeof vectorTileSource !== 'undefined')
+        const haveVectorLayers = !!vectorTileSource
 
         // if no image layers then make feature borders (and lines?) more visible...??
         if (haveVectorLayers) {
@@ -212,21 +191,19 @@ class FlatMapStylingLayer
         this.#setPaintRasterLayers(this.#layerOptions)
     }
 
-    #addStylingLayer(style, minimap=false)
-    //====================================
+    #addStylingLayer(style: maplibregl.LayerSpecification, minimap=false)
+    //===================================================================
     {
-        // @ts-ignore
         this.#map.addLayer(style)
         if (minimap) {
             this.#minimapStylingLayers.push(style)
         }
     }
 
-    #addRasterLayer(layer: ImageLayer)
-    //================================
+    #addRasterLayer(layer: FlatMapImageLayer)
+    //=======================================
     {
         const rasterLayer = new RasterStyleLayer(layer.id, layer.options)
-        // @ts-ignore
         this.#addStylingLayer(rasterLayer.style(layer, this.#layerOptions), true)
         this.#rasterStyleLayers.push(rasterLayer)
     }
@@ -273,7 +250,6 @@ class FlatMapStylingLayer
     {
         const vectorStyleLayer = new vectorStyleClass(`${this.#id}_${sourceLayer}`,
                                                       this.#vectorSourceId(sourceLayer))
-        // @ts-ignore
         this.#addStylingLayer(vectorStyleLayer.style(this.#layer, this.#layerOptions), minimap)
         this.#vectorStyleLayers.push(vectorStyleLayer)
         if (pathLayer) {
@@ -365,7 +341,6 @@ export class LayerManager
     #markerLayer: ClusteredAnatomicalMarkerLayer
     #minimapStyleSpecification: maplibregl.StyleSpecification
 //    #modelLayer
-    #rasterLayer = null
 
     constructor(flatmap: FlatMap, ui: UserInteractions)
     {
@@ -379,8 +354,9 @@ export class LayerManager
         this.#minimapStyleSpecification = this.#map.getStyle()
 
         const backgroundLayer = new BackgroundStyleLayer()
-        const backgroundLayerStyle = backgroundLayer.style(flatmap.options.background || 'white') as maplibregl.LayerSpecification
-        // @ts-ignore
+        const backgroundLayerStyle = backgroundLayer.style(null, {
+            colour: flatmap.options.background || 'white'
+        }) as maplibregl.LayerSpecification
         this.#map.addLayer(backgroundLayerStyle)
         this.#minimapStyleSpecification.layers.push(backgroundLayerStyle)
 
@@ -406,8 +382,8 @@ export class LayerManager
 //        this.#modelLayer = new SvgLayer(this.#deckGlOverlay, flatmap)
     }
 
-    get layers()
-    //==========
+    get layers(): FlatMapLayer[]
+    //==========================
     {
         const layers = []
         for (const mapLayer of this.#mapStyleLayers.values()) {
@@ -415,9 +391,9 @@ export class LayerManager
                 id: mapLayer.id,
                 description: mapLayer.description,
                 enabled: mapLayer.active
-            });
+            })
         }
-        return layers;
+        return layers
     }
 
     get minimapStyleSpecification()
@@ -429,7 +405,7 @@ export class LayerManager
     get sckanState()
     //==============
     {
-        return this.#layerOptions.sckan;
+        return this.#layerOptions.sckan
     }
 
     activate(layerId: string, enable=true)
@@ -473,8 +449,8 @@ export class LayerManager
         this.#markerLayer.removeDatasetMarker(datasetId)
     }
 
-    featuresAtPoint(point)
-    //====================
+    featuresAtPoint(point): MapRenderedFeature[]
+    //==========================================
     {
         let features = []
         features = this.#flightPathLayer.queryFeaturesAtPoint(point)
@@ -487,18 +463,18 @@ export class LayerManager
         return features
     }
 
-    removeFeatureState(feature, key: string)
-    //======================================
+    removeFeatureState(featureId: number, key: string)
+    //=======================================================
     {
-        this.#flightPathLayer.removeFeatureState(feature.id, key)
-        this.#markerLayer.removeFeatureState(feature.id, key)
+        this.#flightPathLayer.removeFeatureState(featureId, key)
+        this.#markerLayer.removeFeatureState(featureId, key)
     }
 
-    setFeatureState(feature, state)
-    //=============================
+    setFeatureState(featureId: number, state)
+    //=======================================
     {
-        this.#flightPathLayer.setFeatureState(feature.id, state)
-        this.#markerLayer.setFeatureState(feature.id, state)
+        this.#flightPathLayer.setFeatureState(featureId, state)
+        this.#markerLayer.setFeatureState(featureId, state)
     }
 
     setPaint(options={})
@@ -508,7 +484,6 @@ export class LayerManager
         for (const mapLayer of this.#mapStyleLayers.values()) {
             mapLayer.setPaint(this.#layerOptions)
         }
-        // @ts-ignore
         this.#flightPathLayer.setPaint(options)
     }
 
@@ -592,25 +567,25 @@ export class LayerManager
     //=======================================
     {
 /** WIP
-        const currentState = this.#layerOptions.sckan;
-        const validEnabled = ['valid', 'all'].includes(currentState);
-        const invalidEnabled = ['invalid', 'all'].includes(currentState);
-        let newState = sckanState.toLowerCase();
+        const currentState = this.#layerOptions.sckan
+        const validEnabled = ['valid', 'all'].includes(currentState)
+        const invalidEnabled = ['invalid', 'all'].includes(currentState)
+        let newState = sckanState.toLowerCase()
         if (newState === 'valid') {
             if (enable && !validEnabled) {
-                newState = invalidEnabled ? 'all' : 'valid';
+                newState = invalidEnabled ? 'all' : 'valid'
             } else if (!enable && validEnabled) {
-                newState = invalidEnabled ? 'invalid' : 'none';
+                newState = invalidEnabled ? 'invalid' : 'none'
             }
         } else if (newState === 'invalid') {
             if (enable && !invalidEnabled) {
-                newState = validEnabled ? 'all' : 'invalid';
+                newState = validEnabled ? 'all' : 'invalid'
             } else if (!enable && invalidEnabled) {
-                newState = validEnabled ? 'valid' : 'none';
+                newState = validEnabled ? 'valid' : 'none'
             }
         }
         if (newState !== this.#layerOptions.sckan) {
-            this.setFilter({sckan: newState});
+            this.setFilter({sckan: newState})
         }
 
         // @ts-ignore
@@ -626,7 +601,7 @@ export class LayerManager
         }
 
     const sckanState = !'sckan' in options ? 'all'
-                     : options.sckan.toLowerCase();
+                     : options.sckan.toLowerCase()
     const sckanFilter =
         sckanState == 'none' ? [
             ['!', ['has', 'sckan']]
@@ -649,7 +624,7 @@ export class LayerManager
                 ['!=', ['get', 'sckan'], true]
             ]
         ]] :
-        [ ];
+        [ ]
 **/
 
     }

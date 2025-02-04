@@ -18,21 +18,35 @@ limitations under the License.
 
 ==============================================================================*/
 
+import {
+    FlatMapServerIndex,
+    FlatMapIndex,
+    FlatMapLayer,
+    FlatMapMetadata,
+    FlatMapPathways
+} from './flatmap'
+import type {FlatMapAnnotations} from './flatmap'
+import type {FlatMapStyleSpecification} from './flatmap-viewer'
+
+import {NodeLinkGraph} from './knowledge/graphs'
+
+//==============================================================================
+
 export const KNOWLEDGE_SOURCE_SCHEMA = 1.3
 
 //==============================================================================
 
-type SchemaRecord = {
+type KnowledgeSchemaRecord = {
     version: number
 }
 
-type SourcesRecord = {
+type KnowledgeSourcesRecord = {
     sources: string[]
 }
 
 //==============================================================================
 
-export class MapServer
+export class FlatMapServer
 {
     #url: string
     #latestSource: string = ''
@@ -60,14 +74,14 @@ export class MapServer
     //================
     {
         try {
-            const schemaVersion = await this.loadJSON<SchemaRecord>('knowledge/schema-version')
+            const schemaVersion = await this.#loadJSON<KnowledgeSchemaRecord>('knowledge/schema-version')
             if (!schemaVersion) {
                 return
             }
             if ('version' in schemaVersion) {
                 this.#knowledgeSchema = +schemaVersion.version
             }
-            const knowledgeSources = await this.loadJSON<SourcesRecord>('knowledge/sources')
+            const knowledgeSources = await this.#loadJSON<KnowledgeSourcesRecord>('knowledge/sources')
             if (knowledgeSources && 'sources' in knowledgeSources) {
                 this.#knowledgeSources = knowledgeSources.sources
                 if (this.#knowledgeSources.length) {
@@ -79,15 +93,8 @@ export class MapServer
         }
     }
 
-    url(relativePath: string='')
-    //==========================
-    {
-        const url = new URL(relativePath, this.#url);
-        return url.href
-    }
-
-    async loadJSON<T>(relativePath: string, missingOK: boolean=false): Promise<T|null>
-    //================================================================================
+    async #loadJSON<T>(relativePath: string, missingOK: boolean=false): Promise<T|null>
+    //=================================================================================
     {
         const url = this.url(relativePath)
         const response = await fetch(url, {
@@ -106,7 +113,56 @@ export class MapServer
         return await response.json()
     }
 
-    async queryKnowledge(sql: string, params: string[]=[]): Promise<unknown[]>
+    async flatMaps(): Promise<FlatMapServerIndex[]|null>
+    //==================================================
+    {
+        return this.#loadJSON<FlatMapServerIndex[]>('')
+    }
+
+    async mapIndex(mapId: string): Promise<FlatMapIndex|null>
+    //=======================================================
+    {
+        return this.#loadJSON<FlatMapIndex>(`flatmap/${mapId}/`)
+    }
+
+    async mapLayers(mapId: string): Promise<FlatMapLayer[]|null>
+    //==========================================================
+    {
+        return this.#loadJSON<FlatMapLayer[]>(`flatmap/${mapId}/layers`)
+    }
+
+    async mapStyle(mapId: string): Promise<FlatMapStyleSpecification|null>
+    //====================================================================
+    {
+        return this.#loadJSON<FlatMapStyleSpecification>(`flatmap/${mapId}/style`)
+    }
+
+    async mapPathways(mapId: string): Promise<FlatMapPathways|null>
+    //=============================================================
+    {
+        return this.#loadJSON<FlatMapPathways>(`flatmap/${mapId}/pathways`)
+    }
+
+    async mapAnnotations(mapId: string): Promise<FlatMapAnnotations|null>
+    //===================================================================
+    {
+        return this.#loadJSON<FlatMapAnnotations>(`flatmap/${mapId}/annotations`)
+    }
+
+    async mapMetadata(mapId: string): Promise<FlatMapMetadata|null>
+    //=============================================================
+    {
+        return this.#loadJSON<FlatMapMetadata>(`flatmap/${mapId}/metadata`)
+    }
+
+    async mapTermGraph(mapId: string): Promise<NodeLinkGraph|null>
+    //============================================================
+    {
+        return this.#loadJSON<NodeLinkGraph>(`flatmap/${mapId}/termgraph`)
+
+    }
+
+    async queryKnowledge(sql: string, params: string[]=[]): Promise<string[]>
     //========================================================================
     {
         const url = this.url('knowledge/query/')
@@ -128,6 +184,19 @@ export class MapServer
             throw new TypeError(data.error)
         }
         return data.values
+    }
+
+    async sparcTermGraph(): Promise<NodeLinkGraph|null>
+    //=================================================
+    {
+        return this.#loadJSON<NodeLinkGraph>('knowledge/sparcterms')
+    }
+
+    url(relativePath: string=''): string
+    //==================================
+    {
+        const url = new URL(relativePath, this.#url);
+        return url.href
     }
 }
 

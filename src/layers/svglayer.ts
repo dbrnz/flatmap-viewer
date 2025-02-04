@@ -20,9 +20,9 @@ limitations under the License.
 
 import {Map as MapLibreMap} from 'maplibre-gl'
 
-import {BitmapLayer, BitmapLayerProps} from '@deck.gl/layers';
-import {GeoJsonLayer, GeoJsonLayerProps} from '@deck.gl/layers';
-import {MVTLayer, TileLayer} from '@deck.gl/geo-layers'
+//import {BitmapLayer, BitmapLayerProps} from '@deck.gl/layers';
+//import {GeoJsonLayer, GeoJsonLayerProps} from '@deck.gl/layers';
+import {MVTLayer /*, TileLayer */} from '@deck.gl/geo-layers'
 import {Matrix4} from '@math.gl/core';
 
 //==============================================================================
@@ -33,9 +33,11 @@ import {DeckGlOverlay} from './deckgl'
 
 //==============================================================================
 
+//   >>>>>>>>>>>>>>>>>>>>>>>>>>>>   WIP   <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
 type Bounds = [GeoJSON.Position, GeoJSON.Position]
 
-const FC_LV_MYOCYTE_BOUNDS: Bounds = [[-7.09305, -0.35484], [-6.06056, -0.03271]]
+//const FC_LV_MYOCYTE_BOUNDS: Bounds = [[-7.09305, -0.35484], [-6.06056, -0.03271]]
 
 const LAYER_OFFSET = new Matrix4().translate([0, 0, 2000])
 
@@ -43,7 +45,7 @@ const MIN_VISIBLE_ZOOM = 8
 
 //==============================================================================
 
-function boundingGeoJSONPolygon(bounds: Bounds): GeoJSON.Feature<GeoJSON.Polygon>
+function _boundingGeoJSONPolygon(bounds: Bounds): GeoJSON.Feature<GeoJSON.Polygon>
 {
     return {
         type: 'Feature',
@@ -56,7 +58,7 @@ function boundingGeoJSONPolygon(bounds: Bounds): GeoJSON.Feature<GeoJSON.Polygon
     }
 }
 
-function imageBounds(bounds: Bounds): [number, number, number, number]
+function _imageBounds(bounds: Bounds): [number, number, number, number]
 {
     return [bounds[0][0], bounds[0][1], bounds[1][0], bounds[1][1]]
 }

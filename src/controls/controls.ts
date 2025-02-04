@@ -22,10 +22,9 @@ import maplibregl from 'maplibre-gl'
 
 //==============================================================================
 
+import type {FlatMapLayer, FlatMapLayerOptions} from '../flatmap'
 import {FlatMap} from '../flatmap-viewer'
 import {LayerManager} from '../layers'
-import type {Layer} from '../layers'
-import type {PropertiesType} from '../types'
 
 //==============================================================================
 // Make sure colour string is in `#rrggbb` form.
@@ -77,8 +76,8 @@ export class Control
         return this.#prefix
     }
 
-    getDefaultPosition()
-    //==================
+    getDefaultPosition(): maplibregl.ControlPosition
+    //==============================================
     {
         return 'top-right'
     }
@@ -234,8 +233,8 @@ export class NavigationControl
         this.#flatmap = flatmap
     }
 
-    getDefaultPosition()
-    //==================
+    getDefaultPosition(): maplibregl.ControlPosition
+    //==============================================
     {
         return 'top-right'
     }
@@ -280,7 +279,7 @@ export class LayerControl
     #container: HTMLDivElement|null = null
     #flatmap: FlatMap
     #halfCount: number
-    #layers: Layer[]
+    #layers: FlatMapLayer[]
     #layersControl: HTMLDivElement
     #layersCount: number
 
@@ -290,8 +289,8 @@ export class LayerControl
         this.#layers = layerManager.layers
     }
 
-    getDefaultPosition()
-    //==================
+    getDefaultPosition(): maplibregl.ControlPosition
+    //==============================================
     {
         return 'top-right'
     }
@@ -416,14 +415,14 @@ export class SCKANControl
     #sckan: HTMLDivElement
     #sckanCount: number
 
-    constructor(flatmap: FlatMap, options: PropertiesType={sckan: 'valid'})
+    constructor(flatmap: FlatMap, options: FlatMapLayerOptions={sckan: 'valid'})
     {
         this.#flatmap = flatmap
         this.#initialState = <string>options.sckan || 'valid'
     }
 
-    getDefaultPosition()
-    //==================
+    getDefaultPosition(): maplibregl.ControlPosition
+    //==============================================
     {
         return 'top-right'
     }
@@ -542,8 +541,8 @@ export class AnnotatorControl
         this.#flatmap = flatmap
     }
 
-    getDefaultPosition()
-    //==================
+    getDefaultPosition(): maplibregl.ControlPosition
+    //==============================================
     {
         return 'top-right'
     }
@@ -609,8 +608,8 @@ export class BackgroundControl
         this.#flatmap = flatmap
     }
 
-    getDefaultPosition()
-    //==================
+    getDefaultPosition(): maplibregl.ControlPosition
+    //==============================================
     {
         return 'bottom-right'
     }

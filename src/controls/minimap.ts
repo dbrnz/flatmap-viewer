@@ -59,11 +59,11 @@ type OPTIONS_TYPE = {
     lineColor: string
     lineOpacity: number
     lineWidth: number
-    position: string
+    position: maplibregl.ControlPosition
     width: string|number
 }
 
-type USER_OPTIONS = {
+export type MINIMAP_OPTIONS = {
     postion?: string
     width?: string|number
 }
@@ -114,7 +114,7 @@ export class MinimapControl
     #trackingRectCoordinates: [[[number, number], [number, number], [number, number], [number, number], [number, number]]]
         = [[[0, 0], [0, 0], [0, 0], [0, 0], [0, 0]]]
 
-    constructor(flatmap: FlatMap, options: USER_OPTIONS, styleSpecification: maplibregl.StyleSpecification)
+    constructor(flatmap: FlatMap, options: MINIMAP_OPTIONS, styleSpecification: maplibregl.StyleSpecification)
     {
         this.#flatmap = flatmap
         this.#styleSpecification = styleSpecification
@@ -123,8 +123,8 @@ export class MinimapControl
         this.#options = Object.assign({}, DEFAULT_OPTIONS, options)
     }
 
-    getDefaultPosition()
-    //==================
+    getDefaultPosition(): maplibregl.ControlPosition
+    //==============================================
     {
         return this.#options.position
     }

@@ -47,7 +47,9 @@ import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
 
 //==============================================================================
 
-import {Feature, FlatMap} from '../flatmap-viewer'
+import type {MapRenderedFeature} from '../flatmap'
+
+import {FlatMap} from '../flatmap-viewer'
 
 //==============================================================================
 
@@ -65,7 +67,7 @@ export const DRAW_ANNOTATION_LAYERS = [...drawStyleIds.map(id => `${id}.cold`),
 
 export class AnnotationDrawControl
 {
-    #committedFeatures: Map<string, Feature> = new Map()
+    #committedFeatures: Map<number, MapRenderedFeature> = new Map()
     #container: HTMLElement|null = null
     #draw: MapboxDraw
     #flatmap: FlatMap
@@ -161,12 +163,12 @@ export class AnnotationDrawControl
         return features.length ? features[0] : null
     }
 
-    #sendEvent(type, feature: Feature)
-    //================================
+    #sendEvent(type: string, feature: MapRenderedFeature)
+    //===================================================
     {
         if (feature.id) {
             // Add when the event is 'created', 'updated' or 'deleted'
-            this.#uncommittedFeatureIds.add(feature.id)
+            this.#uncommittedFeatureIds.add(+feature.id)
         }
         this.#flatmap.annotationEvent(type, feature)
     }
@@ -284,8 +286,8 @@ export class AnnotationDrawControl
         this.#draw.trash()
     }
 
-    addFeature(feature: Feature)
-    //==========================
+    addFeature(feature: MapRenderedFeature)
+    //=====================================
     {
         feature = Object.assign({}, feature, {type: 'Feature'})
         const ids = this.#draw.add(feature)
@@ -293,8 +295,8 @@ export class AnnotationDrawControl
         this.#uncommittedFeatureIds.delete(ids[0])
     }
 
-    refreshGeometry(feature: Feature)
-    //===============================
+    refreshGeometry(feature: MapRenderedFeature)
+    //==========================================
     {
         return this.#draw.get(feature.id) || null
     }

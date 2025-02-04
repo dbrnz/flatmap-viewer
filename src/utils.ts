@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019  David Brooks
+Copyright (c) 2019 - 2025  David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -18,6 +18,10 @@ limitations under the License.
 
 ==============================================================================*/
 
+import type {Pair} from './types'
+
+//==============================================================================
+
 // A PMID is a "1- to 8-digit accession number with no leading zeros"
 const ZERO_PAD_PREFIXES = {
     'ILX':    7,
@@ -27,7 +31,7 @@ const ZERO_PAD_PREFIXES = {
 //==============================================================================
 
 export class List<T> extends Array<T> {
-    constructor(iterable=null) {
+    constructor(iterable: Iterable<T>|null=null) {
         super()
         if (iterable !== null)
             this.extend(iterable)
@@ -46,8 +50,8 @@ export class List<T> extends Array<T> {
         return (super.includes(element))
     }
 
-    extend(other: Array<T>)
-    //=====================
+    extend(other: Iterable<T>)
+    //========================
     {
         if (this === other) {
             throw new Error('Cannot extend a list with itself...')
@@ -80,7 +84,7 @@ export class Mutex
     lock(): PromiseLike<() => void>
     //=============================
     {
-        let begin = _ => {}
+        let begin = (_) => {}
 
         this.#mutex = this.#mutex.then(() => {
             return new Promise(begin)
@@ -113,8 +117,9 @@ export function normaliseId(id: string): string
     }
     const parts = id.split(':')
     const lastPart = parts[parts.length - 1]
-    if (parts[0].toUpperCase() in ZERO_PAD_PREFIXES && '0123456789'.includes(lastPart[0])) {
-        parts[parts.length - 1] = lastPart.padStart(ZERO_PAD_PREFIXES[parts[0].toUpperCase()], '0')
+    const prefix = parts[0].toUpperCase()
+    if (prefix in ZERO_PAD_PREFIXES && '0123456789'.includes(lastPart[0])) {
+        parts[parts.length - 1] = lastPart.padStart(ZERO_PAD_PREFIXES[prefix], '0')
         return parts.join(':')
     }
     return id
@@ -122,9 +127,9 @@ export function normaliseId(id: string): string
 
 //==============================================================================
 
-export function setDefaults(options: Object | null | undefined, defaultOptions: Object): Object
+export function setDefaults(options: object | null | undefined, defaultOptions: object): object
 {
-    if (options === undefined || options === null) {
+    if (!options) {
         return defaultOptions
     }
     for (const [key, value] of Object.entries(defaultOptions)) {
@@ -144,7 +149,7 @@ export function reverseMap<K, V>(mapping: Map<K, Array<V>|Set<V>>): Map<V, Set<K
     for (const [key, values] of mapping.entries()) {
         for (const value of values) {
             if (reverse.has(value)) {
-                reverse.get(value).add(key)
+                reverse.get(value)!.add(key)
             } else {
                 reverse.set(value, new Set([key]))
             }
@@ -157,11 +162,31 @@ export function reverseMap<K, V>(mapping: Map<K, Array<V>|Set<V>>): Map<V, Set<K
 
 export function delay(fn, wait: number = 0)
 {
-    let timeout
+    let timeout: NodeJS.Timeout
     return function(...args) {
         clearTimeout(timeout)
         timeout = setTimeout(() => fn.apply(this, args), wait)
     }
+}
+
+//==============================================================================
+
+// From https://stackoverflow.com/a/65064026
+
+export function pairwise<T>(a: T[]): Pair<T>[]
+{
+    return a.flatMap( (x: T) => {
+        return a.flatMap( (y: T): Pair<T>[] => {
+            return (x !== y) ? [[x, y]] : []
+        })
+    })
+}
+
+//==============================================================================
+
+export function wait(ms: number): Promise<NodeJS.Timeout>
+{
+    return new Promise(r => setTimeout(r, ms))
 }
 
 //==============================================================================

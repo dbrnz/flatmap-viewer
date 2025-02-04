@@ -43,8 +43,8 @@ export class PathControl
         this.#pathTypes = pathTypes
     }
 
-    getDefaultPosition()
-    //==================
+    getDefaultPosition(): maplibregl.ControlPosition
+    //==============================================
     {
         return 'top-right'
     }

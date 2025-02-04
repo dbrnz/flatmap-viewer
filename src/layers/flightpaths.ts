@@ -24,6 +24,7 @@ import {Model, Geometry} from '@luma.gl/engine'
 
 //==============================================================================
 
+import type {MapFeature, MapFeatureIdentifier} from '../flatmap'
 import {FlatMap} from '../flatmap-viewer'
 import {pathColourArray, PathStyle} from '../pathways'
 import {UserInteractions} from '../interactions'
@@ -36,9 +37,13 @@ import {PropertiesFilter} from '../filters'
 import {PropertiesType} from '../types'
 
 interface PathProperties extends PropertiesType {
-    featureId: string,
-    pathEndPosition: number[],
-    pathStartPosition: number[]
+    active?: boolean
+    featureId?: number
+    hidden?: boolean
+    kind?: string
+    pathEndPosition?: number[]
+    pathStartPosition?: number[]
+    selected?: boolean
 }
 
 interface LayerOptions extends PropertiesType {
@@ -136,7 +141,7 @@ export class FlightPathLayer
                                                 && 'kind' in ann
                                                 && 'pathStartPosition' in ann
                                                 && 'pathEndPosition' in ann)
-                                    .map(ann => [ann.featureId, ann]))
+                                    .map(ann => [ann.featureId, ann as PathProperties]))
         this.#pathStyles = new Map(ui.pathManager.pathStyles().map(pathStyle => [pathStyle.type, pathStyle]))
         this.#pathTypes = [...this.#pathStyles.keys()]
         const knownTypes = this.#pathTypes.filter(pathType => pathType !== 'other')
@@ -181,8 +186,8 @@ export class FlightPathLayer
         }
     }
 
-    queryFeaturesAtPoint(point)
-    //=========================
+    queryFeaturesAtPoint(point): MapFeatureIdentifier[]
+    //=================================================
     {
         if (this.#enabled) {
             return this.#deckOverlay
@@ -193,10 +198,10 @@ export class FlightPathLayer
         return []
     }
 
-    setDataProperty(featureId: string, key: string, enabled: boolean)
+    setDataProperty(featureId: number, key: string, enabled: boolean)
     //===============================================================
     {
-        const properties = this.#pathFeatures.get(+featureId)
+        const properties = this.#pathFeatures.get(featureId)
         if (properties) {
             if (!(key in properties) || properties[key] !== enabled) {
                 properties[key] = enabled
@@ -204,20 +209,20 @@ export class FlightPathLayer
         }
     }
 
-    removeFeatureState(featureId: string, key: string)
+    removeFeatureState(featureId: number, key: string)
     //================================================
     {
-        const properties = this.#featureToLayerProperties.get(+featureId)
+        const properties = this.#featureToLayerProperties.get(featureId)
         if (properties) {
             properties[key] = false
             this.#redraw()
         }
     }
 
-    setFeatureState(featureId: string, state: PropertiesType)
+    setFeatureState(featureId: number, state: PropertiesType)
     //=======================================================
     {
-        const properties = this.#featureToLayerProperties.get(+featureId)
+        const properties = this.#featureToLayerProperties.get(featureId)
         if (properties) {
             for (const [key, value] of Object.entries(state)) {
                 properties[key] = value
@@ -265,12 +270,12 @@ export class FlightPathLayer
         }
     }
 
-    #makeMapFeature(pickedObject: PropertiesType)
-    //===========================================
+    #makeMapFeature(pickedObject: PropertiesType): MapFeature
+    //=======================================================
     {
         // Mock up a map vector feature
         return {
-            id: pickedObject.featureId,
+            id: +pickedObject.featureId,
             source: 'vector-tiles',
             sourceLayer: `${pickedObject.layer}_${pickedObject['tile-layer']}`,
             properties: pickedObject,
@@ -290,6 +295,8 @@ export class FlightPathLayer
         }
         return layer
     }
+
+    // DeckGL isn't recognising changes in active and selected...
 
     #pathColour(properties: PropertiesType)
     //=====================================

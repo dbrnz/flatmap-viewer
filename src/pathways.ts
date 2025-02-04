@@ -23,6 +23,8 @@ import {colord} from 'colord'
 //==============================================================================
 
 import {FlatMap, FLATMAP_STYLE} from './flatmap-viewer'
+import {FlatMapFeature} from './flatmap'
+import type {PathDetailsType} from './flatmap'
 import {UserInteractions} from './interactions'
 import {Callback, PropertiesType} from './types'
 import {reverseMap} from './utils'
@@ -85,21 +87,6 @@ const NO_NERVES = ['NO-NERVES', 'No associated nerves']
 
 //==============================================================================
 
-/* To go into flatmap-viewer.ts */
-
-interface FeatureInterface
-{
-    id: number
-    properties?: PropertiesType
-}
-
-interface FlatmapInterface extends FlatMap
-{
-    pathways: PathwaysInterface
-}
-
-//==============================================================================
-
 /* To go into systems.ts */
 
 interface SystemComponent
@@ -129,47 +116,20 @@ export interface NerveCentrelineDetails
 
 //==============================================================================
 
-interface ModelsInterface
-{
-    id: string
-    paths: string[]
-}
-
-interface PathInterface
-{
-    centrelines: string[]
-    lines: number[]                                 // line GeoJSON ids
-    models?: string
-    nerves?: number[]                               // nerve cuff GeoJSON ids
-    nodes?: number[]                                // node GeoJSON ids
-    pathType: string
-    systemCount: number
-}
-
-interface PathwaysInterface
-{
-    models?: ModelsInterface[]                      // model --> paths with model
-    'node-paths': Record<number, string[]>          // node --> associated paths
-    paths: Record<string, PathInterface>            // path --> path details
-    'type-paths': Record<string, string[]>          // type --> paths with type
-}
-
-//==============================================================================
-
 export class PathManager
 {
     #allFeatureIds: Set<number>
     #nerveCentrelineDetails: Map<string, string> = new Map() // models --> label
     #connectivityModelPaths: Record<string, string[]>   // modelId: [pathIds]
     #enabledCentrelines: boolean = false
-    #flatmap: FlatmapInterface
+    #flatmap: FlatMap
     #haveCentrelines: boolean = true
     #nodePaths: Record<number, string[]>
     #pathsByCentreline: Map<string, Set<string>> = new Map()
     #pathsByType: Record<string, string[]>
     #pathLines: Map<string, Array<number>> = new Map()  // pathId: [lineIds]
     #pathModelPaths: Record<string, string[]>
-    #paths: Record<string, PathInterface>
+    #paths: Record<string, PathDetailsType>
     #pathsByLine: Map<number, Set<string>>
     #pathsByNerve: Map<string, Set<string>>
     #pathToConnectivityModel: Record<string, string>
@@ -177,28 +137,22 @@ export class PathManager
     #pathtypeEnabled: Record<string, boolean>
     #ui: UserInteractions
 
-    constructor(flatmap: FlatmapInterface, ui: UserInteractions)
+    constructor(flatmap: FlatMap, ui: UserInteractions)
     {
         this.#flatmap = flatmap
         this.#ui = ui
         this.#connectivityModelPaths = {}
         this.#pathToConnectivityModel = {}
-        if ('models' in flatmap.pathways) {
-            for (const model of flatmap.pathways.models) {
-                this.#connectivityModelPaths[model.id] = model.paths
-                for (const path of model.paths) {
-                    this.#pathToConnectivityModel[path] = model.id
-                }
+        for (const model of flatmap.pathways.models || []) {
+            this.#connectivityModelPaths[model.id] = model.paths
+            for (const path of model.paths) {
+                this.#pathToConnectivityModel[path] = model.id
             }
         }
         this.#pathModelPaths = {}                               // pathModelId: [pathIds]
         this.#pathToPathModel = {}                              // pathId: pathModelId
         this.#paths = {}                                        // pathId: path
         const pathNerves = new Map()                            // pathId: [nerveIds]
-
-        const pw = flatmap.pathways
-        const p = pw.paths
-
         if ('paths' in flatmap.pathways) {
             for (const [pathId, path] of Object.entries(flatmap.pathways.paths)) {
                 this.#pathLines.set(pathId, path.lines)
@@ -348,8 +302,8 @@ export class PathManager
         return pathTypes
     }
 
-    #addPathsToFeatureSet(pathIds: string[]|Set<string>, featureSet: Set<number>)
-    //===========================================================================
+    #addPathsToFeatureSet(pathIds: Iterable<string>, featureSet: Set<number>)
+    //=======================================================================
     {
         for (const pathId of pathIds) {
             const path = this.#paths[pathId]
@@ -365,8 +319,8 @@ export class PathManager
         return this.#allFeatureIds
     }
 
-    lineFeatureIds(lineIds: number[]): Set<number>
-    //============================================
+    lineFeatureIds(lineIds: Iterable<number>): Set<number>
+    //====================================================
     {
         const featureIds: Set<number> = new Set()
         for (const lineId of lineIds) {
@@ -387,12 +341,12 @@ export class PathManager
         return featureIds
     }
 
-    pathProperties(feature: FeatureInterface): PropertiesType
-    //=======================================================
+    pathProperties(feature: FlatMapFeature): PropertiesType
+    //=====================================================
     {
         const properties: PropertiesType = Object.assign({}, feature.properties)
-        if (this.#pathsByLine.has(feature.id)) {
-            for (const pathId of this.#pathsByLine.get(feature.id)) {
+        if (this.#pathsByLine.has(+feature.id)) {
+            for (const pathId of this.#pathsByLine.get(+feature.id)) {
                 // There should only be a single path for a line
                 if (pathId in this.#pathToConnectivityModel) {
                     properties['connectivity'] = this.#pathToConnectivityModel[pathId]
@@ -451,6 +405,7 @@ export class PathManager
         return featureIds
     }
 
+    /* FUTURE
     #typeFeatureIds(pathType: string): Set<number>
     //============================================
     {
@@ -460,6 +415,7 @@ export class PathManager
         }
         return featureIds
     }
+    */
 
     enablePathLines(enable: boolean, force: boolean=false)
     //====================================================
@@ -571,7 +527,7 @@ export class PathManager
         this.#watcherCallbacks.delete(watcherId)
     }
 
-    #notifyWatchers(changes: Object={})
+    #notifyWatchers(changes: object={})
     //=================================
     {
         for (const callback of this.#watcherCallbacks.values()) {

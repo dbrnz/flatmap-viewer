@@ -115,8 +115,8 @@ export class InfoControl
         return this.#active
     }
 
-    getDefaultPosition()
-    //==================
+    getDefaultPosition(): maplibregl.ControlPosition
+    //===============================================
     {
         return 'top-right'
     }

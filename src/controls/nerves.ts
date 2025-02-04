@@ -45,8 +45,8 @@ export class NerveCentrelineControl
         this.#ui = ui
     }
 
-    getDefaultPosition()
-    //==================
+    getDefaultPosition(): maplibregl.ControlPosition
+    //==============================================
     {
         return 'top-right'
     }

@@ -66,8 +66,8 @@ export class SearchControl
         return this.#container
     }
 
-    getDefaultPosition()
-    //==================
+    getDefaultPosition(): maplibregl.ControlPosition
+    //==============================================
     {
         return 'top-right'
     }

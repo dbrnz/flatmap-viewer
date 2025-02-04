@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019 - 2024  David Brooks
+Copyright (c) 2019 - 2025  David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -19,6 +19,10 @@ limitations under the License.
 ==============================================================================*/
 
 import MiniSearch, {Suggestion} from 'minisearch'
+
+//==============================================================================
+
+import {FlatMapFeatureAnnotation} from './flatmap'
 
 //==============================================================================
 
@@ -47,16 +51,16 @@ export class SearchIndex
         })
     }
 
-    indexMetadata(featureId: string, metadata: Record<string, string>)
-    //================================================================
+    indexMetadata(featureId: string, metadata: FlatMapFeatureAnnotation)
+    //==================================================================
     {
         const textSeen: string[] = []
         for (const prop of indexedProperties) {
             if (prop in metadata) {
-                const text = metadata[prop];
+                const text = metadata[prop]
                 if (!textSeen.includes(text)) {
-                    this.indexText(featureId, text);
-                    textSeen.push(text);
+                    this.indexText(featureId, text)
+                    textSeen.push(text)
                 }
             }
         }
@@ -65,8 +69,8 @@ export class SearchIndex
     indexText(featureId: string, text: string)
     //========================================
     {
-        text = text.replace(new RegExp('<br/>', 'g'), ' ')
-                   .replace(new RegExp('\n', 'g'), ' ')
+        text = text.replace(/<br\/>/g, ' ')
+                   .replace(/\n/g, ' ')
         if (text) {
             this.#searchEngine.add({
                 id: this.#featureIds.length,

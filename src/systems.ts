@@ -42,7 +42,7 @@ type SystemFeature = {
 type SystemDetail = {
     colour: string
     enabled: boolean
-    featureIds: string[]
+    featureIds: number[]
     name: string
     organs: SystemFeature[]
     pathIds: string[]
@@ -62,7 +62,7 @@ export type System = {
 
 export class SystemsManager
 {
-    #enabledChildren: Map<string, number> = new Map()
+    #enabledChildren: Map<number, number> = new Map()
     #flatmap: FlatMap
     #systems: Map<string, SystemDetail> = new Map()
     #ui: UserInteractions
@@ -103,7 +103,7 @@ export class SystemsManager
         }
     }
 
-    #children(childFeatureIds: string[], childClass: FC_CLASS_LIST): SystemFeature[]
+    #children(childFeatureIds: number[], childClass: FC_CLASS_LIST): SystemFeature[]
     //==============================================================================
     {
         const children = []

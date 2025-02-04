@@ -18,7 +18,7 @@ limitations under the License.
 
 ==============================================================================*/
 
-import {MapServer} from '../mapserver'
+import {FlatMapServer} from '../mapserver'
 import {DiGraph, NodeLinkGraph} from './graphs'
 
 //==============================================================================
@@ -86,10 +86,10 @@ export class SparcTermGraph
 {
     #graph: DiGraph = new DiGraph()
 
-    async load(mapServer: MapServer)
-    //==============================
+    async load(mapServer: FlatMapServer)
+    //==================================
     {
-        const sparcGraph = await mapServer.loadJSON<NodeLinkGraph>('knowledge/sparcterms')
+        const sparcGraph = await mapServer.sparcTermGraph()
         if (sparcGraph) {
             this.#graph.load(sparcGraph)
         }

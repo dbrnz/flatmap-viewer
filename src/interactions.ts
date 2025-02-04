@@ -18,97 +18,112 @@ limitations under the License.
 
 ==============================================================================*/
 
-import maplibregl from 'maplibre-gl';
+import Set from 'core-js/actual/set'
+import maplibregl from 'maplibre-gl'
 
-import {default as turfArea} from '@turf/area'
+//import {default as turfArea} from '@turf/area'
 import {default as turfAlong} from '@turf/along'
 import {default as turfBBox} from '@turf/bbox'
 import * as turf from '@turf/helpers'
 import * as turfNearestPointOnLine from "@turf/nearest-point-on-line"
 import * as turfProjection from '@turf/projection'
 
-import polylabel from 'polylabel';
+import polylabel from 'polylabel'
 
 //==============================================================================
 
 import {PropertiesFilter} from './filters'
-import {inAnatomicalClusterLayer, LayerManager} from './layers';
-import {PATHWAYS_LAYER, PathManager} from './pathways';
 import {NerveCentreFacet} from './filters/facets/nerve'
 import {PathTypeFacet} from './filters/facets/pathtype'
 import {TaxonFacet} from './filters/facets/taxon'
-import {VECTOR_TILES_SOURCE} from './layers/styling';
-import {SystemsManager} from './systems';
-import {FLATMAP_STYLE} from './flatmap-viewer'
+import {FlatMapFeature, FlatMapFeatureAnnotation, FlatMapMarkerOptions, FlatMapPopUpOptions} from './flatmap'
+import type {MapFeature, MapFeatureIdentifier, MapRenderedFeature} from './flatmap'
+import type {Point2D} from './flatmap'
+import {FlatMap, FLATMAP_STYLE} from './flatmap-viewer'
+import {inAnatomicalClusterLayer, LayerManager} from './layers'
+import {VECTOR_TILES_SOURCE} from './layers/styling'
+import {latex2Svg} from './mathjax'
+import {NerveCentrelineDetails} from './pathways'
+import {PATHWAYS_LAYER, PathManager} from './pathways'
+import {SystemsManager} from './systems'
 
-import {displayedProperties, InfoControl} from './controls/info';
-import {AnnotatorControl, BackgroundControl, LayerControl, SCKANControl} from './controls/controls';
+import {displayedProperties, InfoControl} from './controls/info'
+import {AnnotatorControl, BackgroundControl, LayerControl, NavigationControl, SCKANControl} from './controls/controls'
 import {AnnotationDrawControl, DRAW_ANNOTATION_LAYERS} from './controls/annotation'
 import {NerveCentrelineControl} from './controls/nerves'
-import {PathControl} from './controls/paths';
+import {PathControl} from './controls/paths'
 import {FlightPathControl} from './controls/flightpaths'
-import {SearchControl} from './controls/search';
-import {MinimapControl} from './controls/minimap';
-import {SystemsControl} from './controls/systems';
-import {TaxonsControl} from './controls/taxons';
-import {latex2Svg} from './mathjax';
+import {SearchControl} from './controls/search'
+import {MinimapControl, MINIMAP_OPTIONS} from './controls/minimap'
+import {SystemsControl} from './controls/systems'
+import {TaxonsControl} from './controls/taxons'
 
-import * as utils from './utils';
+import * as utils from './utils'
+
+//==============================================================================
+/*
+{
+    children?: number[]
+}
+*/
 
 //==============================================================================
 
-
+// FUTURE
 // smallest `group` features when zoom < SHOW_DETAILS_ZOOM if there are some, otherwise smallest feature
 // if no non-group features then smallest group one
 
-const SHOW_DETAILS_ZOOM = 6;
+//export const SHOW_DETAILS_ZOOM = 6
 
 //==============================================================================
 
-function bounds(feature)
-//======================
+function featureBounds(feature: MapRenderedFeature): [number, number, number, number]
+//===================================================================================
 {
     // Find the feature's bounding box
 
-    let bounds = ('bounds' in feature.properties) ? feature.properties.bounds
-                                                  : feature.properties.bbox;
+    const bounds = ('bounds' in feature.properties) ? feature.properties.bounds
+                                                    : feature.properties.bbox
     if (bounds) {
         // Bounding box is defined in GeoJSON
 
-        return JSON.parse(bounds);
-    } else {
+        return JSON.parse(bounds)
+    } else if (feature.geometry.type === 'Polygon') {
         // Get the bounding box of the current polygon. This won't neccessary
         // be the full feature because of tiling
 
-        const polygon = turf.geometry(feature.geometry.type, feature.geometry.coordinates);
-        return turfBBox(polygon);
+        const polygon = turf.geometry(feature.geometry.type, feature.geometry.coordinates)
+        return turfBBox(polygon)
     }
 }
 
 //==============================================================================
 
-function expandBounds(bbox1, bbox2, padding)
-//==========================================
+function expandBounds(bbox1, bbox2, _padding=0)
+//=============================================
 {
     return (bbox1 === null) ? [...bbox2]
                             : [Math.min(bbox1[0], bbox2[0]), Math.min(bbox1[1], bbox2[1]),
                                Math.max(bbox1[2], bbox2[2]), Math.max(bbox1[3], bbox2[3])
-                              ];
+                              ]
 }
 
 //==============================================================================
 
-function labelPosition(feature)
+function labelPosition(feature: FlatMapFeature|GeoJSON.Feature): [number, number]
 {
+    let coords: number[]
     if (feature.geometry.type === 'Point') {
-        return feature.geometry.coordinates
+        coords = feature.geometry.coordinates
+    } else if (feature.geometry.type === 'Polygon') {
+        const polygon = feature.geometry.coordinates
+        // Rough heuristic. Area is in km^2; below appears to be good enough.
+        const precision = ('area' in feature.properties)
+                            ? Math.sqrt(feature.properties.area)/500000
+                            : 0.1
+        coords = polylabel(polygon, precision)
     }
-    const polygon = feature.geometry.coordinates;
-    // Rough heuristic. Area is in km^2; below appears to be good enough.
-    const precision = ('area' in feature.properties)
-                        ? Math.sqrt(feature.properties.area)/500000
-                        : 0.1;
-    return polylabel(polygon, precision);
+    return [coords[0], coords[1]]
 }
 
 //==============================================================================
@@ -122,174 +137,180 @@ function getRenderedLabel(properties)
         const uppercaseLabel = (label !== '') ? (label.substr(0, 1).toUpperCase()
                                                + label.substr(1)).replaceAll("\n", "<br/>")
                                               : ''
-        properties.renderedLabel = uppercaseLabel.replaceAll(/\$([^\$]*)\$/g, math => latex2Svg(math.slice(1, -1)))
+        properties.renderedLabel = uppercaseLabel.replaceAll(/\$([^$]*)\$/g, math => latex2Svg(math.slice(1, -1)))
     }
-    return properties.renderedLabel;
+    return properties.renderedLabel
 }
 
 //==============================================================================
 
 export class UserInteractions
 {
-    #activeFeatures = new Map()
+    #activeFeatures: Map<number, MapFeature> = new Map()
+    #activeMarker = null
+    #annotationByMarkerId = new Map()
     #annotationDrawControl = null
+    #colourOptions
+    #currentPopup = null
+    #featureEnabledCount: Map<number, number>
+    #featureIdToMapId: Map<string, number>
+    #flatmap: FlatMap
     #imageLayerIds = new Map()
-    #lastImageId = 0
-    #lastMarkerId = 900000
-    #minimap = null
-    #nerveCentrelineFacet
-    #pathTypeFacet
+    #infoControl = null
+    #lastClickLngLat = null
+    #lastFeatureMouseEntered = null
+    #lastFeatureModelsMouse = null
+    #lastImageId: number = 0
+    #lastMarkerId: number = 900000
+    #layerManager: LayerManager
+    #map: maplibregl.Map
+    #markerIdByFeatureId = new Map()
+    #markerIdByMarker = new Map()
+    #markerPositions: Map<number, [number, number]> = new Map() // Where to put labels and popups on a feature
+    #minimap: MinimapControl|null = null
+    #modal: boolean = false
+    #nerveCentrelineFacet: NerveCentreFacet
+    #pan_zoom_enabled: boolean = false
+    #pathManager: PathManager
+    #pathTypeFacet: PathTypeFacet
     #selectedFeatureRefCount = new Map()
-    #taxonFacet
+    #systemsManager: SystemsManager
+    #taxonFacet: TaxonFacet
+    #tooltip = null
 
-    constructor(flatmap)
+    constructor(flatmap: FlatMap)
     {
-        this._flatmap = flatmap;
-        this._map = flatmap.map;
-
-        this._currentPopup = null;
-        this._infoControl = null;
-        this._tooltip = null;
-
-        this._inQuery = false;
-        this._modal = false;
+        this.#flatmap = flatmap
+        this.#map = flatmap.map
 
         // Default colour settings
-        this.__colourOptions = {colour: true, outline: true};
-
-        // Marker placement and interaction
-
-        this.__activeMarker = null;
-        this.__markerIdByMarker = new Map();
-        this.__markerIdByFeatureId = new Map();
-        this.__annotationByMarkerId = new Map();
-
-        // Where to put labels and popups on a feature
-        this.__markerPositions = new Map();
+        this.#colourOptions = {colour: true, outline: true}
 
         // Track enabled features
 
-        this.__featureEnabledCount = new Map(Array.from(this._flatmap.annotations.keys()).map(k => [+k, 0]));
+        this.#featureEnabledCount = new Map(Array.from(this.#flatmap.annotations.keys()).map(k => [+k, 0]))
 
-        const featuresEnabled = flatmap.options.style !== FLATMAP_STYLE.FUNCTIONAL;
+        const featuresEnabled = flatmap.options.style !== FLATMAP_STYLE.FUNCTIONAL
 
-        this.tooltipDelay = flatmap.options.tooltipDelay || 0;
+        const tooltipDelay = flatmap.options.tooltipDelay || 0
 
         // Path visibility is either controlled externally or by a local control
         // FC path visiblitity is determined by system visiblity
 
-        this.__pathManager = new PathManager(flatmap, this, featuresEnabled);
+        this.#pathManager = new PathManager(flatmap, this)
 
         // The path types in this map
 
-        const mapPathTypes = this.__pathManager.pathTypes();
+        const mapPathTypes = this.#pathManager.pathTypes()
 
         // Add and manage our layers. NB. This needs to be done after we
         // have a path manager but before paths are enabled
 
-        this._layerManager = new LayerManager(flatmap, this);
+        this.#layerManager = new LayerManager(flatmap, this)
 
         // Set initial enabled state of paths
-        this.__pathManager.enablePathLines(true, true)
+        this.#pathManager.enablePathLines(true, true)
 
         this.#pathTypeFacet = new PathTypeFacet(mapPathTypes)
-        this._layerManager.addFilteredFacet(this.#pathTypeFacet)
+        this.#layerManager.addFilteredFacet(this.#pathTypeFacet)
 
-        this.#nerveCentrelineFacet = new NerveCentreFacet(this.__pathManager.nerveCentrelineDetails)
-        this._layerManager.addFilteredFacet(this.#nerveCentrelineFacet)
+        this.#nerveCentrelineFacet = new NerveCentreFacet(this.#pathManager.nerveCentrelineDetails)
+        this.#layerManager.addFilteredFacet(this.#nerveCentrelineFacet)
 
         // Note features that are FC systems
-        this.__systemsManager = new SystemsManager(this._flatmap, this, featuresEnabled);
+        this.#systemsManager = new SystemsManager(this.#flatmap, this, featuresEnabled)
 
         // All taxons of connectivity paths are enabled by default
-        this.#taxonFacet = new TaxonFacet(this._flatmap.taxonIdentifiers)
-        this._layerManager.addFilteredFacet(this.#taxonFacet)
+        this.#taxonFacet = new TaxonFacet(this.#flatmap.taxonIdentifiers)
+        this.#layerManager.addFilteredFacet(this.#taxonFacet)
 
         // Add a minimap if option set
         if (flatmap.options.minimap) {
-            this.#minimap = new MinimapControl(flatmap, flatmap.options.minimap,
-                this._layerManager.minimapStyleSpecification)
-            this._map.addControl(this.#minimap)
+            const options: MINIMAP_OPTIONS = (typeof flatmap.options.minimap === 'object')
+                                           ? flatmap.options.minimap : {}
+            this.#minimap = new MinimapControl(flatmap, options,
+                this.#layerManager.minimapStyleSpecification)
+            this.#map.addControl(this.#minimap)
         }
 
         // Do we want a fullscreen control?
         if (flatmap.options.fullscreenControl === true) {
-            this._map.addControl(new maplibregl.FullscreenControl(), 'top-right');
+            this.#map.addControl(new maplibregl.FullscreenControl(), 'top-right')
         }
 
         // Add navigation controls if option set
         if (flatmap.options.navigationControl) {
-            const value = flatmap.options.navigationControl;
+            const value = flatmap.options.navigationControl
             const position = ((typeof value === 'string')
                            && ['top-left', 'top-right', 'bottom-right', 'bottom-left'].includes(value))
-                           ? value : 'bottom-right';
-            this._map.addControl(new NavigationControl(flatmap), position);
+                           ? value : 'bottom-right'
+            this.#map.addControl(new NavigationControl(flatmap), <maplibregl.ControlPosition>position)
         }
 
         // Add various controls when running standalone
         if (flatmap.options.standalone) {
             // Add a control to search annotations if option set
-            this._map.addControl(new SearchControl(flatmap));
+            this.#map.addControl(new SearchControl(flatmap))
 
             // Show information about features
-            this._infoControl = new InfoControl(flatmap);
-            this._map.addControl(this._infoControl);
+            this.#infoControl = new InfoControl(flatmap)
+            this.#map.addControl(this.#infoControl)
 
             // Control background colour (NB. this depends on having map layers created)
-            this._map.addControl(new BackgroundControl(flatmap));
+            this.#map.addControl(new BackgroundControl(flatmap))
 
             // Add a control to manage our paths
-            this._map.addControl(new PathControl(flatmap, mapPathTypes));
+            this.#map.addControl(new PathControl(flatmap, mapPathTypes))
 
             // Add a control for nerve centrelines if they are present
-            if (flatmap.options.style === FLATMAP_STYLE.ANATOMICAL && this.__pathManager.haveCentrelines) {
-                this._map.addControl(new NerveCentrelineControl(flatmap, this))
+            if (flatmap.options.style === FLATMAP_STYLE.ANATOMICAL && this.#pathManager.haveCentrelines) {
+                this.#map.addControl(new NerveCentrelineControl(flatmap, this))
             }
 
             if (flatmap.options.style === FLATMAP_STYLE.FUNCTIONAL) {
                 // SCKAN path and SYSTEMS controls for FC maps
-                this._map.addControl(new SystemsControl(flatmap, this.__systemsManager.systems));
-                this._map.addControl(new SCKANControl(flatmap, flatmap.options.layerOptions));
+                this.#map.addControl(new SystemsControl(flatmap, this.#systemsManager.systems))
+                this.#map.addControl(new SCKANControl(flatmap, flatmap.options.layerOptions))
             } else {
                 // Connectivity taxon control for AC maps
-                this._map.addControl(new TaxonsControl(flatmap));
+                this.#map.addControl(new TaxonsControl(flatmap))
             }
 
             if (flatmap.has_flightpaths) {
-                this._map.addControl(new FlightPathControl(flatmap, flatmap.options.flightPaths));
+                this.#map.addControl(new FlightPathControl(flatmap, flatmap.options.flightPaths))
             }
 
             if (flatmap.options.annotator) {
-                this._map.addControl(new AnnotatorControl(flatmap));
+                this.#map.addControl(new AnnotatorControl(flatmap))
             }
 
             // Add a control to control layer visibility
-            this._map.addControl(new LayerControl(flatmap, this._layerManager));
+            this.#map.addControl(new LayerControl(flatmap, this.#layerManager))
         }
 
         // Initialise map annotation
-        this.__setupAnnotation()
+        this.#setupAnnotation()
 
         // Add an initially hidden tool for drawing on the map.
         this.#annotationDrawControl = new AnnotationDrawControl(flatmap, false)
-        this._map.addControl(this.#annotationDrawControl)
+        this.#map.addControl(this.#annotationDrawControl)
 
         // Set initial path viewing mode
         if (flatmap.options.flightPaths === true) {
-            this._layerManager.setFlightPathMode(true)
+            this.#layerManager.setFlightPathMode(true)
         }
 
         // Handle mouse events
 
-        const handleMouseMoveEvent = this.mouseMoveEvent_.bind(this);
-        this._map.on('click', this.clickEvent_.bind(this));
-        this._map.on('dblclick', event => {
-            const clickedFeatures = this._layerManager.featuresAtPoint(event.point)
+        const handleMouseMoveEvent = this.#mouseMoveEvent.bind(this)
+        this.#map.on('click', this.#clickEvent.bind(this))
+        this.#map.on('dblclick', event => {
+            const clickedFeatures = this.#layerManager.featuresAtPoint(event.point)
             for (const feature of clickedFeatures) {
                 if (feature.properties.kind === 'expandable'
-                 && this._map.getZoom() > (feature.properties.maxzoom - 2)) {
+                 && this.#map.getZoom() > (feature.properties.maxzoom - 2)) {
                     event.preventDefault()
-                    this._map.fitBounds(bounds(feature), {
+                    this.#map.fitBounds(featureBounds(feature), {
                         padding: 0,
                         animate: false
                     })
@@ -297,16 +318,12 @@ export class UserInteractions
                 }
             }
         })
-        this._map.on('touchend', this.clickEvent_.bind(this));
-        this._map.on('mousemove', utils.delay(handleMouseMoveEvent, this.tooltipDelay));
-        this._lastFeatureMouseEntered = null;
-        this._lastFeatureModelsMouse = null;
-        this.__lastClickLngLat = null;
+        this.#map.on('touchend', this.#clickEvent.bind(this))
+        this.#map.on('mousemove', utils.delay(handleMouseMoveEvent, tooltipDelay))
 
         // Handle pan/zoom events
-        this._map.on('move', this.panZoomEvent_.bind(this, 'pan'));
-        this._map.on('zoom', this.panZoomEvent_.bind(this, 'zoom'));
-        this.__pan_zoom_enabled = false;
+        this.#map.on('move', this.#panZoomEvent.bind(this, 'pan'))
+        this.#map.on('zoom', this.#panZoomEvent.bind(this, 'zoom'))
     }
 
     get minimap()
@@ -318,7 +335,7 @@ export class UserInteractions
     get pathManager()
     //===============
     {
-        return this.__pathManager;
+        return this.#pathManager
     }
 
     getState()
@@ -327,11 +344,11 @@ export class UserInteractions
         // Return the map's centre, zoom, and active layers
         // Can only be called when the map is fully loaded
         return {
-            center: this._map.getCenter().toArray(),
-            zoom: this._map.getZoom(),
-            bearing: this._map.getBearing(),
-            pitch: this._map.getPitch()
-        };
+            center: this.#map.getCenter().toArray(),
+            zoom: this.#map.getZoom(),
+            bearing: this.#map.getBearing(),
+            pitch: this.#map.getPitch()
+        }
     }
 
     setState(state)
@@ -342,13 +359,13 @@ export class UserInteractions
         const options = Object.assign({}, state)
         if ('zoom' in options) {
             if ('center' in options) {
-                options['around'] = options.center;
+                options['around'] = options.center
             } else {
-                options['around'] = [0, 0];
+                options['around'] = [0, 0]
             }
         }
         if (Object.keys(options).length > 0) {
-            this._map.jumpTo(options);
+            this.#map.jumpTo(options)
         }
     }
 
@@ -400,16 +417,16 @@ export class UserInteractions
         }
     }
 
-    addAnnotationFeature(feature)
-    //===========================
+    addAnnotationFeature(feature: FlatMapFeature)
+    //===========================================
     {
         if (this.#annotationDrawControl) {
             this.#annotationDrawControl.addFeature(feature)
         }
     }
 
-    refreshAnnotationFeatureGeometry(feature)
-    //=======================================
+    refreshAnnotationFeatureGeometry(feature: FlatMapFeature)
+    //=======================================================
     {
         if (this.#annotationDrawControl) {
             return this.#annotationDrawControl.refreshGeometry(feature)
@@ -424,30 +441,30 @@ export class UserInteractions
         }
     }
 
-    __setupAnnotation()
-    //=================
+    #setupAnnotation()
+    //================
     {
         // Relate external annotation identifiers to map (GeoJSON) ids
-        this.__featureIdToMapId = new Map([...this._flatmap.annotations.entries()]
+        this.#featureIdToMapId = new Map([...this.#flatmap.annotations.entries()]
                                                   .map(idAnn => [idAnn[1].id, idAnn[0]]))
         // Flag features that have annotations
-        for (const mapId of this.__featureIdToMapId.values()) {
+        for (const mapId of this.#featureIdToMapId.values()) {
             const feature = this.mapFeature(mapId)
-            if (feature !== undefined) {
-                this._map.setFeatureState(feature, { 'map-annotation': true })
+            if (feature) {
+                this.#map.setFeatureState(feature, { 'map-annotation': true })
             }
         }
     }
 
-    setFeatureAnnotated(featureId)
-    //============================
+    setFeatureAnnotated(featureId: string)
+    //====================================
     {
         // External feature id to map's GeoJSON id
-        const mapId = this.__featureIdToMapId.get(featureId)
+        const mapId = this.#featureIdToMapId.get(featureId)
         if (mapId) {
             const feature = this.mapFeature(mapId)
-            if (feature !== undefined) {
-                this._map.setFeatureState(feature, { 'annotated': true })
+            if (feature) {
+                this.#map.setFeatureState(feature, { 'annotated': true })
             }
         }
     }
@@ -455,70 +472,70 @@ export class UserInteractions
     #setPaint(options)
     //================
     {
-        this._layerManager.setPaint(options)
+        this.#layerManager.setPaint(options)
     }
 
     setPaint(options)
     //===============
     {
-        this.__colourOptions = options;
-        this.#setPaint(options);
+        this.#colourOptions = options
+        this.#setPaint(options)
     }
 
     getLayers()
     //=========
     {
-        return this._layerManager.layers;
+        return this.#layerManager.layers
     }
 
     enableLayer(layerId, enable=true)
     //===============================
     {
-        this._layerManager.activate(layerId, enable);
+        this.#layerManager.activate(layerId, enable)
     }
 
     enableFlightPaths(enable=true)
     //============================
     {
-        this._layerManager.setFlightPathMode(enable)
+        this.#layerManager.setFlightPathMode(enable)
     }
 
     getSystems()
     //==========
     {
-        return this.__systemsManager.systems;
+        return this.#systemsManager.systems
     }
 
     enableSystem(systemId, enable=true)
     //=================================
     {
-        this.__systemsManager.enable(systemId, enable);
+        this.#systemsManager.enable(systemId, enable)
     }
 
-    mapFeatureFromAnnotation(annotation)
-    //==================================
+    mapFeatureFromAnnotation(annotation: FlatMapFeatureAnnotation): MapFeature
+    //========================================================================
     {
         if (annotation) {
             return {
-                id: +annotation.featureId,
+                id: annotation.featureId,
                 source: VECTOR_TILES_SOURCE,
-                sourceLayer: (this._flatmap.options.separateLayers
+                sourceLayer: (this.#flatmap.options.separateLayers
                              ? `${annotation['layer']}_${annotation['tile-layer']}`
                              : annotation['tile-layer']).replaceAll('/', '_'),
                 children: annotation.children || []
             }
         }
-        return undefined
+        return null
     }
 
-    mapFeature(geojsonId)
-    //===================
+    mapFeature(geojsonId: number): MapFeature
+    //=======================================
     {
-        return this.mapFeatureFromAnnotation(this._flatmap.annotation(geojsonId))
+        return this.mapFeatureFromAnnotation(this.#flatmap.annotation(geojsonId))
     }
 
-    #markerToFeature(feature)
-    //=======================
+    #markerToFeature(feature: MapFeature|MapRenderedFeature): MapFeature
+    //==================================================================
     {
         if (inAnatomicalClusterLayer(feature)) {
             return this.mapFeature(feature.properties.featureId)
@@ -526,170 +543,170 @@ export class UserInteractions
         return feature
     }
 
-    #getFeatureState(feature)
-    //=======================
+    #getFeatureState(feature: MapFeature|MapRenderedFeature)
+    //======================================================
     {
-        feature = this.#markerToFeature(feature)
-        return this._map.getFeatureState(feature)
+        const mapFeature = this.#markerToFeature(feature)
+        return this.#map.getFeatureState(mapFeature)
     }
 
 
-    getFeatureState(featureId)
-    //========================
+    getFeatureState(featureId: number)
+    //================================
     {
         const feature = this.mapFeature(featureId)
         if (feature) {
-            const state = this._map.getFeatureState(feature)
+            const state = this.#map.getFeatureState(feature)
             if (Object.keys(state).length) {
                 return state
             }
         }
-        return undefined
+        return null
     }
 
-    #removeFeatureState(feature, key)
-    //===============================
+    #removeFeatureState(feature: MapFeature|MapRenderedFeature, key: string)
+    //======================================================================
     {
-        feature = this.#markerToFeature(feature)
-        this._map.removeFeatureState(feature, key)
-        this._layerManager.removeFeatureState(feature, key)
+        const mapFeature = this.#markerToFeature(feature)
+        this.#map.removeFeatureState(mapFeature, key)
+        this.#layerManager.removeFeatureState(+feature.id, key)
     }
 
-    #setFeatureState(feature, state)
-    //==============================
+    #setFeatureState(feature: MapFeature|MapRenderedFeature, state)
+    //=============================================================
     {
-        feature = this.#markerToFeature(feature)
-        this._map.setFeatureState(feature, state)
-        this._layerManager.setFeatureState(feature, state)
+        const mapFeature = this.#markerToFeature(feature)
+        this.#map.setFeatureState(mapFeature, state)
+        this.#layerManager.setFeatureState(+feature.id, state)
     }
 
-    enableMapFeature(feature, enable=true)
-    //====================================
+    enableMapFeature(feature: MapFeature, enable=true)
+    //========================================================
     {
-        if (feature !== undefined) {
-            const state = this.#getFeatureState(feature);
+        if (feature) {
+            const state = this.#getFeatureState(feature)
             if  ('hidden' in state) {
                 if (enable) {
-                    this.#removeFeatureState(feature, 'hidden');
+                    this.#removeFeatureState(feature, 'hidden')
                 } else if (!state.hidden) {
-                    this.#setFeatureState(feature, { hidden: true });
+                    this.#setFeatureState(feature, { hidden: true })
                 }
             } else if (!enable) {
-                this.#setFeatureState(feature, { hidden: true });
+                this.#setFeatureState(feature, { hidden: true })
             }
-            this.__enableFeatureMarker(feature.id, enable);
+            this.#enableFeatureMarker(+feature.id, enable)
         }
     }
 
-    enableFeature(featureId, enable=true, force=false)
-    //================================================
+    enableFeature(featureId: number, enable=true, force=false)
+    //========================================================
     {
-        const enabledCount = this.__featureEnabledCount.get(+featureId)
+        const enabledCount = this.#featureEnabledCount.get(+featureId)
         if (force || enable && enabledCount === 0 || !enable && enabledCount == 1) {
-            this.enableMapFeature(this.mapFeature(featureId), enable)
+            this.enableMapFeature(this.mapFeature(+featureId), enable)
         }
         if (force) {
-            this.__featureEnabledCount.set(+featureId, enable ? 1 : 0);
+            this.#featureEnabledCount.set(+featureId, enable ? 1 : 0)
         } else {
-            this.__featureEnabledCount.set(+featureId, enabledCount + (enable ? 1 : -1));
+            this.#featureEnabledCount.set(+featureId, enabledCount + (enable ? 1 : -1))
         }
     }
 
-    enableFeatureWithChildren(featureId, enable=true, force=false)
-    //============================================================
+    enableFeatureWithChildren(featureId: number, enable=true, force=false)
+    //====================================================================
     {
-        const feature = this.mapFeature(featureId);
-        if (feature !== undefined) {
-            this.enableFeature(featureId, enable, force);
+        const feature = this.mapFeature(featureId)
+        if (feature) {
+            this.enableFeature(featureId, enable, force)
             for (const childFeatureId of feature.children) {
-                this.enableFeatureWithChildren(childFeatureId, enable, force);
+                this.enableFeatureWithChildren(childFeatureId, enable, force)
             }
         }
     }
 
-    __enableFeatureMarker(featureId, enable=true)
-    //===========================================
+    #enableFeatureMarker(featureId: number, enable=true)
+    //==================================================
     {
-        const markerId = this.__markerIdByFeatureId.get(+featureId);
-        if (markerId !== undefined) {
-            const markerDiv = document.getElementById(`marker-${markerId}`);
+        const markerId = this.#markerIdByFeatureId.get(featureId)
+        if (markerId) {
+            const markerDiv = document.getElementById(`marker-${markerId}`)
             if (markerDiv) {
-                markerDiv.style.visibility = enable ? 'visible' : 'hidden';
+                markerDiv.style.visibility = enable ? 'visible' : 'hidden'
             }
         }
     }
 
-    __featureEnabled(feature)
-    //=======================
+    #featureEnabled(feature: MapFeatureIdentifier): boolean
+    //===============================================
     {
         if (feature.id) {
-            const state = this.#getFeatureState(feature);
-            return (state !== undefined
+            const state = this.#getFeatureState(feature)
+            return (state
                 && !(state.hidden || false)
                 && !(state.invisible || false))
         }
         return DRAW_ANNOTATION_LAYERS.includes(feature.layer.id)
     }
 
-    featureSelected_(featureId)
-    //=========================
+    #featureSelected(featureId: number|string): boolean
+    //=================================================
     {
         return this.#selectedFeatureRefCount.has(+featureId)
     }
 
-    selectFeature(featureId, dim=true)
-    //================================
+    selectFeature(featureId: number, dim=true)
+    //========================================
     {
-        const ann = this._flatmap.annotation(featureId);
+        const ann = this.#flatmap.annotation(featureId)
         if (ann && 'sckan' in ann) {
-            const sckanState = this._layerManager.sckanState;
+            const sckanState = this.#layerManager.sckanState
             if (sckanState === 'none'
              || sckanState === 'valid' && !ann.sckan
              || sckanState === 'invalid' && ann.sckan) {
-                return false;
+                return false
             }
         }
         featureId = +featureId;   // Ensure numeric
-        let result = false;
+        let result = false
         const noSelection = (this.#selectedFeatureRefCount.size === 0)
         if (this.#selectedFeatureRefCount.has(featureId)) {
             this.#selectedFeatureRefCount.set(featureId, this.#selectedFeatureRefCount.get(featureId) + 1)
-            result = true;
+            result = true
         } else {
-            const feature = this.mapFeature(featureId);
-            if (feature !== undefined) {
-                const state = this.#getFeatureState(feature);
-                if (state !== undefined && (!('hidden' in state) || !state.hidden)) {
-                    this.#setFeatureState(feature, { selected: true });
+            const feature = this.mapFeature(featureId)
+            if (feature) {
+                const state = this.#getFeatureState(feature)
+                if (state && (!('hidden' in state) || !state.hidden)) {
+                    this.#setFeatureState(feature, { selected: true })
                     this.#selectedFeatureRefCount.set(featureId, 1)
-                    result = true;
+                    result = true
                 }
             }
         }
         if (result && noSelection) {
-            this.#setPaint({...this.__colourOptions, dimmed: dim});
+            this.#setPaint({...this.#colourOptions, dimmed: dim})
         }
-        return result;
+        return result
     }
 
-    unselectFeature(featureId)
-    //========================
+    unselectFeature(featureId: number|string)
+    //=======================================
     {
         featureId = +featureId;   // Ensure numeric
-        if (this.#selectedFeatureRefCount.has(featureId)) {
+        if (this.#selectedFeatureRefCount.has(+featureId)) {
             const refCount = this.#selectedFeatureRefCount.get(featureId)
             if (refCount > 1) {
-                this.#selectedFeatureRefCount.set(featureId, refCount - 1)
+                this.#selectedFeatureRefCount.set(+featureId, refCount - 1)
             } else {
-                const feature = this.mapFeature(featureId);
-                if (feature !== undefined) {
-                    this.#removeFeatureState(feature, 'selected');
+                const feature = this.mapFeature(+featureId)
+                if (feature) {
+                    this.#removeFeatureState(feature, 'selected')
                     this.#selectedFeatureRefCount.delete(+featureId)
                 }
             }
         }
         if (this.#selectedFeatureRefCount.size === 0) {
-            this.#setPaint({...this.__colourOptions, dimmed: false});
+            this.#setPaint({...this.#colourOptions, dimmed: false})
         }
     }
 
@@ -697,39 +714,39 @@ export class UserInteractions
     //================
     {
         for (const featureId of this.#selectedFeatureRefCount.keys()) {
-            const feature = this.mapFeature(featureId);
-            if (feature !== undefined) {
-                this.#removeFeatureState(feature, 'selected');
+            const feature = this.mapFeature(featureId)
+            if (feature) {
+                this.#removeFeatureState(feature, 'selected')
             }
         }
-        this.#selectedFeatureRefCount.clear();
-        this.#setPaint({...this.__colourOptions, dimmed: false});
+        this.#selectedFeatureRefCount.clear()
+        this.#setPaint({...this.#colourOptions, dimmed: false})
     }
 
-    activateFeature(feature)
-    //======================
+    activateFeature(feature: MapFeature|MapRenderedFeature)
+    //=====================================================
     {
-        if (feature !== undefined) {
-            this.#setFeatureState(feature, { active: true });
+        if (feature) {
+            this.#setFeatureState(feature, { active: true })
             if (!this.#activeFeatures.has(+feature.id)) {
                 this.#activeFeatures.set(+feature.id, feature)
             }
         }
     }
 
-    activateLineFeatures(lineFeatures)
-    //================================
+    activateLineFeatures(lineFeatures: MapRenderedFeature[])
+    //==============================================
     {
         for (const lineFeature of lineFeatures) {
             this.activateFeature(lineFeature)
-            const lineIds = new Set(lineFeatures.map(f => f.properties.featureId))
-            for (const featureId of this.__pathManager.lineFeatureIds(lineIds)) {
+            const lineIds: Set<number> = new Set(lineFeatures.map(f => f.properties.featureId))
+            for (const featureId of this.#pathManager.lineFeatureIds(lineIds)) {
                 this.activateFeature(this.mapFeature(featureId))
             }
         }
     }
 
-    resetActiveFeatures_()
+    #resetActiveFeatures()
     //====================
     {
         for (const feature of this.#activeFeatures.values()) {
@@ -738,51 +755,53 @@ export class UserInteractions
         this.#activeFeatures.clear()
     }
 
-    smallestAnnotatedPolygonFeature_(features)
+    /* UNUSED
+    #smallestAnnotatedPolygonFeature(features)
     //========================================
     {
         // Get the smallest feature from a list of features
 
-        let smallestArea = 0;
-        let smallestFeature = null;
+        let smallestArea = 0
+        let smallestFeature = null
         for (const feature of features) {
             if (feature.geometry.type.includes('Polygon')
              && this.#getFeatureState(feature)['map-annotation']) {
-                const polygon = turf.geometry(feature.geometry.type, feature.geometry.coordinates);
-                const area = turfArea(polygon);
+                const polygon = turf.geometry(feature.geometry.type, feature.geometry.coordinates)
+                const area = turfArea(polygon)
                 if (smallestFeature === null || smallestArea > area) {
-                    smallestFeature = feature;
-                    smallestArea = area;
+                    smallestFeature = feature
+                    smallestArea = area
                 }
             }
         }
-        return smallestFeature;
+        return smallestFeature
+    }
+    */
+
+    #setModal()
+    //=========
+    {
+        this.#modal = true
     }
 
-    setModal_(event)
-    //==============
+    #clearModal()
+    //===========
     {
-        this._modal = true;
-    }
-
-    __clearModal(event)
-    //=================
-    {
-        this._modal = false;
+        this.#modal = false
     }
 
     reset()
     //=====
     {
-        this.__clearModal();
-        this.__clearActiveMarker();
-        this.unselectFeatures();
+        this.#clearModal()
+        this.#clearActiveMarker()
+        this.unselectFeatures()
     }
 
-    clearSearchResults(reset=true)
-    //============================
+    clearSearchResults(_reset=true)
+    //=============================
     {
-        this.unselectFeatures();
+        this.unselectFeatures()
     }
 
     /**
@@ -790,18 +809,18 @@ export class UserInteractions
      *
      * @param {Array.<string>}  featureIds  An array of feature identifiers to highlight
      */
-    selectFeatures(featureIds)
-    //========================
+    selectFeatures(featureIds: number[])
+    //==================================
     {
         if (featureIds.length) {
-            this.unselectFeatures();
+            this.unselectFeatures()
             for (const featureId of featureIds) {
-                const annotation = this._flatmap.annotation(featureId);
+                const annotation = this.#flatmap.annotation(featureId)
                 if (annotation) {
                     if (this.selectFeature(featureId)) {
                         if ('type' in annotation && annotation.type.startsWith('line')) {
-                            for (const pathFeatureId of this.__pathManager.lineFeatureIds([featureId])) {
-                                this.selectFeature(pathFeatureId);
+                            for (const pathFeatureId of this.#pathManager.lineFeatureIds([+featureId])) {
+                                this.selectFeature(pathFeatureId)
                             }
                         }
                     }
@@ -810,11 +829,11 @@ export class UserInteractions
         }
     }
 
-    showSearchResults(featureIds)
-    //===========================
+    showSearchResults(featureIds: number[])
+    //==============================================
     {
-        this.unselectFeatures();
-        this.zoomToFeatures(featureIds, {noZoomIn: true});
+        this.unselectFeatures()
+        this.zoomToFeatures(featureIds, {noZoomIn: true})
     }
 
     /**
@@ -824,28 +843,28 @@ export class UserInteractions
      * @param      {Object}  [options]
      * @param      {boolean} [options.zoomIn=false]  Zoom in the map (always zoom out as necessary)
      */
-    zoomToFeatures(featureIds, options=null)
-    //======================================
+    zoomToFeatures(featureIds: number[], options=null)
+    //================================================
     {
         options = utils.setDefaults(options, {
             zoomIn: false
-        });
+        })
         if (featureIds.length) {
-            this.unselectFeatures();
-            let bbox = null;
+            this.unselectFeatures()
+            let bbox = null
             if (!options.zoomIn) {
-                const bounds = this._map.getBounds().toArray();
-                bbox = [...bounds[0], ...bounds[1]];
+                const bounds = this.#map.getBounds().toArray()
+                bbox = [...bounds[0], ...bounds[1]]
             }
             for (const featureId of featureIds) {
-                const annotation = this._flatmap.annotation(featureId)
+                const annotation = this.#flatmap.annotation(featureId)
                 if (annotation) {
                     if (this.selectFeature(featureId)) {
                         bbox = expandBounds(bbox, annotation.bounds)
                         if ('type' in annotation && annotation.type.startsWith('line')) {
-                            for (const pathFeatureId of this.__pathManager.lineFeatureIds([featureId])) {
+                            for (const pathFeatureId of this.#pathManager.lineFeatureIds([+featureId])) {
                                 if (this.selectFeature(pathFeatureId)) {
-                                    const pathAnnotation = this._flatmap.annotation(pathFeatureId)
+                                    const pathAnnotation = this.#flatmap.annotation(pathFeatureId)
                                     bbox = expandBounds(bbox, pathAnnotation.bounds)
                                 }
                             }
@@ -854,7 +873,7 @@ export class UserInteractions
                 }
             }
             if (bbox !== null) {
-                this._map.fitBounds(bbox, {
+                this.#map.fitBounds(bbox, {
                     padding: 0,
                     animate: false
                 })
@@ -862,20 +881,20 @@ export class UserInteractions
         }
     }
 
-    showPopup(featureId, content, options={})
-    //=======================================
+    showPopup(featureId: number, content, options: FlatMapPopUpOptions={})
+    //====================================================================
     {
-        const ann = this._flatmap.annotation(featureId);
-        const drawn = options && options.annotationFeatureGeometry;
+        const ann = this.#flatmap.annotation(featureId)
+        const drawn = !!options.annotationFeatureGeometry
         if (ann || drawn) {  // The feature exists or it is a drawn annotation
 
             // Remove any existing popup
 
-            if (this._currentPopup) {
+            if (this.#currentPopup) {
                 if (options && options.preserveSelection) {
-                    this._currentPopup.options.preserveSelection = options.preserveSelection;
+                    this.#currentPopup.options.preserveSelection = options.preserveSelection
                 }
-                this._currentPopup.remove();
+                this.#currentPopup.remove()
             }
 
             // Clear selection if we are not preserving it
@@ -883,67 +902,67 @@ export class UserInteractions
             if (options && options.preserveSelection) {
                 delete options.preserveSelection;       // Don't pass to onClose()
             } else {                                    // via the popup's options
-                this.unselectFeatures();
+                this.unselectFeatures()
             }
 
             // Select the feature
 
-            this.selectFeature(featureId);
+            this.selectFeature(featureId)
 
             // Find the pop-up's postion
 
-            let location = null;
+            let location = null
             if ('positionAtLastClick' in options
                && options.positionAtLastClick
-               && this.__lastClickLngLat !== null) {
-                location = this.__lastClickLngLat;
+               && this.#lastClickLngLat !== null) {
+                location = this.#lastClickLngLat
             } else if (drawn) {
                 // Popup at the centroid of the feature
                 // Calculated with the feature geometry coordinates
-                location = options.annotationFeatureGeometry;
+                location = options.annotationFeatureGeometry
             } else {
                 // Position popup at the feature's 'centre'
-                location = this.markerPosition(featureId, ann, options);
+                location = this.markerPosition(+featureId, ann)
             }
 
             // Make sure the feature is on screen
 
-            if (!this._map.getBounds().contains(location)) {
-                this._map.panTo(location);
+            if (!this.#map.getBounds().contains(location)) {
+                this.#map.panTo(location)
             }
-            this.setModal_();
-            this._currentPopup = new maplibregl.Popup(options).addTo(this._map);
-            this._currentPopup.on('close', this.__onCloseCurrentPopup.bind(this));
+            this.#setModal()
+            this.#currentPopup = new maplibregl.Popup(options).addTo(this.#map)
+            this.#currentPopup.on('close', this.#onCloseCurrentPopup.bind(this))
             if (drawn) {
-                this._currentPopup.on('close', this.abortAnnotationEvent.bind(this));
+                this.#currentPopup.on('close', this.abortAnnotationEvent.bind(this))
             }
-            this._currentPopup.setLngLat(location);
+            this.#currentPopup.setLngLat(location)
             if (typeof content === 'object') {
-                this._currentPopup.setDOMContent(content);
+                this.#currentPopup.setDOMContent(content)
             } else {
-                this._currentPopup.setText(content);
+                this.#currentPopup.setText(content)
             }
         }
     }
 
-    __onCloseCurrentPopup()
-    //=====================
+    #onCloseCurrentPopup()
+    //====================
     {
-        if (this._currentPopup) {
-            this.__clearModal();
-            if (!(this._currentPopup.options && this._currentPopup.options.preserveSelection)) {
-                this.unselectFeatures();
+        if (this.#currentPopup) {
+            this.#clearModal()
+            if (!(this.#currentPopup.options && this.#currentPopup.options.preserveSelection)) {
+                this.unselectFeatures()
             }
-            this._currentPopup = null;
+            this.#currentPopup = null
         }
     }
 
-    removeTooltip_()
+    #removeTooltip()
     //==============
     {
-        if (this._tooltip) {
-            this._tooltip.remove();
-            this._tooltip = null;
+        if (this.#tooltip) {
+            this.#tooltip.remove()
+            this.#tooltip = null
         }
     }
 
@@ -953,18 +972,18 @@ export class UserInteractions
     removePopup()
     //===========
     {
-        if (this._currentPopup) {
-            this._currentPopup.remove();
-            this._currentPopup = null;
+        if (this.#currentPopup) {
+            this.#currentPopup.remove()
+            this.#currentPopup = null
         }
     }
 
-    lineTooltip_(lineFeatures)
-    //========================
+    #lineTooltip(lineFeatures: MapRenderedFeature[])
+    //==============================================
     {
-        const tooltips = [];
+        const tooltips = []
         for (const lineFeature of lineFeatures) {
-            const properties = lineFeature.properties;
+            const properties = lineFeature.properties
             if ('error' in properties) {
                 tooltips.push(`<div class="feature-error">Error: ${properties.error}</div>`)
             }
@@ -972,21 +991,21 @@ export class UserInteractions
                 tooltips.push(`<div class="feature-error">Warning: ${properties.warning}</div>`)
             }
             if ('label' in properties && (!('tooltip' in properties) || properties.tooltip)) {
-                const label = properties.label;
-                const cleanLabel = (label.substr(0, 1).toUpperCase() + label.substr(1)).replaceAll("\n", "<br/>");
+                const label = properties.label
+                const cleanLabel = (label.substr(0, 1).toUpperCase() + label.substr(1)).replaceAll("\n", "<br/>")
                 if (!tooltips.includes(cleanLabel)) {
-                    tooltips.push(cleanLabel);
+                    tooltips.push(cleanLabel)
                 }
             }
         }
         return (tooltips.length === 0) ? ''
-                                       : `<div class='flatmap-feature-label'>${tooltips.join('<hr/>')}</div>`;
+                                       : `<div class='flatmap-feature-label'>${tooltips.join('<hr/>')}</div>`
     }
 
-    tooltipHtml_(properties, forceLabel=false)
+    #tooltipHtml(properties, forceLabel=false)
     //========================================
     {
-        const tooltip = [];
+        const tooltip = []
         if ('error' in properties) {
             tooltip.push(`<div class="feature-error">Error: ${properties.error}</div>`)
         }
@@ -997,85 +1016,85 @@ export class UserInteractions
           || 'hyperlink' in properties
           || 'user_label' in properties)
                 && (forceLabel || !('tooltip' in properties) || properties.tooltip)) {
-            const renderedLabel = getRenderedLabel(properties);
+            const renderedLabel = getRenderedLabel(properties)
             if ('hyperlink' in properties) {
                 if (renderedLabel === '') {
-                    tooltip.push(`<a href='${properties.hyperlink}'>${properties.hyperlink}</a>`);
+                    tooltip.push(`<a href='${properties.hyperlink}'>${properties.hyperlink}</a>`)
                 } else {
-                    tooltip.push(`<a href='${properties.hyperlink}'>${renderedLabel}</a></div>`);
+                    tooltip.push(`<a href='${properties.hyperlink}'>${renderedLabel}</a></div>`)
                 }
             } else {
-                tooltip.push(renderedLabel);
+                tooltip.push(renderedLabel)
             }
         }
         return (tooltip.length === 0) ? ''
-                                      : `<div class='flatmap-feature-label'>${tooltip.join('<hr/>')}</div>`;
+                                      : `<div class='flatmap-feature-label'>${tooltip.join('<hr/>')}</div>`
     }
 
-    __featureEvent(type, feature, values={})
-    //======================================
+    #featureEvent(type, feature, values={})
+    //=====================================
     {
         const properties = Object.assign({}, feature.properties, values)
         if (inAnatomicalClusterLayer(feature)) {
-            return this._flatmap.markerEvent(type, feature.id, properties);
+            return this.#flatmap.markerEvent(type, feature.id, properties)
         } else if (feature.sourceLayer === PATHWAYS_LAYER) {  // I suspect this is never true as source layer
                                                               // names are like `neural_routes_pathways`
-            return this._flatmap.featureEvent(type, this.__pathManager.pathProperties(feature));
+            return this.#flatmap.featureEvent(type, this.#pathManager.pathProperties(feature))
         } else if ('properties' in feature) {
-            return this._flatmap.featureEvent(type, properties);
+            return this.#flatmap.featureEvent(type, properties)
         }
-        return false;
+        return false
     }
 
-    __resetFeatureDisplay()
-    //=====================
+    #resetFeatureDisplay()
+    //====================
     {
         // Remove any existing tooltip
-        this.removeTooltip_();
+        this.#removeTooltip()
 
         // Reset cursor
-        this._map.getCanvas().style.cursor = 'default';
+        this.#map.getCanvas().style.cursor = 'default'
 
         // Reset any active features
-        this.resetActiveFeatures_();
+        this.#resetActiveFeatures()
     }
 
-    #renderedFeatures(point)
-    //======================
+    #renderedFeatures(point): MapRenderedFeature[]
+    //============================================
     {
-        const features = this._layerManager.featuresAtPoint(point)
-        return features.filter(feature => this.__featureEnabled(feature));
+        const features = this.#layerManager.featuresAtPoint(point)
+        return features.filter(feature => this.#featureEnabled(feature))
     }
 
-    mouseMoveEvent_(event)
+    #mouseMoveEvent(event)
     //====================
     {
         this.#updateActiveFeature(event.point, event.lngLat)
     }
 
-    #updateActiveFeature(eventPoint, lngLat)
-    //======================================
+    #updateActiveFeature(eventPoint, lngLat: maplibregl.LngLat|null=null)
+    //===================================================================
     {
         // No tooltip when context menu is open
-        if (this._modal) {
-            return;
+        if (this.#modal) {
+            return
         }
 
         // Remove tooltip, reset active features, etc
-        this.__resetFeatureDisplay();
+        this.#resetFeatureDisplay()
 
         // Reset any info display
-        const displayInfo = (this._infoControl && this._infoControl.active);
+        const displayInfo = (this.#infoControl && this.#infoControl.active)
         if (displayInfo) {
-            this._infoControl.reset()
+            this.#infoControl.reset()
         }
 
         // Get all the features at the current point
         const features = this.#renderedFeatures(eventPoint)
         if (features.length === 0) {
-            this._lastFeatureMouseEntered = null;
-            this._lastFeatureModelsMouse = null;
-            return;
+            this.#lastFeatureMouseEntered = null
+            this.#lastFeatureModelsMouse = null
+            return
         }
 
         // Simulate `mouseenter` events on features
@@ -1086,46 +1105,46 @@ export class UserInteractions
         const featureModels = ('properties' in feature && 'models' in feature.properties)
                             ? feature.properties.models
                             : null
-        if (this._lastFeatureMouseEntered !== featureId
-         && (this._lastFeatureModelsMouse === null
-          || this._lastFeatureModelsMouse !== featureModels)) {
-            if (this.__featureEvent('mouseenter', feature,
+        if (this.#lastFeatureMouseEntered !== featureId
+         && (this.#lastFeatureModelsMouse === null
+          || this.#lastFeatureModelsMouse !== featureModels)) {
+            if (this.#featureEvent('mouseenter', feature,
                                     this.#locationOnLine(featureId, lngLat))) {
-                this._lastFeatureMouseEntered = featureId
-                this._lastFeatureModelsMouse = featureModels
+                this.#lastFeatureMouseEntered = featureId
+                this.#lastFeatureModelsMouse = featureModels
             } else {
-                this._lastFeatureMouseEntered = null
-                this._lastFeatureModelsMouse = null
+                this.#lastFeatureMouseEntered = null
+                this.#lastFeatureModelsMouse = null
             }
-        } else if (this._flatmap.options.style === FLATMAP_STYLE.CENTRELINE
+        } else if (this.#flatmap.options.style === FLATMAP_STYLE.CENTRELINE
                 && feature.properties.centreline) {
-            if (this._lastFeatureMouseEntered === featureId) {
+            if (this.#lastFeatureMouseEntered === featureId) {
                 const location = this.#locationOnLine(featureId, lngLat)
                 if ('location' in location) {
-                    this.__featureEvent('mousemove', feature, location)
+                    this.#featureEvent('mousemove', feature, location)
                 }
             }
         }
 
-        let info = '';
-        let tooltip = '';
-        let tooltipFeature = null;
-        const eventLngLat = this._map.unproject(eventPoint)
+        let info = ''
+        let tooltip = ''
+        let tooltipFeature = null
+        const eventLngLat = this.#map.unproject(eventPoint)
         if (displayInfo) {
             if (!('tooltip' in features[0].properties)) {
-                this.activateFeature(features[0]);
+                this.activateFeature(feature as MapFeature)
             }
-            info = this._infoControl.featureInformation(features, eventLngLat);
-        } else if (this._flatmap.options.showId) {
-            this.activateFeature(features[0])
-            tooltipFeature = features[0]
+            info = this.#infoControl.featureInformation(features, eventLngLat)
+        } else if (this.#flatmap.options.showId) {
+            this.activateFeature(feature)
+            tooltipFeature = feature
         }
         const lineFeatures = features.filter(feature => ('centreline' in feature.properties
                                                       || ('type' in feature.properties
-                                                        && feature.properties.type.startsWith('line')) ));
+                                                        && feature.properties.type.startsWith('line')) ))
         if (lineFeatures.length > 0) {
-            tooltip = this.lineTooltip_(lineFeatures);
-            tooltipFeature = lineFeatures[0];
+            tooltip = this.#lineTooltip(lineFeatures)
+            tooltipFeature = lineFeatures[0]
             this.activateLineFeatures(lineFeatures)
         } else {
             const topSourceLayer = feature.sourceLayer
@@ -1133,82 +1152,82 @@ export class UserInteractions
                                                          && ('hyperlink' in feature.properties
                                                           || 'label' in feature.properties
                                                           || 'user_label' in feature.properties
-                                                          || this._flatmap.options.showId && 'id' in feature.properties
+                                                          || this.#flatmap.options.showId && 'id' in feature.properties
                                                             )
                                                          && (!('tooltip' in feature.properties)
                                                             || feature.properties.tooltip)))
-                                           .sort((a, b) => (a.properties.area - b.properties.area));
+                                           .sort((a, b) => (a.properties.area - b.properties.area))
             if (labelledFeatures.length > 0) {
                 // Favour group features at low zoom levels
-                const zoomLevel = this._map.getZoom();
+                const zoomLevel = this.#map.getZoom()
                 const groupFeatures = labelledFeatures.filter(feature => (feature.properties.group
-                                                     && zoomLevel < (feature.properties.scale + 1)));
+                                                     && zoomLevel < (feature.properties.scale + 1)))
                 if (groupFeatures.length > 0) {
-                    labelledFeatures = groupFeatures;
+                    labelledFeatures = groupFeatures
                 }
-                const feature = labelledFeatures[0];
+                const feature = labelledFeatures[0]
                 if (feature.properties.user_drawn) {
                     feature.id = feature.properties.id
                 }
-                tooltip = this.tooltipHtml_(feature.properties);
-                tooltipFeature = feature;
-                if (this._flatmap.options.debug) {  // Do this when Info on and not debug??
+                tooltip = this.#tooltipHtml(feature.properties)
+                tooltipFeature = feature
+                if (this.#flatmap.options.debug) {  // Do this when Info on and not debug??
                     const debugProperties = [
                         'featureId',
                         'nerveId',
                         'tile-layer',
                         'type',
                         ...displayedProperties
-                    ];
-                    const htmlList = [];
-                    const featureIds = [];
+                    ]
+                    const htmlList = []
+                    const featureIds = []
                     for (const feature of labelledFeatures) {
                         if (!featureIds.includes(feature.id)) {
-                            featureIds.push(feature.id);
+                            featureIds.push(feature.id)
                             for (const prop of debugProperties) {
                                 if (prop in feature.properties) {
-                                    htmlList.push(`<span class="info-name">${prop}:</span>`);
-                                    htmlList.push(`<span class="info-value">${feature.properties[prop]}</span>`);
+                                    htmlList.push(`<span class="info-name">${prop}:</span>`)
+                                    htmlList.push(`<span class="info-value">${feature.properties[prop]}</span>`)
                                 }
                             }
                         }
-                        //htmlList.push(`<span class="info-name">Area:</span>`);
-                        //htmlList.push(`<span class="info-value">${feature.properties.area/1000000000}</span>`);
-                        //htmlList.push(`<span class="info-name">Scale:</span>`);
-                        //htmlList.push(`<span class="info-value">${feature.properties.scale}</span>`);
+                        //htmlList.push(`<span class="info-name">Area:</span>`)
+                        //htmlList.push(`<span class="info-value">${feature.properties.area/1000000000}</span>`)
+                        //htmlList.push(`<span class="info-name">Scale:</span>`)
+                        //htmlList.push(`<span class="info-value">${feature.properties.scale}</span>`)
                     }
-                    if (!this._flatmap.options.debug) {
-                        info = `<div id="info-control-info">${htmlList.join('\n')}</div>`;
+                    if (!this.#flatmap.options.debug) {
+                        info = `<div id="info-control-info">${htmlList.join('\n')}</div>`
                     }
                 }
-                this.activateFeature(feature);
-                this.__activateRelatedFeatures(feature);
+                this.activateFeature(feature)
+                this.#activateRelatedFeatures(feature)
                 if ('hyperlink' in feature.properties) {
-                    this._map.getCanvas().style.cursor = 'pointer';
+                    this.#map.getCanvas().style.cursor = 'pointer'
                 }
             }
         }
 
         if (info !== '') {
-            this._infoControl.show(info);
+            this.#infoControl.show(info)
         }
-        this.__showToolTip(tooltip, eventLngLat, tooltipFeature);
+        this.#showToolTip(tooltip, eventLngLat, tooltipFeature)
     }
 
-    __showToolTip(html, lngLat, feature=null)
-    //=======================================
+    #showToolTip(html, lngLat, feature=null)
+    //======================================
     {
         // Show a tooltip
         if (html !== ''
-        || this._flatmap.options.showPosition
-        || this._flatmap.options.showId && feature !== null) {
-            let header = '';
-            if (this._flatmap.options.showPosition) {
+        || this.#flatmap.options.showPosition
+        || this.#flatmap.options.showId && feature !== null) {
+            let header = ''
+            if (this.#flatmap.options.showPosition) {
                 const pt = turf.point(lngLat.toArray())
                 const gps = turfProjection.toMercator(pt)
                 const coords = JSON.stringify(gps.geometry.coordinates)
                 let geopos = null
-                if (this._flatmap.options.showLngLat) {
+                if (this.#flatmap.options.showLngLat) {
                     geopos = JSON.stringify(lngLat.toArray())
                 }
                 const position = (geopos === null) ? coords : `${geopos}<br/>${coords}`
@@ -1216,23 +1235,23 @@ export class UserInteractions
                              ? position
                              : `${position} (${feature.id})`
             }
-            if (this._flatmap.options.showId && feature !== null && 'id' in feature.properties) {
-                header = `${header} ${feature.properties.id}`;
+            if (this.#flatmap.options.showId && feature !== null && 'id' in feature.properties) {
+                header = `${header} ${feature.properties.id}`
             }
             if (header !== '') {
-                html = `<span>${header}</span><br/>${html}`;
+                html = `<span>${header}</span><br/>${html}`
             }
             if (html !== '') {
-                this._tooltip = new maplibregl.Popup({
+                this.#tooltip = new maplibregl.Popup({
                     closeButton: false,
                     closeOnClick: false,
                     maxWidth: 'none',
                     className: 'flatmap-tooltip-popup'
-                });
-                this._tooltip
+                })
+                this.#tooltip
                     .setLngLat(lngLat)
                     .setHTML(html)
-                    .addTo(this._map);
+                    .addTo(this.#map)
             }
         }
     }
@@ -1250,7 +1269,7 @@ export class UserInteractions
                        && ['cell-type', 'scaffold', 'tissue'].includes(feature.properties.kind))
             if (singleSelection) {
                 this.selectFeature(featureId, dim)
-            } else if (this.featureSelected_(featureId)) {
+            } else if (this.#featureSelected(featureId)) {
                 this.unselectFeature(featureId)
             } else {
                 this.selectFeature(featureId, dim)
@@ -1258,49 +1277,49 @@ export class UserInteractions
         }
     }
 
-    clickEvent_(event)
+    #clickEvent(event)
     //================
     {
-        if (this._modal) {
-            return;
+        if (this.#modal) {
+            return
         }
 
         // Reset pitch and bearing with an ``alt-meta-click``
         if (event.originalEvent.altKey && event.originalEvent.metaKey) {
-            this._map.resetNorthPitch({animate: false})
+            this.#map.resetNorthPitch({animate: false})
             return
         }
 
-        this.__clearActiveMarker();
+        this.#clearActiveMarker()
 
         let clickedFeatures = this.#renderedFeatures(event.point)
         if (clickedFeatures.length == 0) {
-            this.unselectFeatures();
-            return;
+            this.unselectFeatures()
+            return
         }
-        const clickedDrawnFeatures = clickedFeatures.filter((f) => !f.id);
+        const clickedDrawnFeatures = clickedFeatures.filter((f) => !f.id)
         clickedFeatures = clickedFeatures.filter((f) => f.id)
         const clickedFeature = clickedFeatures[0]
-        if (this._modal) {
+        if (this.#modal) {
             // Remove tooltip, reset active features, etc
-            this.__resetFeatureDisplay();
-            this.unselectFeatures();
-            this.__clearModal();
+            this.#resetFeatureDisplay()
+            this.unselectFeatures()
+            this.#clearModal()
         } else if (clickedDrawnFeatures.length > 0) {
             // Layer of existing drawn features
-            const clickedOnColdLayer = clickedDrawnFeatures.filter((f) => f.source === 'mapbox-gl-draw-cold')[0];
+            const clickedOnColdLayer = clickedDrawnFeatures.filter((f) => f.source === 'mapbox-gl-draw-cold')[0]
             // Layer of currently drawing feature
-            const clickedOnHotLayer = clickedDrawnFeatures.filter((f) => f.source === 'mapbox-gl-draw-hot')[0];
-            this.__featureEvent('click',
+            const clickedOnHotLayer = clickedDrawnFeatures.filter((f) => f.source === 'mapbox-gl-draw-hot')[0]
+            this.#featureEvent('click',
                 clickedOnColdLayer ? clickedOnColdLayer
               : clickedFeature ? clickedFeature
               : clickedOnHotLayer
-            );
+            )
         } else if (clickedFeatures.length) {
-            this.__lastClickLngLat = event.lngLat
-            if (this._flatmap.options.style !== FLATMAP_STYLE.CENTRELINE) {
+            this.#lastClickLngLat = event.lngLat
+            if (this.#flatmap.options.style !== FLATMAP_STYLE.CENTRELINE) {
                 this.#selectActiveFeatures(event.originalEvent)
-                this.__featureEvent('click', clickedFeature)
+                this.#featureEvent('click', clickedFeature)
             } else {
                 const seenFeatures = new Set()
                 this.#selectActiveFeatures(event.originalEvent)
@@ -1309,25 +1328,25 @@ export class UserInteractions
                     if (!seenFeatures.has(feature.properties.id)) {
                         seenFeatures.add(feature.properties.id)
                         if (!centreline_click || centreline_click && (feature.properties.kind === 'centreline')) {
-                            this.__featureEvent('click', feature,
+                            this.#featureEvent('click', feature,
                                                 this.#locationOnLine(feature.id, event.lngLat))
                         }
                     }
                 }
             }
-            if (this._flatmap.options.standalone) {
+            if (this.#flatmap.options.standalone) {
                 if ('properties' in clickedFeature && 'hyperlink' in clickedFeature.properties) {
-                    window.open(clickedFeature.properties.hyperlink, '_blank');
+                    window.open(clickedFeature.properties.hyperlink, '_blank')
                 }
             }
         }
     }
 
-    #locationOnLine(featureId, lngLat)
-    //================================
+    #locationOnLine(featureId, lngLat: maplibregl.LngLat|null)
+    //========================================================
     {
-        if (lngLat && this._flatmap.options.style === FLATMAP_STYLE.CENTRELINE) {
-            const annotation = this._flatmap.annotation(featureId)
+        if (lngLat && this.#flatmap.options.style === FLATMAP_STYLE.CENTRELINE) {
+            const annotation = this.#flatmap.annotation(featureId)
             if (annotation.centreline && 'lineString' in annotation) {
                 const line = annotation.lineString
                 const clickedPoint = turf.point([lngLat.lng, lngLat.lat])
@@ -1340,21 +1359,21 @@ export class UserInteractions
         return {}
     }
 
-    __activateRelatedFeatures(feature)
-    //================================
+    #activateRelatedFeatures(feature: MapRenderedFeature)
+    //===================================================
     {
         if ('nerveId' in feature.properties) {
-            const nerveId = feature.properties.nerveId;
+            const nerveId = feature.properties.nerveId
             if (nerveId !== feature.id) {
-                this.activateFeature(this.mapFeature(nerveId));
+                this.activateFeature(this.mapFeature(+nerveId))
             }
-            for (const featureId of this.__pathManager.nerveFeatureIds(nerveId)) {
-                this.activateFeature(this.mapFeature(featureId));
+            for (const featureId of this.#pathManager.nerveFeatureIds(nerveId)) {
+                this.activateFeature(this.mapFeature(+featureId))
             }
         }
         if ('nodeId' in feature.properties) {
-            for (const featureId of this.__pathManager.pathFeatureIds(feature.properties.nodeId)) {
-                this.activateFeature(this.mapFeature(featureId));
+            for (const featureId of this.#pathManager.pathFeatureIds(+feature.properties.nodeId)) {
+                this.activateFeature(this.mapFeature(featureId))
             }
         }
     }
@@ -1362,125 +1381,127 @@ export class UserInteractions
     clearVisibilityFilter()
     //=====================
     {
-        this._layerManager.clearVisibilityFilter()
+        this.#layerManager.clearVisibilityFilter()
     }
 
     setVisibilityFilter(filterSpecification=true)
     //===========================================
     {
-        this._layerManager.setVisibilityFilter(new PropertiesFilter(filterSpecification))
+        this.#layerManager.setVisibilityFilter(new PropertiesFilter(filterSpecification))
     }
 
     enablePathsBySystem(system, enable=true, force=false)
     //===================================================
     {
-        this.__pathManager.enablePathsBySystem(system, enable, force);
+        this.#pathManager.enablePathsBySystem(system, enable, force)
     }
 
     enablePathsByType(pathType, enable=true)
     //======================================
     {
         this.#pathTypeFacet.enable(Array.isArray(pathType) ? pathType : [pathType], enable)
-        this._layerManager.refresh()
+        this.#layerManager.refresh()
     }
 
-    pathFeatureIds(externalIds)
-    //=========================
+    pathFeatureIds(externalIds: string[]): Set<number>
+    //================================================
     {
-        const featureIds = new utils.List();
-        featureIds.extend(this.__pathManager.connectivityModelFeatureIds(externalIds));
-        featureIds.extend(this.__pathManager.pathModelFeatureIds(externalIds));
-        return featureIds;
+        let featureIds = new Set<number>()
+        for (const id of externalIds) {
+            featureIds = featureIds.union(this.#pathManager.connectivityModelFeatureIds(id))
+            featureIds = featureIds.union(this.#pathManager.pathModelFeatureIds(id))
+        }
+        return featureIds
     }
 
-    pathModelNodes(modelId)
-    //=====================
+    pathModelNodes(modelId: string): Set<number>
+    //===========================================
     {
-        return this.__pathManager.pathModelNodes(modelId);
+        return this.#pathManager.pathModelNodes(modelId)
     }
 
-    nodePathModels(nodeId)
-    //====================
+    nodePathModels(nodeId: number): Set<string>
+    //=========================================
     {
-        return this.__pathManager.nodePathModels(nodeId);
+        return this.#pathManager.nodePathModels(nodeId)
     }
 
     enableSckanPaths(sckanState, enable=true)
     //=======================================
     {
-        this._layerManager.enableSckanPaths(sckanState, enable);
+        this.#layerManager.enableSckanPaths(sckanState, enable)
     }
 
     enableConnectivityByTaxonIds(taxonIds, enable=true)
     //=================================================
     {
         this.#taxonFacet.enable(Array.isArray(taxonIds) ? taxonIds : [taxonIds], enable)
-        this._layerManager.refresh()
+        this.#layerManager.refresh()
     }
 
     excludeAnnotated(exclude=false)
     //=============================
     {
-        this.#setPaint({excludeAnnotated: exclude});
+        this.#setPaint({excludeAnnotated: exclude})
     }
 
     //==============================================================================
 
     // Marker handling
 
-    markerPosition(featureId, annotation, options={})
-    //===============================================
+    markerPosition(featureId: number, annotation: FlatMapFeatureAnnotation, options:FlatMapMarkerOptions={}): Point2D
+    //===============================================================================================================
     {
-        if (this.__markerPositions.has(featureId)) {
-            return this.__markerPositions.get(featureId);
+        if (this.#markerPositions.has(featureId)) {
+            return this.#markerPositions.get(featureId)
         }
         if (annotation.centreline && 'location' in options) {
             if ('lineString' in annotation) {
                 const line = annotation.lineString
                 const point = turfAlong(line, options.location*annotation.lineLength)
-                return point.geometry.coordinates
+                return point.geometry.coordinates as Point2D
             }
             return null
         }
         if (!('markerPosition' in annotation) && !annotation.geometry.includes('Polygon')) {
             return null
         }
-        let position = annotation.markerPosition || annotation.centroid;
-        if (position === null || position == undefined) {
+        let position = annotation.markerPosition || annotation.centroid
+        if (!position) {
             // Find where to place a label or popup on a feature
-            const features = this._map.querySourceFeatures(VECTOR_TILES_SOURCE, {
-                'sourceLayer': this._flatmap.options.separateLayers
+            const features = this.#map.querySourceFeatures(VECTOR_TILES_SOURCE, {
+                'sourceLayer': this.#flatmap.options.separateLayers
                                 ? `${annotation['layer']}_${annotation['tile-layer']}`
                                 : annotation['tile-layer'],
                 'filter': [
                     'all',
-                    [ '==', ['id'], parseInt(featureId) ],
+                    [ '==', ['id'], featureId ],
                     [ '==', ['geometry-type'], 'Polygon' ]
                 ]
-            });
+            })
             if (features.length > 0) {
-                position = labelPosition(features[0]);
+                position = labelPosition(features[0])
             }
         }
-        this.__markerPositions.set(featureId, position, options);
-        return position;
+        this.#markerPositions.set(featureId, position)
+        return position
     }
 
-    nextMarkerId()
-    //============
+    nextMarkerId(): number
+    //====================
     {
         this.#lastMarkerId += 1
         return this.#lastMarkerId
     }
 
-    addMarker(anatomicalId, options={})
-    //=================================
+    addMarker(anatomicalId, options: FlatMapMarkerOptions={})
+    //=======================================================
     {
-        const featureIds = this._flatmap.modelFeatureIds(anatomicalId);
-        let markerId = -1;
+        const featureIds = this.#flatmap.modelFeatureIds(anatomicalId)
+        let markerId = -1
 
         for (const featureId of featureIds) {
-            const annotation = this._flatmap.annotation(featureId);
+            const annotation = this.#flatmap.annotation(featureId)
             const markerPosition = this.markerPosition(featureId, annotation, options)
             if (markerPosition === null) {
                 continue
@@ -1493,39 +1514,39 @@ export class UserInteractions
                 // MapLibre dynamically sets a transform on marker elements so in
                 // order to apply a scale transform we need to create marker icons
                 // inside the marker container <div>.
-                const colour = options.colour || '#005974';
+                const colour = options.colour || '#005974'
                 const markerHTML = options.element ? new maplibregl.Marker({element: options.element})
-                                                   : new maplibregl.Marker({color: colour, scale: 0.5});
+                                                   : new maplibregl.Marker({color: colour, scale: 0.5})
 
-                const markerElement = document.createElement('div');
-                const markerIcon = document.createElement('div');
-                markerIcon.innerHTML = markerHTML.getElement().innerHTML;
-                markerElement.id = `marker-${markerId}`;
-                markerElement.appendChild(markerIcon);
-                const markerOptions = {element: markerElement};
+                const markerElement = document.createElement('div')
+                const markerIcon = document.createElement('div')
+                markerIcon.innerHTML = markerHTML.getElement().innerHTML
+                markerElement.id = `marker-${markerId}`
+                markerElement.appendChild(markerIcon)
+                const markerOptions: maplibregl.MarkerOptions = {element: markerElement}
                 if ('className' in options) {
-                    markerOptions.className = options.className;
+                    markerOptions.className = options.className
                 }
-//                if (options.cluster && this._layerManager) {
-//                    this._layerManager.addMarker(markerId, markerPosition, annotation)
+//                if (options.cluster && this.#layerManager) {
+//                    this.#layerManager.addMarker(markerId, markerPosition, annotation)
 //                } else {
                     const marker = new maplibregl.Marker(markerOptions)
                                                  .setLngLat(markerPosition)
-                                                 .addTo(this._map);
+                                                 .addTo(this.#map)
                     markerElement.addEventListener('mouseenter',
-                        this.markerMouseEvent_.bind(this, marker, anatomicalId));
+                        this.#markerMouseEvent.bind(this, marker, anatomicalId))
                     markerElement.addEventListener('mousemove',
-                        this.markerMouseEvent_.bind(this, marker, anatomicalId));
+                        this.#markerMouseEvent.bind(this, marker, anatomicalId))
                     markerElement.addEventListener('mouseleave',
-                        this.markerMouseEvent_.bind(this, marker, anatomicalId));
+                        this.#markerMouseEvent.bind(this, marker, anatomicalId))
                     markerElement.addEventListener('click',
-                        this.markerMouseEvent_.bind(this, marker, anatomicalId));
+                        this.#markerMouseEvent.bind(this, marker, anatomicalId))
 
-                    this.__markerIdByMarker.set(marker, markerId);
-                    this.__markerIdByFeatureId.set(+featureId, markerId);
-                    this.__annotationByMarkerId.set(markerId, annotation);
-                    if (!this.__featureEnabled(this.mapFeature(+featureId))) {
-                        markerElement.style.visibility = 'hidden';
+                    this.#markerIdByMarker.set(marker, markerId)
+                    this.#markerIdByFeatureId.set(+featureId, markerId)
+                    this.#annotationByMarkerId.set(markerId, annotation)
+                    if (!this.#featureEnabled(this.mapFeature(+featureId))) {
+                        markerElement.style.visibility = 'hidden'
                     }
 //                }
             }
@@ -1533,31 +1554,31 @@ export class UserInteractions
         if (markerId === -1) {
             console.warn(`Unable to find feature '${anatomicalId}' on which to place marker`)
         }
-        return markerId;
+        return markerId
     }
 
     clearMarkers()
     //============
     {
-        if (this._layerManager) {
-            this._layerManager.clearMarkers()
+        if (this.#layerManager) {
+            this.#layerManager.clearMarkers()
         }
-        for (const marker of this.__markerIdByMarker.keys()) {
-            marker.remove();
+        for (const marker of this.#markerIdByMarker.keys()) {
+            marker.remove()
         }
-        this.__markerIdByMarker.clear();
-        this.__annotationByMarkerId.clear();
+        this.#markerIdByMarker.clear()
+        this.#annotationByMarkerId.clear()
     }
 
     removeMarker(markerId)
     //====================
     {
-        for (const [marker, id] of this.__markerIdByMarker.entries()) {
+        for (const [marker, id] of this.#markerIdByMarker.entries()) {
             if (markerId === id) {
-                marker.remove();
-                this.__markerIdByMarker.remove(marker);
-                this.__annotationByMarkerId.remove(id);
-                break;
+                marker.remove()
+                this.#markerIdByMarker.delete(marker)
+                this.#annotationByMarkerId.delete(id)
+                break
             }
         }
     }
@@ -1565,163 +1586,163 @@ export class UserInteractions
     addDatasetMarkers(datasets)
     //=========================
     {
-        if (this._layerManager) {
-            return this._layerManager.addDatasetMarkers(datasets)
+        if (this.#layerManager) {
+            return this.#layerManager.addDatasetMarkers(datasets)
         }
     }
 
     clearDatasetMarkers()
     //===================
     {
-        if (this._layerManager) {
-            this._layerManager.clearDatasetMarkers()
+        if (this.#layerManager) {
+            this.#layerManager.clearDatasetMarkers()
         }
     }
 
     removeDatasetMarker(datasetId)
-    //============================
+    //=============================
     {
-        if (this._layerManager) {
-            this._layerManager.removeDatasetMarker(markedatasetIdrId)
+        if (this.#layerManager) {
+            this.#layerManager.removeDatasetMarker(datasetId)
         }
     }
 
     visibleMarkerAnatomicalIds()
     //==========================
     {
-        const anatomicalIds = [];
-        const visibleBounds = this._map.getBounds();
-        for (const [marker, id] of this.__markerIdByMarker.entries()) {
+        const anatomicalIds = []
+        const visibleBounds = this.#map.getBounds()
+        for (const [marker, id] of this.#markerIdByMarker.entries()) {
             if (visibleBounds.contains(marker.getLngLat())) {
-                const annotation = this.__annotationByMarkerId.get(id);
+                const annotation = this.#annotationByMarkerId.get(id)
                 if (!anatomicalIds.includes(annotation.models)) {
-                    anatomicalIds.push(annotation.models);
+                    anatomicalIds.push(annotation.models)
                 }
             }
         }
-        return anatomicalIds;
+        return anatomicalIds
     }
 
-    markerMouseEvent_(marker, anatomicalId, event)
-    //============================================
+    #markerMouseEvent(marker, _anatomicalId, event)
+    //=============================================
     {
         // No tooltip when context menu is open
-        if (this._modal
-         || (this.__activeMarker !== null && event.type === 'mouseleave')) {
+        if (this.#modal
+         || (this.#activeMarker !== null && event.type === 'mouseleave')) {
             return
         }
 
         if (['mouseenter', 'mousemove', 'click'].includes(event.type)) {
-            this.__activeMarker = marker
+            this.#activeMarker = marker
 
             // Remove any tooltip
             marker.setPopup(null)
 
             // Reset cursor
-            marker.getElement().style.cursor = 'default';
+            marker.getElement().style.cursor = 'default'
 
-            const markerId = this.__markerIdByMarker.get(marker)
-            const annotation = this.__annotationByMarkerId.get(markerId)
+            const markerId = this.#markerIdByMarker.get(marker)
+            const annotation = this.#annotationByMarkerId.get(markerId)
 
-            this.markerEvent_(event, markerId, marker.getLngLat(), annotation)
+            this.markerEvent(event, markerId, marker.getLngLat(), annotation)
             event.stopPropagation()
         }
     }
 
-    markerEvent_(event, markerId, markerPosition, annotation)
-    //=======================================================
+    markerEvent(event, markerId, markerPosition, annotation)
+    //======================================================
     {
         if (['mousemove', 'click'].includes(event.type)) {
 
             // Remove any tooltips
-            this.removeTooltip_();
+            this.#removeTooltip()
 
             if (['mouseenter', 'mousemove', 'click'].includes(event.type)) {
                 // The marker's feature
-                const feature = this.mapFeature(annotation.featureId);
-                if (feature !== undefined) {
+                const feature = this.mapFeature(annotation.featureId)
+                if (feature) {
                     if (event.type === 'mouseenter') {
                         // Highlight on mouse enter
-                        this.resetActiveFeatures_();
-                        this.activateFeature(feature);
+                        this.#resetActiveFeatures()
+                        this.activateFeature(feature)
                     } else {
                         this.#selectActiveFeatures(event)
                     }
                 }
                 // Show tooltip
-                const html = this.tooltipHtml_(annotation, true);
-                this.__showToolTip(html, markerPosition);
+                const html = this.#tooltipHtml(annotation, true)
+                this.#showToolTip(html, markerPosition)
 
                 // Send marker event message
-                this._flatmap.markerEvent(event.type, markerId, annotation)
+                this.#flatmap.markerEvent(event.type, markerId, annotation)
             }
         }
     }
 
-    __clearActiveMarker()
+    #clearActiveMarker()
     //==================
     {
-        if (this.__activeMarker !== null) {
-            this.__activeMarker.setPopup(null);
-            this.__activeMarker = null;
+        if (this.#activeMarker !== null) {
+            this.#activeMarker.setPopup(null)
+            this.#activeMarker = null
         }
     }
 
-    showMarkerPopup(markerId, content, options)
-    //=========================================
+    showMarkerPopup(markerId, content, _options)
+    //==========================================
     {
-        const marker = this.__activeMarker;
-        if (markerId !== this.__markerIdByMarker.get(marker)) {
-            this.__clearActiveMarker();
-            return false;
+        const marker = this.#activeMarker
+        if (markerId !== this.#markerIdByMarker.get(marker)) {
+            this.#clearActiveMarker()
+            return false
         }
 
-        const location = marker.getLngLat();
+        const location = marker.getLngLat()
 
         // Make sure the marker is on screen
 
-        if (!this._map.getBounds().contains(location)) {
-            this._map.panTo(location);
+        if (!this.#map.getBounds().contains(location)) {
+            this.#map.panTo(location)
         }
 
-        const element = document.createElement('div');
+        const element = document.createElement('div')
         if (typeof content === 'object') {
-            element.appendChild(content);
+            element.appendChild(content)
         } else {
-            element.innerHTML = content;
+            element.innerHTML = content
         }
 
-        element.addEventListener('click', e => this.__clearActiveMarker());
+        element.addEventListener('click', _ => this.#clearActiveMarker())
 
-        this._tooltip = new maplibregl.Popup({
+        this.#tooltip = new maplibregl.Popup({
             closeButton: false,
             closeOnClick: false,
             maxWidth: 'none',
             className: 'flatmap-marker-popup'
-        });
+        })
 
-        this._tooltip
+        this.#tooltip
             .setLngLat(location)
-            .setDOMContent(element);
+            .setDOMContent(element)
 
         // Set the marker tooltip and show it
-        marker.setPopup(this._tooltip);
-        marker.togglePopup();
+        marker.setPopup(this.#tooltip)
+        marker.togglePopup()
 
-        return true;
+        return true
     }
 
     enablePanZoomEvents(enabled=true)
     //===============================
     {
-        this.__pan_zoom_enabled = enabled;
+        this.#pan_zoom_enabled = enabled
     }
 
-    panZoomEvent_(type, event)
+    #panZoomEvent(type, event)
     //========================
     {
-        if (this.__pan_zoom_enabled) {
-            this._flatmap.panZoomEvent(type);
+        if (this.#pan_zoom_enabled) {
+            this.#flatmap.panZoomEvent(type)
         }
         if (type === 'zoom') {
             if ('originalEvent' in event) {
@@ -1732,27 +1753,27 @@ export class UserInteractions
                     ])
                 }
             }
-            this._layerManager.zoomEvent()
+            this.#layerManager.zoomEvent()
         }
     }
 
     //==========================================================================
 
-    addImage(anatomicalId, imageUrl, options={})
-    //==========================================
+    addImage(anatomicalId, imageUrl, _options={})
+    //===========================================
     {
-        const featureIds = this._flatmap.modelFeatureIds(anatomicalId)
+        const featureIds = this.#flatmap.modelFeatureIds(anatomicalId)
         const imageIds = []
         const mapImageId = `image-${this.#lastImageId}`
         for (const featureId of featureIds) {
-            const annotation = this._flatmap.annotation(featureId)
+            const annotation = this.#flatmap.annotation(featureId)
             if (!annotation.geometry.includes('Polygon')) {
-                continue;
+                continue
             }
             this.#lastImageId += 1
             const imageId = `${mapImageId}-${this.#lastImageId}`
-            const featureBounds = annotation.bounds
-            this._map.addSource(`${imageId}-source`, {
+            const featureBounds = JSON.parse(annotation.bounds)
+            this.#map.addSource(`${imageId}-source`, {
                 type: 'image',
                 url: imageUrl,
                 coordinates: [
@@ -1762,7 +1783,7 @@ export class UserInteractions
                     [featureBounds[0], featureBounds[1]],
                 ]
             })
-            this._map.addLayer({
+            this.#map.addLayer({
                 id: `${imageId}-layer`,
                 'type': 'raster',
                 'source': `${imageId}-source`,
@@ -1786,10 +1807,10 @@ export class UserInteractions
         if (this.#imageLayerIds.has(mapImageId)) {
             for (const imageId of this.#imageLayerIds.get(mapImageId)) {
                 const layerId = `${imageId}-layer`
-                if (this._map.getLayer(layerId)) {
-                    this._map.removeLayer(layerId)
+                if (this.#map.getLayer(layerId)) {
+                    this.#map.removeLayer(layerId)
                 }
-                this._map.removeSource(`${imageId}-source`)
+                this.#map.removeSource(`${imageId}-source`)
             }
             this.#imageLayerIds.delete(mapImageId)
         }
@@ -1797,10 +1818,10 @@ export class UserInteractions
 
     //==========================================================================
 
-    getNerveDetails()
-    //===============
+    getNerveDetails(): NerveCentrelineDetails[]
+    //=========================================
     {
-        return this.__pathManager.nerveCentrelineDetails
+        return this.#pathManager.nerveCentrelineDetails
     }
 
     enableNeuronPathsByNerve(nerveModels, enable=true, showCentreline=false)
@@ -1808,7 +1829,7 @@ export class UserInteractions
     {
         this.#nerveCentrelineFacet.enable(Array.isArray(nerveModels) ? nerveModels : [nerveModels], enable)
         this.#pathTypeFacet.enableCentrelines(showCentreline)
-        this._layerManager.refresh()
+        this.#layerManager.refresh()
     }
 }
 
