@@ -47,7 +47,7 @@
     "graphology-operators": "^1.6.0",
     "graphology-shortest-path": "^2.1.0",
     "html-es6cape": "^2.0.2",
-    "maplibre-gl": ">=4.7.1",
+    "maplibre-gl": "^5.1.0",
     "mathjax-full": "^3.2.2",
     "minisearch": "^2.2.1",
     "polylabel": "^2.0.1"
