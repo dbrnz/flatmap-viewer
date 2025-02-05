@@ -1142,7 +1142,7 @@ export class FeatureLargeSymbolLayer extends VectorStyleLayer
                 'icon-image': 'label-background',
                 'text-allow-overlap': true,
                 'text-field': '{label}',
-                'text-font': ['Open Sans Regular'],
+                'text-font': ['Open Sans Semibold'],
                 'text-line-height': 1,
                 'text-max-width': 5,
                 'text-size': 16,
@@ -1190,10 +1190,10 @@ export class FeatureSmallSymbolLayer extends VectorStyleLayer
                 'icon-image': 'label-background',
                 'text-allow-overlap': true,
                 'text-field': '{label}',
-                'text-font': ['Open Sans Regular'],
+                'text-font': ['Open Sans Semibold'],
                 'text-line-height': 1,
                 'text-max-width': 5,
-                'text-size': ['step', ['zoom'], 5,8, 7,12, 9,20],
+                'text-size': ['step', ['zoom'], 8, 5, 12, 7, 16, 9, 20],
                 'icon-text-fit': 'both'
             },
             'paint': {
