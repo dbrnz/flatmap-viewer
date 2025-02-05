@@ -259,40 +259,45 @@ export class UserInteractions
             // Add a control to search annotations if option set
             this.#map.addControl(new SearchControl(flatmap))
 
-            // Show information about features
-            this.#infoControl = new InfoControl(flatmap)
-            this.#map.addControl(this.#infoControl)
-
             // Control background colour (NB. this depends on having map layers created)
             this.#map.addControl(new BackgroundControl(flatmap))
 
-            // Add a control to manage our paths
-            this.#map.addControl(new PathControl(flatmap, mapPathTypes))
+            // Remaining controls only show if we want all of them
 
-            // Add a control for nerve centrelines if they are present
-            if (flatmap.options.style === FLATMAP_STYLE.ANATOMICAL && this.#pathManager.haveCentrelines) {
-                this.#map.addControl(new NerveCentrelineControl(flatmap, this))
+            if (flatmap.options.allControls) {
+
+                // Show information about features
+                this.#infoControl = new InfoControl(flatmap)
+                this.#map.addControl(this.#infoControl)
+
+                // Add a control to manage our paths
+                this.#map.addControl(new PathControl(flatmap, mapPathTypes))
+
+                // Add a control for nerve centrelines if they are present
+                if (flatmap.options.style === FLATMAP_STYLE.ANATOMICAL && this.#pathManager.haveCentrelines) {
+                    this.#map.addControl(new NerveCentrelineControl(flatmap, this))
+                }
+
+                if (flatmap.options.style === FLATMAP_STYLE.FUNCTIONAL) {
+                    // SCKAN path and SYSTEMS controls for FC maps
+                    this.#map.addControl(new SystemsControl(flatmap, this.#systemsManager.systems))
+                    this.#map.addControl(new SCKANControl(flatmap, flatmap.options.layerOptions))
+                } else {
+                    // Connectivity taxon control for AC maps
+                    this.#map.addControl(new TaxonsControl(flatmap))
+                }
+
+                if (flatmap.has_flightpaths) {
+                    this.#map.addControl(new FlightPathControl(flatmap, flatmap.options.flightPaths))
+                }
+
+                if (flatmap.options.annotator) {
+                    this.#map.addControl(new AnnotatorControl(flatmap))
+                }
+
+                // Add a control to control layer visibility
+                this.#map.addControl(new LayerControl(flatmap, this.#layerManager))
             }
-
-            if (flatmap.options.style === FLATMAP_STYLE.FUNCTIONAL) {
-                // SCKAN path and SYSTEMS controls for FC maps
-                this.#map.addControl(new SystemsControl(flatmap, this.#systemsManager.systems))
-                this.#map.addControl(new SCKANControl(flatmap, flatmap.options.layerOptions))
-            } else {
-                // Connectivity taxon control for AC maps
-                this.#map.addControl(new TaxonsControl(flatmap))
-            }
-
-            if (flatmap.has_flightpaths) {
-                this.#map.addControl(new FlightPathControl(flatmap, flatmap.options.flightPaths))
-            }
-
-            if (flatmap.options.annotator) {
-                this.#map.addControl(new AnnotatorControl(flatmap))
-            }
-
-            // Add a control to control layer visibility
-            this.#map.addControl(new LayerControl(flatmap, this.#layerManager))
         }
 
         // Initialise map annotation

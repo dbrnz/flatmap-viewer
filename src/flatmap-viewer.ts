@@ -152,6 +152,7 @@ export type FlatMapStyleSpecification = maplibregl.StyleSpecification & {
 
 type MapDescriptionOptions = FlatMapOptions & {
     addCloseControl: boolean
+    allControls: boolean
     bounds: [number, number, number, number]
     images?: {
         id: string
@@ -2426,6 +2427,10 @@ export class MapManager
                 flatmap.addCloseControl()
             }
         }
+
+        // Don't clutter the screen with controls if a multipane viewer
+
+        mapOptions.allControls = (this.#panes <= 1)
 
         // Display the map
 
