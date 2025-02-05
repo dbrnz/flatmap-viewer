@@ -48,7 +48,7 @@ import {PATHWAYS_LAYER, PathManager} from './pathways'
 import {SystemsManager} from './systems'
 
 import {displayedProperties, InfoControl} from './controls/info'
-import {AnnotatorControl, BackgroundControl, LayerControl, NavigationControl, SCKANControl} from './controls/controls'
+import {AnnotatorControl, BackgroundControl, ClosePaneControl, LayerControl, NavigationControl, SCKANControl} from './controls/controls'
 import {AnnotationDrawControl, DRAW_ANNOTATION_LAYERS} from './controls/annotation'
 import {NerveCentrelineControl} from './controls/nerves'
 import {PathControl} from './controls/paths'
@@ -150,6 +150,7 @@ export class UserInteractions
     #activeMarker = null
     #annotationByMarkerId = new Map()
     #annotationDrawControl = null
+    #closeControl: ClosePaneControl|null = null
     #colourOptions
     #currentPopup = null
     #featureEnabledCount: Map<number, number>
@@ -247,6 +248,12 @@ export class UserInteractions
             this.#map.addControl(new NavigationControl(flatmap), <maplibregl.ControlPosition>position)
         }
 
+        // Optionally add a close pane control
+
+        if (flatmap.options.addCloseControl) {
+            this.addCloseControl()
+        }
+
         // Add various controls when running standalone
         if (flatmap.options.standalone) {
             // Add a control to search annotations if option set
@@ -336,6 +343,24 @@ export class UserInteractions
     //===============
     {
         return this.#pathManager
+    }
+
+    addCloseControl()
+    //===============
+    {
+        if (this.#closeControl === null) {
+            this.#closeControl = new ClosePaneControl(this.#flatmap)
+            this.#map.addControl(this.#closeControl)
+        }
+    }
+
+    removeCloseControl()
+    //==================
+    {
+        if (this.#closeControl) {
+            this.#map.removeControl(this.#closeControl)
+            this.#closeControl = null
+        }
     }
 
     getState()

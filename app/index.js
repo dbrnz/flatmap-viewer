@@ -2,7 +2,7 @@
 
 Flatmap viewer and annotation tool
 
-Copyright (c) 2019 - 2024 David Brooks
+Copyright (c) 2019 - 2025 David Brooks
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -241,6 +241,8 @@ export async function standaloneViewer(mapEndpoints={}, options={})
             currentMap.close()
         }
         currentManager = new MapManager(mapEndpoints[server], {
+            container: 'flatmap-viewer-canvas',
+            panes: 3,
             images: [
                 {
                     id: 'label-background',
@@ -362,12 +364,11 @@ export async function standaloneViewer(mapEndpoints={}, options={})
         mapGeneration.innerHTML = generationList.join('')
     }
 
-    function loadMap(manager, id, taxon=null, sex=null)
-    //=================================================
+    async function loadMap(manager, id, taxon=null, sex=null)
+    //=======================================================
     {
-        if (currentMap !== null) {
-            currentMap.close()
-        }
+        manager.closeMaps()
+
         mapProvenance.innerHTML = ''
         if (id !== null) {
             requestUrl.searchParams.set('id', id)
@@ -386,7 +387,7 @@ export async function standaloneViewer(mapEndpoints={}, options={})
         // Update address bar URL to current map
         window.history.pushState('data', document.title, requestUrl)
 
-        manager.loadMap(id, 'map-canvas', (eventType, ...args) => {
+        await manager.loadMap(id, async (eventType, ...args) => {
                 if (args[0].type === 'control' && args[0].control === 'background') {
                     mapOptions.background = args[0].value
                 } else if (eventType === 'annotation') {
@@ -413,8 +414,5 @@ export async function standaloneViewer(mapEndpoints={}, options={})
         });
     }
 }
-
-//==============================================================================
-
 
 //==============================================================================

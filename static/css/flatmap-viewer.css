@@ -11,6 +11,11 @@
 .maplibregl-ctrl-minimap {
     border: 1px solid #444;
 }
+.flatmap-viewer-pane {
+    position: relative !important;
+    width: 100%;
+    border: 1px solid darkgreen;
+}
 
 /* Context menu */
 
@@ -49,6 +54,20 @@ li.flatmap-contextmenu-item:hover {
     width: 20px;
     height: 20px;
     margin-top: 2px;
+}
+
+.close-button {
+    display: inline-block;
+    vertical-align: middle;
+    padding: 0;
+    margin: 0;
+    border: 0;
+    width: 24px;
+    height: 24px;
+}
+.close-button svg {
+    fill: #444;
+    background-color: #ccc;
 }
 
 .text-button {

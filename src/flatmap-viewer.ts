@@ -151,6 +151,7 @@ export type FlatMapStyleSpecification = maplibregl.StyleSpecification & {
 //==============================================================================
 
 type MapDescriptionOptions = FlatMapOptions & {
+    addCloseControl: boolean
     bounds: [number, number, number, number]
     images?: {
         id: string
@@ -207,6 +208,7 @@ export class FlatMap
     #layers
     #idToAnnotation: Map<number, FlatMapFeatureAnnotation> = new Map()
     #knowledgeSource = ''
+    #manager: MapManager
     #map: maplibregl.Map|null = null
     #mapNumber: number
     #mapServer: FlatMapServer
@@ -226,8 +228,9 @@ export class FlatMap
     #userInteractions: UserInteractions|null = null
     #uuid: string
 
-    constructor(container: string, mapServer: FlatMapServer, mapDescription: MapDescription)
+    constructor(manager: MapManager, container: string, mapServer: FlatMapServer, mapDescription: MapDescription)
     {
+        this.#manager = manager
         this.#mapServer = mapServer
         this.#baseUrl = mapServer.url()
         this.#id = mapDescription.id
@@ -1038,6 +1041,12 @@ export class FlatMap
             this.#map.remove()
             this.#map = null
         }
+    }
+
+    closePane()
+    //=========
+    {
+        this.#manager.closePane(this.#mapNumber)
     }
 
     resize()
@@ -2031,6 +2040,24 @@ export class FlatMap
 
     //==========================================================================
 
+    addCloseControl()
+    //===============
+    {
+        if (this.#userInteractions !== null) {
+            this.#userInteractions.addCloseControl()
+        }
+    }
+
+    removeCloseControl()
+    //===============
+    {
+        if (this.#userInteractions !== null) {
+            this.#userInteractions.removeCloseControl()
+        }
+    }
+
+    //==========================================================================
+
 }   // End of FlatMap class
 
 //==============================================================================
@@ -2051,10 +2078,23 @@ type MapListEntry = FlatMapServerIndex & {
 //==============================================================================
 //==============================================================================
 
+export interface PreloadedImage
+{
+    id: string
+    url: string
+    options: {
+        content: number[]
+        stretchX: number[][]
+        stretchY: number[][]
+    }
+
+}
+
 export interface MapManagerOptions extends FlatMapOptions
 {
-    container?: string
+    container: string
     panes?: number
+    images?: PreloadedImage[]
 }
 
 //==============================================================================
@@ -2071,18 +2111,28 @@ export class MapManager
      */
     static version = VIEWER_VERSION
 
+    #container: string
+    #containerElement: HTMLElement
     #initialisingMutex: utils.Mutex = new utils.Mutex()
     #initialised: boolean = false
     #mapList: MapListEntry[] = []
     #mapNumber: number = 0
+    #mapsByPane: Map<number, FlatMap> = new Map()
     #mapServer: FlatMapServer
-    #options: MapManagerOptions
+    #images: PreloadedImage[]
+    #panes: number
     #sparcTermGraph = new SparcTermGraph()
 
-    constructor(mapServerUrl: string, options: MapManagerOptions={})
+    constructor(mapServerUrl: string, options: MapManagerOptions)
     {
         this.#mapServer = new FlatMapServer(mapServerUrl)
-        this.#options = options
+        this.#container = options.container
+        this.#containerElement = document.getElementById(this.#container)
+        this.#images = options.images || []
+        this.#panes = options.panes || 1
+        if (this.#panes > 1) {
+            this.#containerElement.style.display = 'flex'
+        }
     }
 
     async #ensureInitialised()
@@ -2228,8 +2278,8 @@ export class MapManager
     *                     {uuid: 'a563be90-9225-51c1-a84d-00ed2d03b7dc'},
     *                     'div-4')
     */
-    async loadMap(identifier: string, container: string, callback: FlatMapCallback, options: FlatMapOptions={}): Promise<FlatMap>
-    //===========================================================================================================================
+    async loadMap(identifier: string, callback: FlatMapCallback, options: FlatMapOptions={}): Promise<FlatMap>
+    //========================================================================================================
     {
         const map = await this.#findMap(identifier)
         if (map === null) {
@@ -2245,7 +2295,7 @@ export class MapManager
         if (mapId !== mapIndexId) {
             throw new Error(`Map '${mapId}' has wrong ID in index`)
         }
-        const mapOptions = Object.assign({}, this.#options, options) as MapDescriptionOptions
+        const mapOptions = Object.assign({images: this.#images}, options) as MapDescriptionOptions
 
         // If bounds are not specified in options then set them
 
@@ -2351,10 +2401,35 @@ export class MapManager
 
         mapOptions.separateLayers = map.separateLayers
 
+        // Create a container for the map if in multi-pane mode
+
+        let containerId: string
+        if (this.#panes <= 1) {
+            containerId = this.#container
+        } else if (this.#mapsByPane.size >= this.#panes) {
+            const flatmap = this.#mapsByPane.get(this.#mapNumber)
+            if (flatmap) {
+                flatmap.close()
+            }
+            containerId = `${this.#container}-${this.#mapNumber}`
+        } else {
+            this.#mapNumber += 1
+            containerId = `${this.#container}-${this.#mapNumber}`
+            const mapPane = document.createElement('div')
+            mapPane.id = containerId
+            mapPane.setAttribute('class', 'flatmap-viewer-pane')
+            this.#containerElement.append(mapPane)
+        }
+        mapOptions.addCloseControl = (this.#panes > 1) && (this.#mapsByPane.size >= 1)
+        if (this.#mapsByPane.size === 1) {
+            for (const flatmap of this.#mapsByPane.values()) {
+                flatmap.addCloseControl()
+            }
+        }
+
         // Display the map
 
-        this.#mapNumber += 1
-        const flatmap = new FlatMap(container, this.#mapServer,
+        const flatmap = new FlatMap(this, containerId, this.#mapServer,
             {
                 id: map.id,
                 uuid: mapId,
@@ -2372,7 +2447,42 @@ export class MapManager
                 provenance
             })
         await flatmap.mapLoaded()
+
+        this.#mapsByPane.set(this.#mapNumber, flatmap)
         return flatmap
+    }
+
+    closeMaps()
+    //=========
+    {
+        for (const [mapNumber, flatmap] of this.#mapsByPane.entries()) {
+            flatmap.close()
+            if (this.#panes > 1) {
+                const container = document.getElementById(`${this.#container}-${mapNumber}`)
+                container.remove()
+            }
+        }
+        this.#mapsByPane.clear()
+        this.#mapNumber = 0
+    }
+
+    closePane(mapNumber: number)
+    //==========================
+    {
+        if (this.#mapsByPane.size > 1) {
+            const flatmap = this.#mapsByPane.get(mapNumber)
+            if (flatmap) {
+                flatmap.close()
+                this.#mapsByPane.delete(mapNumber)
+            }
+            const container = document.getElementById(`${this.#container}-${mapNumber}`)
+            container.remove()
+        }
+        if (this.#mapsByPane.size <= 1) {
+            for (const flatmap of this.#mapsByPane.values()) {
+                flatmap.removeCloseControl()
+            }
+        }
     }
 }
 
