@@ -137,6 +137,13 @@ export class FLATMAP_STYLE
 }
 
 //==============================================================================
+
+interface CentrelineDetails
+{
+    models: string
+    label: string
+}
+
 //==============================================================================
 
 type FlatMapSourceSpecification = maplibregl.VectorSourceSpecification
@@ -1809,13 +1816,11 @@ export class FlatMap
     /**
      * Select features and zoom the map to them.
      *
-     * @param {string | Array.<string>}  geojsonIds  A single GeoJSON feature identifiers
-     *                                               or an array of identifiers.
-     * @param {Object}  [options]
+     * @param  geojsonIds  An array of  GeoJSON feature identifiers
      * @param {boolean} [options.zoomIn=false]  Zoom in the map (always zoom out as necessary)
      */
-    zoomToGeoJSONFeatures(geojsonIds, options=null)
-    //=============================================
+    zoomToGeoJSONFeatures(geojsonIds: number[], options: { zoomIn?: boolean }=null)
+    //=============================================================================
     {
         options = utils.setDefaults(options, {
             select: true,
@@ -1842,8 +1847,8 @@ export class FlatMap
      *                                      being placed on each feature. ``null`` is returned if
      *                                      there are no features with the given ``anatomicalId``.
      */
-    addImage(anatomicalId, imageUrl, options={}) // : string[]
-    //==========================================
+    addImage(anatomicalId: string, imageUrl: string, options={}): string|null
+    //=======================================================================
     {
         if (this.#userInteractions !== null) {
             return this.#userInteractions.addImage(anatomicalId, imageUrl, options)
@@ -1856,8 +1861,8 @@ export class FlatMap
      *
      * @param   {string}   mapImageId       An image identifier previously returned by ``addImage()``.
      */
-    removeImage(mapImageId)
-    //=====================
+    removeImage(mapImageId: string)
+    //=============================
     {
         if (this.#userInteractions !== null) {
             this.#userInteractions.removeImage(mapImageId)
@@ -1865,19 +1870,12 @@ export class FlatMap
     }
 
     //==========================================================================
-    /**
-     * @typedef {Object} CentrelineDetails
-     * @property {string} models
-     * @property {string} label
-     */
 
     /**
      * Get a details of the nerve centrelines in the map.
-     *
-     * @return  {CentrelineDetails[]}
      */
-    getNerveDetails()
-    //===============
+    getNerveDetails(): CentrelineDetails[]
+    //====================================
     {
         if (this.#userInteractions !== null) {
             return this.#userInteractions.getNerveDetails()
@@ -1891,8 +1889,8 @@ export class FlatMap
      * @param   {string[]|string}   nerveModels   Anatomical identifiers of nerve centrelines
      * @param   {boolean}  [enable=true]
      */
-    enableNeuronPathsByNerve(nerveModels, enable=true)
-    //================================================
+    enableNeuronPathsByNerve(nerveModels: string|string[], enable=true)
+    //=================================================================
     {
         if (this.#userInteractions !== null) {
             this.#userInteractions.enableNeuronPathsByNerve(nerveModels, enable)
