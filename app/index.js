@@ -18,7 +18,7 @@ limitations under the License.
 
 ******************************************************************************/
 
-import { MapManager } from '../src/flatmap-viewer';
+import { MapViewer } from '../src/flatmap-viewer';
 
 //==============================================================================
 
@@ -203,12 +203,12 @@ export async function standaloneViewer(mapEndpoints={}, options={})
         serverSelector.innerHTML = mapServerList.join('')
         serverSelector.onchange = (e) => {
             if (e.target.value !== '') {
-                changeManager(e.target.value)
+                changeViewer(e.target.value)
             }
         }
     }
 
-    let currentManager = null
+    let currentViewer = null
     let currentMap = null
 
     let drawControl = null
@@ -230,17 +230,17 @@ export async function standaloneViewer(mapEndpoints={}, options={})
     let defaultBackground = localStorage.getItem('flatmap-background-colour') || 'black'
     const mapOptions = Object.assign({}, DEFAULT_OPTIONS, {background: defaultBackground}, options)
 
-    // Everything setup so start by getting a map manager
+    // Everything setup so start by getting a map viewer
 
-    await changeManager(currentServer)
+    await changeViewer(currentServer)
 
-    async function changeManager(server)
-    //==================================
+    async function changeViewer(server)
+    //=================================
     {
         if (currentMap) {
             currentMap.close()
         }
-        currentManager = new MapManager(mapEndpoints[server], {
+        currentViewer = new MapViewer(mapEndpoints[server], {
             container: 'flatmap-viewer-canvas',
             panes: 3,
             images: [
@@ -260,16 +260,16 @@ export async function standaloneViewer(mapEndpoints={}, options={})
         mapId = null
         mapTaxon = null
         mapSex = null
-        await setMapList(currentManager)
+        await setMapList(currentViewer)
     }
 
-    async function setMapList(manager)
+    async function setMapList(viewer)
     //================================
     {
         mapIdToName.clear()
         mapGenerations.clear()
         const latestMaps = new Map()
-        const maps = await manager.allMaps()
+        const maps = await viewer.allMaps()
         for (const map of Object.values(maps)) {
             const text = [];
             if ('describes' in map) {
@@ -328,12 +328,12 @@ export async function standaloneViewer(mapEndpoints={}, options={})
         mapSelector.onchange = (e) => {
             if (e.target.value !== '') {
                 setGenerationSelector(e.target.value)
-                loadMap(currentManager, e.target.value)
+                loadMap(currentViewer, e.target.value)
             }
         }
         mapGeneration.onchange = (e) => {
             if (e.target.value !== '') {
-                loadMap(currentManager, e.target.value)
+                loadMap(currentViewer, e.target.value)
             }
         }
 
@@ -346,7 +346,7 @@ export async function standaloneViewer(mapEndpoints={}, options={})
         }
 
         setGenerationSelector(mapId)
-        loadMap(currentManager, mapId, mapTaxon, mapSex)
+        loadMap(currentViewer, mapId, mapTaxon, mapSex)
     }
 
     function setGenerationSelector(mapId)
@@ -364,10 +364,10 @@ export async function standaloneViewer(mapEndpoints={}, options={})
         mapGeneration.innerHTML = generationList.join('')
     }
 
-    async function loadMap(manager, id, taxon=null, sex=null)
-    //=======================================================
+    async function loadMap(viewer, id, taxon=null, sex=null)
+    //======================================================
     {
-        manager.closeMaps()
+        viewer.closeMaps()
 
         mapProvenance.innerHTML = ''
         if (id !== null) {
@@ -387,7 +387,7 @@ export async function standaloneViewer(mapEndpoints={}, options={})
         // Update address bar URL to current map
         window.history.pushState('data', document.title, requestUrl)
 
-        await manager.loadMap(id, async (eventType, ...args) => {
+        await viewer.loadMap(id, async (eventType, ...args) => {
                 if (args[0].type === 'control' && args[0].control === 'background') {
                     mapOptions.background = args[0].value
                 } else if (eventType === 'annotation') {

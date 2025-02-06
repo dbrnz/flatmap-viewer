@@ -191,7 +191,7 @@ type FeatureIdMap = Map<string, number[]>
 
 /**
 * Maps are not created directly but instead are created and loaded by
-* :meth:`LoadMap` of :class:`MapManager`.
+* :meth:`LoadMap` of :class:`MapViewer`.
 */
 export class FlatMap
 {
@@ -209,7 +209,7 @@ export class FlatMap
     #layers
     #idToAnnotation: Map<number, FlatMapFeatureAnnotation> = new Map()
     #knowledgeSource = ''
-    #manager: MapManager
+    #viewer: MapViewer
     #map: maplibregl.Map|null = null
     #mapNumber: number
     #mapServer: FlatMapServer
@@ -229,9 +229,9 @@ export class FlatMap
     #userInteractions: UserInteractions|null = null
     #uuid: string
 
-    constructor(manager: MapManager, container: string, mapServer: FlatMapServer, mapDescription: MapDescription)
+    constructor(viewer: MapViewer, container: string, mapServer: FlatMapServer, mapDescription: MapDescription)
     {
-        this.#manager = manager
+        this.#viewer = viewer
         this.#mapServer = mapServer
         this.#baseUrl = mapServer.url()
         this.#id = mapDescription.id
@@ -1047,7 +1047,7 @@ export class FlatMap
     closePane()
     //=========
     {
-        this.#manager.closePane(this.#mapNumber)
+        this.#viewer.closePane(this.#mapNumber)
     }
 
     resize()
@@ -2091,7 +2091,7 @@ export interface PreloadedImage
 
 }
 
-export interface MapManagerOptions extends FlatMapOptions
+export interface MapViewerOptions extends FlatMapOptions
 {
     container: string
     panes?: number
@@ -2101,11 +2101,12 @@ export interface MapManagerOptions extends FlatMapOptions
 //==============================================================================
 
 /**
- * A manager for FlatMaps.
+ * A viewer for FlatMaps.
+ *
  * @example
- * const mapManager = new MapManger('https://mapcore-demo.org/flatmaps/')
+ * const viewer = new MapViewer('https://mapcore-demo.org/flatmaps/', {container: 'container-id'})
  */
-export class MapManager
+export class MapViewer
 {
     /**
      * The released version of the viewer
@@ -2124,7 +2125,7 @@ export class MapManager
     #panes: number
     #sparcTermGraph = new SparcTermGraph()
 
-    constructor(mapServerUrl: string, options: MapManagerOptions)
+    constructor(mapServerUrl: string, options: MapViewerOptions)
     {
         this.#mapServer = new FlatMapServer(mapServerUrl)
         this.#container = options.container
