@@ -2070,7 +2070,9 @@ type MapIdentifier = {
 
 //==============================================================================
 
-type MapListEntry = FlatMapServerIndex & {
+export type MapListEntry = FlatMapServerIndex & {
+    describes?: string
+    id?: string
     separateLayers?: boolean
 }
 
@@ -2162,14 +2164,14 @@ export class MapViewer
         })
     }
 
-    async allMaps()
-    //=============
+    async allMaps(): Promise<Record<string, MapListEntry>>
+    //====================================================
     {
         await this.#ensureInitialised()
-        const allMaps = {};
+        const allMaps = {}
         for (const map of this.#mapList) {
-            const id = ('uuid' in map) ? map.uuid : map.id;
-            allMaps[id] = map;
+            const id = ('uuid' in map) ? map.uuid : map.id
+            allMaps[id] = map
         }
         return allMaps
     }
