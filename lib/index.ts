@@ -1,9 +1,9 @@
 //==============================================================================
 
-import {FlatMap, MapManager} from '../src/flatmap-viewer'
+import {FlatMap, MapViewer} from '../src/flatmap-viewer'
 
 //==============================================================================
 
-export {FlatMap, MapManager}
+export {FlatMap, MapViewer}
 
 //==============================================================================
