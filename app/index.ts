@@ -18,7 +18,8 @@ limitations under the License.
 
 ******************************************************************************/
 
-import { MapViewer } from '../src/flatmap-viewer';
+import { FlatMapOptions } from '../src/flatmap'
+import { FlatMap, MapViewer } from '../src/flatmap-viewer';
 
 //==============================================================================
 
@@ -46,10 +47,12 @@ const DEFAULT_OPTIONS = {
     maxZoom: 10
 }
 
-window.onload = standaloneViewer(MAP_ENDPOINTS, {
-    debug: DEBUG,
-    minimap: MINIMAP
-})
+window.onload = () => {
+    standaloneViewer(MAP_ENDPOINTS, {
+        debug: DEBUG,
+        minimap: MINIMAP
+    })
+}
 
 //==============================================================================
 
@@ -69,10 +72,10 @@ const keyPrompts = [
     ['connectivity', 'SCKAN connectivity']
 ]
 
-function fieldAsHtml(dict, level, sckan=false)
-//============================================
+function fieldAsHtml(dict, level, sckan=false): string
+//====================================================
 {
-    const html = []
+    const html: string[] = []
     for (const key of Object.keys(dict)) {
         let value = dict[key]
         if (value instanceof Object && value.constructor === Object) {
@@ -84,13 +87,13 @@ function fieldAsHtml(dict, level, sckan=false)
     return html.join('\n')
 }
 
-function provenanceAsHtml(dict)
-//=============================
+function provenanceAsHtml(dict): string
+//=====================================
 {
     const mapServer = dict.server || null
     const mapID = dict.uuid || dict.id || null
 
-    const html = []
+    const html: string[] = []
     for (const [key, prompt] of keyPrompts) {
         if (key in dict) {
             let value = dict[key]
@@ -109,46 +112,55 @@ function provenanceAsHtml(dict)
 
 //==============================================================================
 
+type DrawEvent = Event & {
+    feature
+}
+
 class DrawControl
 {
-    constructor(flatmap)
-    {
-        this._flatmap = flatmap
-        this._lastEvent = null
-        this._idField = document.getElementById('drawing-id')
+    #cancelBtn: HTMLElement|null
+    #flatmap: FlatMap
+    #idField: HTMLElement|null
+    #lastEvent: DrawEvent|null = null
+    #okBtn: HTMLElement|null
 
-        this._okBtn = document.getElementById('drawing-ok')
-        if (this._okBtn) {
-            this._okBtn.addEventListener('click', e => {
-                if (this._lastEvent) {
-                    const feature = this._flatmap.refreshAnnotationFeatureGeometry(this._lastEvent.feature)
-                    this._flatmap.commitAnnotationEvent(this._lastEvent)
-                    this._idField.innerText = ''
-                    this._lastEvent = null
+    constructor(flatmap: FlatMap)
+    {
+        this.#flatmap = flatmap
+        this.#idField = document.getElementById('drawing-id')
+
+        this.#okBtn = document.getElementById('drawing-ok')
+        if (this.#okBtn) {
+            this.#okBtn.addEventListener('click', e => {
+                if (this.#lastEvent) {
+                    const feature = this.#flatmap.refreshAnnotationFeatureGeometry(this.#lastEvent.feature)
+                    this.#flatmap.commitAnnotationEvent(this.#lastEvent)
+                    this.#idField!.innerText = ''
+                    this.#lastEvent = null
                     // Send `feature`, along with user comments, to the annotation service
                 }
             })
         }
 
-        this._cancelBtn = document.getElementById('drawing-cancel')
-        if (this._cancelBtn) {
-            this._cancelBtn.addEventListener('click', e => {
-                if (this._lastEvent) {
-                    this._flatmap.rollbackAnnotationEvent(this._lastEvent)
-                    this._idField.innerText = ''
-                    this._lastEvent = null
+        this.#cancelBtn = document.getElementById('drawing-cancel')
+        if (this.#cancelBtn) {
+            this.#cancelBtn.addEventListener('click', e => {
+                if (this.#lastEvent) {
+                    this.#flatmap.rollbackAnnotationEvent(this.#lastEvent)
+                    this.#idField!.innerText = ''
+                    this.#lastEvent = null
                 }
             })
         }
     }
 
-    handleEvent(event)
-    //================
+    handleEvent(event: DrawEvent)
+    //=======================
     {
         console.log(event)
-        if (this._idField && event.type !== 'modeChanged' && event.type !== 'selectionChanged') {
-            this._idField.innerText = `Annotation ${event.type}, Id: ${event.feature.id}`
-            this._lastEvent = event
+        if (this.#idField && event.type !== 'modeChanged' && event.type !== 'selectionChanged') {
+            this.#idField.innerText = `Annotation ${event.type}, Id: ${event.feature.id}`
+            this.#lastEvent = event
         }
     }
 }
@@ -157,90 +169,119 @@ class DrawControl
 
 export async function standaloneViewer(mapEndpoints={}, options={})
 {
-    const requestUrl = new URL(window.location.href)
-    const requestPathParts = requestUrl.pathname.split('/')
-    const requestEndpoint = requestUrl.origin + (requestPathParts.slice(0, (requestPathParts[requestPathParts.length - 1] === '') ? -2 : -1)
-                                                                 .concat([''])
-                                                                 .join('/'))
-    let currentServer = requestUrl.searchParams.get('server') || null
-    if (currentServer && !mapEndpoints[currentServer]) {
-        currentServer = null
-    }
-    if (currentServer === null) {
-        if (requestEndpoint.includes('localhost')) {
-            if ('local' in mapEndpoints) {
-                // localhost is a special case since viewer might be separate
-                currentServer = 'local'
-            }
-        } else {
-            // Running remotely so don't confuse the user...
-            if ('local' in mapEndpoints) {
-                delete mapEndpoints['local']
-            }
-            for (const [server, endpoint] of Object.entries(mapEndpoints)) {
-                if (endpoint === requestEndpoint) {
-                    currentServer = server
-                    break
+    const viewer = new StandaloneViewer(mapEndpoints, options)
+
+    // Everything setup so start by loading a map from a map server
+
+    await viewer.loadMapList()
+}
+
+//==============================================================================
+
+class StandaloneViewer
+{
+    #currentMap: FlatMap|null = null
+    #currentServer: string|null
+    #currentViewer: MapViewer|null = null
+    #defaultBackground: string = localStorage.getItem('flatmap-background-colour') || 'black'
+    #drawControl: DrawControl|null = null
+
+    #mapEndpoints: object
+    #mapSelector: HTMLSelectElement|null
+    #mapGeneration: HTMLSelectElement|null
+    #mapOptions: FlatMapOptions
+    #mapProvenance: HTMLElement|null
+
+    #mapIdToName = new Map()
+    #mapGenerations = new Map()
+
+    #mapId: string|null = null
+    #mapSex: string|null = null
+    #mapTaxon: string|null = null
+    #requestUrl: URL
+
+    #viewMapId: string|null = null
+    #viewMapSex: string|null = null
+    #viewMapTaxon: string|null = null
+
+    constructor(mapEndpoints={}, options={})
+    {
+        this.#mapEndpoints = mapEndpoints
+        this.#mapOptions = Object.assign({}, DEFAULT_OPTIONS, {background: this.#defaultBackground}, options)
+
+        this.#requestUrl = new URL(window.location.href)
+        const requestPathParts = this.#requestUrl.pathname.split('/')
+        const requestEndpoint = this.#requestUrl.origin + (requestPathParts.slice(0, (requestPathParts[requestPathParts.length - 1] === '') ? -2 : -1)
+                                                                     .concat([''])
+                                                                     .join('/'))
+        this.#currentServer = this.#requestUrl.searchParams.get('server') || null
+        if (this.#currentServer && !this.#mapEndpoints[this.#currentServer]) {
+            this.#currentServer = null
+        }
+        if (this.#currentServer === null) {
+            if (requestEndpoint.includes('localhost')) {
+                if ('local' in this.#mapEndpoints) {
+                    // localhost is a special case since viewer might be separate
+                    this.#currentServer = 'local'
+                }
+            } else {
+                // Running remotely so don't confuse the user...
+                if ('local' in this.#mapEndpoints) {
+                    delete this.#mapEndpoints['local']
+                }
+                for (const [server, endpoint] of Object.entries(this.#mapEndpoints)) {
+                    if (endpoint === requestEndpoint) {
+                        this.#currentServer = server
+                        break
+                    }
+                }
+                if (this.#currentServer === null) {
+                    this.#currentServer = 'default'
+                    this.#mapEndpoints[this.#currentServer] = requestEndpoint
                 }
             }
-            if (currentServer === null) {
-                currentServer = 'default'
-                mapEndpoints[currentServer] = requestEndpoint
+        }
+        if (Object.keys(this.#mapEndpoints).length <= 1) {
+            // Don't allow server selection if there's just a single server
+            document.getElementById('server-selection')!.hidden = true
+        } else {
+            const mapServerList: string[] = []
+            for (const [server, endpoint] of Object.entries(this.#mapEndpoints)) {
+                const selected = (server === this.#currentServer) ? 'selected' : ''
+                mapServerList.push(`<option value="${server}" ${selected}>${server} -- ${endpoint}</option>`)
+            }
+            mapServerList.splice(0, 0, '<option value="">Select flatmap server...</option>')
+            const serverSelector = document.getElementById('server-selector') as HTMLSelectElement
+            serverSelector!.innerHTML = mapServerList.join('')
+            serverSelector!.onchange = async (e) => {
+                if (e.target.value !== '') {
+                    this.changeMapServer(e.target.value)
+                    await this.loadMapList()
+                }
             }
         }
-    }
-    if (Object.keys(mapEndpoints).length <= 1) {
-        // Don't allow server selection if there's just a single server
-        document.getElementById('server-selection').hidden = true
-    } else {
-        const mapServerList = []
-        for (const [server, endpoint] of Object.entries(mapEndpoints)) {
-            const selected = (server === currentServer) ? 'selected' : ''
-            mapServerList.push(`<option value="${server}" ${selected}>${server} -- ${endpoint}</option>`)
-        }
-        mapServerList.splice(0, 0, '<option value="">Select flatmap server...</option>')
-        const serverSelector = document.getElementById('server-selector')
-        serverSelector.innerHTML = mapServerList.join('')
-        serverSelector.onchange = (e) => {
-            if (e.target.value !== '') {
-                changeViewer(e.target.value)
-            }
-        }
+
+        this.#viewMapId = this.#requestUrl.searchParams.get('id')
+        this.#viewMapTaxon = this.#requestUrl.searchParams.get('taxon')
+        this.#viewMapSex = this.#requestUrl.searchParams.get('sex')
+
+        this.#mapSelector = document.getElementById('map-selector') as HTMLSelectElement
+        this.#mapGeneration = document.getElementById('map-generation') as HTMLSelectElement
+        this.#mapProvenance = document.getElementById('provenance-display')
+
+        this.changeMapServer(this.#currentServer)
     }
 
-    let currentViewer = null
-    let currentMap = null
-
-    let drawControl = null
-
-    let mapId = null
-    let mapTaxon = null
-    let mapSex = null
-    let viewMapId = requestUrl.searchParams.get('id')
-    let viewMapTaxon = requestUrl.searchParams.get('taxon')
-    let viewMapSex = requestUrl.searchParams.get('sex')
-
-    const mapSelector = document.getElementById('map-selector')
-    const mapGeneration = document.getElementById('map-generation')
-    const mapProvenance = document.getElementById('provenance-display')
-
-    const mapIdToName = new Map()
-    const mapGenerations = new Map()
-
-    let defaultBackground = localStorage.getItem('flatmap-background-colour') || 'black'
-    const mapOptions = Object.assign({}, DEFAULT_OPTIONS, {background: defaultBackground}, options)
-
-    // Everything setup so start by getting a map viewer
-
-    await changeViewer(currentServer)
-
-    async function changeViewer(server)
-    //=================================
+    changeMapServer(server: string|null)
+    //==================================
     {
-        if (currentMap) {
-            currentMap.close()
+        if (server === null) {
+            return
         }
-        currentViewer = new MapViewer(mapEndpoints[server], {
+        if (this.#currentMap) {
+            this.#currentMap.close()
+        }
+        this.#currentViewer = new MapViewer(this.#mapEndpoints[server], {
             container: 'flatmap-viewer-canvas',
             panes: 3,
             images: [
@@ -255,23 +296,27 @@ export async function standaloneViewer(mapEndpoints={}, options={})
                 }
             ]
         })
-        currentServer = server
-
-        mapId = null
-        mapTaxon = null
-        mapSex = null
-        await setMapList(currentViewer)
+        this.#currentServer = server
+        this.#mapId = null
+        this.#mapTaxon = null
+        this.#mapSex = null
     }
 
-    async function setMapList(viewer)
-    //================================
+    async loadMapList()
+    //=================
     {
-        mapIdToName.clear()
-        mapGenerations.clear()
+        await this.setMapList(this.#currentViewer!)
+    }
+
+    async setMapList(viewer: MapViewer)
+    //=================================
+    {
+        this.#mapIdToName.clear()
+        this.#mapGenerations.clear()
         const latestMaps = new Map()
         const maps = await viewer.allMaps()
         for (const map of Object.values(maps)) {
-            const text = [];
+            const text: string[] = []
             if ('describes' in map) {
                 text.push(map.describes)
             }
@@ -287,131 +332,136 @@ export async function standaloneViewer(mapEndpoints={}, options={})
                 latestMaps.set(mapName, map)
             }
             const id = ('uuid' in map) ? map.uuid : map.id
-            mapIdToName.set(id, mapName)
-            if (!mapGenerations.has(mapName)) {
-                mapGenerations.set(mapName, [map])
+            this.#mapIdToName.set(id, mapName)
+            if (!this.#mapGenerations.has(mapName)) {
+                this.#mapGenerations.set(mapName, [map])
             } else {
-                mapGenerations.get(mapName).push(map)
+                this.#mapGenerations.get(mapName).push(map)
             }
         }
 
         // The name of the map being viewed
-        const viewName = mapIdToName.get(viewMapId)
+        const viewName = this.#mapIdToName.get(this.#viewMapId)
 
         // Sort maps into name order
         const sortedMaps = new Map([...latestMaps]
                                 .sort((a, b) => Intl.Collator().compare(a[0], b[0])))
-        const mapList = []
+        const mapList: string[] = []
         for (const [name, map] of sortedMaps.entries()) {
             // Sort generations into created order with most recent first
-            const reverseDateOrder = mapGenerations.get(name)
+            const reverseDateOrder = this.#mapGenerations.get(name)
                                             .sort((a, b) => (a.created < b.created) ? 1
                                                           : (a.created > b.created) ? -1
                                                           : 0)
-            mapGenerations.set(name, reverseDateOrder)
+            this.#mapGenerations.set(name, reverseDateOrder)
             const id = ('uuid' in map) ? map.uuid : map.id
-            if (mapId === null && id === viewMapId) {
-                mapId = id
-            } else if (mapId === null
-                    && mapTaxon === null
-                    && map.taxon === viewMapTaxon
-                    && !('biologicalSex' in map || map.biologicalSex === viewMapSex)) {
-                mapTaxon = viewMapTaxon
-                mapSex = viewMapSex
+            if (this.#mapId === null && id === this.#viewMapId) {
+                this.#mapId = id
+            } else if (this.#mapId === null
+                    && this.#mapTaxon === null
+                    && map.taxon === this.#viewMapTaxon
+                    && !('biologicalSex' in map || map.biologicalSex === this.#viewMapSex)) {
+                this.#mapTaxon = this.#viewMapTaxon
+                this.#mapSex = this.#viewMapSex
             }
             const selected = (name === viewName) ? 'selected' : ''
             mapList.push(`<option value="${id}" ${selected}>${name}</option>`)
         }
         mapList.splice(0, 0, '<option value="">Select flatmap...</option>')
 
-        mapSelector.innerHTML = mapList.join('')
-        mapSelector.onchange = (e) => {
+        this.#mapSelector!.innerHTML = mapList.join('')
+        this.#mapSelector!.onchange = async (e) => {
             if (e.target.value !== '') {
-                setGenerationSelector(e.target.value)
-                loadMap(currentViewer, e.target.value)
+                this.setGenerationSelector(e.target.value)
+                await this.loadMap(this.#currentViewer!, e.target.value)
             }
         }
-        mapGeneration.onchange = (e) => {
+        this.#mapGeneration!.onchange = async (e: Event) => {
             if (e.target.value !== '') {
-                loadMap(currentViewer, e.target.value)
+                await this.loadMap(this.#currentViewer!, e.target.value)
             }
         }
 
-        mapId ||= viewMapId
-        mapTaxon ||= viewMapTaxon
-        mapSex ||= viewMapSex
-        if (!(mapId || mapTaxon)) {
-            mapId = mapSelector.options[1].value
-            mapSelector.options[1].selected = true
+        this.#mapId ||= this.#viewMapId
+        this.#mapTaxon ||= this.#viewMapTaxon
+        this.#mapSex ||= this.#viewMapSex
+        if (!(this.#mapId || this.#mapTaxon)) {
+            this.#mapId = this.#mapSelector!.options[1].value
+            this.#mapSelector!.options[1].selected = true
         }
 
-        setGenerationSelector(mapId)
-        loadMap(currentViewer, mapId, mapTaxon, mapSex)
+        this.setGenerationSelector(this.#mapId!)
+        await this.loadMap(this.#currentViewer!, this.#mapId!, this.#mapTaxon, this.#mapSex)
     }
 
-    function setGenerationSelector(mapId)
-    //===================================
+    setGenerationSelector(mapId: string)
+    //==================================
     {
-        const generationList = []
-        const mapName = mapIdToName.get(mapId)
+        const generationList: string[] = []
+        const mapName = this.#mapIdToName.get(mapId)
         if (mapName) {
-            for (const map of mapGenerations.get(mapName)) {
+            for (const map of this.#mapGenerations.get(mapName)) {
                 const id = ('uuid' in map) ? map.uuid : map.id
                 const selected = (mapId === id) ? 'selected' : ''
                 generationList.push(`<option value="${id}" ${selected}>${map.created}</option>`)
             }
         }
-        mapGeneration.innerHTML = generationList.join('')
+        this.#mapGeneration!.innerHTML = generationList.join('')
     }
 
-    async function loadMap(viewer, id, taxon=null, sex=null)
-    //======================================================
+    async loadMap(viewer: MapViewer, id: string, taxon: string|null=null, sex: string|null=null)
+    //==========================================================================================
     {
         viewer.closeMaps()
 
-        mapProvenance.innerHTML = ''
+        this.#mapProvenance!.innerHTML = ''
         if (id !== null) {
-            requestUrl.searchParams.set('id', id)
-            requestUrl.searchParams.delete('taxon')
-            requestUrl.searchParams.delete('sex')
+            this.#requestUrl.searchParams.set('id', id)
+            this.#requestUrl.searchParams.delete('taxon')
+            this.#requestUrl.searchParams.delete('sex')
         } else if (taxon !== null) {
             id = taxon
-            requestUrl.searchParams.set('taxon', taxon)
+            this.#requestUrl.searchParams.set('taxon', taxon)
             if (sex !== null) {
-                requestUrl.searchParams.set('sex', sex)
+                this.#requestUrl.searchParams.set('sex', sex)
             }
-            requestUrl.searchParams.delete('id')
+            this.#requestUrl.searchParams.delete('id')
         }
-        requestUrl.searchParams.set('server', currentServer)
+        this.#requestUrl.searchParams.set('server', this.#currentServer!)
 
         // Update address bar URL to current map
-        window.history.pushState('data', document.title, requestUrl)
+        window.history.pushState('data', document.title, this.#requestUrl)
 
-        await viewer.loadMap(id, async (eventType, ...args) => {
-                if (args[0].type === 'control' && args[0].control === 'background') {
-                    mapOptions.background = args[0].value
-                } else if (eventType === 'annotation') {
-                    drawControl.handleEvent(...args)
-                } else if (args[0].type === 'marker') {
-                    console.log(eventType, ...args)
-                } else if (eventType === 'click') {
-                    console.log(eventType, ...args)
-                }
-            }, mapOptions)
-        .then(async map => {
-            currentMap = map
-            mapProvenance.innerHTML = provenanceAsHtml(Object.assign({server: mapEndpoints[currentServer]},
-                                                                 map.provenance))
-            drawControl = new DrawControl(map)
-
-            const vagus = await map.queryKnowledge('UBERON:0001759')
-
-            console.log(vagus)
-        })
+        await viewer.loadMap(id, this.mapCallback.bind(this), this.#mapOptions)
+        .then(this.mapLoaded.bind(this))
         .catch(error => {
             console.log(error)
             alert(error)
-        });
+        })
+    }
+
+    async mapCallback(eventType, ...args)
+    //===================================
+    {
+        if (args[0].type === 'control' && args[0].control === 'background') {
+            this.#mapOptions.background = args[0].value
+        } else if (eventType === 'annotation') {
+            if (this.#drawControl) {
+                this.#drawControl.handleEvent(...args)
+            }
+        } else if (eventType === 'click') {
+            console.log(eventType, ...args)
+        } else if (args[0].type === 'marker') {
+            console.log(eventType, ...args)
+        }
+    }
+
+    async mapLoaded(map: FlatMap)
+    //===========================
+    {
+        this.#currentMap = map
+        this.#mapProvenance!.innerHTML = provenanceAsHtml(Object.assign({server: this.#mapEndpoints[this.#currentServer!]},
+                                                             map.provenance))
     }
 }
 
