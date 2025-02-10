@@ -2293,6 +2293,13 @@ export class MapViewer
         const mapId = ('uuid' in map) ? map.uuid : map.id
         const mapIndex = await this.#mapServer.mapIndex(mapId)
 
+        // Don't create a new pane for an already open map
+        for (const flatmap of this.#mapsByPane.values()) {
+            if (mapId === flatmap.uuid) {
+                return flatmap
+            }
+        }
+
         const mapIndexId = ('uuid' in mapIndex) ? mapIndex.uuid : mapIndex.id
         if (mapId !== mapIndexId) {
             throw new Error(`Map '${mapId}' has wrong ID in index`)
