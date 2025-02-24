@@ -22,7 +22,7 @@ import MiniSearch, {Suggestion} from 'minisearch'
 
 //==============================================================================
 
-import {FlatMapFeatureAnnotation} from './flatmap'
+import {FlatMapFeatureAnnotation} from './flatmap-types'
 
 //==============================================================================
 

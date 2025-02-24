@@ -18,8 +18,8 @@ limitations under the License.
 
 ******************************************************************************/
 
-import { FlatMapOptions } from '../src/flatmap'
 import { FlatMap, MapViewer } from '../src/flatmap-viewer';
+import { FlatMapOptions } from '../src/flatmap-types'
 
 //==============================================================================
 

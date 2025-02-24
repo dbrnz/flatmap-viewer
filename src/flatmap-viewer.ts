@@ -46,7 +46,7 @@ import {
     FlatMapMarkerOptions,
     FlatMapPopUpOptions,
     FlatMapServerIndex
-} from './flatmap'
+} from './flatmap-types'
 
 import {KNOWLEDGE_SOURCE_SCHEMA, FlatMapServer} from './mapserver'
 
