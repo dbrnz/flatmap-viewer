@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "mapviewer"
-version = "3.2.13"
+version = "4.0.0"
 description = ""
 authors = ["David Brooks <d.brooks@auckland.ac.nz>"]
 
