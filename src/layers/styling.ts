@@ -42,7 +42,7 @@ import {FLATMAP_STYLE} from '../flatmap-viewer'
 import {PATH_STYLE_RULES} from '../pathways'
 import {PropertiesType} from '../types'
 
-import {FlatMapLayer} from '../flatmap'
+import {FlatMapLayer} from '../flatmap-types'
 
 //==============================================================================
 

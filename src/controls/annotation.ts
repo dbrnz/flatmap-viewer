@@ -47,7 +47,7 @@ import '@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css'
 
 //==============================================================================
 
-import type {MapRenderedFeature} from '../flatmap'
+import type {MapRenderedFeature} from '../flatmap-types'
 
 import {FlatMap} from '../flatmap-viewer'
 

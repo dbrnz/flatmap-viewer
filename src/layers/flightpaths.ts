@@ -24,7 +24,7 @@ import {Model, Geometry} from '@luma.gl/engine'
 
 //==============================================================================
 
-import type {MapFeature, MapFeatureIdentifier} from '../flatmap'
+import type {MapFeature, MapFeatureIdentifier} from '../flatmap-types'
 import {FlatMap} from '../flatmap-viewer'
 import {pathColourArray, PathStyle} from '../pathways'
 import {UserInteractions} from '../interactions'
