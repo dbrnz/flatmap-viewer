@@ -26,7 +26,7 @@ import {
     FlatMapPathways
 } from './flatmap-types'
 import type {FlatMapAnnotations} from './flatmap-types'
-import type {FlatMapStyleSpecification} from './flatmap-viewer'
+import type {FlatMapStyleSpecification} from './flatmap'
 
 import {NodeLinkGraph} from './knowledge/graphs'
 

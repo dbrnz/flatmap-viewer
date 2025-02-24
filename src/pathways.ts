@@ -22,7 +22,7 @@ import {colord} from 'colord'
 
 //==============================================================================
 
-import {FlatMap, FLATMAP_STYLE} from './flatmap-viewer'
+import {FlatMap, FLATMAP_STYLE} from './flatmap'
 import {FlatMapFeature} from './flatmap-types'
 import type {PathDetailsType} from './flatmap-types'
 import {UserInteractions} from './interactions'

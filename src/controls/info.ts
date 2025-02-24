@@ -22,7 +22,7 @@ import maplibregl from 'maplibre-gl'
 
 //==============================================================================
 
-import {FlatMap} from '../flatmap-viewer'
+import {FlatMap} from '../flatmap'
 import {indexedProperties} from '../search'
 
 //==============================================================================

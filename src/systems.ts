@@ -18,7 +18,7 @@ limitations under the License.
 
 ==============================================================================*/
 
-import {FlatMap} from './flatmap-viewer'
+import {FlatMap} from './flatmap'
 import {UserInteractions} from './interactions'
 
 //==============================================================================

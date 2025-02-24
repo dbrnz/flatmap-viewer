@@ -25,7 +25,7 @@ import {IControl, Map as MapLibreMap} from 'maplibre-gl'
 
 //==============================================================================
 
-import {FlatMap} from '../flatmap-viewer'
+import {FlatMap} from '../flatmap'
 
 //==============================================================================
 

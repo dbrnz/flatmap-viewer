@@ -25,7 +25,7 @@ import {SvgManager, SvgTemplateManager} from '../../thirdParty/maplibre-gl-svg/s
 
 //==============================================================================
 
-import {FlatMap} from '../flatmap-viewer'
+import {FlatMap} from '../flatmap'
 import {UserInteractions} from '../interactions'
 import {MapTermGraph} from '../knowledge'
 import {DatasetMarkerSet} from './anatomical-cluster'

@@ -18,7 +18,7 @@ limitations under the License.
 
 ==============================================================================*/
 
-import {FlatMap, FLATMAP_STYLE, MapDescriptionOptions} from './flatmap-viewer'
+import {FlatMap, FLATMAP_STYLE, MapDescriptionOptions} from './flatmap'
 import {FlatMapCallback, FlatMapLayer, FlatMapOptions, FlatMapServerIndex} from './flatmap-types'
 import {SparcTermGraph} from './knowledge'
 import {FlatMapServer} from './mapserver'

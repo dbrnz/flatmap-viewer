@@ -23,7 +23,7 @@ import maplibregl from 'maplibre-gl'
 //==============================================================================
 
 import type {FlatMapLayer, FlatMapLayerOptions} from '../flatmap-types'
-import {FlatMap} from '../flatmap-viewer'
+import {FlatMap} from '../flatmap'
 import {LayerManager} from '../layers'
 
 //==============================================================================

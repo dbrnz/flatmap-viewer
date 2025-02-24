@@ -22,7 +22,7 @@ import maplibregl from 'maplibre-gl';
 
 //==============================================================================
 
-import {FlatMap} from '../flatmap-viewer'
+import {FlatMap} from '../flatmap'
 import {SvgManager, SvgTemplateManager} from '../../thirdParty/maplibre-gl-svg/src'
 import {UserInteractions} from '../interactions'
 

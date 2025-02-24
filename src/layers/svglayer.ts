@@ -27,7 +27,7 @@ import {Matrix4} from '@math.gl/core';
 
 //==============================================================================
 
-import {FlatMap} from '../flatmap-viewer'
+import {FlatMap} from '../flatmap'
 
 import {DeckGlOverlay} from './deckgl'
 

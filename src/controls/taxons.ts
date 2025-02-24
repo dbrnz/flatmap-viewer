@@ -19,7 +19,7 @@ limitations under the License.
 ==============================================================================*/
 
 import {Control} from './controls'
-import {FlatMap} from '../flatmap-viewer'
+import {FlatMap} from '../flatmap'
 
 //==============================================================================
 
