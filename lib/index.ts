@@ -1,6 +1,7 @@
 //==============================================================================
 
-import {FlatMap, MapViewer} from '../src/flatmap-viewer'
+import {FlatMap} from '../src/flatmap-viewer'
+import {MapViewer} from '../src/viewer'
 
 //==============================================================================
 

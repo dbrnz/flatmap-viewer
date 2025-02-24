@@ -44,8 +44,7 @@ import {
     FlatMapOptions,
     FlatMapPathways,
     FlatMapMarkerOptions,
-    FlatMapPopUpOptions,
-    FlatMapServerIndex
+    FlatMapPopUpOptions
 } from './flatmap-types'
 
 import {KNOWLEDGE_SOURCE_SCHEMA, FlatMapServer} from './mapserver'
@@ -55,21 +54,12 @@ import {UserInteractions} from './interactions'
 import {MapTermGraph, SparcTermGraph} from './knowledge'
 
 import {APINATOMY_PATH_PREFIX} from './pathways'
+import {MapViewer} from './viewer'
 
 import {loadClusterIcons} from './layers/acluster'
 
 import * as images from './images'
 import * as utils from './utils'
-
-//==============================================================================
-
-// The released version of the viewer
-export const VIEWER_VERSION = '3.2.13'
-
-//==============================================================================
-
-const MAP_MAKER_SEPARATE_LAYERS_VERSION = 1.4
-const MAP_MAKER_FLIGHTPATHS_VERSION = 1.6
 
 //==============================================================================
 
@@ -79,6 +69,10 @@ const MAP_MAKER_FLIGHTPATHS_VERSION = 1.6
  * @type       {string}
  */
 export const UNCLASSIFIED_TAXON_ID = 'NCBITaxon:2787823';   // unclassified entries
+
+//==============================================================================
+
+const MAP_MAKER_FLIGHTPATHS_VERSION = 1.6
 
 //==============================================================================
 
@@ -157,7 +151,7 @@ export type FlatMapStyleSpecification = maplibregl.StyleSpecification & {
 
 //==============================================================================
 
-type MapDescriptionOptions = FlatMapOptions & {
+export type MapDescriptionOptions = FlatMapOptions & {
     addCloseControl: boolean
     allControls: boolean
     bounds: [number, number, number, number]
