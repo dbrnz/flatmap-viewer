@@ -66,7 +66,12 @@ export interface PreloadedImage
 
 }
 
-export interface MapViewerOptions extends FlatMapOptions
+export interface LoadMapOptions extends FlatMapOptions
+{
+    container?: string
+}
+
+export interface MapViewerOptions extends LoadMapOptions
 {
     container: string
     panes?: number
@@ -261,7 +266,7 @@ export class MapViewer
     *                     {uuid: 'a563be90-9225-51c1-a84d-00ed2d03b7dc'},
     *                     'div-4')
     */
-    async loadMap(identifier: string, callback: FlatMapCallback, options: FlatMapOptions={}): Promise<FlatMap>
+    async loadMap(identifier: string, callback: FlatMapCallback, options: LoadMapOptions={}): Promise<FlatMap>
     //========================================================================================================
     {
         const map = await this.#findMap(identifier)
@@ -391,10 +396,13 @@ export class MapViewer
 
         mapOptions.separateLayers = map.separateLayers
 
-        // Create a container for the map if in multi-pane mode
+        // Create a container for the map if in multi-pane mode and no container is given
 
-        let containerId: string
-        if (this.#panes <= 1) {
+        let containerId: string = options.container || null
+
+        if (containerId) {
+            // Saves a nest
+        } else if (this.#panes <= 1) {
             containerId = this.#container
         } else if (this.#mapsByPane.size >= this.#panes) {
             const flatmap = this.#mapsByPane.get(this.#mapNumber)
@@ -410,10 +418,12 @@ export class MapViewer
             mapPane.setAttribute('class', 'flatmap-viewer-pane')
             this.#containerElement.append(mapPane)
         }
-        mapOptions.addCloseControl = (this.#panes > 1) && (this.#mapsByPane.size >= 1)
-        if (this.#mapsByPane.size === 1) {
-            for (const flatmap of this.#mapsByPane.values()) {
-                flatmap.addCloseControl()
+        if (!options.container) {
+            mapOptions.addCloseControl = (this.#panes > 1) && (this.#mapsByPane.size >= 1)
+            if (this.#mapsByPane.size === 1) {
+                for (const flatmap of this.#mapsByPane.values()) {
+                    flatmap.addCloseControl()
+                }
             }
         }
 
