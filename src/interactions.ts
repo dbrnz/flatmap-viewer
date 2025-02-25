@@ -860,10 +860,10 @@ export class UserInteractions
     }
 
     showSearchResults(featureIds: number[])
-    //==============================================
+    //=====================================
     {
         this.unselectFeatures()
-        this.zoomToFeatures(featureIds, {noZoomIn: true})
+        this.zoomToFeatures(featureIds, {zoomIn: false})
     }
 
     /**
