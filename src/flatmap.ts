@@ -53,10 +53,9 @@ import {SearchIndex} from './search'
 import {UserInteractions} from './interactions'
 import {MapTermGraph, SparcTermGraph} from './knowledge'
 
+import {loadMarkerIcons} from './markers'
 import {APINATOMY_PATH_PREFIX} from './pathways'
 import {MapViewer} from './viewer'
-
-import {loadClusterIcons} from './layers/acluster'
 
 import * as images from './images'
 import * as utils from './utils'
@@ -399,7 +398,7 @@ export class FlatMap
         }
 
         // Load icons used for clustered markers
-        await loadClusterIcons(this.#map)
+        await loadMarkerIcons(this.#map)
 
         // Load anatomical term hierarchy for the flatmap
         const termGraph = await this.#mapServer.mapTermGraph(this.#uuid)

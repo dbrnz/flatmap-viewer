@@ -21,14 +21,13 @@ limitations under the License.
 import {Map as MapLibreMap} from 'maplibre-gl'
 import {DataDrivenPropertyValueSpecification, GeoJSONSource} from 'maplibre-gl'
 
-import {SvgManager, SvgTemplateManager} from '../../thirdParty/maplibre-gl-svg/src'
-
 //==============================================================================
 
 import {FlatMap} from '../flatmap'
 import {UserInteractions} from '../interactions'
 import {MapTermGraph} from '../knowledge'
 import {DatasetMarkerSet} from './anatomical-cluster'
+import {CLUSTERED_MARKER_ID} from '../markers'
 import {PropertiesType} from '../types'
 
 //==============================================================================
@@ -43,38 +42,6 @@ export interface Dataset
 
 export const ANATOMICAL_MARKERS_LAYER = 'anatomical-markers-layer'
 const ANATOMICAL_MARKERS_SOURCE = 'anatomical-markers-source'
-
-//==============================================================================
-
-const CLUSTERED_MARKER_IMAGE_ID = 'clustered-marker'
-const UNCLUSTERED_MARKER_IMAGE_ID = 'unclustered-marker'
-
-export async function loadClusterIcons(map: MapLibreMap)
-{
-    const markerLargeCircle = `<svg xmlns="http://www.w3.org/2000/svg" width="calc(28 * {scale})" height="calc(39 * {scale})" viewBox="-1 -1 27 42">
-        <ellipse style="fill: rgb(0, 0, 0); fill-opacity: 0.2;" cx="12" cy="36" rx="8" ry="4"/>
-        <path d="M12.25.25a12.254 12.254 0 0 0-12 12.494c0 6.444 6.488 12.109 11.059 22.564.549 1.256 1.333 1.256 1.882 0
-                 C17.762 24.853 24.25 19.186 24.25 12.744A12.254 12.254 0 0 0 12.25.25Z"
-              style="fill:{color};stroke:{secondaryColor};stroke-width:1"/>
-        <circle cx="12.5" cy="12.5" r="9" fill="{secondaryColor}"/>
-        <text x="12" y="17.5" style="font-size:14px;fill:#000;text-anchor:middle">{text}</text>
-    </svg>`
-
-    const markerSmallCircle = `<svg xmlns="http://www.w3.org/2000/svg" width="calc(28 * {scale})" height="calc(39 * {scale})" viewBox="-1 -1 27 42">
-        <ellipse style="fill: rgb(0, 0, 0); fill-opacity: 0.2;" cx="12" cy="36" rx="8" ry="4"/>
-        <path d="M12.25.25a12.254 12.254 0 0 0-12 12.494c0 6.444 6.488 12.109 11.059 22.564.549 1.256 1.333 1.256 1.882 0
-                 C17.762 24.853 24.25 19.186 24.25 12.744A12.254 12.254 0 0 0 12.25.25Z"
-              style="fill:{color};stroke:{secondaryColor};stroke-width:1"/>
-        <circle cx="12.5" cy="12.5" r="5" fill="{secondaryColor}"/>
-    </svg>`
-
-    SvgTemplateManager.addTemplate('marker-large-circle', markerLargeCircle, false)
-    SvgTemplateManager.addTemplate('marker-small-circle', markerSmallCircle, false)
-
-    const svgManager = new SvgManager(map)
-    await svgManager.createFromTemplate(CLUSTERED_MARKER_IMAGE_ID, 'marker-large-circle', '#EE5900', '#fff')
-    await svgManager.createFromTemplate(UNCLUSTERED_MARKER_IMAGE_ID, 'marker-small-circle', '#005974', '#fff')
-}
 
 //==============================================================================
 
@@ -140,7 +107,7 @@ export class ClusteredAnatomicalMarkerLayer
                         ['>', ['at', ['var', 'index'], ['get', 'zoom-count']], 0]
                     ],
             layout: {
-                'icon-image': CLUSTERED_MARKER_IMAGE_ID,
+                'icon-image': CLUSTERED_MARKER_ID,
                 'icon-allow-overlap': true,
                 'icon-ignore-placement': true,
                 'icon-offset': [0, -17],
