@@ -46,15 +46,14 @@ import {
     FlatMapMarkerOptions,
     FlatMapPopUpOptions
 } from './flatmap-types'
+import type {FeatureZoomOptions} from './flatmap-types'
 
-import {KNOWLEDGE_SOURCE_SCHEMA, FlatMapServer} from './mapserver'
-
-import {SearchIndex} from './search'
 import {UserInteractions} from './interactions'
 import {MapTermGraph, SparcTermGraph} from './knowledge'
-
+import {KNOWLEDGE_SOURCE_SCHEMA, FlatMapServer} from './mapserver'
 import {loadMarkerIcons} from './markers'
 import {APINATOMY_PATH_PREFIX} from './pathways'
+import {SearchIndex} from './search'
 import {MapViewer} from './viewer'
 
 import * as images from './images'
@@ -206,7 +205,7 @@ export class FlatMap
     #featurePropertyValues = new Map()
     #id: string
     #initialState = null
-    #layers
+    #layers: FlatMapLayer[]
     #idToAnnotation: Map<number, FlatMapFeatureAnnotation> = new Map()
     #knowledgeSource = ''
     #viewer: MapViewer
@@ -1773,7 +1772,7 @@ export class FlatMap
         options = utils.setDefaults(options, {
             select: true,
             highlight: false,
-            padding:100
+            padding: 100
         })
         if (this.#userInteractions !== null) {
             const featureIds = this.modelFeatureIdList(externalIds)
