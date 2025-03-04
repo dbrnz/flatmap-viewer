@@ -35,9 +35,6 @@ const MAP_MAKER_SEPARATE_LAYERS_VERSION = 1.4
 
 //==============================================================================
 
-
-
-
 type MapIdentifier = {
     biologicalSex?: string
     taxon?: string

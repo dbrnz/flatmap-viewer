@@ -48,7 +48,6 @@ export type MapRenderedFeature = maplibregl.MapGeoJSONFeature & {
 
 // Flatmap types as received from server...
 
-
 export interface FlatMapServerIndex
 {
     created: string
