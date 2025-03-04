@@ -451,6 +451,11 @@ class StandaloneViewer
             }
         } else if (eventType === 'click') {
             console.log(eventType, ...args)
+            if ('hyperlinks' in args[0]) {
+                if ('flatmap' in args[0].hyperlinks) {
+                    await this.#currentViewer!.loadMap(args[0].hyperlinks.flatmap, this.mapCallback.bind(this), this.#mapOptions)
+                }
+            }
         } else if (args[0].type === 'marker') {
             console.log(eventType, ...args)
         }
