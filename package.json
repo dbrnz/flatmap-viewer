@@ -23,6 +23,7 @@
     "preview": "vite preview",
     "build": "vite build app --base /viewer/",
     "docs": "cd docs; poetry run make html",
+    "lint": "eslint ./src/",
     "typecheck": "tsc --noEmit -p tsconfig-build.json --composite false",
     "tsdoc": "typedoc"
   },
