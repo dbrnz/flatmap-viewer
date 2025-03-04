@@ -66,12 +66,7 @@ export interface PreloadedImage
 
 }
 
-export interface LoadMapOptions extends FlatMapOptions
-{
-    container?: string
-}
-
-export interface MapViewerOptions extends LoadMapOptions
+export interface MapViewerOptions extends FlatMapOptions
 {
     container: string
     panes?: number
@@ -266,8 +261,8 @@ export class MapViewer
     *                     {uuid: 'a563be90-9225-51c1-a84d-00ed2d03b7dc'},
     *                     'div-4')
     */
-    async loadMap(identifier: string, callback: FlatMapCallback, options: LoadMapOptions={}): Promise<FlatMap>
-    //========================================================================================================
+    async loadMap(identifier: string, callback: FlatMapCallback, options: FlatMapOptions={}): Promise<FlatMap>
+    //=========================================================================================================
     {
         const map = await this.#findMap(identifier)
         if (map === null) {
@@ -461,7 +456,7 @@ export class MapViewer
     {
         for (const [mapNumber, flatmap] of this.#mapsByPane.entries()) {
             flatmap.close()
-            if (this.#panes > 1) {
+            if (!flatmap.options.container && this.#panes > 1) {
                 const container = document.getElementById(`${this.#container}-${mapNumber}`)
                 container.remove()
             }

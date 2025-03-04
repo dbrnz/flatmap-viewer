@@ -18,8 +18,8 @@ limitations under the License.
 
 ******************************************************************************/
 
-import { FlatMapOptions } from '../src/flatmap-types'
 import { FlatMap, MapViewer } from '../lib'
+import { LoadMapOptions } from '../src/viewer'
 
 //==============================================================================
 
@@ -189,7 +189,7 @@ class StandaloneViewer
     #mapEndpoints: object
     #mapSelector: HTMLSelectElement|null
     #mapGeneration: HTMLSelectElement|null
-    #mapOptions: FlatMapOptions
+    #mapOptions: LoadMapOptions
     #mapProvenance: HTMLElement|null
 
     #mapIdToName = new Map()

@@ -167,6 +167,7 @@ export interface FlatMapOptions
 {
     annotator?: boolean
     background?: string
+    container?: string
     debug?: boolean
     flightPaths?: boolean
     fullscreenControl?: boolean
