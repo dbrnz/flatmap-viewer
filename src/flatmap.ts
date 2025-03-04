@@ -46,7 +46,6 @@ import {
     FlatMapMarkerOptions,
     FlatMapPopUpOptions
 } from './flatmap-types'
-import type {FeatureZoomOptions} from './flatmap-types'
 
 import {UserInteractions} from './interactions'
 import {MapTermGraph, SparcTermGraph} from './knowledge'
