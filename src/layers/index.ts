@@ -97,6 +97,9 @@ class FlatMapStylingLayer
             const bodyLayer = new BodyStyleLayer(layerId, source)
             this.#addStylingLayer(bodyLayer.style(layer, this.#layerOptions), true)
             this.#vectorStyleLayers.push(bodyLayer)
+            const borderLayer = new style.BackgroundBorderLayer(layerId, source)
+            this.#addStylingLayer(borderLayer.style(layer, this.#layerOptions), true)
+            this.#vectorStyleLayers.push(borderLayer)
         }
 
         // Image feature layers are generally below feature vector layers

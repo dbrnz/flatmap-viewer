@@ -278,6 +278,38 @@ export class BodyStyleLayer extends VectorStyleLayer
 
 //==============================================================================
 
+export class BackgroundBorderLayer extends VectorStyleLayer
+{
+    constructor(id: string, sourceLayer: string)
+    {
+        super(id, 'background-border', sourceLayer)
+    }
+
+    defaultFilter(): ExpressionFilterSpecification
+    {
+        return [
+            'all',
+            ['==', ['geometry-type'], 'Polygon'],
+            ['==', ['get', 'kind'], 'background']
+        ]
+    }
+
+    style(layer: FlatMapLayer, options: StylingOptions): LineLayerSpecification
+    {
+        return {
+            ...super.style(layer, options),
+            'type': 'line',
+            'filter': this.defaultFilter(),
+            'paint': {
+                'line-color': '#666',
+                'line-width': 6
+            }
+        }
+    }
+}
+
+//==============================================================================
+
 export class FeatureFillLayer extends VectorStyleLayer
 {
     constructor(id: string, sourceLayer: string)
