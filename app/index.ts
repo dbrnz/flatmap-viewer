@@ -316,14 +316,10 @@ class StandaloneViewer
         const maps = await viewer.allMaps()
         for (const map of Object.values(maps)) {
             const text: string[] = []
-            if ('describes' in map) {
+            if (map.describes) {
                 text.push(map.describes)
             }
-            if ('name' in map) {
-                text.push(map.name)
-            } else {
-                text.push(map.id)
-            }
+            text.push(map.name || map.id)
             const mapName = text.join(' -- ')
             if (!latestMaps.has(mapName)) {
                 latestMaps.set(mapName, map)
