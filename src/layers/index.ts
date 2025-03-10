@@ -191,29 +191,6 @@ class FlatMapStylingLayer
         this.#setPaintRasterLayers(this.#layerOptions)
     }
 
-    #addStylingLayer(style: maplibregl.LayerSpecification, minimap=false)
-    //===================================================================
-    {
-        this.#map.addLayer(style)
-        if (minimap) {
-            this.#minimapStylingLayers.push(style)
-        }
-    }
-
-    #addRasterLayer(layer: FlatMapImageLayer)
-    //=======================================
-    {
-        const rasterLayer = new RasterStyleLayer(layer.id, layer.options)
-        this.#addStylingLayer(rasterLayer.style(layer, this.#layerOptions), true)
-        this.#rasterStyleLayers.push(rasterLayer)
-    }
-
-    #showStyleLayer(styleLayerId: string, visible=true)
-    //=================================================
-    {
-        this.#map.setLayoutProperty(styleLayerId, 'visibility', visible ? 'visible' : 'none')
-    }
-
     #addPathwayStyleLayers()
     //======================
     {
@@ -238,11 +215,21 @@ class FlatMapStylingLayer
         }
     }
 
-    #vectorSourceId(sourceLayer: string)
-    //==================================
+    #addRasterLayer(layer: FlatMapImageLayer)
+    //=======================================
     {
-        return (this.#separateLayers ? `${this.#id}_${sourceLayer}`
-                                      : sourceLayer).replaceAll('/', '_')
+        const rasterLayer = new RasterStyleLayer(layer.id, layer.options)
+        this.#addStylingLayer(rasterLayer.style(layer, this.#layerOptions), true)
+        this.#rasterStyleLayers.push(rasterLayer)
+    }
+
+    #addStylingLayer(style: maplibregl.LayerSpecification, minimap=false)
+    //===================================================================
+    {
+        this.#map.addLayer(style)
+        if (minimap) {
+            this.#minimapStylingLayers.push(style)
+        }
     }
 
     #addVectorStyleLayer(vectorStyleClass, sourceLayer, pathLayer=false, minimap=false): VectorStyleLayer
@@ -256,6 +243,14 @@ class FlatMapStylingLayer
             this.#pathStyleLayers.push(vectorStyleLayer)
         }
         return vectorStyleLayer
+    }
+
+    clearVisibilityFilter()
+    //=====================
+    {
+        for (const layer of this.#vectorStyleLayers) {
+            this.#map.setFilter(layer.id, layer.defaultFilter(), {validate: false})
+        }
     }
 
     setFlatPathMode(visible: boolean)
@@ -290,14 +285,6 @@ class FlatMapStylingLayer
         }
     }
 
-    clearVisibilityFilter()
-    //=====================
-    {
-        for (const layer of this.#vectorStyleLayers) {
-            this.#map.setFilter(layer.id, layer.defaultFilter(), {validate: false})
-        }
-    }
-
     setVisibilityFilter(filter: StyleFilterType)
     //==========================================
     {
@@ -323,6 +310,19 @@ class FlatMapStylingLayer
                 this.#map.setFilter(layer.id, newFilter, {validate: true})
             }
         }
+    }
+
+    #showStyleLayer(styleLayerId: string, visible=true)
+    //=================================================
+    {
+        this.#map.setLayoutProperty(styleLayerId, 'visibility', visible ? 'visible' : 'none')
+    }
+
+    #vectorSourceId(sourceLayer: string)
+    //==================================
+    {
+        return (this.#separateLayers ? `${this.#id}_${sourceLayer}`
+                                      : sourceLayer).replaceAll('/', '_')
     }
 }
 
