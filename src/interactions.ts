@@ -1364,8 +1364,12 @@ export class UserInteractions
                     }
                 }
             }
-            if (this.#flatmap.options.standalone) {
-                if ('properties' in clickedFeature && 'hyperlink' in clickedFeature.properties) {
+            if (this.#flatmap.options.style === FLATMAP_STYLE.FUNCTIONAL
+             && 'details-layer' in clickedFeature.properties) {
+                this.#layerManager.enableDetailedLayer(clickedFeature.properties.layer,
+                                                       clickedFeature.properties['details-layer'])
+            } else if (this.#flatmap.options.standalone) {
+                if ('hyperlink' in clickedFeature.properties) {
                     window.open(clickedFeature.properties.hyperlink, '_blank')
                 }
             }

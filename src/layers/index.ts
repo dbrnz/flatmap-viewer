@@ -23,9 +23,10 @@ import {Map as MapLibreMap} from 'maplibre-gl'
 //==============================================================================
 
 import {PropertiesFilter, StyleFilterType} from '../filters'
+import {DetailsFilter} from '../filters/facets/details'
 import {FilteredFacet} from '../filters/facets'
 import {FlatMapImageLayer, FlatMapLayer} from '../flatmap-types'
-import type {MapFeature, MapRenderedFeature} from '../flatmap-types'
+import type {MapExtent, MapFeature, MapRenderedFeature} from '../flatmap-types'
 import {FlatMap, FLATMAP_STYLE} from '../flatmap'
 import {PATHWAYS_LAYER} from '../pathways'
 import {UserInteractions} from '../interactions'
@@ -41,7 +42,11 @@ import {DeckGlOverlay} from './deckgl'
 import {FlightPathLayer} from './flightpaths'
 //import {SvgLayer} from './svglayer'
 
+//==============================================================================
+
 const FEATURES_LAYER = 'features'
+
+const REVERT_DETAIL_ZOOM_OFFSET = 0.5
 
 //==============================================================================
 
@@ -150,11 +155,19 @@ class FlatMapStylingLayer
                 if (!flatmap.options.tooltips) {
                     this.#addVectorStyleLayer(style.FeatureSmallSymbolLayer, FEATURES_LAYER)
                 }
+                if (options.flatmapStyle === FLATMAP_STYLE.FUNCTIONAL) {
+                    this.#addVectorStyleLayer(style.FeatureZoomPointLayer, FEATURES_LAYER)
+                }
             }
         }
 
         // Make sure our paint options are set properly, in particular raster layer visibility
         this.setPaint(this.#layerOptions)
+
+        // Detail layers only show by clicking on their low-resolution feature or their zoom marker
+        if (layer['detail-layer']) {
+            this.activate(false)
+        }
     }
 
     get active()
@@ -163,10 +176,23 @@ class FlatMapStylingLayer
         return this.#active
     }
 
+    get centre(): [number, number]
+    //============================
+    {
+        const extent = this.#layer.extent
+        return [(extent[0] + extent[2])/2, (extent[1] + extent[3])/2]
+    }
+
     get description()
     //===============
     {
         return this.#description
+    }
+
+    get extent(): MapExtent
+    //=====================
+    {
+        return this.#layer.extent
     }
 
     get id()
@@ -179,6 +205,12 @@ class FlatMapStylingLayer
     //========================
     {
         return this.#minimapStylingLayers
+    }
+
+    get minZoom(): number
+    //===================
+    {
+        return this.#layer['min-zoom']
     }
 
     activate(enable=true)
@@ -315,6 +347,14 @@ class FlatMapStylingLayer
         }
     }
 
+    dimRasterLayers(dimmed: boolean=true)
+    //===================================
+    {
+        for (const rasterLayer of this.#rasterStyleLayers) {
+            this.#map.setPaintProperty(rasterLayer.id, 'raster-opacity', dimmed ? 0.2 : 1.0)
+        }
+    }
+
     #showStyleLayer(styleLayerId: string, visible=true)
     //=================================================
     {
@@ -333,7 +373,10 @@ class FlatMapStylingLayer
 
 export class LayerManager
 {
+    #baseLayer: FlatMapStylingLayer|null = null
+    #currentDetailLayer: FlatMapStylingLayer|null = null
     #deckGlOverlay: DeckGlOverlay
+    #detailsFilter: DetailsFilter|null = null
     #facetMap: Map<string, FilteredFacet> = new Map()
     #filterMap: Map<string, PropertiesFilter> = new Map()
     #flatmap: FlatMap
@@ -344,6 +387,7 @@ export class LayerManager
     #markerLayer: ClusteredAnatomicalMarkerLayer
     #minimapStyleSpecification: maplibregl.StyleSpecification
 //    #modelLayer
+    #revertDetailZoom: number = -1
 
     constructor(flatmap: FlatMap, ui: UserInteractions)
     {
@@ -564,7 +608,41 @@ export class LayerManager
     zoomEvent()
     //=========
     {
-//        this.#modelLayer.zoomEvent()
+        const zoomLevel = this.#map.getZoom()
+        if (this.#currentDetailLayer && zoomLevel < this.#revertDetailZoom) {
+            this.#currentDetailLayer.activate(false)
+            if (this.#detailsFilter) {
+                this.removeFilteredFacet(this.#detailsFilter.id)
+                this.#detailsFilter = null
+            }
+            this.#baseLayer.dimRasterLayers(false)
+            this.#currentDetailLayer = null
+            this.#revertDetailZoom = -1
+        }
+    }
+
+    enableDetailedLayer(currentLayerId: string, layerId: string)
+    //==========================================================
+    {
+        if (this.#baseLayer === null) {
+            this.#baseLayer = this.#mapStyleLayers.get(currentLayerId)!
+        }
+        const detailLayer = this.#mapStyleLayers.get(layerId)
+        if (detailLayer) {
+            this.#baseLayer.dimRasterLayers()
+            if (this.#detailsFilter) {
+                this.removeFilteredFacet(this.#detailsFilter.id)
+            }
+            this.#detailsFilter = new DetailsFilter(layerId)
+            this.addFilteredFacet(this.#detailsFilter)
+            detailLayer.activate(true)
+            this.#currentDetailLayer = detailLayer
+            this.#map.fitBounds(detailLayer.extent, {
+                animate: false,
+                padding: 50
+            })
+            this.#revertDetailZoom = this.#map.getZoom() - REVERT_DETAIL_ZOOM_OFFSET
+        }
     }
 
     enableSckanPaths(_sckanState, _enable=true)

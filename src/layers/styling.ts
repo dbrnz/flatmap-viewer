@@ -1145,6 +1145,41 @@ export class NervePolygonFill extends VectorStyleLayer
 
 //==============================================================================
 
+export class FeatureZoomPointLayer extends VectorStyleLayer
+{
+    constructor(id: string, sourceLayer: string)
+    {
+        super(id, 'zoom-point', sourceLayer)
+    }
+
+    defaultFilter(): ExpressionFilterSpecification
+    {
+        return [
+            'all',
+            ['==', ['geometry-type'], 'Point'],
+            ['==', ['get', 'kind'], 'zoom-point'],
+        ]
+    }
+
+    style(layer: FlatMapLayer, options: StylingOptions): SymbolLayerSpecification
+    {
+        return {
+            ...super.style(layer, options),
+            'type': 'symbol',
+            'filter': this.defaultFilter(),
+            'layout': {
+                'visibility': 'visible',
+                'icon-allow-overlap': true,
+                'icon-image': 'zoom-marker',
+//                'icon-image': ['get', 'marker-icon'],
+                'icon-size': ['interpolate', ['linear'], ['zoom'], 0, 0.1, 3, 0.01, 9, 2],
+            }
+        }
+    }
+}
+
+//==============================================================================
+
 export class FeatureLargeSymbolLayer extends VectorStyleLayer
 {
     constructor(id: string, sourceLayer: string)

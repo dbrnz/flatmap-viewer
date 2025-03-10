@@ -46,6 +46,11 @@ export type MapRenderedFeature = maplibregl.MapGeoJSONFeature & {
 
 //==============================================================================
 
+// Lng, Lat coordinates
+export type MapExtent = [number, number, number, number]
+
+//==============================================================================
+
 // Flatmap types as received from server...
 
 export interface FlatMapServerIndex
@@ -86,7 +91,7 @@ export interface FlatMapIndex
 {
     authoring?: boolean
     biologicalSex?: string
-    bounds: [number, number, number, number]
+    bounds: MapExtent
     connectivity?: SckanConnectivity
     'git-status'?: object
     id: string
@@ -142,6 +147,7 @@ export interface FlatMapImageLayer
 
 export interface FlatMapLayer
 {
+    extent?: MapExtent
     description?: string
     'detail-layer'?: boolean
     enabled?: boolean
