@@ -24,13 +24,14 @@ import {Model, Geometry} from '@luma.gl/engine'
 
 //==============================================================================
 
+import {PropertiesFilter} from '../filters'
 import type {MapFeature, MapFeatureIdentifier} from '../flatmap-types'
 import {FlatMap} from '../flatmap'
 import {pathColourArray, PathStyle} from '../pathways'
 import {UserInteractions} from '../interactions'
 
 import {DeckGlOverlay} from './deckgl'
-import {PropertiesFilter} from '../filters'
+import {StylingOptions} from './styling'
 
 //==============================================================================
 
@@ -44,10 +45,6 @@ interface PathProperties extends PropertiesType {
     pathEndPosition?: number[]
     pathStartPosition?: number[]
     selected?: boolean
-}
-
-interface LayerOptions extends PropertiesType {
-    dimmed?: boolean
 }
 
 //==============================================================================
@@ -231,8 +228,8 @@ export class FlightPathLayer
         }
     }
 
-    setPaint(options: LayerOptions)
-    //=============================
+    setPaint(options: StylingOptions)
+    //===============================
     {
         const dimmed = options.dimmed || false
         if (this.#dimmed !== dimmed) {

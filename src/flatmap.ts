@@ -157,10 +157,6 @@ export type MapDescriptionOptions = FlatMapOptions & {
         url: string
         options: object
     }[]
-    layerOptions?: FlatMapLayerOptions & {
-        authoring?: boolean
-        flatmapStyle?: string
-    }
     separateLayers: boolean
     style: string
 }

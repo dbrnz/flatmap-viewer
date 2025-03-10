@@ -157,8 +157,9 @@ export type FlatMapCallback = (type: string, ...args: unknown[]) => undefined|bo
 
 export interface FlatMapLayerOptions
 {
-    colour?: boolean
-    outline?: boolean
+    authoring?: boolean
+    coloured?: boolean
+    outlined?: boolean
     sckan?: string
 }
 

@@ -29,13 +29,13 @@ import type {MapFeature, MapRenderedFeature} from '../flatmap-types'
 import {FlatMap, FLATMAP_STYLE} from '../flatmap'
 import {PATHWAYS_LAYER} from '../pathways'
 import {UserInteractions} from '../interactions'
-import type {PropertiesType} from '../types'
 import * as utils from '../utils'
 
 import {ANATOMICAL_MARKERS_LAYER, ClusteredAnatomicalMarkerLayer, Dataset} from './acluster'
 
 import * as style from './styling'
-import {BackgroundStyleLayer, BodyStyleLayer, RasterStyleLayer, VectorStyleLayer, VECTOR_TILES_SOURCE} from './styling'
+import {BackgroundStyleLayer, BodyStyleLayer, RasterStyleLayer, StyleLayerOptions, StylingOptions} from './styling'
+import {VectorStyleLayer, VECTOR_TILES_SOURCE} from './styling'
 
 import {DeckGlOverlay} from './deckgl'
 import {FlightPathLayer} from './flightpaths'
@@ -59,7 +59,7 @@ class FlatMapStylingLayer
     #description: string
     #id: string
     #layer: FlatMapLayer
-    #layerOptions
+    #layerOptions: StylingOptions
     #map: MapLibreMap
     #minimapStylingLayers = []
     #pathStyleLayers: VectorStyleLayer[] = []
@@ -67,7 +67,7 @@ class FlatMapStylingLayer
     #separateLayers: boolean
     #vectorStyleLayers: VectorStyleLayer[] = []
 
-    constructor(flatmap: FlatMap, layer: FlatMapLayer, options: PropertiesType)
+    constructor(flatmap: FlatMap, layer: FlatMapLayer, options: StylingOptions)
     {
         this.#id = layer.id
         this.#layer = layer
@@ -266,8 +266,8 @@ class FlatMapStylingLayer
         }
     }
 
-    setPaint(options)
-    //===============
+    setPaint(options: StylingOptions)
+    //===============================
     {
         for (const layer of this.#vectorStyleLayers) {
             const paintStyle = layer.paintStyle(options, true)
@@ -335,7 +335,7 @@ export class LayerManager
     #filterMap: Map<string, PropertiesFilter> = new Map()
     #flatmap: FlatMap
     #flightPathLayer: FlightPathLayer
-    #layerOptions
+    #layerOptions: StylingOptions
     #map: MapLibreMap
     #mapStyleLayers: Map<string, FlatMapStylingLayer> = new Map()
     #markerLayer: ClusteredAnatomicalMarkerLayer
@@ -347,8 +347,9 @@ export class LayerManager
         this.#flatmap = flatmap
         this.#map = flatmap.map
         this.#layerOptions = utils.setDefaults(flatmap.options.layerOptions, {
-            colour: true,
-            outline: true,
+            coloured: true,
+            flatmapStyle: flatmap.options.style,
+            outlined: true,
             sckan: 'valid'
         })
         this.#minimapStyleSpecification = this.#map.getStyle()
