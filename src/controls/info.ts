@@ -30,9 +30,6 @@ import {indexedProperties} from '../search'
 export const displayedProperties = [
 //    'id',
     'class',
-    'cd-class',
-    'fc-class',
-    'fc-kind',
     'name',
     ...indexedProperties,
     'featureId',

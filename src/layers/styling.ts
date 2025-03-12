@@ -40,9 +40,30 @@ export const VECTOR_TILES_SOURCE = 'vector-tiles'
 
 import {FLATMAP_STYLE} from '../flatmap'
 import {PATH_STYLE_RULES} from '../pathways'
-import {PropertiesType} from '../types'
 
-import {FlatMapLayer} from '../flatmap-types'
+import {FlatMapLayer, FlatMapLayerOptions} from '../flatmap-types'
+
+//==============================================================================
+
+export interface StyleLayerOptions extends FlatMapLayerOptions
+{
+    dashed?: boolean
+    'detail-layer'?: boolean
+    flatmapStyle?: FLATMAP_STYLE,
+    highlight?: boolean
+    'max-zoom'?: number
+    'min-zoom'?: number
+}
+
+export interface StylingOptions extends StyleLayerOptions
+{
+    activeRasterLayer?: boolean
+    excludeAnnotated?: boolean
+    colour?: string
+    dimmed?: boolean
+    opacity?: number
+    showNerveCentrelines?: boolean
+}
 
 //==============================================================================
 
@@ -115,21 +136,6 @@ type PaintSpecification = FillPaintSpecification | LinePaintSpecification
 
 //==============================================================================
 
-export interface StyleLayerOptions
-{
-    dashed?: boolean
-    'detail-layer'?: boolean
-    'max-zoom'?: number
-    'min-zoom'?: number
-}
-
-export interface StylingOptions
-{
-    colour?: string
-    opacity?: number
-    showNerveCentrelines?: boolean
-}
-
 interface BaseLayerStyle
 {
     id: string
@@ -195,7 +201,7 @@ export class VectorStyleLayer extends StyleLayer
         return null
     }
 
-    paintStyle(_options: PropertiesType, _changes: boolean=false): PaintSpecification
+    paintStyle(_options: StylingOptions, _changes: boolean=false): PaintSpecification
     {
         return {}
     }
@@ -248,7 +254,7 @@ export class BodyStyleLayer extends VectorStyleLayer
         ]
     }
 
-    style(layer: FlatMapLayer, options: PropertiesType): FillLayerSpecification
+    style(layer: FlatMapLayer, options: StylingOptions): FillLayerSpecification
     {
         return {
             ...super.style(layer, options),
@@ -265,6 +271,38 @@ export class BodyStyleLayer extends VectorStyleLayer
                     ['has', 'colour'], 1.0,
                     0.1
                 ]
+            }
+        }
+    }
+}
+
+//==============================================================================
+
+export class BackgroundBorderLayer extends VectorStyleLayer
+{
+    constructor(id: string, sourceLayer: string)
+    {
+        super(id, 'background-border', sourceLayer)
+    }
+
+    defaultFilter(): ExpressionFilterSpecification
+    {
+        return [
+            'all',
+            ['==', ['geometry-type'], 'Polygon'],
+            ['==', ['get', 'kind'], 'background']
+        ]
+    }
+
+    style(layer: FlatMapLayer, options: StylingOptions): LineLayerSpecification
+    {
+        return {
+            ...super.style(layer, options),
+            'type': 'line',
+            'filter': this.defaultFilter(),
+            'paint': {
+                'line-color': '#666',
+                'line-width': 6
             }
         }
     }
@@ -290,10 +328,10 @@ export class FeatureFillLayer extends VectorStyleLayer
         ]
     }
 
-    paintStyle(options, changes=false)
+    paintStyle(options: StylingOptions, changes=false)
     {
-        const coloured = !('colour' in options) || options.colour
-        const dimmed = 'dimmed' in options && options.dimmed
+        const coloured = options.coloured || true
+        const dimmed = options.dimmed || false
         const functional = (options.flatmapStyle === FLATMAP_STYLE.FUNCTIONAL)
         const paintStyle: PaintSpecification = {
             'fill-color': [
@@ -325,7 +363,7 @@ export class FeatureFillLayer extends VectorStyleLayer
         return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(layer: FlatMapLayer, options): FillLayerSpecification
+    style(layer: FlatMapLayer, options: StylingOptions): FillLayerSpecification
     {
         return {
             ...super.style(layer, options),
@@ -357,12 +395,12 @@ export class FeatureBorderLayer extends VectorStyleLayer
         ]
     }
 
-    paintStyle(options, changes=false)
+    paintStyle(options: StylingOptions, changes=false)
     {
-        const coloured = !('colour' in options) || options.colour
-        const outlined = !('outline' in options) || options.outline
-        const dimmed = 'dimmed' in options && options.dimmed
-        const activeRasterLayer = 'activeRasterLayer' in options && options.activeRasterLayer
+        const coloured = options.coloured || true
+        const outlined = options.outlined || true
+        const dimmed = options.dimmed || false
+        const activeRasterLayer = options.activeRasterLayer || false
         const functional = (options.flatmapStyle === FLATMAP_STYLE.FUNCTIONAL)
 
         const lineColour: CaseSpecification = ['case']
@@ -414,7 +452,7 @@ export class FeatureBorderLayer extends VectorStyleLayer
         }, changes)
     }
 
-    style(layer: FlatMapLayer, options): LineLayerSpecification
+    style(layer: FlatMapLayer, options: StylingOptions): LineLayerSpecification
     {
         return {
             ...super.style(layer),
@@ -450,9 +488,9 @@ export class FeatureLineLayer extends VectorStyleLayer
         ]
     }
 
-    paintStyle(options, changes=false)
+    paintStyle(options: StylingOptions, changes=false)
     {
-        const coloured = !('colour' in options) || options.colour
+        const coloured = options.coloured || true
         const paintStyle: PaintSpecification = {
             'line-color': [
                 'case',
@@ -496,7 +534,7 @@ export class FeatureLineLayer extends VectorStyleLayer
         return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(layer: FlatMapLayer, options): LineLayerSpecification
+    style(layer: FlatMapLayer, options: StylingOptions): LineLayerSpecification
     {
         return {
             ...super.style(layer, options),
@@ -519,7 +557,7 @@ export class FeatureDashLineLayer extends FeatureLineLayer
 
 //==============================================================================
 
-function sckanFilter(options: FilterProperties={}): ExpressionFilterSpecification
+function sckanFilter(options: StylingOptions={}): ExpressionFilterSpecification
 {
     const sckanState = (options.sckan || 'all').toLowerCase()
     if        (sckanState === 'none') {
@@ -551,11 +589,6 @@ function sckanFilter(options: FilterProperties={}): ExpressionFilterSpecificatio
 
 //==============================================================================
 
-interface FilterProperties
-{
-    sckan?: string
-}
-
 export class AnnotatedPathLayer extends VectorStyleLayer
 {
     constructor(id: string, sourceLayer: string)
@@ -563,7 +596,7 @@ export class AnnotatedPathLayer extends VectorStyleLayer
         super(id, 'annotated-path', sourceLayer)
     }
 
-    defaultFilter(options: FilterProperties={}): ExpressionFilterSpecification
+    defaultFilter(options: StylingOptions={}): ExpressionFilterSpecification
     {
         return [
             'all',
@@ -571,10 +604,10 @@ export class AnnotatedPathLayer extends VectorStyleLayer
         ]
     }
 
-    paintStyle(options={}, changes=false)
+    paintStyle(options: StylingOptions={}, changes=false)
     {
-        const dimmed = 'dimmed' in options && options.dimmed
-        const exclude = 'excludeAnnotated' in options && options.excludeAnnotated
+        const dimmed = options.dimmed || false
+        const exclude = options.excludeAnnotated || false
         const paintStyle: PaintSpecification = {
             'line-color': COLOUR_ANNOTATED,
             'line-dasharray': [5, 0.5, 3, 0.5],
@@ -606,7 +639,7 @@ export class AnnotatedPathLayer extends VectorStyleLayer
         return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(layer: FlatMapLayer, options): LineLayerSpecification
+    style(layer: FlatMapLayer, options: StylingOptions): LineLayerSpecification
     {
         return {
             ...super.style(layer, options),
@@ -627,7 +660,7 @@ export class PathLineLayer extends VectorStyleLayer
     #dashed: boolean
     #highlight: boolean
 
-    constructor(id: string, sourceLayer: string, options: PropertiesType={})
+    constructor(id: string, sourceLayer: string, options: StyleLayerOptions={})
     {
         const dashed = !!(options.dashed || false)
         const highlight = !!('highlight' in options && options.highlight)
@@ -636,7 +669,7 @@ export class PathLineLayer extends VectorStyleLayer
         this.#highlight = highlight
     }
 
-    defaultFilter(options: PropertiesType={}): ExpressionFilterSpecification
+    defaultFilter(options: StylingOptions={}): ExpressionFilterSpecification
     {
         const sckan_filter = sckanFilter(options)
         return this.#dashed ? [
@@ -657,9 +690,9 @@ export class PathLineLayer extends VectorStyleLayer
         ]
     }
 
-    paintStyle(options={}, changes=false)
+    paintStyle(options: StylingOptions={}, changes=false)
     {
-        const dimmed = 'dimmed' in options && options.dimmed
+        const dimmed = options.dimmed || false
         const exclude = 'excludeAnnotated' in options && options.excludeAnnotated
         const paintStyle: PaintSpecification = {
             'line-color': [
@@ -715,7 +748,7 @@ export class PathLineLayer extends VectorStyleLayer
         return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(layer: FlatMapLayer, options={}): LineLayerSpecification
+    style(layer: FlatMapLayer, options: StylingOptions={}): LineLayerSpecification
     {
         return {
             ...super.style(layer, options),
@@ -778,7 +811,7 @@ class NerveCentrelineLayer extends VectorStyleLayer
         ]
     }
 
-    paintStyle(_options, changes=false)
+    paintStyle(_options: StylingOptions, changes=false)
     {
         const paintStyle: PaintSpecification = {
             'line-color': (this.#type == 'edge') ? [
@@ -811,7 +844,7 @@ class NerveCentrelineLayer extends VectorStyleLayer
         return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(layer: FlatMapLayer, options): LineLayerSpecification
+    style(layer: FlatMapLayer, options: StylingOptions): LineLayerSpecification
     {
         return {
             ...super.style(layer, options),
@@ -829,7 +862,7 @@ class NerveCentrelineLayer extends VectorStyleLayer
 
 export class NerveCentrelineEdgeLayer extends NerveCentrelineLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
         super(id, 'edge', sourceLayer)
     }
@@ -837,7 +870,7 @@ export class NerveCentrelineEdgeLayer extends NerveCentrelineLayer
 
 export class NerveCentrelineTrackLayer extends NerveCentrelineLayer
 {
-    constructor(id, sourceLayer)
+    constructor(id: string, sourceLayer: string)
     {
         super(id, 'track', sourceLayer)
     }
@@ -876,7 +909,7 @@ export class CentrelineNodeFillLayer extends VectorStyleLayer
         return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(layer: FlatMapLayer, options): FillLayerSpecification
+    style(layer: FlatMapLayer, options: StylingOptions): FillLayerSpecification
     {
         return {
             ...super.style(layer, options),
@@ -922,7 +955,7 @@ export class CentrelineNodeBorderLayer extends VectorStyleLayer
         return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(layer: FlatMapLayer, options)
+    style(layer: FlatMapLayer, options: StylingOptions)
     {
         return {
             ...super.style(layer, options),
@@ -952,7 +985,7 @@ export class FeatureNerveLayer extends VectorStyleLayer
         ]
     }
 
-    style(layer: FlatMapLayer, options): LineLayerSpecification
+    style(layer: FlatMapLayer, options: StylingOptions): LineLayerSpecification
     {
         return {
             ...super.style(layer, options),
@@ -1010,7 +1043,7 @@ export class NervePolygonBorder extends VectorStyleLayer
         ]
     }
 
-    style(layer: FlatMapLayer, options): LineLayerSpecification
+    style(layer: FlatMapLayer, options: StylingOptions): LineLayerSpecification
     {
         return {
             ...super.style(layer, options),
@@ -1065,9 +1098,9 @@ export class NervePolygonFill extends VectorStyleLayer
         ]
     }
 
-    paintStyle(options={}, changes=false)
+    paintStyle(options: StylingOptions={}, changes=false)
     {
-        const dimmed = 'dimmed' in options && options.dimmed
+        const dimmed = options.dimmed || false
         const paintStyle: PaintSpecification = {
             'fill-color': [
                 'let', 'active', ['to-number', ['feature-state', 'active'], 0],
@@ -1099,13 +1132,48 @@ export class NervePolygonFill extends VectorStyleLayer
         return super.changedPaintStyle(paintStyle, changes)
     }
 
-    style(layer: FlatMapLayer, options={}): FillLayerSpecification
+    style(layer: FlatMapLayer, options: StylingOptions={}): FillLayerSpecification
     {
         return {
             ...super.style(layer, options),
             'filter': this.defaultFilter(),
             'type': 'fill',
             'paint': this.paintStyle(options) as FillPaintSpecification
+        }
+    }
+}
+
+//==============================================================================
+
+export class FeatureZoomPointLayer extends VectorStyleLayer
+{
+    constructor(id: string, sourceLayer: string)
+    {
+        super(id, 'zoom-point', sourceLayer)
+    }
+
+    defaultFilter(): ExpressionFilterSpecification
+    {
+        return [
+            'all',
+            ['==', ['geometry-type'], 'Point'],
+            ['==', ['get', 'kind'], 'zoom-point'],
+        ]
+    }
+
+    style(layer: FlatMapLayer, options: StylingOptions): SymbolLayerSpecification
+    {
+        return {
+            ...super.style(layer, options),
+            'type': 'symbol',
+            'filter': this.defaultFilter(),
+            'layout': {
+                'visibility': 'visible',
+                'icon-allow-overlap': true,
+                'icon-image': 'zoom-marker',
+//                'icon-image': ['get', 'marker-icon'],
+                'icon-size': ['interpolate', ['linear'], ['zoom'], 0, 0.1, 3, 0.01, 9, 2],
+            }
         }
     }
 }
@@ -1177,7 +1245,7 @@ export class FeatureSmallSymbolLayer extends VectorStyleLayer
         ]
     }
 
-    style(layer: FlatMapLayer, options): SymbolLayerSpecification
+    style(layer: FlatMapLayer, options: StylingOptions): SymbolLayerSpecification
     {
         return {
             ...super.style(layer, options),
@@ -1209,10 +1277,6 @@ export class FeatureSmallSymbolLayer extends VectorStyleLayer
 
 //==============================================================================
 
-export type BackgroundStylingOptions = StylingOptions & {
-    colour: string
-}
-
 export class BackgroundStyleLayer extends StyleLayer
 {
     constructor()
@@ -1220,7 +1284,7 @@ export class BackgroundStyleLayer extends StyleLayer
         super('background')
     }
 
-    style(_, options: BackgroundStylingOptions): BackgroundLayerSpecification
+    style(_, options: StylingOptions): BackgroundLayerSpecification
     {
         return {
             ...super.style(null, {}),
@@ -1247,7 +1311,7 @@ export class RasterStyleLayer extends StyleLayer
 
     style(layer: FlatMapLayer, options: StylingOptions): RasterLayerSpecification
     {
-        const coloured = !('colour' in options) || options.colour
+        const coloured = options.coloured || true
         const style: RasterLayerSpecification = {
             ...super.style(layer),
             source: this.id,

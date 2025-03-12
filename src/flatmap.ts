@@ -74,9 +74,11 @@ const MAP_MAKER_FLIGHTPATHS_VERSION = 1.6
 //==============================================================================
 
 const EXCLUDED_FEATURE_FILTER_PROPERTIES = [
+    'associated-details',
     'bounds',
     'class',
     'coordinates',
+    'details-layer',
     'featureId',
     'geometry',
     'geom-type',
@@ -157,10 +159,6 @@ export type MapDescriptionOptions = FlatMapOptions & {
         url: string
         options: object
     }[]
-    layerOptions?: FlatMapLayerOptions & {
-        authoring?: boolean
-        flatmapStyle?: string
-    }
     separateLayers: boolean
     style: string
 }

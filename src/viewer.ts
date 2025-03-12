@@ -229,8 +229,8 @@ export class MapViewer
     * @arg options.flightPaths {boolean} Enable flight path (3D) view of neuron paths
     * @arg options.fullscreenControl {boolean} Add a ``Show full screen`` button to the map.
     * @arg options.layerOptions {Object} Options to control colour and outlines of features
-    * @arg options.layerOptions.colour {boolean} Use colour fill (if available) for features. Defaults to ``true``.
-    * @arg options.layerOptions.outline {boolean} Show the border of features. Defaults to ``true``.
+    * @arg options.layerOptions.coloured {boolean} Use colour fill (if available) for features. Defaults to ``true``.
+    * @arg options.layerOptions.outlined {boolean} Show the border of features. Defaults to ``true``.
     * @arg options.layerOptions.sckan {string} Show neuron paths known to SCKAN: values are ``valid`` (default),
     *                                        ``invalid``, ``all`` or ``none``.
     * @arg options.minimap {boolean|Object} Display a MiniMap of the flatmap. Defaults to ``false``.
@@ -366,23 +366,22 @@ export class MapViewer
             }
         }
 
-        // Make sure ``layerOptions`` are set
+        // Make sure ``layerOptions`` fields are set
 
         if (mapOptions.layerOptions) {
-            if (!('colour' in mapOptions.layerOptions)) {
-                mapOptions.layerOptions.colour = true
+            if (!('coloured' in mapOptions.layerOptions)) {
+                mapOptions.layerOptions.coloured = true
             }
-            if (!('outline' in mapOptions.layerOptions)) {
-                mapOptions.layerOptions.outline = true
+            if (!('outlined' in mapOptions.layerOptions)) {
+                mapOptions.layerOptions.outlined = true
             }
         } else {
             mapOptions.layerOptions = {
-                colour: true,
-                outline: true
+                coloured: true,
+                outlined: true
             }
         }
         mapOptions.layerOptions.authoring = ('authoring' in mapIndex) ? mapIndex.authoring : false
-        mapOptions.layerOptions.flatmapStyle = mapOptions.style
 
         // Are features in separate vector tile source layers?
 

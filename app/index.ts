@@ -18,8 +18,7 @@ limitations under the License.
 
 ******************************************************************************/
 
-import { FlatMap, MapViewer } from '../lib'
-import { LoadMapOptions } from '../src/viewer'
+import { FlatMap, FlatMapOptions, MapViewer } from '../lib'
 
 //==============================================================================
 
@@ -189,7 +188,7 @@ class StandaloneViewer
     #mapEndpoints: object
     #mapSelector: HTMLSelectElement|null
     #mapGeneration: HTMLSelectElement|null
-    #mapOptions: LoadMapOptions
+    #mapOptions: FlatMapOptions
     #mapProvenance: HTMLElement|null
 
     #mapIdToName = new Map()
@@ -317,14 +316,10 @@ class StandaloneViewer
         const maps = await viewer.allMaps()
         for (const map of Object.values(maps)) {
             const text: string[] = []
-            if ('describes' in map) {
+            if (map.describes) {
                 text.push(map.describes)
             }
-            if ('name' in map) {
-                text.push(map.name)
-            } else {
-                text.push(map.id)
-            }
+            text.push(map.name || map.id)
             const mapName = text.join(' -- ')
             if (!latestMaps.has(mapName)) {
                 latestMaps.set(mapName, map)

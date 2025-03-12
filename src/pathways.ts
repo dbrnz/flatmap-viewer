@@ -23,7 +23,7 @@ import {colord} from 'colord'
 //==============================================================================
 
 import {FlatMap, FLATMAP_STYLE} from './flatmap'
-import {FlatMapFeature} from './flatmap-types'
+import {MapRenderedFeature} from './flatmap-types'
 import type {PathDetailsType} from './flatmap-types'
 import {UserInteractions} from './interactions'
 import {Callback, PropertiesType} from './types'
@@ -341,8 +341,8 @@ export class PathManager
         return featureIds
     }
 
-    pathProperties(feature: FlatMapFeature): PropertiesType
-    //=====================================================
+    pathProperties(feature: MapRenderedFeature): PropertiesType
+    //=========================================================
     {
         const properties: PropertiesType = Object.assign({}, feature.properties)
         if (this.#pathsByLine.has(+feature.id)) {

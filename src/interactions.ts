@@ -765,7 +765,7 @@ export class UserInteractions
     }
 
     activateLineFeatures(lineFeatures: MapRenderedFeature[])
-    //==============================================
+    //======================================================
     {
         for (const lineFeature of lineFeatures) {
             this.activateFeature(lineFeature)
@@ -1061,8 +1061,8 @@ export class UserInteractions
                                       : `<div class='flatmap-feature-label'>${tooltip.join('<hr/>')}</div>`
     }
 
-    #featureEvent(type, feature, values={})
-    //=====================================
+    #featureEvent(type: string, feature: MapRenderedFeature, values={})
+    //=================================================================
     {
         const properties = Object.assign({}, feature.properties, values)
         if (inAnatomicalClusterLayer(feature)) {
@@ -1364,8 +1364,12 @@ export class UserInteractions
                     }
                 }
             }
-            if (this.#flatmap.options.standalone) {
-                if ('properties' in clickedFeature && 'hyperlink' in clickedFeature.properties) {
+            if (this.#flatmap.options.style === FLATMAP_STYLE.FUNCTIONAL
+             && 'details-layer' in clickedFeature.properties) {
+                this.#layerManager.enableDetailedLayer(clickedFeature.properties.layer,
+                                                       clickedFeature.properties['details-layer'])
+            } else if (this.#flatmap.options.standalone) {
+                if ('hyperlink' in clickedFeature.properties) {
                     window.open(clickedFeature.properties.hyperlink, '_blank')
                 }
             }
