@@ -765,7 +765,7 @@ export class UserInteractions
     }
 
     activateLineFeatures(lineFeatures: MapRenderedFeature[])
-    //==============================================
+    //======================================================
     {
         for (const lineFeature of lineFeatures) {
             this.activateFeature(lineFeature)
