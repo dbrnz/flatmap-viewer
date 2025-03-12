@@ -1061,8 +1061,8 @@ export class UserInteractions
                                       : `<div class='flatmap-feature-label'>${tooltip.join('<hr/>')}</div>`
     }
 
-    #featureEvent(type, feature, values={})
-    //=====================================
+    #featureEvent(type: string, feature: MapRenderedFeature, values={})
+    //=================================================================
     {
         const properties = Object.assign({}, feature.properties, values)
         if (inAnatomicalClusterLayer(feature)) {
