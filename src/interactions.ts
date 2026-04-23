@@ -1416,7 +1416,8 @@ export class UserInteractions
         const clickedDrawnFeatures = clickedFeatures.filter((f) => !f.id)
         clickedFeatures = clickedFeatures.filter((f) => f.id)
         let clickedFeature = clickedFeatures[0]
-        if (this.#flatmap.mapMetadata['map-kinds']?.includes('model')) {
+        if (this.#flatmap.mapMetadata['map-kinds']?.includes('model')
+         && !clickedFeature.layer.id.endsWith(MARKERS_LAYER_ID_SUFFIX)) {
             for (const feature of clickedFeatures) {
                 if (feature.properties.variable) {
                     clickedFeature = feature
